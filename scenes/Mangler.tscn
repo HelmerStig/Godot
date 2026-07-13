@@ -1,21 +1,21 @@
 [gd_scene load_steps=3 format=3 uid="uid://cemh2xowvxf8g"]
 
-[ext_resource type="Script" path="res://scripts/Fighter.gd" id="1_fighter"]
+[ext_resource type="Script" path="res://scripts/Mangler.gd" id="1_mangler"]
+[ext_resource type="Texture2D" uid="uid://unique_mangler_texture" path="res://assets/sprites/characters/mangler_idle.png" id="2_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(40, 80)
+size = Vector2(60, 140)
 
-[node name="Fighter" type="CharacterBody2D"]
-script = ExtResource("1_fighter")
+[node name="Mangler" type="CharacterBody2D"]
+script = ExtResource("1_mangler")
 
-[node name="Sprite2D" type="ColorRect" parent="."]
-offset_left = -20.0
-offset_top = -80.0
-offset_right = 20.0
-color = Color(0.2, 0.5, 1, 1)
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -120)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("2_texture")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -40)
+position = Vector2(0, -70)
 shape = SubResource("RectangleShape2D_1")
 
 [node name="Hitbox" type="Area2D" parent="."]
@@ -23,7 +23,7 @@ collision_layer = 2
 collision_mask = 4
 
 [node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
-position = Vector2(30, -40)
+position = Vector2(40, -70)
 shape = SubResource("RectangleShape2D_1")
 disabled = true
 
@@ -32,5 +32,5 @@ collision_layer = 4
 collision_mask = 2
 
 [node name="HurtboxShape" type="CollisionShape2D" parent="Hurtbox"]
-position = Vector2(0, -40)
+position = Vector2(0, -70)
 shape = SubResource("RectangleShape2D_1")

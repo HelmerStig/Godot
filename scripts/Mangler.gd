@@ -1,5 +1,5 @@
 extends CharacterBody2D
-class_name Fighter
+class_name Mangler
 
 ## Script base per i personaggi del picchiaduro
 ## Gestisce movimento, stati, combattimento e fisica
@@ -187,7 +187,7 @@ func flip_character():
 	scale.x *= -1
 
 
-func take_damage(damage: int, _attacker: Fighter):
+func take_damage(damage: int, _attacker: Mangler):
 	"""Riceve danno da un attacco"""
 	if is_blocking:
 		# Se sta bloccando, riduce il danno
@@ -237,7 +237,7 @@ func _on_hitbox_area_entered(area: Area2D):
 	# La hitbox colpisce la hurtbox dell'avversario
 	if area.is_in_group("hurtbox") and is_attacking:
 		var opponent = area.get_parent()
-		if opponent != self and opponent is Fighter:
+		if opponent != self and opponent is Mangler:
 			# Infliggi danno in base all'attacco corrente
 			var damage = 10  # Danno base, da calcolare in base all'attacco
 			opponent.take_damage(damage, self)

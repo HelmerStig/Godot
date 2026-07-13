@@ -52,7 +52,7 @@ class_name CharacterData
 ## Crea un CharacterData di default
 static func create_default() -> CharacterData:
 	var data = CharacterData.new()
-	data.character_name = "Ryu"
-	data.display_name = "Ryu"
-	data.description = "Maestro di arti marziali con il Hadouken"
+	data.character_name = "Mangler"
+	data.display_name = "Mangler"
+	data.description = "Un potente combattente con mosse devastanti"
 	return data
