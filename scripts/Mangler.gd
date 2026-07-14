@@ -20,6 +20,24 @@ enum State {
 const WALK_SPEED = 200.0
 const JUMP_VELOCITY = -450.0
 const GRAVITY = 980.0
+const ATTACK_HITBOXES = {
+	"light_punch": {
+		"size": Vector2(55.0, 35.0),
+		"position": Vector2(47.5, -105.0),
+	},
+	"heavy_punch": {
+		"size": Vector2(80.0, 45.0),
+		"position": Vector2(65.0, -100.0),
+	},
+	"light_kick": {
+		"size": Vector2(75.0, 35.0),
+		"position": Vector2(57.5, -55.0),
+	},
+	"heavy_kick": {
+		"size": Vector2(105.0, 45.0),
+		"position": Vector2(77.5, -65.0),
+	},
+}
 
 # === VARIABILI DI STATO ===
 var current_state = State.IDLE
@@ -38,6 +56,7 @@ var combo_counter = 0
 var last_attack_time = 0.0
 var current_attack_damage = 0
 var action_generation = 0
+var hit_targets: Array[Mangler] = []
 
 # === LIMITI DELLO STAGE ===
 var stage_left_limit = 0.0
@@ -49,6 +68,7 @@ var stage_right_limit = 1152.0
 @onready var collision_shape = $CollisionShape2D
 @onready var hitbox = $Hitbox if has_node("Hitbox") else null
 @onready var hurtbox = $Hurtbox if has_node("Hurtbox") else null
+@onready var hitbox_shape: CollisionShape2D = $Hitbox/HitboxShape if has_node("Hitbox/HitboxShape") else null
 
 
 func _ready():
@@ -56,6 +76,9 @@ func _ready():
 	apply_character_data()
 	current_health = max_health
 	add_to_group("fighters")
+	if hitbox_shape and hitbox_shape.shape:
+		# Ogni fighter deve poter cambiare la propria hitbox indipendentemente.
+		hitbox_shape.shape = hitbox_shape.shape.duplicate()
 	
 	# Connetti segnali hitbox/hurtbox
 	if hitbox:
@@ -136,6 +159,8 @@ func perform_attack(attack_name: String, damage: int, duration: float):
 		is_attacking = true
 		is_blocking = false
 		current_attack_damage = damage
+		hit_targets.clear()
+		configure_hitbox(attack_name)
 		can_move = false
 		current_state = State.ATTACKING
 		velocity.x = 0
@@ -160,6 +185,7 @@ func perform_attack(attack_name: String, damage: int, duration: float):
 			return
 		is_attacking = false
 		current_attack_damage = 0
+		hit_targets.clear()
 		can_move = true
 		current_state = State.IDLE
 
@@ -304,8 +330,9 @@ func _on_hitbox_area_entered(area: Area2D):
 	"""Chiamato quando la hitbox colpisce un'area"""
 	# La hitbox colpisce la hurtbox dell'avversario
 	if area.is_in_group("hurtbox") and is_attacking:
-		var target = area.get_parent()
-		if target != self and target is Mangler:
+		var target := area.get_parent() as Mangler
+		if target != null and target != self and not hit_targets.has(target):
+			hit_targets.append(target)
 			target.take_damage(current_attack_damage, self)
 
 
@@ -317,14 +344,26 @@ func _on_hurtbox_area_entered(_area: Area2D):
 
 func enable_hitbox():
 	"""Abilita la hitbox durante un attacco"""
-	if hitbox and hitbox.has_node("HitboxShape"):
-		hitbox.get_node("HitboxShape").disabled = false
+	if hitbox_shape:
+		hitbox_shape.disabled = false
 
 
 func disable_hitbox():
 	"""Disabilita la hitbox"""
-	if hitbox and hitbox.has_node("HitboxShape"):
-		hitbox.get_node("HitboxShape").disabled = true
+	if hitbox_shape:
+		hitbox_shape.disabled = true
+
+
+func configure_hitbox(attack_name: String):
+	"""Configura dimensione e posizione dell'hitbox per l'attacco scelto."""
+	if hitbox_shape == null or not ATTACK_HITBOXES.has(attack_name):
+		return
+
+	var hitbox_data: Dictionary = ATTACK_HITBOXES[attack_name]
+	var attack_shape = hitbox_shape.shape as RectangleShape2D
+	if attack_shape:
+		attack_shape.size = hitbox_data["size"]
+		hitbox_shape.position = hitbox_data["position"]
 
 
 func reset_fighter(spawn_position: Vector2):
@@ -343,6 +382,7 @@ func cancel_current_action():
 	is_attacking = false
 	is_blocking = false
 	current_attack_damage = 0
+	hit_targets.clear()
 	disable_hitbox()
 
 
