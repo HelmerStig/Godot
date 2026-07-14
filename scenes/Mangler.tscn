@@ -20,6 +20,8 @@ size = Vector2(115, 155)
 size = Vector2(100, 135)
 
 [node name="Mangler" type="CharacterBody2D"]
+collision_layer = 8
+collision_mask = 9
 script = ExtResource("1_mangler")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

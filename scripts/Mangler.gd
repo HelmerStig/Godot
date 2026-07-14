@@ -20,6 +20,8 @@ enum State {
 const WALK_SPEED = 200.0
 const JUMP_VELOCITY = -450.0
 const GRAVITY = 980.0
+const GROUND_COLLISION_LAYER = 1
+const FIGHTER_COLLISION_LAYER = 8
 const ATTACK_HITBOXES = {
 	"light_punch": {
 		"size": Vector2(70.0, 35.0),
@@ -99,6 +101,7 @@ func _physics_process(delta):
 	
 	# Aggiorna stato
 	update_state()
+	update_physical_collision()
 	
 	# Muovi il personaggio
 	move_and_slide()
@@ -208,6 +211,17 @@ func update_state():
 	
 	# Debug stato
 	# print("Stato corrente: ", State.keys()[current_state])
+
+
+func update_physical_collision():
+	"""In aria attraversa gli altri fighter, ma continua a collidere col terreno."""
+	var is_airborne = current_state == State.JUMPING or not is_on_floor()
+	if is_airborne:
+		collision_layer = 0
+		collision_mask = GROUND_COLLISION_LAYER
+	else:
+		collision_layer = FIGHTER_COLLISION_LAYER
+		collision_mask = GROUND_COLLISION_LAYER | FIGHTER_COLLISION_LAYER
 
 
 func update_facing_direction():
