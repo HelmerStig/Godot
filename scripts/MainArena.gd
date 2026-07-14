@@ -36,6 +36,8 @@ var round_generation = 0
 func _ready():
 	# Player2 è un bersaglio statico finché non verrà aggiunta l'IA.
 	player2.is_player_controlled = false
+	player1.opponent = player2
+	player2.opponent = player1
 	
 	# Imposta limiti stage sui personaggi
 	player1.stage_left_limit = STAGE_LEFT

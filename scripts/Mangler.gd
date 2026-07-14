@@ -25,6 +25,7 @@ const GRAVITY = 980.0
 var current_state = State.IDLE
 var is_facing_right = true
 var is_player_controlled = true  # false per IA
+var opponent: Mangler
 
 # === VARIABILI DI COMBATTIMENTO ===
 @export var character_data: CharacterData
@@ -186,19 +187,28 @@ func update_state():
 
 
 func update_facing_direction():
-	"""Aggiorna la direzione in cui guarda il personaggio"""
-	if velocity.x > 0 and not is_facing_right:
-		flip_character()
-	elif velocity.x < 0 and is_facing_right:
+	"""Mantiene il personaggio rivolto verso il proprio avversario."""
+	if opponent == null or not is_instance_valid(opponent):
+		return
+
+	var horizontal_distance = opponent.global_position.x - global_position.x
+	if is_zero_approx(horizontal_distance):
+		return
+
+	var should_face_right = horizontal_distance > 0.0
+	if should_face_right != is_facing_right:
 		flip_character()
 
 
 func flip_character():
 	"""Inverte la direzione del personaggio"""
 	is_facing_right = !is_facing_right
-	
-	# Usa scale.x per il flip (funziona con qualsiasi tipo di nodo)
-	scale.x *= -1
+
+	# Il corpo fisico resta invariato: si girano solo grafica e hitbox offensiva.
+	if sprite:
+		sprite.flip_h = not is_facing_right
+	if hitbox:
+		hitbox.scale.x = 1.0 if is_facing_right else -1.0
 
 
 func take_damage(damage: int, _attacker: Mangler):
@@ -257,9 +267,9 @@ func _on_hitbox_area_entered(area: Area2D):
 	"""Chiamato quando la hitbox colpisce un'area"""
 	# La hitbox colpisce la hurtbox dell'avversario
 	if area.is_in_group("hurtbox") and is_attacking:
-		var opponent = area.get_parent()
-		if opponent != self and opponent is Mangler:
-			opponent.take_damage(current_attack_damage, self)
+		var target = area.get_parent()
+		if target != self and target is Mangler:
+			target.take_damage(current_attack_damage, self)
 
 
 func _on_hurtbox_area_entered(_area: Area2D):
