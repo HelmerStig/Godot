@@ -22,20 +22,20 @@ const JUMP_VELOCITY = -450.0
 const GRAVITY = 980.0
 const ATTACK_HITBOXES = {
 	"light_punch": {
-		"size": Vector2(55.0, 35.0),
-		"position": Vector2(47.5, -105.0),
+		"size": Vector2(70.0, 35.0),
+		"position": Vector2(35.0, -110.0),
 	},
 	"heavy_punch": {
-		"size": Vector2(80.0, 45.0),
-		"position": Vector2(65.0, -100.0),
+		"size": Vector2(100.0, 45.0),
+		"position": Vector2(55.0, -105.0),
 	},
 	"light_kick": {
-		"size": Vector2(75.0, 35.0),
-		"position": Vector2(57.5, -55.0),
+		"size": Vector2(85.0, 35.0),
+		"position": Vector2(47.5, -55.0),
 	},
 	"heavy_kick": {
-		"size": Vector2(105.0, 45.0),
-		"position": Vector2(77.5, -65.0),
+		"size": Vector2(115.0, 45.0),
+		"position": Vector2(72.5, -65.0),
 	},
 }
 
@@ -47,6 +47,7 @@ var opponent: Mangler
 
 # === VARIABILI DI COMBATTIMENTO ===
 @export var character_data: CharacterData
+@export var show_debug_boxes = true
 var max_health = 100
 var current_health = 100
 var is_blocking = false

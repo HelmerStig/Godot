@@ -1,13 +1,23 @@
-[gd_scene load_steps=4 format=3 uid="uid://cemh2xowvxf8g"]
+[gd_scene load_steps=8 format=3 uid="uid://cemh2xowvxf8g"]
 
 [ext_resource type="Script" path="res://scripts/Mangler.gd" id="1_mangler"]
 [ext_resource type="Texture2D" uid="uid://unique_mangler_texture" path="res://assets/sprites/characters/mangler/idle.png" id="2_texture"]
+[ext_resource type="Script" path="res://scripts/FighterDebugOverlay.gd" id="3_debug"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(60, 140)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
-size = Vector2(55, 35)
+size = Vector2(70, 35)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox_head"]
+size = Vector2(55, 55)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox_torso"]
+size = Vector2(115, 155)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox_legs"]
+size = Vector2(100, 135)
 
 [node name="Mangler" type="CharacterBody2D"]
 script = ExtResource("1_mangler")
@@ -26,7 +36,7 @@ collision_layer = 2
 collision_mask = 4
 
 [node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
-position = Vector2(47.5, -105)
+position = Vector2(35, -110)
 shape = SubResource("RectangleShape2D_hitbox")
 disabled = true
 
@@ -34,6 +44,18 @@ disabled = true
 collision_layer = 4
 collision_mask = 2
 
-[node name="HurtboxShape" type="CollisionShape2D" parent="Hurtbox"]
-position = Vector2(0, -70)
-shape = SubResource("RectangleShape2D_1")
+[node name="HeadHurtbox" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -252.5)
+shape = SubResource("RectangleShape2D_hurtbox_head")
+
+[node name="TorsoHurtbox" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -166)
+shape = SubResource("RectangleShape2D_hurtbox_torso")
+
+[node name="LegsHurtbox" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -67.5)
+shape = SubResource("RectangleShape2D_hurtbox_legs")
+
+[node name="DebugOverlay" type="Node2D" parent="."]
+z_index = 10
+script = ExtResource("3_debug")

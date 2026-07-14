@@ -50,6 +50,10 @@ Un gioco picchiaduro 2D in stile Street Fighter sviluppato con Godot Engine 4.7 
 #### Difesa
 - **Direzione opposta all'avversario**: Blocco (riduce danno dell'80%)
 
+#### Debug
+- **F3**: Mostra o nasconde corpo fisico, hurtbox e hitbox attive
+- **F4**: Attiva o disattiva lo slow motion per osservare le hitbox
+
 ### Player 2
 *Attualmente usa gli stessi controlli di Player 1 (per testing con 2 giocatori sulla stessa tastiera)*
 

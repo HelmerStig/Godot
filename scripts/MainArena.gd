@@ -188,3 +188,11 @@ func update_health_bars():
 func _unhandled_input(event):
 	if event.is_action_pressed("reset_training"):
 		start_round()
+	elif event.is_action_pressed("toggle_debug_boxes"):
+		var boxes_are_visible = not player1.show_debug_boxes
+		player1.show_debug_boxes = boxes_are_visible
+		player2.show_debug_boxes = boxes_are_visible
+		player1.queue_redraw()
+		player2.queue_redraw()
+	elif event.is_action_pressed("toggle_slow_motion"):
+		Engine.time_scale = 1.0 if Engine.time_scale < 1.0 else 0.15
