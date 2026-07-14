@@ -1,24 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/ParallaxStage.gd" id="1_stage"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/default_stage/sky.png" id="2_sky"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/default_stage/midground.png" id="3_midground"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/default_stage/foreground.png" id="4_foreground"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/default_stage/wide-background-v2.png" id="1_background"]
 
 [node name="DefaultStage" type="Node2D"]
-script = ExtResource("1_stage")
 
-[node name="Sky" type="Sprite2D" parent="."]
+[node name="Background" type="Sprite2D" parent="."]
 texture_filter = 1
 position = Vector2(1152, 324)
-texture = ExtResource("2_sky")
-
-[node name="Midground" type="Sprite2D" parent="."]
-texture_filter = 1
-position = Vector2(1152, 324)
-texture = ExtResource("3_midground")
-
-[node name="Foreground" type="Sprite2D" parent="."]
-texture_filter = 1
-position = Vector2(1152, 324)
-texture = ExtResource("4_foreground")
+texture = ExtResource("1_background")

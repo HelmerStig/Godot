@@ -2,9 +2,10 @@ extends Node2D
 
 ## Parallasse orizzontale leggero per lo stage predefinito.
 
-const SKY_SCROLL_FACTOR = 0.08
-const MIDGROUND_SCROLL_FACTOR = 0.18
-const FOREGROUND_SCROLL_FACTOR = 0.30
+const SKY_SCROLL_FACTOR = 0.05
+const MIDGROUND_SCROLL_FACTOR = 0.15
+# Il terreno è ancorato al mondo per non scivolare sotto i fighter.
+const FOREGROUND_SCROLL_FACTOR = 1.0
 
 @export var stage_center_x = 1152.0
 
