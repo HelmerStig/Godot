@@ -2,7 +2,7 @@ extends RefCounted
 class_name FighterInputBuffer
 
 ## Memorizza gli input recenti di un fighter in direzioni relative all'avversario.
-## Le direzioni arrivano dal D-pad tramite l'Input Map del relativo giocatore.
+## Le direzioni arrivano dal D-pad o dallo stick sinistro tramite l'Input Map.
 
 enum Direction {
 	NEUTRAL,
