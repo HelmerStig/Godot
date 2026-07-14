@@ -24,10 +24,10 @@ In un picchiaduro, ogni azione è misurata in "frame". A 60 FPS, 1 frame = 1/60 
 | Azione         | Valore         | Note                              |
 |----------------|----------------|-----------------------------------|
 | Velocità Base  | 200 px/s       | Movimento orizzontale             |
-| Velocità Salto | -450 px/s      | Velocità iniziale verticale       |
-| Gravità        | 980 px/s²      | Accelerazione verso il basso      |
-| Altezza Salto  | ~103 px        | Calcolata: v²/(2g)                |
-| Durata Salto   | ~0.92s         | Tempo totale in aria              |
+| Velocità Salto | -850 px/s      | Velocità iniziale verticale       |
+| Gravità        | 1400 px/s²     | Accelerazione verso il basso      |
+| Altezza Salto  | ~258 px        | Calcolata: v²/(2g)                |
+| Durata Salto   | ~1.21s         | Tempo totale in aria              |
 
 ### Sistema di Danno
 
@@ -176,13 +176,13 @@ secondi = frame / 60
 ### Calcolo Altezza Salto
 ```
 altezza_max = velocità_iniziale² / (2 * gravità)
-altezza_max = 450² / (2 * 980) = 103.3 px
+altezza_max = 850² / (2 * 1400) = 258.0 px
 ```
 
 ### Calcolo Tempo in Aria
 ```
 tempo_totale = 2 * velocità_iniziale / gravità
-tempo_totale = 2 * 450 / 980 = 0.918 s
+tempo_totale = 2 * 850 / 1400 = 1.214 s
 ```
 
 ### Scaling Combo

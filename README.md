@@ -160,8 +160,8 @@ Il personaggio può trovarsi in uno dei seguenti stati:
 ### Parametri Bilanciamento Attuale
 ```gdscript
 WALK_SPEED = 200.0
-JUMP_VELOCITY = -450.0
-GRAVITY = 980.0
+JUMP_VELOCITY = -850.0
+GRAVITY = 1400.0
 
 Pugno Leggero:  5 danno, 0.3s durata
 Pugno Pesante: 15 danno, 0.6s durata
