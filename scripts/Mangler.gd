@@ -35,6 +35,10 @@ var is_attacking = false
 var combo_counter = 0
 var last_attack_time = 0.0
 
+# === LIMITI DELLO STAGE ===
+var stage_left_limit = 0.0
+var stage_right_limit = 1152.0
+
 # === RIFERIMENTI ===
 @onready var sprite = $Sprite2D if has_node("Sprite2D") else null
 @onready var animation_player = $AnimationPlayer if has_node("AnimationPlayer") else null
@@ -69,6 +73,9 @@ func _physics_process(delta):
 	
 	# Muovi il personaggio
 	move_and_slide()
+	
+	# Applica limiti dello stage
+	position.x = clamp(position.x, stage_left_limit, stage_right_limit)
 	
 	# Aggiorna direzione sprite
 	update_facing_direction()

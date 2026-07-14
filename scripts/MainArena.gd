@@ -12,6 +12,11 @@ extends Node2D
 # @onready var player2_health_bar = $CanvasLayer/UI/Player2Health  # Temporaneamente disabilitato
 @onready var round_timer_label = $CanvasLayer/UI/RoundTimer
 @onready var round_label = $CanvasLayer/UI/RoundLabel
+@onready var camera = $Camera2D
+
+# === LIMITI DELLO STAGE ===
+const STAGE_LEFT = 100.0
+const STAGE_RIGHT = 1052.0
 
 # === VARIABILI DI GIOCO ===
 var round_time = 99.0  # Tempo del round in secondi
@@ -27,12 +32,19 @@ func _ready():
 	# Imposta Player2 come non controllato dal giocatore (per ora)
 	# player2.is_player_controlled = false  # Per IA futura
 	
+	# Imposta limiti stage sui personaggi
+	player1.stage_left_limit = STAGE_LEFT
+	player1.stage_right_limit = STAGE_RIGHT
+	
 	# Avvia il primo round
 	await get_tree().create_timer(1.0).timeout
 	start_round()
 
 
 func _process(delta):
+	# Aggiorna posizione camera per seguire il player
+	update_camera_position()
+	
 	if round_active and not match_over:
 		# Aggiorna timer
 		round_time -= delta
@@ -96,6 +108,18 @@ func next_round():
 	"""Prepara il round successivo"""
 	# Disabilitato per training mode
 	pass
+
+
+func update_camera_position():
+	"""Aggiorna la posizione della camera per seguire i personaggi"""
+	if player1:
+		# Per ora segue solo player1, in futuro centrerà tra player1 e player2
+		var target_x = player1.position.x
+		
+		# Clamp la camera dentro i limiti dello stage
+		target_x = clamp(target_x, STAGE_LEFT + 576, STAGE_RIGHT - 576)
+		
+		camera.position.x = target_x
 
 
 func end_match(_winner: int):

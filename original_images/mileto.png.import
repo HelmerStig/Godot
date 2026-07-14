@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://of71art5v2rn"
-path="res://.godot/imported/mangler_idle.png-9e90739af0d73715357305fcfe1d0086.ctex"
+uid="uid://dajvfinifjqsn"
+path="res://.godot/imported/mileto.png-670dd5c2b704cb51c38f550bff53307c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/mangler_idle.png"
-dest_files=["res://.godot/imported/mangler_idle.png-9e90739af0d73715357305fcfe1d0086.ctex"]
+source_file="res://original_images/mileto.png"
+dest_files=["res://.godot/imported/mileto.png-670dd5c2b704cb51c38f550bff53307c.ctex"]
 
 [params]
 
