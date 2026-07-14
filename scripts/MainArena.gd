@@ -4,12 +4,12 @@ extends Node2D
 ## Gestisce il round, timer, UI e condizioni di vittoria
 
 # === RIFERIMENTI AI FIGHTER ===
-@onready var player1: CharacterBody2D = $Player1
-# @onready var player2: CharacterBody2D = $Player2  # Temporaneamente disabilitato
+@onready var player1: Mangler = $Player1
+@onready var player2: Mangler = $Player2
 
 # === RIFERIMENTI UI ===
 @onready var player1_health_bar = $CanvasLayer/UI/Player1Health
-# @onready var player2_health_bar = $CanvasLayer/UI/Player2Health  # Temporaneamente disabilitato
+@onready var player2_health_bar = $CanvasLayer/UI/Player2Health
 @onready var round_timer_label = $CanvasLayer/UI/RoundTimer
 @onready var round_label = $CanvasLayer/UI/RoundLabel
 @onready var camera = $Camera2D
@@ -26,15 +26,18 @@ var player1_wins = 0
 var player2_wins = 0
 var round_active = false
 var match_over = false
+var round_generation = 0
 
 
 func _ready():
-	# Imposta Player2 come non controllato dal giocatore (per ora)
-	# player2.is_player_controlled = false  # Per IA futura
+	# Player2 è un bersaglio statico finché non verrà aggiunta l'IA.
+	player2.is_player_controlled = false
 	
 	# Imposta limiti stage sui personaggi
 	player1.stage_left_limit = STAGE_LEFT
 	player1.stage_right_limit = STAGE_RIGHT
+	player2.stage_left_limit = STAGE_LEFT
+	player2.stage_right_limit = STAGE_RIGHT
 	
 	# Avvia il primo round
 	await get_tree().create_timer(1.0).timeout
@@ -47,8 +50,8 @@ func _process(delta):
 	
 	if round_active and not match_over:
 		# Aggiorna timer
-		round_time -= delta
-		round_timer_label.text = str(int(round_time))
+		round_time = maxf(round_time - delta, 0.0)
+		round_timer_label.text = str(ceili(round_time))
 		
 		# Aggiorna barre vita
 		update_health_bars()
@@ -57,33 +60,38 @@ func _process(delta):
 		# if round_time <= 0:
 		# 	end_round_timeout()
 		
-		# Controlla fine round per KO (solo player1 per ora)
+		# In training il KO ferma l'azione, ma non avanza il match.
 		if player1.current_health <= 0:
-			round_label.text = "KNOCKED OUT!"
-			round_label.visible = true
+			end_round_ko(2)
+		elif player2.current_health <= 0:
+			end_round_ko(1)
 
 
 func start_round():
 	"""Inizia un nuovo round"""
+	round_generation += 1
+	var this_round_generation = round_generation
 	round_active = false
 	round_label.text = "TRAINING MODE"
 	round_label.visible = true
 	
-	# Reset posizione
-	player1.position = Vector2(300, 600)
-	
-	# Reset vita
-	player1.current_health = player1.max_health
-	
-	# Reset stato
-	player1.current_state = 0  # State.IDLE
-	player1.can_move = false
+	player1.reset_fighter(Vector2(300, 600))
+	player2.reset_fighter(Vector2(852, 600))
+	if not player1.is_facing_right:
+		player1.flip_character()
+	if player2.is_facing_right:
+		player2.flip_character()
+	update_health_bars()
 	
 	# Countdown
 	await get_tree().create_timer(1.0).timeout
+	if this_round_generation != round_generation:
+		return
 	round_label.text = "START!"
 	
 	await get_tree().create_timer(1.0).timeout
+	if this_round_generation != round_generation:
+		return
 	round_label.visible = false
 	
 	# Inizia il round
@@ -100,8 +108,13 @@ func end_round_timeout():
 
 func end_round_ko(_winner: int):
 	"""Fine round per KO"""
-	# Disabilitato per training mode
-	pass
+	if not round_active:
+		return
+	round_active = false
+	player1.can_move = false
+	player2.can_move = false
+	round_label.text = "PLAYER %d WINS - R TO RESET" % _winner
+	round_label.visible = true
 
 
 func next_round():
@@ -113,11 +126,15 @@ func next_round():
 func update_camera_position():
 	"""Aggiorna la posizione della camera per seguire i personaggi"""
 	if player1:
-		# Per ora segue solo player1, in futuro centrerà tra player1 e player2
-		var target_x = player1.position.x
-		
-		# Clamp la camera dentro i limiti dello stage
-		target_x = clamp(target_x, STAGE_LEFT + 576, STAGE_RIGHT - 576)
+		# Centra l'inquadratura tra i fighter rispettando i bordi dello stage.
+		var target_x = (player1.position.x + player2.position.x) * 0.5
+		var half_viewport = get_viewport_rect().size.x * 0.5
+		var camera_min = STAGE_LEFT + half_viewport
+		var camera_max = STAGE_RIGHT - half_viewport
+		if camera_min > camera_max:
+			target_x = (STAGE_LEFT + STAGE_RIGHT) * 0.5
+		else:
+			target_x = clamp(target_x, camera_min, camera_max)
 		
 		camera.position.x = target_x
 
@@ -131,4 +148,9 @@ func end_match(_winner: int):
 func update_health_bars():
 	"""Aggiorna le barre della vita"""
 	player1_health_bar.value = player1.get_health_percentage() * 100
-	# player2_health_bar.value = player2.get_health_percentage() * 100  # Temporaneamente disabilitato
+	player2_health_bar.value = player2.get_health_percentage() * 100
+
+
+func _unhandled_input(event):
+	if event.is_action_pressed("reset_training"):
+		start_round()

@@ -27,6 +27,7 @@ var is_facing_right = true
 var is_player_controlled = true  # false per IA
 
 # === VARIABILI DI COMBATTIMENTO ===
+@export var character_data: CharacterData
 var max_health = 100
 var current_health = 100
 var is_blocking = false
@@ -34,6 +35,8 @@ var can_move = true
 var is_attacking = false
 var combo_counter = 0
 var last_attack_time = 0.0
+var current_attack_damage = 0
+var action_generation = 0
 
 # === LIMITI DELLO STAGE ===
 var stage_left_limit = 0.0
@@ -49,6 +52,7 @@ var stage_right_limit = 1152.0
 
 func _ready():
 	# Inizializzazione
+	apply_character_data()
 	current_health = max_health
 	add_to_group("fighters")
 	
@@ -82,93 +86,96 @@ func _physics_process(delta):
 
 
 func handle_input():
-	"""Gestisce gli input del giocatore"""
-	
-	# Reset velocità orizzontale
-	if is_on_floor() and current_state != State.ATTACKING:
-		velocity.x = 0
-	
-	# Accovacciamento - controlla prima per priorità
-	if Input.is_action_pressed("crouch") and is_on_floor() and current_state != State.ATTACKING:
-		current_state = State.CROUCHING
-		velocity.x = 0
-		return  # Esce dalla funzione, ignora altri input
-	
-	# Se era accovacciato ma ha rilasciato il tasto, torna a IDLE
-	if current_state == State.CROUCHING and not Input.is_action_pressed("crouch"):
-		current_state = State.IDLE
-	
-	# Movimento orizzontale (funziona anche in aria durante il salto)
-	if current_state in [State.IDLE, State.WALKING, State.JUMPING]:
-		if Input.is_action_pressed("move_left"):
-			velocity.x = -WALK_SPEED
-			if is_on_floor():
-				current_state = State.WALKING
-		elif Input.is_action_pressed("move_right"):
-			velocity.x = WALK_SPEED
-			if is_on_floor():
-				current_state = State.WALKING
-		else:
-			velocity.x = 0
-			if is_on_floor() and current_state != State.JUMPING:
-				current_state = State.IDLE
-	
-	# Salto
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
-		current_state = State.JUMPING
-	
-	# Blocco
-	if Input.is_action_pressed("block") and current_state != State.CROUCHING:
+	"""Gestisce un'unica azione per frame secondo una priorità esplicita."""
+	if current_state in [State.ATTACKING, State.HIT, State.KNOCKED_DOWN]:
+		return
+
+	if Input.is_action_pressed("block") and is_on_floor():
 		is_blocking = true
 		current_state = State.BLOCKING
 		velocity.x = 0
-	else:
-		is_blocking = false
-	
-	# Attacchi
-	if Input.is_action_just_pressed("light_punch"):
-		perform_attack("light_punch", 5, 0.3)
-	elif Input.is_action_just_pressed("heavy_punch"):
-		perform_attack("heavy_punch", 15, 0.6)
-	elif Input.is_action_just_pressed("light_kick"):
-		perform_attack("light_kick", 8, 0.4)
-	elif Input.is_action_just_pressed("heavy_kick"):
-		perform_attack("heavy_kick", 20, 0.7)
+		return
+
+	if current_state == State.BLOCKING:
+		current_state = State.IDLE
+	is_blocking = false
+
+	if Input.is_action_just_pressed("light_punch") and is_on_floor():
+		perform_attack("light_punch", get_attack_damage("light_punch"), get_attack_duration("light_punch"))
+		return
+	elif Input.is_action_just_pressed("heavy_punch") and is_on_floor():
+		perform_attack("heavy_punch", get_attack_damage("heavy_punch"), get_attack_duration("heavy_punch"))
+		return
+	elif Input.is_action_just_pressed("light_kick") and is_on_floor():
+		perform_attack("light_kick", get_attack_damage("light_kick"), get_attack_duration("light_kick"))
+		return
+	elif Input.is_action_just_pressed("heavy_kick") and is_on_floor():
+		perform_attack("heavy_kick", get_attack_damage("heavy_kick"), get_attack_duration("heavy_kick"))
+		return
+
+	if Input.is_action_pressed("crouch") and is_on_floor():
+		current_state = State.CROUCHING
+		velocity.x = 0
+		return
+	elif current_state == State.CROUCHING:
+		current_state = State.IDLE
+
+	if Input.is_action_just_pressed("jump") and is_on_floor():
+		velocity.y = character_data.jump_velocity
+		current_state = State.JUMPING
+		return
+
+	var direction = Input.get_axis("move_left", "move_right")
+	velocity.x = direction * character_data.walk_speed
+	if is_on_floor():
+		current_state = State.WALKING if direction != 0 else State.IDLE
 
 
 func perform_attack(attack_name: String, damage: int, duration: float):
 	"""Esegue un attacco"""
-	if not is_attacking and is_on_floor():
+	if current_state in [State.IDLE, State.WALKING] and not is_attacking and is_on_floor():
+		action_generation += 1
+		var attack_generation = action_generation
 		is_attacking = true
+		current_attack_damage = damage
 		can_move = false
 		current_state = State.ATTACKING
 		velocity.x = 0
 		
 		# Abilita hitbox dopo un breve delay (startup frames)
 		await get_tree().create_timer(duration * 0.3).timeout
+		if attack_generation != action_generation:
+			return
 		enable_hitbox()
 		
 		print("Eseguendo attacco: " + attack_name + " (danno: " + str(damage) + ")")
 		
 		# Disabilita hitbox dopo i frame attivi
 		await get_tree().create_timer(duration * 0.4).timeout
+		if attack_generation != action_generation:
+			return
 		disable_hitbox()
 		
 		# Fine attacco (recovery frames)
 		await get_tree().create_timer(duration * 0.3).timeout
+		if attack_generation != action_generation:
+			return
 		is_attacking = false
+		current_attack_damage = 0
 		can_move = true
 		current_state = State.IDLE
 
 
 func update_state():
 	"""Aggiorna lo stato del personaggio in base alle condizioni"""
+	if current_state in [State.ATTACKING, State.BLOCKING, State.HIT, State.KNOCKED_DOWN]:
+		return
 	
 	# Se sta saltando
-	if not is_on_floor() and current_state != State.HIT:
-		if current_state != State.JUMPING:
-			current_state = State.JUMPING
+	if not is_on_floor():
+		current_state = State.JUMPING
+	elif current_state == State.JUMPING:
+		current_state = State.IDLE
 	
 	# Se è a terra e non si sta muovendo
 	elif is_on_floor() and velocity.x == 0 and current_state == State.WALKING:
@@ -196,6 +203,8 @@ func flip_character():
 
 func take_damage(damage: int, _attacker: Mangler):
 	"""Riceve danno da un attacco"""
+	if current_state == State.KNOCKED_DOWN:
+		return
 	if is_blocking:
 		# Se sta bloccando, riduce il danno
 		damage = int(damage * 0.2)
@@ -215,18 +224,23 @@ func take_damage(damage: int, _attacker: Mangler):
 
 func hit_reaction():
 	"""Reazione quando viene colpito"""
+	cancel_current_action()
+	var hit_generation = action_generation
 	current_state = State.HIT
 	can_move = false
 	velocity.x = 0
 	
 	# Torna allo stato normale dopo un breve stun
 	await get_tree().create_timer(0.3).timeout
+	if hit_generation != action_generation or current_health <= 0:
+		return
 	can_move = true
 	current_state = State.IDLE
 
 
 func die():
 	"""Gestisce la morte del personaggio"""
+	cancel_current_action()
 	current_state = State.KNOCKED_DOWN
 	can_move = false
 	velocity.x = 0
@@ -245,9 +259,7 @@ func _on_hitbox_area_entered(area: Area2D):
 	if area.is_in_group("hurtbox") and is_attacking:
 		var opponent = area.get_parent()
 		if opponent != self and opponent is Mangler:
-			# Infliggi danno in base all'attacco corrente
-			var damage = 10  # Danno base, da calcolare in base all'attacco
-			opponent.take_damage(damage, self)
+			opponent.take_damage(current_attack_damage, self)
 
 
 func _on_hurtbox_area_entered(_area: Area2D):
@@ -266,3 +278,46 @@ func disable_hitbox():
 	"""Disabilita la hitbox"""
 	if hitbox and hitbox.has_node("HitboxShape"):
 		hitbox.get_node("HitboxShape").disabled = true
+
+
+func reset_fighter(spawn_position: Vector2):
+	"""Riporta il fighter a uno stato neutrale e invalida le azioni pendenti."""
+	cancel_current_action()
+	position = spawn_position
+	velocity = Vector2.ZERO
+	current_health = max_health
+	current_state = State.IDLE
+	is_blocking = false
+	can_move = false
+
+
+func cancel_current_action():
+	action_generation += 1
+	is_attacking = false
+	is_blocking = false
+	current_attack_damage = 0
+	disable_hitbox()
+
+
+func apply_character_data():
+	if character_data == null:
+		character_data = CharacterData.create_default()
+	max_health = character_data.max_health
+
+
+func get_attack_damage(attack_name: String) -> int:
+	match attack_name:
+		"light_punch": return character_data.light_punch_damage
+		"heavy_punch": return character_data.heavy_punch_damage
+		"light_kick": return character_data.light_kick_damage
+		"heavy_kick": return character_data.heavy_kick_damage
+	return 0
+
+
+func get_attack_duration(attack_name: String) -> float:
+	match attack_name:
+		"light_punch": return character_data.light_punch_duration
+		"heavy_punch": return character_data.heavy_punch_duration
+		"light_kick": return character_data.light_kick_duration
+		"heavy_kick": return character_data.heavy_kick_duration
+	return 0.0

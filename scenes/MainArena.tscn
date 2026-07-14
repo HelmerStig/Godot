@@ -29,6 +29,9 @@ shape = SubResource("RectangleShape2D_ground")
 [node name="Player1" parent="." instance=ExtResource("1_mangler")]
 position = Vector2(300, 600)
 
+[node name="Player2" parent="." instance=ExtResource("1_mangler")]
+position = Vector2(852, 600)
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(576, 324)
 enabled = true
