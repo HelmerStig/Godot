@@ -50,6 +50,7 @@ var opponent: Mangler
 # === VARIABILI DI COMBATTIMENTO ===
 @export var character_data: CharacterData
 @export var show_debug_boxes = true
+@export_range(1, 2, 1) var player_number := 1
 var max_health = 100
 var current_health = 100
 var is_blocking = false
@@ -124,32 +125,32 @@ func handle_input():
 	# Tenere indietro prepara la guardia, ma permette ancora di arretrare.
 	is_blocking = is_holding_back() and is_on_floor()
 
-	if Input.is_action_just_pressed("light_punch") and is_on_floor():
+	if Input.is_action_just_pressed(get_input_action("light_punch")) and is_on_floor():
 		perform_attack("light_punch", get_attack_damage("light_punch"), get_attack_duration("light_punch"))
 		return
-	elif Input.is_action_just_pressed("heavy_punch") and is_on_floor():
+	elif Input.is_action_just_pressed(get_input_action("heavy_punch")) and is_on_floor():
 		perform_attack("heavy_punch", get_attack_damage("heavy_punch"), get_attack_duration("heavy_punch"))
 		return
-	elif Input.is_action_just_pressed("light_kick") and is_on_floor():
+	elif Input.is_action_just_pressed(get_input_action("light_kick")) and is_on_floor():
 		perform_attack("light_kick", get_attack_damage("light_kick"), get_attack_duration("light_kick"))
 		return
-	elif Input.is_action_just_pressed("heavy_kick") and is_on_floor():
+	elif Input.is_action_just_pressed(get_input_action("heavy_kick")) and is_on_floor():
 		perform_attack("heavy_kick", get_attack_damage("heavy_kick"), get_attack_duration("heavy_kick"))
 		return
 
-	if Input.is_action_pressed("crouch") and is_on_floor():
+	if Input.is_action_pressed(get_input_action("crouch")) and is_on_floor():
 		current_state = State.CROUCHING
 		velocity.x = 0
 		return
 	elif current_state == State.CROUCHING:
 		current_state = State.IDLE
 
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	if Input.is_action_just_pressed(get_input_action("jump")) and is_on_floor():
 		velocity.y = character_data.jump_velocity
 		current_state = State.JUMPING
 		return
 
-	var direction = Input.get_axis("move_left", "move_right")
+	var direction = Input.get_axis(get_input_action("move_left"), get_input_action("move_right"))
 	var movement_speed = character_data.air_speed if current_state == State.JUMPING else character_data.walk_speed
 	velocity.x = direction * movement_speed
 	if is_on_floor():
@@ -255,8 +256,13 @@ func is_holding_back() -> bool:
 	if opponent == null or not is_instance_valid(opponent):
 		return false
 	if opponent.global_position.x > global_position.x:
-		return Input.is_action_pressed("move_left")
-	return Input.is_action_pressed("move_right")
+		return Input.is_action_pressed(get_input_action("move_left"))
+	return Input.is_action_pressed(get_input_action("move_right"))
+
+
+func get_input_action(action_name: String) -> StringName:
+	"""Restituisce l'azione Input Map associata a questo giocatore."""
+	return StringName("p%d_%s" % [player_number, action_name])
 
 
 func is_attack_in_front(attacker: Mangler) -> bool:

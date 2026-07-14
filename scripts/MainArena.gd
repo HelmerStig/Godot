@@ -34,8 +34,13 @@ var round_generation = 0
 
 
 func _ready():
-	# Player2 è un bersaglio statico finché non verrà aggiunta l'IA.
-	player2.is_player_controlled = false
+	# Ogni fighter legge esclusivamente il proprio profilo di input.
+	player1.player_number = 1
+	player2.player_number = 2
+	player1.is_player_controlled = true
+	player2.is_player_controlled = true
+	player1.can_move = false
+	player2.can_move = false
 	player1.opponent = player2
 	player2.opponent = player1
 	
@@ -114,6 +119,7 @@ func start_round():
 	round_active = true
 	round_time = 99.0
 	player1.can_move = true
+	player2.can_move = true
 
 
 func end_round_timeout():

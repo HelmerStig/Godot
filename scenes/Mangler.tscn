@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://cemh2xowvxf8g"]
 
 [ext_resource type="Script" path="res://scripts/Mangler.gd" id="1_mangler"]
-[ext_resource type="Texture2D" uid="uid://unique_mangler_texture" path="res://assets/sprites/characters/mangler/idle.png" id="2_texture"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/idle.png" id="2_texture"]
 [ext_resource type="Script" path="res://scripts/FighterDebugOverlay.gd" id="3_debug"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
