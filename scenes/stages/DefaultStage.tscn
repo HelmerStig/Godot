@@ -1,10 +1,17 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/backgrounds/default_stage/wide-background-v2.png" id="1_background"]
+[ext_resource type="Script" path="res://scripts/StageAmbientEffects.gd" id="2_effects"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/default_stage/effects/birds.png" id="4_birds"]
 
 [node name="DefaultStage" type="Node2D"]
 
 [node name="Background" type="Sprite2D" parent="."]
+z_index = -100
 texture_filter = 1
 position = Vector2(1152, 324)
 texture = ExtResource("1_background")
+
+[node name="AmbientEffects" type="Node2D" parent="."]
+script = ExtResource("2_effects")
+birds_texture = ExtResource("4_birds")
