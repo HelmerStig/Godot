@@ -19,6 +19,7 @@ const STAGE_WIDTH = 2304.0
 const STAGE_LEFT = 60.0
 const STAGE_RIGHT = STAGE_WIDTH - 60.0
 const FIGHTER_SPAWN_DISTANCE = 276.0
+const FIGHTER_SCREEN_MARGIN = 70.0
 const FLOOR_Y = 600.0
 
 # === VARIABILI DI GIOCO ===
@@ -50,6 +51,7 @@ func _ready():
 func _process(delta):
 	# Aggiorna posizione camera per seguire il player
 	update_camera_position()
+	update_fighter_visible_limits()
 	
 	if round_active and not match_over:
 		# Aggiorna timer
@@ -79,8 +81,16 @@ func start_round():
 	round_label.visible = true
 	
 	var stage_center = STAGE_WIDTH * 0.5
+	# Ripristina prima i limiti assoluti: quelli visibili possono essere ristretti
+	# dalla posizione della camera raggiunta nel tentativo precedente.
+	player1.stage_left_limit = STAGE_LEFT
+	player1.stage_right_limit = STAGE_RIGHT
+	player2.stage_left_limit = STAGE_LEFT
+	player2.stage_right_limit = STAGE_RIGHT
 	player1.reset_fighter(Vector2(stage_center - FIGHTER_SPAWN_DISTANCE, FLOOR_Y))
 	player2.reset_fighter(Vector2(stage_center + FIGHTER_SPAWN_DISTANCE, FLOOR_Y))
+	camera.position.x = stage_center
+	camera.reset_smoothing()
 	if not player1.is_facing_right:
 		player1.flip_character()
 	if player2.is_facing_right:
@@ -141,6 +151,24 @@ func update_camera_position():
 			target_x = clamp(target_x, camera_min, camera_max)
 		
 		camera.position.x = target_x
+
+
+func update_fighter_visible_limits():
+	"""Impedisce ai fighter di oltrepassare i bordi visibili della camera."""
+	var half_visible_width = get_viewport_rect().size.x * 0.5 / camera.zoom.x
+	var camera_center_x = camera.get_screen_center_position().x
+	var visible_left = maxf(STAGE_LEFT, camera_center_x - half_visible_width + FIGHTER_SCREEN_MARGIN)
+	var visible_right = minf(STAGE_RIGHT, camera_center_x + half_visible_width - FIGHTER_SCREEN_MARGIN)
+
+	# Su viewport eccezionalmente piccoli conserva almeno i limiti dello stage.
+	if visible_left > visible_right:
+		visible_left = STAGE_LEFT
+		visible_right = STAGE_RIGHT
+
+	player1.stage_left_limit = visible_left
+	player1.stage_right_limit = visible_right
+	player2.stage_left_limit = visible_left
+	player2.stage_right_limit = visible_right
 
 
 func end_match(_winner: int):
