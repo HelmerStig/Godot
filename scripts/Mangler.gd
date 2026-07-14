@@ -22,10 +22,22 @@ const JUMP_VELOCITY = -850.0
 const GRAVITY = 1400.0
 const GROUND_COLLISION_LAYER = 1
 const FIGHTER_COLLISION_LAYER = 8
+const ATTACK_PRIORITY := [
+	&"light_punch",
+	&"medium_punch",
+	&"heavy_punch",
+	&"light_kick",
+	&"medium_kick",
+	&"heavy_kick",
+]
 const ATTACK_HITBOXES = {
 	"light_punch": {
 		"size": Vector2(70.0, 35.0),
 		"position": Vector2(35.0, -110.0),
+	},
+	"medium_punch": {
+		"size": Vector2(85.0, 40.0),
+		"position": Vector2(45.0, -108.0),
 	},
 	"heavy_punch": {
 		"size": Vector2(100.0, 45.0),
@@ -34,6 +46,10 @@ const ATTACK_HITBOXES = {
 	"light_kick": {
 		"size": Vector2(85.0, 35.0),
 		"position": Vector2(47.5, -55.0),
+	},
+	"medium_kick": {
+		"size": Vector2(100.0, 40.0),
+		"position": Vector2(60.0, -60.0),
 	},
 	"heavy_kick": {
 		"size": Vector2(115.0, 45.0),
@@ -59,8 +75,10 @@ var is_attacking = false
 var combo_counter = 0
 var last_attack_time = 0.0
 var current_attack_damage = 0
+var current_attack_direction := FighterInputBuffer.Direction.NEUTRAL
 var action_generation = 0
 var hit_targets: Array[Mangler] = []
+var input_buffer: FighterInputBuffer
 
 # === LIMITI DELLO STAGE ===
 var stage_left_limit = 0.0
@@ -77,6 +95,7 @@ var stage_right_limit = 1152.0
 
 func _ready():
 	# Inizializzazione
+	input_buffer = FighterInputBuffer.new(player_number)
 	apply_character_data()
 	current_health = max_health
 	add_to_group("fighters")
@@ -96,6 +115,10 @@ func _physics_process(delta):
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
 	
+	# Il buffer continua a registrare durante startup e recovery.
+	if is_player_controlled:
+		input_buffer.update(is_facing_right)
+
 	# Gestione input e movimento
 	if is_player_controlled and can_move:
 		handle_input()
@@ -125,20 +148,19 @@ func handle_input():
 	# Tenere indietro prepara la guardia, ma permette ancora di arretrare.
 	is_blocking = is_holding_back() and is_on_floor()
 
-	if Input.is_action_just_pressed(get_input_action("light_punch")) and is_on_floor():
-		perform_attack("light_punch", get_attack_damage("light_punch"), get_attack_duration("light_punch"))
-		return
-	elif Input.is_action_just_pressed(get_input_action("heavy_punch")) and is_on_floor():
-		perform_attack("heavy_punch", get_attack_damage("heavy_punch"), get_attack_duration("heavy_punch"))
-		return
-	elif Input.is_action_just_pressed(get_input_action("light_kick")) and is_on_floor():
-		perform_attack("light_kick", get_attack_damage("light_kick"), get_attack_duration("light_kick"))
-		return
-	elif Input.is_action_just_pressed(get_input_action("heavy_kick")) and is_on_floor():
-		perform_attack("heavy_kick", get_attack_damage("heavy_kick"), get_attack_duration("heavy_kick"))
-		return
+	if is_on_floor():
+		for attack_name in ATTACK_PRIORITY:
+			var attack_direction := input_buffer.consume_attack(attack_name)
+			if attack_direction != FighterInputBuffer.NO_DIRECTION:
+				perform_attack(
+					attack_name,
+					get_attack_damage(attack_name),
+					get_attack_duration(attack_name),
+					attack_direction
+				)
+				return
 
-	if Input.is_action_pressed(get_input_action("crouch")) and is_on_floor():
+	if input_buffer.is_down_held() and is_on_floor():
 		current_state = State.CROUCHING
 		velocity.x = 0
 		return
@@ -150,14 +172,19 @@ func handle_input():
 		current_state = State.JUMPING
 		return
 
-	var direction = Input.get_axis(get_input_action("move_left"), get_input_action("move_right"))
+	var direction := input_buffer.get_horizontal_axis()
 	var movement_speed = character_data.air_speed if current_state == State.JUMPING else character_data.walk_speed
 	velocity.x = direction * movement_speed
 	if is_on_floor():
 		current_state = State.WALKING if direction != 0 else State.IDLE
 
 
-func perform_attack(attack_name: String, damage: int, duration: float):
+func perform_attack(
+	attack_name: String,
+	damage: int,
+	duration: float,
+	input_direction: int = FighterInputBuffer.Direction.NEUTRAL
+):
 	"""Esegue un attacco"""
 	if current_state in [State.IDLE, State.WALKING] and not is_attacking and is_on_floor():
 		action_generation += 1
@@ -165,6 +192,7 @@ func perform_attack(attack_name: String, damage: int, duration: float):
 		is_attacking = true
 		is_blocking = false
 		current_attack_damage = damage
+		current_attack_direction = input_direction
 		hit_targets.clear()
 		configure_hitbox(attack_name)
 		can_move = false
@@ -253,15 +281,15 @@ func flip_character():
 
 func is_holding_back() -> bool:
 	"""Controlla se il giocatore tiene la direzione opposta all'avversario."""
-	if opponent == null or not is_instance_valid(opponent):
+	if opponent == null or not is_instance_valid(opponent) or input_buffer == null:
 		return false
-	if opponent.global_position.x > global_position.x:
-		return Input.is_action_pressed(get_input_action("move_left"))
-	return Input.is_action_pressed(get_input_action("move_right"))
+	return input_buffer.is_back_held()
 
 
 func get_input_action(action_name: String) -> StringName:
 	"""Restituisce l'azione Input Map associata a questo giocatore."""
+	if input_buffer != null:
+		return input_buffer.get_action(action_name)
 	return StringName("p%d_%s" % [player_number, action_name])
 
 
@@ -397,6 +425,8 @@ func reset_fighter(spawn_position: Vector2):
 	current_state = State.IDLE
 	is_blocking = false
 	can_move = false
+	if input_buffer != null:
+		input_buffer.clear()
 
 
 func cancel_current_action():
@@ -404,6 +434,7 @@ func cancel_current_action():
 	is_attacking = false
 	is_blocking = false
 	current_attack_damage = 0
+	current_attack_direction = FighterInputBuffer.Direction.NEUTRAL
 	hit_targets.clear()
 	disable_hitbox()
 
@@ -417,8 +448,10 @@ func apply_character_data():
 func get_attack_damage(attack_name: String) -> int:
 	match attack_name:
 		"light_punch": return character_data.light_punch_damage
+		"medium_punch": return character_data.medium_punch_damage
 		"heavy_punch": return character_data.heavy_punch_damage
 		"light_kick": return character_data.light_kick_damage
+		"medium_kick": return character_data.medium_kick_damage
 		"heavy_kick": return character_data.heavy_kick_damage
 	return 0
 
@@ -426,7 +459,9 @@ func get_attack_damage(attack_name: String) -> int:
 func get_attack_duration(attack_name: String) -> float:
 	match attack_name:
 		"light_punch": return character_data.light_punch_duration
+		"medium_punch": return character_data.medium_punch_duration
 		"heavy_punch": return character_data.heavy_punch_duration
 		"light_kick": return character_data.light_kick_duration
+		"medium_kick": return character_data.medium_kick_duration
 		"heavy_kick": return character_data.heavy_kick_duration
 	return 0.0

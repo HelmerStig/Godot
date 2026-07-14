@@ -23,6 +23,12 @@ class_name CharacterData
 @export var light_kick_damage: int = 8
 @export var light_kick_duration: float = 0.4
 
+@export_group("Medium Attacks")
+@export var medium_punch_damage: int = 10
+@export var medium_punch_duration: float = 0.45
+@export var medium_kick_damage: int = 12
+@export var medium_kick_duration: float = 0.5
+
 @export_group("Heavy Attacks")
 @export var heavy_punch_damage: int = 15
 @export var heavy_punch_duration: float = 0.6
