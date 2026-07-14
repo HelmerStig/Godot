@@ -5,7 +5,7 @@
 [ext_resource type="Script" path="res://scripts/FighterDebugOverlay.gd" id="3_debug"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(60, 140)
+size = Vector2(70, 240)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
 size = Vector2(70, 35)
@@ -28,7 +28,7 @@ scale = Vector2(0.35, 0.35)
 texture = ExtResource("2_texture")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -70)
+position = Vector2(0, -120)
 shape = SubResource("RectangleShape2D_1")
 
 [node name="Hitbox" type="Area2D" parent="."]
