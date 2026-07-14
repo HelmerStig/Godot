@@ -102,6 +102,7 @@ func _physics_process(delta):
 	# Aggiorna stato
 	update_state()
 	update_physical_collision()
+	update_visual_animation()
 	
 	# Muovi il personaggio
 	move_and_slide()
@@ -223,6 +224,20 @@ func update_physical_collision():
 	else:
 		collision_layer = FIGHTER_COLLISION_LAYER
 		collision_mask = GROUND_COLLISION_LAYER | FIGHTER_COLLISION_LAYER
+
+
+func update_visual_animation():
+	"""Riproduce l'idle solo quando il fighter e' realmente fermo."""
+	if not sprite is AnimatedSprite2D:
+		return
+
+	var animated_sprite := sprite as AnimatedSprite2D
+	if current_state == State.IDLE:
+		if not animated_sprite.is_playing():
+			animated_sprite.play(&"idle")
+	else:
+		animated_sprite.pause()
+		animated_sprite.frame = 0
 
 
 func update_facing_direction():
