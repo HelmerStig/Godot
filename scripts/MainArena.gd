@@ -15,8 +15,11 @@ extends Node2D
 @onready var camera = $Camera2D
 
 # === LIMITI DELLO STAGE ===
-const STAGE_LEFT = 100.0
-const STAGE_RIGHT = 1052.0
+const STAGE_WIDTH = 2304.0
+const STAGE_LEFT = 60.0
+const STAGE_RIGHT = STAGE_WIDTH - 60.0
+const FIGHTER_SPAWN_DISTANCE = 276.0
+const FLOOR_Y = 600.0
 
 # === VARIABILI DI GIOCO ===
 var round_time = 99.0  # Tempo del round in secondi
@@ -75,8 +78,9 @@ func start_round():
 	round_label.text = "TRAINING MODE"
 	round_label.visible = true
 	
-	player1.reset_fighter(Vector2(300, 600))
-	player2.reset_fighter(Vector2(852, 600))
+	var stage_center = STAGE_WIDTH * 0.5
+	player1.reset_fighter(Vector2(stage_center - FIGHTER_SPAWN_DISTANCE, FLOOR_Y))
+	player2.reset_fighter(Vector2(stage_center + FIGHTER_SPAWN_DISTANCE, FLOOR_Y))
 	if not player1.is_facing_right:
 		player1.flip_character()
 	if player2.is_facing_right:
@@ -125,12 +129,12 @@ func next_round():
 
 func update_camera_position():
 	"""Aggiorna la posizione della camera per seguire i personaggi"""
-	if player1:
+	if player1 and player2:
 		# Centra l'inquadratura tra i fighter rispettando i bordi dello stage.
 		var target_x = (player1.position.x + player2.position.x) * 0.5
 		var half_viewport = get_viewport_rect().size.x * 0.5
-		var camera_min = STAGE_LEFT + half_viewport
-		var camera_max = STAGE_RIGHT - half_viewport
+		var camera_min = half_viewport
+		var camera_max = STAGE_WIDTH - half_viewport
 		if camera_min > camera_max:
 			target_x = (STAGE_LEFT + STAGE_RIGHT) * 0.5
 		else:
