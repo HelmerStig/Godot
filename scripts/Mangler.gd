@@ -91,15 +91,11 @@ func handle_input():
 	if current_state in [State.ATTACKING, State.HIT, State.KNOCKED_DOWN]:
 		return
 
-	if Input.is_action_pressed("block") and is_on_floor():
-		is_blocking = true
-		current_state = State.BLOCKING
-		velocity.x = 0
+	if current_state == State.BLOCKING:
 		return
 
-	if current_state == State.BLOCKING:
-		current_state = State.IDLE
-	is_blocking = false
+	# Tenere indietro prepara la guardia, ma permette ancora di arretrare.
+	is_blocking = is_holding_back() and is_on_floor()
 
 	if Input.is_action_just_pressed("light_punch") and is_on_floor():
 		perform_attack("light_punch", get_attack_damage("light_punch"), get_attack_duration("light_punch"))
@@ -138,6 +134,7 @@ func perform_attack(attack_name: String, damage: int, duration: float):
 		action_generation += 1
 		var attack_generation = action_generation
 		is_attacking = true
+		is_blocking = false
 		current_attack_damage = damage
 		can_move = false
 		current_state = State.ATTACKING
@@ -211,11 +208,34 @@ func flip_character():
 		hitbox.scale.x = 1.0 if is_facing_right else -1.0
 
 
-func take_damage(damage: int, _attacker: Mangler):
+func is_holding_back() -> bool:
+	"""Controlla se il giocatore tiene la direzione opposta all'avversario."""
+	if opponent == null or not is_instance_valid(opponent):
+		return false
+	if opponent.global_position.x > global_position.x:
+		return Input.is_action_pressed("move_left")
+	return Input.is_action_pressed("move_right")
+
+
+func is_attack_in_front(attacker: Mangler) -> bool:
+	"""Verifica che l'attaccante si trovi sul lato verso cui guarda il fighter."""
+	if attacker == null or not is_instance_valid(attacker):
+		return false
+	var attacker_is_on_right = attacker.global_position.x > global_position.x
+	return attacker_is_on_right == is_facing_right
+
+
+func take_damage(damage: int, attacker: Mangler):
 	"""Riceve danno da un attacco"""
 	if current_state == State.KNOCKED_DOWN:
 		return
-	if is_blocking:
+	var attack_was_blocked = (
+		(is_blocking or current_state == State.BLOCKING)
+		and is_holding_back()
+		and is_attack_in_front(attacker)
+		and is_on_floor()
+	)
+	if attack_was_blocked:
 		# Se sta bloccando, riduce il danno
 		damage = int(damage * 0.2)
 		print("Attacco bloccato! Danno ridotto a: " + str(damage))
@@ -227,9 +247,26 @@ func take_damage(damage: int, _attacker: Mangler):
 	
 	if current_health <= 0:
 		die()
+	elif attack_was_blocked:
+		block_reaction()
 	else:
 		# Stato colpito
 		hit_reaction()
+
+
+func block_reaction():
+	"""Entra brevemente in guardia solo dopo aver bloccato un colpo."""
+	cancel_current_action()
+	var block_generation = action_generation
+	current_state = State.BLOCKING
+	can_move = false
+	velocity.x = 0
+
+	await get_tree().create_timer(0.15).timeout
+	if block_generation != action_generation or current_health <= 0:
+		return
+	can_move = true
+	current_state = State.IDLE
 
 
 func hit_reaction():

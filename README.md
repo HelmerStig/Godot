@@ -48,7 +48,7 @@ Un gioco picchiaduro 2D in stile Street Fighter sviluppato con Godot Engine 4.7 
 - **I**: Calcio Pesante (20 danno, molto lento)
 
 #### Difesa
-- **L**: Blocco (riduce danno dell'80%)
+- **Direzione opposta all'avversario**: Blocco (riduce danno dell'80%)
 
 ### Player 2
 *Attualmente usa gli stessi controlli di Player 1 (per testing con 2 giocatori sulla stessa tastiera)*
