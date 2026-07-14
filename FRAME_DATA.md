@@ -24,6 +24,7 @@ In un picchiaduro, ogni azione è misurata in "frame". A 60 FPS, 1 frame = 1/60 
 | Azione         | Valore         | Note                              |
 |----------------|----------------|-----------------------------------|
 | Velocità Base  | 200 px/s       | Movimento orizzontale             |
+| Velocità Aerea | 280 px/s       | Controllo orizzontale durante il salto |
 | Velocità Salto | -850 px/s      | Velocità iniziale verticale       |
 | Gravità        | 1400 px/s²     | Accelerazione verso il basso      |
 | Altezza Salto  | ~258 px        | Calcolata: v²/(2g)                |

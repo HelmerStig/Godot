@@ -160,6 +160,7 @@ Il personaggio può trovarsi in uno dei seguenti stati:
 ### Parametri Bilanciamento Attuale
 ```gdscript
 WALK_SPEED = 200.0
+AIR_SPEED = 280.0
 JUMP_VELOCITY = -850.0
 GRAVITY = 1400.0
 

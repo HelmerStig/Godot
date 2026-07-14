@@ -150,7 +150,8 @@ func handle_input():
 		return
 
 	var direction = Input.get_axis("move_left", "move_right")
-	velocity.x = direction * character_data.walk_speed
+	var movement_speed = character_data.air_speed if current_state == State.JUMPING else character_data.walk_speed
+	velocity.x = direction * movement_speed
 	if is_on_floor():
 		current_state = State.WALKING if direction != 0 else State.IDLE
 

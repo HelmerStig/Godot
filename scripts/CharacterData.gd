@@ -13,6 +13,7 @@ class_name CharacterData
 @export_group("Stats")
 @export var max_health: int = 100
 @export var walk_speed: float = 200.0
+@export var air_speed: float = 280.0
 @export var jump_velocity: float = -850.0
 
 # === ATTACCHI ===
