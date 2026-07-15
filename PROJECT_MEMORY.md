@@ -21,6 +21,7 @@ Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La p
 - Overlay collisioni con `F3` e slow motion con `F4`.
 - Stage con sfondo ed effetti ambientali.
 - Sprite personaggi ridotti a PNG RGBA 512×512; scala della scena condivisa impostata a `0.7`.
+- Idle di Mangler configurato come `AnimatedSprite2D`: 25 frame, 10 FPS, loop.
 - Rimossi lo scaffolding vuoto `node_2d.tscn` e lo script parallasse non collegabile `ParallaxStage.gd`.
 
 ## Architettura corrente
@@ -76,8 +77,9 @@ Esecuzione diretta:
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
-La suite corrente esegue 46 verifiche e copre:
+La suite corrente esegue 53 verifiche e copre:
 
+- configurazione, autoplay e orientamento dell'animazione idle;
 - caricamento, lookup e validazione delle sei risorse `AttackData`;
 - selezione della risorsa e completamento del ciclo startup/active/recovery;
 - conversione delle direzioni in base all'orientamento;
@@ -121,7 +123,7 @@ Ultimo risultato noto: `SMOKE_TESTS_OK`, codice di uscita `0`.
 ## Debito tecnico noto
 
 - `CharacterData` viene creato in memoria e non esistono profili `.tres` per i personaggi.
-- Le animazioni non sono collegate agli stati o agli attacchi.
+- Solo l'idle di Mangler è collegato; mancano ancora walk, jump, crouch, guard, hit, KO e attacchi.
 - Gli asset di Arianna, Bue, Mileto, Peirolo e Torpe non sono ancora collegati a fighter giocabili.
 - `end_round_timeout()`, `next_round()` ed `end_match()` sono segnaposto.
 - Il timer continua a essere visualizzato in training, ma non termina il round.

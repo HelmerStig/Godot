@@ -99,10 +99,36 @@ func _test_combat_flow() -> void:
 	var player2_bar := arena.get_node("CanvasLayer/UI/Player2Health") as ProgressBar
 	var round_label := arena.get_node("CanvasLayer/UI/RoundLabel") as Label
 
+	_expect(player1.animated_sprite != null, "Mangler usa AnimatedSprite2D")
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"idle"),
+		"SpriteFrames contiene l'animazione idle"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"idle") == 25,
+		"idle contiene 25 frame"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"idle"), 10.0),
+		"idle è configurato a 10 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_animation_loop(&"idle"),
+		"idle è configurato in loop"
+	)
+	_expect(
+		player1.animated_sprite.animation == &"idle" and player1.animated_sprite.is_playing(),
+		"idle parte automaticamente"
+	)
+
 	_expect(player1_bar.value == 100.0, "vita iniziale Player 1 visualizzata")
 	_expect(player2_bar.value == 100.0, "vita iniziale Player 2 visualizzata")
 	await create_timer(3.1).timeout
 	_expect(bool(arena.get("round_active")), "training attivo dopo il countdown")
+	_expect(
+		not player1.animated_sprite.flip_h and player2.animated_sprite.flip_h,
+		"AnimatedSprite2D segue l'orientamento verso l'avversario"
+	)
 	var light_punch := player1.character_data.get_attack(&"light_punch")
 	player1.combat.try_attack(&"light_punch")
 	_expect(player1.current_state == Mangler.State.ATTACKING, "AttackData avvia lo stato ATTACKING")

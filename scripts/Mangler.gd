@@ -46,7 +46,7 @@ var input_buffer: FighterInputBuffer
 var stage_left_limit := 0.0
 var stage_right_limit := 1152.0
 
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var combat: FighterCombat = $Combat
 
@@ -173,7 +173,7 @@ func update_facing_direction() -> void:
 
 func flip_character() -> void:
 	is_facing_right = not is_facing_right
-	sprite.flip_h = not is_facing_right
+	animated_sprite.flip_h = not is_facing_right
 	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
 
 

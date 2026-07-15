@@ -84,7 +84,7 @@ Esecuzione diretta, valida anche su altri sistemi:
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
-La suite verifica 46 condizioni relative a `AttackData`, input buffer, ciclo degli attacchi, danno, hit-stun, guardia, segnali UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK` e codice di uscita `0`.
+La suite verifica 53 condizioni relative ad animazione idle, `AttackData`, input buffer, ciclo degli attacchi, danno, hit-stun, guardia, segnali UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK` e codice di uscita `0`.
 
 ## Architettura
 
@@ -168,7 +168,7 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momen
 ## Limiti noti e prossime priorità
 
 - Il progetto offre training locale, non ancora round completi o best-of-three.
-- Le animazioni non sono ancora collegate agli stati.
+- L'animazione idle di Mangler è collegata; gli altri stati attendono i rispettivi spritesheet.
 - `CharacterData` usa ancora un profilo personaggio creato in memoria, anche se gli attacchi sono risorse `.tres` dedicate.
 - Combo e mosse speciali non sono ancora collegate al gameplay, anche se l'input buffer riconosce sequenze.
 - Non sono ancora presenti IA, audio, menu, selezione personaggio o multiplayer online.
