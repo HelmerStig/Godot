@@ -120,6 +120,7 @@ func handle_input() -> void:
 func change_state(next_state: int) -> void:
 	"""Centralizza gli effetti collaterali di ogni transizione di stato."""
 	if current_state == next_state:
+		update_animation()
 		return
 
 	var previous_state := current_state
@@ -139,9 +140,20 @@ func change_state(next_state: int) -> void:
 
 func update_animation() -> void:
 	"""Riproduce l'animazione associata allo stato, senza riavviarla ogni frame."""
-	var next_animation: StringName = &"walk" if current_state == State.WALKING else &"idle"
-	if animated_sprite.sprite_frames.has_animation(next_animation):
+	var next_animation: StringName = &"idle"
+	if current_state == State.WALKING:
+		next_animation = &"backwalk" if is_moving_backward() else &"walk"
+	if (
+		animated_sprite.sprite_frames.has_animation(next_animation)
+		and (animated_sprite.animation != next_animation or not animated_sprite.is_playing())
+	):
 		animated_sprite.play(next_animation)
+
+
+func is_moving_backward() -> bool:
+	if is_zero_approx(velocity.x):
+		return false
+	return velocity.x < 0.0 if is_facing_right else velocity.x > 0.0
 
 
 func update_state() -> void:
@@ -184,6 +196,7 @@ func flip_character() -> void:
 	is_facing_right = not is_facing_right
 	animated_sprite.flip_h = not is_facing_right
 	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	update_animation()
 
 
 func is_holding_back() -> bool:

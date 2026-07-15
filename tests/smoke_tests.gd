@@ -137,8 +137,38 @@ func _test_combat_flow() -> void:
 		player1.animated_sprite.sprite_frames.get_animation_loop(&"walk"),
 		"walk è configurato in loop"
 	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"backwalk"),
+		"SpriteFrames contiene l'animazione backwalk"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"backwalk") == 25,
+		"backwalk contiene 25 frame"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"backwalk"), 12.0),
+		"backwalk è configurato a 12 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_animation_loop(&"backwalk"),
+		"backwalk è configurato in loop"
+	)
+	player1.is_facing_right = true
+	player1.velocity.x = 100.0
 	player1.change_state(Mangler.State.WALKING)
-	_expect(player1.animated_sprite.animation == &"walk", "WALKING riproduce walk")
+	_expect(player1.animated_sprite.animation == &"walk", "avanzando verso destra riproduce walk")
+	player1.velocity.x = -100.0
+	player1.change_state(Mangler.State.WALKING)
+	_expect(player1.animated_sprite.animation == &"backwalk", "arretrando verso sinistra riproduce backwalk")
+	player1.is_facing_right = false
+	player1.velocity.x = -100.0
+	player1.change_state(Mangler.State.WALKING)
+	_expect(player1.animated_sprite.animation == &"walk", "avanzando verso sinistra riproduce walk")
+	player1.velocity.x = 100.0
+	player1.change_state(Mangler.State.WALKING)
+	_expect(player1.animated_sprite.animation == &"backwalk", "arretrando verso destra riproduce backwalk")
+	player1.is_facing_right = true
+	player1.velocity = Vector2.ZERO
 	player1.change_state(Mangler.State.IDLE)
 	_expect(player1.animated_sprite.animation == &"idle", "IDLE ripristina idle")
 
