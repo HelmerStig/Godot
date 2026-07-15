@@ -1,187 +1,176 @@
-# 🥊 Sanmo - Picchiaduro 2D (Godot 4.7)
+# Sanmo
 
-Un gioco picchiaduro 2D in stile Street Fighter sviluppato con Godot Engine 4.7 e GDScript.
+Prototipo didattico di picchiaduro 2D sviluppato con Godot 4.7 e GDScript. Il progetto è attualmente concentrato sulla modalità training locale e sulla stabilizzazione del combattimento di base.
 
-## 📋 Stato del Progetto
+## Stato attuale
 
-### ✅ Funzionalità Implementate
+Il prototipo comprende:
 
-- **Sistema di Movimento Completo**
-  - Camminata destra/sinistra
-  - Salto con fisica realistica
-  - Accovacciamento (crouch)
-  - Blocco difensivo
+- due fighter controllabili contemporaneamente;
+- movimento orizzontale, salto e accovacciamento;
+- sei attacchi a terra: pugni e calci leggeri, medi e pesanti;
+- input buffer con direzioni relative all'avversario;
+- hitbox specifiche per ogni attacco e hurtbox separate per testa, torso e gambe;
+- guardia ottenuta tenendo la direzione opposta all'avversario;
+- nessuna perdita di vita quando un colpo viene parato correttamente;
+- hit-stun, reazione di blocco, KO e reset del training;
+- camera centrata tra i fighter con limiti visibili dello stage;
+- barre della vita, timer e messaggi aggiornati tramite segnali;
+- debug di hitbox e hurtbox e modalità slow motion;
+- stage con sfondo ed effetti ambientali;
+- smoke test headless per input buffer e flusso di combattimento.
 
-- **Sistema di Combattimento**
-  - 4 tipi di attacchi (pugno leggero, pugno pesante, calcio leggero, calcio pesante)
-  - Sistema hitbox/hurtbox per rilevamento colpi
-  - Sistema di guardia senza perdita di vita sui colpi bloccati
-  - Reazione al colpo con stun temporaneo
+Il timer è visualizzato e scende da 99, ma il timeout e il sistema best-of-three sono intenzionalmente disabilitati in modalità training.
 
-- **Sistema di Round**
-  - Best of 3 rounds
-  - Timer di 99 secondi per round
-  - Gestione vittoria per KO o timeout
-  - Sistema di vita con barre UI
-  - Countdown "FIGHT!" all'inizio del round
+## Controlli
 
-- **UI Base**
-  - Barre vita per entrambi i giocatori
-  - Timer del round
-  - Indicatore round corrente
-  - Messaggi di vittoria
+La guardia non usa un pulsante dedicato: bisogna tenere la direzione opposta all'avversario mentre il colpo entra a contatto.
 
-## 🎮 Controlli
+### Player 1 — tastiera
 
-### Player 1
+| Azione | Tasto |
+|---|---|
+| Sinistra / destra | `A` / `D` oppure frecce |
+| Salto | `W`, freccia su o `Spazio` |
+| Accovacciamento | `S` o freccia giù |
+| Pugno leggero / medio / pesante | `J` / `H` / `U` |
+| Calcio leggero / medio / pesante | `K` / `L` / `I` |
 
-#### Movimento
-- **W** o **Freccia Su** o **Spazio**: Salto
-- **A** o **Freccia Sinistra**: Movimento a sinistra
-- **S** o **Freccia Giù**: Accovacciamento
-- **D** o **Freccia Destra**: Movimento a destra
+### Player 2 — tastierino numerico
 
-#### Attacchi
-- **J**: Pugno Leggero (5 danno, veloce)
-- **U**: Pugno Pesante (15 danno, lento)
-- **K**: Calcio Leggero (8 danno, medio)
-- **I**: Calcio Pesante (20 danno, molto lento)
+| Azione | Tasto |
+|---|---|
+| Sinistra / destra | `4` / `6` |
+| Salto | `8` |
+| Accovacciamento | `5` |
+| Pugno leggero / medio / pesante | `1` / `2` / `3` |
+| Calcio leggero / medio / pesante | `7` / `9` / `0` |
 
-#### Difesa
-- **Direzione opposta all'avversario**: Blocco (annulla il danno)
+Player 1 supporta anche il gamepad 0 e Player 2 il gamepad 1.
 
-#### Debug
-- **F3**: Mostra o nasconde corpo fisico, hurtbox e hitbox attive
-- **F4**: Attiva o disattiva lo slow motion per osservare le hitbox
+### Training e debug
 
-### Player 2
-*Attualmente usa gli stessi controlli di Player 1 (per testing con 2 giocatori sulla stessa tastiera)*
+| Azione | Tasto |
+|---|---|
+| Reset training | `R` |
+| Mostra/nascondi collisioni | `F3` |
+| Slow motion | `F4` |
 
-## 🏗️ Struttura del Progetto
+## Esecuzione
 
-```
-Godot/
-├── scenes/
-│   ├── Fighter.tscn          # Scena del personaggio
-│   └── MainArena.tscn        # Scena principale dell'arena
-├── scripts/
-│   ├── Fighter.gd            # Script del personaggio con movimento e combattimento
-│   └── MainArena.gd          # Script di gestione round e match
-├── assets/
-│   ├── sprites/
-│   │   ├── characters/       # Sprite dei personaggi (da aggiungere)
-│   │   └── backgrounds/      # Sfondi (da aggiungere)
-│   └── sounds/
-│       ├── sfx/              # Effetti sonori (da aggiungere)
-│       └── music/            # Musica di sottofondo (da aggiungere)
-└── ui/                       # Scene UI aggiuntive (future)
+1. Aprire la cartella del progetto con Godot Engine 4.7.
+2. Premere `F5` oppure avviare `res://scenes/MainArena.tscn`.
+3. Attendere il countdown iniziale.
+
+La scena principale è configurata in `project.godot` come `res://scenes/MainArena.tscn`.
+
+## Smoke test headless
+
+Su Windows:
+
+```powershell
+.\tests\run_smoke_tests.cmd
 ```
 
-## 🚀 Come Eseguire
+Il runner cerca prima il percorso configurato in `.vscode/settings.json`, poi i comandi `godot` e `godot4` nel `PATH`. È possibile specificare manualmente l'eseguibile:
 
-1. Apri il progetto con **Godot Engine 4.7+**
-2. Premi **F5** o clicca su "Play" per avviare il gioco
-3. La scena principale è `res://scenes/MainArena.tscn`
-
-## 📝 Prossimi Passi Suggeriti
-
-### 🎨 Grafica e Animazioni
-- [ ] Aggiungere sprite sheet per i personaggi
-- [ ] Creare AnimationPlayer con animazioni per:
-  - Idle
-  - Camminata
-  - Salto
-  - Attacchi (x4)
-  - Blocco
-  - Colpito
-  - KO
-- [ ] Aggiungere sfondi animati per l'arena
-- [ ] Aggiungere effetti particellari per gli attacchi
-
-### 🎵 Audio
-- [ ] Suoni degli attacchi (punch, kick)
-- [ ] Suoni di impatto quando si colpisce
-- [ ] Suoni della voce dei personaggi
-- [ ] Musica di sottofondo dell'arena
-- [ ] Effetti sonori UI (countdown, KO, vittoria)
-
-### 🤖 Intelligenza Artificiale
-- [ ] Implementare IA base per Player 2
-- [ ] Sistema di decisioni (quando attaccare, difendere, muoversi)
-- [ ] Difficoltà regolabile (facile, normale, difficile)
-
-### ⚔️ Sistema di Combattimento Avanzato
-- [ ] Sistema di combo (sequenze di attacchi)
-- [ ] Mosse speciali (hadouken style)
-- [ ] Super mosse con barra energia
-- [ ] Sistema di grab/throw
-- [ ] Attacchi aerei
-- [ ] Attacchi speciali da accovacciato
-
-### 🎮 Gameplay
-- [ ] Menu principale
-- [ ] Selezione personaggi (roster multiplo)
-- [ ] Modalità storia/arcade
-- [ ] Modalità training
-- [ ] Sistema di unlock e progressione
-- [ ] Replay dei match
-
-### 🌐 Multiplayer
-- [ ] Input separati per Player 2
-- [ ] Supporto gamepad
-- [ ] Multiplayer online (opzionale)
-
-### ⚙️ Sistema e Polish
-- [ ] Menu pausa
-- [ ] Opzioni (volume, controlli, grafica)
-- [ ] Sistema di salvataggio
-- [ ] Effetti screen shake
-- [ ] Slow motion su colpi critici
-- [ ] Transizioni tra scene
-
-## 🔧 Note Tecniche
-
-### Stati del Personaggio
-Il personaggio può trovarsi in uno dei seguenti stati:
-- `IDLE`: Fermo
-- `WALKING`: In movimento
-- `JUMPING`: In aria
-- `CROUCHING`: Accovacciato
-- `ATTACKING`: Eseguendo un attacco
-- `BLOCKING`: In difesa
-- `HIT`: Colpito (stun)
-- `KNOCKED_DOWN`: KO
-
-### Sistema di Collisioni
-- **Layer 1**: Personaggi (CollisionShape2D)
-- **Layer 2**: Hitbox (attacchi)
-- **Layer 4**: Hurtbox (zone vulnerabili)
-
-### Parametri Bilanciamento Attuale
-```gdscript
-WALK_SPEED = 200.0
-AIR_SPEED = 280.0
-JUMP_VELOCITY = -850.0
-GRAVITY = 1400.0
-
-Pugno Leggero:  5 danno, 0.3s durata
-Pugno Pesante: 15 danno, 0.6s durata
-Calcio Leggero:  8 danno, 0.4s durata
-Calcio Pesante: 20 danno, 0.7s durata
-
-Blocco: nessuna perdita di vita
+```powershell
+.\tests\run_smoke_tests.cmd -GodotPath "C:\percorso\Godot_v4.7-stable_win64.exe"
 ```
 
-## 📚 Risorse Utili
+Esecuzione diretta, valida anche su altri sistemi:
 
-- [Documentazione Godot 4.7](https://docs.godotengine.org/en/stable/)
-- [GDScript Reference](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/index.html)
-- Tutorial Fighting Games con Godot: Cerca su YouTube "Godot fighting game tutorial"
+```text
+godot --headless --path . --script res://tests/smoke_tests.gd
+```
 
-## 🤝 Contributi
+La suite verifica 28 condizioni relative a input buffer, danno, hit-stun, guardia, segnali UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK` e codice di uscita `0`.
 
-Questo è un progetto didattico. Sentiti libero di espandere e migliorare il codice!
+## Architettura
 
----
+```text
+FighterCombat
+    ↓ segnali di combattimento
+Mangler
+    ↓ segnali pubblici del fighter
+MainArena
+    ↓ segnali di stato del training
+ArenaUI
+```
 
-**Developed with Godot Engine 4.7** 🎮
+- `scenes/MainArena.tscn`: stage, terreno, due fighter, camera e nodi UI.
+- `scenes/Mangler.tscn`: corpo fisico, sprite, hitbox, hurtbox e componente combat.
+- `scenes/stages/DefaultStage.tscn`: sfondo ed effetti ambientali.
+- `scripts/Mangler.gd`: input, movimento, orientamento e transizioni di stato.
+- `scripts/FighterCombat.gd`: attacchi, hitbox, danno, guardia, hit-stun e KO.
+- `scripts/FighterInputBuffer.gd`: cronologia input, direzioni relative e riconoscimento sequenze.
+- `scripts/CharacterData.gd`: statistiche e configurazione del personaggio.
+- `scripts/MainArena.gd`: ciclo del training, camera, countdown, KO e reset.
+- `scripts/ArenaUI.gd`: barre vita, timer e messaggi.
+- `scripts/FighterDebugOverlay.gd`: visualizzazione di corpo, hitbox e hurtbox.
+- `scripts/StageAmbientEffects.gd`: effetti ambientali dello stage.
+- `tests/smoke_tests.gd`: suite headless senza addon esterni.
+
+## Stati del fighter
+
+- `IDLE`
+- `WALKING`
+- `JUMPING`
+- `CROUCHING`
+- `ATTACKING`
+- `BLOCKING`
+- `HIT`
+- `KNOCKED_DOWN`
+
+Le transizioni sono centralizzate in `Mangler.change_state()`. Le coroutine di attacco e reazione vengono invalidate durante hit, KO e reset per evitare completamenti tardivi.
+
+## Collisioni
+
+| Layer | Utilizzo |
+|---:|---|
+| 1 | Terreno |
+| 2 | Hitbox offensive |
+| 4 | Hurtbox vulnerabili |
+| 8 | Corpo fisico dei fighter |
+
+In aria il corpo del fighter attraversa l'altro fighter, continuando però a collidere con il terreno.
+
+## Parametri attuali
+
+| Attacco | Danno | Durata totale |
+|---|---:|---:|
+| Pugno leggero | 5 | 0,30 s |
+| Pugno medio | 10 | 0,45 s |
+| Pugno pesante | 15 | 0,60 s |
+| Calcio leggero | 8 | 0,40 s |
+| Calcio medio | 12 | 0,50 s |
+| Calcio pesante | 20 | 0,70 s |
+
+- Vita massima: 100 HP.
+- Velocità a terra: 200 px/s.
+- Velocità aerea: 280 px/s.
+- Velocità iniziale del salto: -850 px/s.
+- Gravità: 1400 px/s².
+- Guardia riuscita: 0 danni.
+- Hit-stun: 0,30 s.
+- Reazione di blocco: 0,15 s.
+
+I timing reali degli attacchi sono attualmente suddivisi in startup 30%, active 40% e recovery 30%. `FRAME_DATA.md` contiene le specifiche di riferimento per la futura risorsa `AttackData`.
+
+## Asset dei personaggi
+
+Gli sprite in `assets/sprites/characters/` sono PNG RGBA 512×512. La scena condivisa `Mangler.tscn` usa una scala di `0.7`, equivalente alla precedente resa visiva degli asset 1024×1024 scalati a `0.35`.
+
+Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momento soltanto Mangler è collegato alla scena giocabile.
+
+## Limiti noti e prossime priorità
+
+- Il progetto offre training locale, non ancora round completi o best-of-three.
+- Le animazioni non sono ancora collegate agli stati.
+- I dati degli attacchi sono divisi tra `CharacterData` e `FighterCombat`; manca `AttackData`.
+- `CharacterData` usa ancora un profilo predefinito creato in memoria, senza risorse `.tres` dedicate.
+- Combo e mosse speciali non sono ancora collegate al gameplay, anche se l'input buffer riconosce sequenze.
+- Non sono ancora presenti IA, audio, menu, selezione personaggio o multiplayer online.
+- Alcuni file ereditati potrebbero non essere più utilizzati e devono essere verificati prima della rimozione.
+
+Per il dettaglio dei timing consultare `FRAME_DATA.md`; per il futuro collegamento delle animazioni consultare `TUTORIAL_ANIMAZIONI.md`.
