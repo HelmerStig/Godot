@@ -25,6 +25,13 @@ collision_layer = 8
 collision_mask = 9
 script = ExtResource("1_mangler")
 
+[node name="GroundShadow" type="Polygon2D" parent="."]
+top_level = true
+z_index = -1
+z_as_relative = false
+color = Color(0.075, 0.055, 0.045, 1)
+polygon = PackedVector2Array(-68, 0, -63, -5, -48, -9, -25, -12, 0, -13, 25, -12, 48, -9, 63, -5, 68, 0, 63, 5, 48, 9, 25, 12, 0, 13, -25, 12, -48, 9, -63, 5)
+
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -120)
 scale = Vector2(0.7, 0.7)

@@ -23,6 +23,11 @@ enum State {
 const GRAVITY := 1400.0
 const GROUND_COLLISION_LAYER := 1
 const FIGHTER_COLLISION_LAYER := 8
+const SHADOW_MAX_HEIGHT := 800.0
+const SHADOW_GROUND_ALPHA := 0.3
+const SHADOW_AIR_ALPHA := 0.12
+const SHADOW_AIR_SCALE := 0.58
+const SHADOW_FLOOR_OFFSET_Y := 20.0
 const ATTACK_PRIORITY := [
 	&"light_punch",
 	&"medium_punch",
@@ -45,14 +50,17 @@ var can_move := true
 var input_buffer: FighterInputBuffer
 var stage_left_limit := 0.0
 var stage_right_limit := 1152.0
+var shadow_ground_y := 0.0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var combat: FighterCombat = $Combat
+@onready var ground_shadow: Polygon2D = $GroundShadow
 
 
 func _ready() -> void:
 	input_buffer = FighterInputBuffer.new(player_number)
+	shadow_ground_y = global_position.y
 	apply_character_data()
 	combat.health_changed.connect(_on_combat_health_changed)
 	combat.knocked_out.connect(_on_combat_knocked_out)
@@ -61,6 +69,7 @@ func _ready() -> void:
 	combat.configure(character_data)
 	add_to_group("fighters")
 	update_animation()
+	update_ground_shadow()
 
 
 func _physics_process(delta: float) -> void:
@@ -79,6 +88,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	position.x = clampf(position.x, stage_left_limit, stage_right_limit)
 	update_facing_direction()
+	update_ground_shadow()
 
 
 func handle_input() -> void:
@@ -179,6 +189,22 @@ func update_physical_collision() -> void:
 		collision_mask = GROUND_COLLISION_LAYER | FIGHTER_COLLISION_LAYER
 
 
+func update_ground_shadow() -> void:
+	"""Mantiene l'ombra sul pavimento e la attenua in base all'altezza."""
+	if is_on_floor():
+		shadow_ground_y = global_position.y
+
+	var height_above_ground := maxf(shadow_ground_y - global_position.y, 0.0)
+	var air_ratio := clampf(height_above_ground / SHADOW_MAX_HEIGHT, 0.0, 1.0)
+	var shadow_scale := lerpf(1.0, SHADOW_AIR_SCALE, air_ratio)
+	ground_shadow.global_position = Vector2(
+		global_position.x,
+		shadow_ground_y + SHADOW_FLOOR_OFFSET_Y
+	)
+	ground_shadow.scale = Vector2(shadow_scale, lerpf(1.0, 0.72, air_ratio))
+	ground_shadow.modulate.a = lerpf(SHADOW_GROUND_ALPHA, SHADOW_AIR_ALPHA, air_ratio)
+
+
 func update_facing_direction() -> void:
 	if opponent == null or not is_instance_valid(opponent):
 		return
@@ -221,11 +247,13 @@ func is_attack_in_front(attacker: Mangler) -> bool:
 func reset_fighter(spawn_position: Vector2) -> void:
 	position = spawn_position
 	velocity = Vector2.ZERO
+	shadow_ground_y = spawn_position.y
 	combat.reset()
 	change_state(State.IDLE)
 	can_move = true
 	if input_buffer != null:
 		input_buffer.clear()
+	update_ground_shadow()
 
 
 func get_health_percentage() -> float:
