@@ -41,25 +41,42 @@ func _init(new_player_number: int = 1) -> void:
 
 
 func update(is_facing_right: bool) -> void:
-	_horizontal = (
+	var absolute_horizontal := (
 		int(Input.is_action_pressed(get_action(&"move_right")))
 		- int(Input.is_action_pressed(get_action(&"move_left")))
 	)
-	_vertical = (
+	var absolute_vertical := (
 		int(Input.is_action_pressed(get_action(&"crouch")))
 		- int(Input.is_action_pressed(get_action(&"jump")))
 	)
-	_current_direction = _to_relative_direction(_horizontal, _vertical, is_facing_right)
 
 	var pressed_attacks: Array[StringName] = []
 	for attack_action in ATTACK_ACTIONS:
 		if Input.is_action_just_pressed(get_action(attack_action)):
 			pressed_attacks.append(attack_action)
+	record_input_snapshot(
+		absolute_horizontal,
+		absolute_vertical,
+		pressed_attacks,
+		is_facing_right
+	)
+
+
+func record_input_snapshot(
+	absolute_horizontal: int,
+	absolute_vertical: int,
+	pressed_attacks: Array[StringName],
+	is_facing_right: bool
+) -> void:
+	"""Registra uno snapshot esplicito, utile anche per replay, IA e test headless."""
+	_horizontal = clampi(absolute_horizontal, -1, 1)
+	_vertical = clampi(absolute_vertical, -1, 1)
+	_current_direction = _to_relative_direction(_horizontal, _vertical, is_facing_right)
 
 	_history.push_front({
 		"frame": Engine.get_physics_frames(),
 		"direction": _current_direction,
-		"attacks": pressed_attacks,
+		"attacks": pressed_attacks.duplicate(),
 	})
 	if _history.size() > HISTORY_LIMIT:
 		_history.pop_back()
