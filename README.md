@@ -171,6 +171,6 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momen
 - `CharacterData` usa ancora un profilo predefinito creato in memoria, senza risorse `.tres` dedicate.
 - Combo e mosse speciali non sono ancora collegate al gameplay, anche se l'input buffer riconosce sequenze.
 - Non sono ancora presenti IA, audio, menu, selezione personaggio o multiplayer online.
-- Alcuni file ereditati potrebbero non essere più utilizzati e devono essere verificati prima della rimozione.
+- `original_images/` conserva materiale sorgente e non fa parte del flusso runtime.
 
 Per il dettaglio dei timing consultare `FRAME_DATA.md`; per il futuro collegamento delle animazioni consultare `TUTORIAL_ANIMAZIONI.md`.

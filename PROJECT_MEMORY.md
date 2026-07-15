@@ -20,6 +20,7 @@ Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La p
 - Overlay collisioni con `F3` e slow motion con `F4`.
 - Stage con sfondo ed effetti ambientali.
 - Sprite personaggi ridotti a PNG RGBA 512×512; scala della scena condivisa impostata a `0.7`.
+- Rimossi lo scaffolding vuoto `node_2d.tscn` e lo script parallasse non collegabile `ParallaxStage.gd`.
 
 ## Architettura corrente
 
@@ -123,18 +124,17 @@ Ultimo risultato noto: `SMOKE_TESTS_OK`, codice di uscita `0`.
 - Il timer continua a essere visualizzato in training, ma non termina il round.
 - Combo e mosse speciali non usano ancora le sequenze riconosciute dall'input buffer.
 - Non sono presenti IA, audio, menu, selezione personaggio, salvataggi o multiplayer online.
-- `ParallaxStage.gd` e `node_2d.tscn` risultano candidati inutilizzati e devono essere verificati nel prossimo intervento.
+- `original_images/` contiene materiale sorgente non usato a runtime e viene conservato intenzionalmente.
 
 ## Priorità successive
 
-1. Verificare ed eliminare oppure collegare i file inutilizzati.
-2. Introdurre `AttackData` con danno, startup, active, recovery, hit-stun e hitbox.
-3. Collegare stati e attacchi ad animazioni e feedback visivi.
-4. Creare risorse `CharacterData` dedicate ai personaggi.
-5. Aggiungere un secondo tipo di fighter o una IA basilare.
-6. Implementare round, timeout, punteggio e best-of-three.
-7. Collegare combo e mosse speciali all'input buffer.
+1. Introdurre `AttackData` con danno, startup, active, recovery, hit-stun e hitbox.
+2. Collegare stati e attacchi ad animazioni e feedback visivi.
+3. Creare risorse `CharacterData` dedicate ai personaggi.
+4. Aggiungere un secondo tipo di fighter o una IA basilare.
+5. Implementare round, timeout, punteggio e best-of-three.
+6. Collegare combo e mosse speciali all'input buffer.
 
 ## Nota per la prossima sessione
 
-Prima di nuove modifiche eseguire `tests/run_smoke_tests.cmd`. Il prossimo punto concordato della tabella di marcia è verificare e rimuovere oppure collegare i file inutilizzati.
+Prima di nuove modifiche eseguire `tests/run_smoke_tests.cmd`. Il prossimo intervento tecnico consigliato è introdurre una risorsa `AttackData`.
