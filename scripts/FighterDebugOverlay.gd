@@ -27,8 +27,13 @@ func _draw():
 	for hurtbox_shape in hurtbox_shapes:
 		draw_collision_box(hurtbox_shape, Vector2.ONE, Color(1.0, 0.15, 0.15, 0.12), Color(1.0, 0.25, 0.25, 0.9))
 	# Zona offensiva: verde, visibile soltanto durante i frame attivi.
-	if fighter.hitbox_shape and not fighter.hitbox_shape.disabled:
-		draw_collision_box(fighter.hitbox_shape, fighter.hitbox.scale, Color(0.2, 1.0, 0.25, 0.28), Color(0.3, 1.0, 0.35, 1.0))
+	if fighter.combat.hitbox_shape and not fighter.combat.hitbox_shape.disabled:
+		draw_collision_box(
+			fighter.combat.hitbox_shape,
+			fighter.combat.hitbox.scale,
+			Color(0.2, 1.0, 0.25, 0.28),
+			Color(0.3, 1.0, 0.35, 1.0)
+		)
 
 
 func draw_collision_box(shape_node: CollisionShape2D, box_scale: Vector2, fill_color: Color, outline_color: Color):

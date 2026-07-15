@@ -39,10 +39,14 @@ func _ready():
 	player2.player_number = 2
 	player1.is_player_controlled = true
 	player2.is_player_controlled = true
-	player1.can_move = false
-	player2.can_move = false
+	player1.controls_enabled = false
+	player2.controls_enabled = false
 	player1.opponent = player2
 	player2.opponent = player1
+	player1.combat.health_changed.connect(_on_player1_health_changed)
+	player2.combat.health_changed.connect(_on_player2_health_changed)
+	player1.combat.knocked_out.connect(_on_fighter_knocked_out.bind(2))
+	player2.combat.knocked_out.connect(_on_fighter_knocked_out.bind(1))
 	
 	# Imposta limiti stage sui personaggi
 	player1.stage_left_limit = STAGE_LEFT
@@ -65,18 +69,9 @@ func _process(delta):
 		round_time = maxf(round_time - delta, 0.0)
 		round_timer_label.text = str(ceili(round_time))
 		
-		# Aggiorna barre vita
-		update_health_bars()
-		
 		# Controlla fine round per tempo scaduto (disabilitato per training)
 		# if round_time <= 0:
 		# 	end_round_timeout()
-		
-		# In training il KO ferma l'azione, ma non avanza il match.
-		if player1.current_health <= 0:
-			end_round_ko(2)
-		elif player2.current_health <= 0:
-			end_round_ko(1)
 
 
 func start_round():
@@ -84,6 +79,8 @@ func start_round():
 	round_generation += 1
 	var this_round_generation = round_generation
 	round_active = false
+	player1.controls_enabled = false
+	player2.controls_enabled = false
 	round_label.text = "TRAINING MODE"
 	round_label.visible = true
 	
@@ -118,8 +115,8 @@ func start_round():
 	# Inizia il round
 	round_active = true
 	round_time = 99.0
-	player1.can_move = true
-	player2.can_move = true
+	player1.controls_enabled = true
+	player2.controls_enabled = true
 
 
 func end_round_timeout():
@@ -133,8 +130,8 @@ func end_round_ko(_winner: int):
 	if not round_active:
 		return
 	round_active = false
-	player1.can_move = false
-	player2.can_move = false
+	player1.controls_enabled = false
+	player2.controls_enabled = false
 	round_label.text = "PLAYER %d WINS - R TO RESET" % _winner
 	round_label.visible = true
 
@@ -189,6 +186,25 @@ func update_health_bars():
 	"""Aggiorna le barre della vita"""
 	player1_health_bar.value = player1.get_health_percentage() * 100
 	player2_health_bar.value = player2.get_health_percentage() * 100
+
+
+func _on_player1_health_changed(current_health: int, max_health: int) -> void:
+	player1_health_bar.value = _health_percentage(current_health, max_health)
+
+
+func _on_player2_health_changed(current_health: int, max_health: int) -> void:
+	player2_health_bar.value = _health_percentage(current_health, max_health)
+
+
+func _on_fighter_knocked_out(winner: int) -> void:
+	# In training il KO ferma l'azione, ma non avanza il match.
+	end_round_ko(winner)
+
+
+func _health_percentage(current_health: int, max_health: int) -> float:
+	if max_health <= 0:
+		return 0.0
+	return float(current_health) / float(max_health) * 100.0
 
 
 func _unhandled_input(event):
