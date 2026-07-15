@@ -60,6 +60,7 @@ func _ready() -> void:
 	combat.attack_finished.connect(_on_combat_attack_finished)
 	combat.configure(character_data)
 	add_to_group("fighters")
+	update_animation()
 
 
 func _physics_process(delta: float) -> void:
@@ -132,7 +133,15 @@ func change_state(next_state: int) -> void:
 		State.ATTACKING, State.BLOCKING, State.HIT, State.KNOCKED_DOWN:
 			can_move = false
 			velocity.x = 0.0
+	update_animation()
 	state_changed.emit(previous_state, current_state)
+
+
+func update_animation() -> void:
+	"""Riproduce l'animazione associata allo stato, senza riavviarla ogni frame."""
+	var next_animation: StringName = &"walk" if current_state == State.WALKING else &"idle"
+	if animated_sprite.sprite_frames.has_animation(next_animation):
+		animated_sprite.play(next_animation)
 
 
 func update_state() -> void:

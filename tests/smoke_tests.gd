@@ -109,8 +109,8 @@ func _test_combat_flow() -> void:
 		"idle contiene 25 frame"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"idle"), 10.0),
-		"idle è configurato a 10 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"idle"), 12.0),
+		"idle è configurato a 12 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.get_animation_loop(&"idle"),
@@ -120,6 +120,27 @@ func _test_combat_flow() -> void:
 		player1.animated_sprite.animation == &"idle" and player1.animated_sprite.is_playing(),
 		"idle parte automaticamente"
 	)
+
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"walk"),
+		"SpriteFrames contiene l'animazione walk"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"walk") == 25,
+		"walk contiene 25 frame"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"walk"), 12.0),
+		"walk è configurato a 12 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_animation_loop(&"walk"),
+		"walk è configurato in loop"
+	)
+	player1.change_state(Mangler.State.WALKING)
+	_expect(player1.animated_sprite.animation == &"walk", "WALKING riproduce walk")
+	player1.change_state(Mangler.State.IDLE)
+	_expect(player1.animated_sprite.animation == &"idle", "IDLE ripristina idle")
 
 	_expect(player1_bar.value == 100.0, "vita iniziale Player 1 visualizzata")
 	_expect(player2_bar.value == 100.0, "vita iniziale Player 2 visualizzata")
