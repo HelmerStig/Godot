@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://b3k8rmv2xqwfp"]
+[gd_scene load_steps=6 format=3 uid="uid://b3k8rmv2xqwfp"]
 
 [ext_resource type="PackedScene" uid="uid://cemh2xowvxf8g" path="res://scenes/Mangler.tscn" id="1_mangler"]
 [ext_resource type="Script" path="res://scripts/MainArena.gd" id="2_arena"]
 [ext_resource type="PackedScene" path="res://scenes/stages/DefaultStage.tscn" id="3_stage"]
+[ext_resource type="Script" path="res://scripts/ArenaUI.gd" id="4_ui"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(2304, 50)
@@ -45,6 +46,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("4_ui")
 
 [node name="Player1Health" type="ProgressBar" parent="CanvasLayer/UI"]
 layout_mode = 0

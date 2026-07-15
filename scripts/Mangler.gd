@@ -3,6 +3,12 @@ class_name Mangler
 
 ## Corpo e coordinatore del fighter: input, movimento, stato e orientamento.
 
+signal health_changed(current_health: int, max_health: int)
+signal knocked_out
+signal state_changed(previous_state: int, current_state: int)
+signal attack_started(attack_name: StringName)
+signal attack_finished
+
 enum State {
 	IDLE,
 	WALKING,
@@ -48,6 +54,10 @@ var stage_right_limit := 1152.0
 func _ready() -> void:
 	input_buffer = FighterInputBuffer.new(player_number)
 	apply_character_data()
+	combat.health_changed.connect(_on_combat_health_changed)
+	combat.knocked_out.connect(_on_combat_knocked_out)
+	combat.attack_started.connect(_on_combat_attack_started)
+	combat.attack_finished.connect(_on_combat_attack_finished)
 	combat.configure(character_data)
 	add_to_group("fighters")
 
@@ -111,6 +121,7 @@ func change_state(next_state: int) -> void:
 	if current_state == next_state:
 		return
 
+	var previous_state := current_state
 	current_state = next_state
 	match current_state:
 		State.IDLE, State.WALKING, State.JUMPING:
@@ -121,6 +132,7 @@ func change_state(next_state: int) -> void:
 		State.ATTACKING, State.BLOCKING, State.HIT, State.KNOCKED_DOWN:
 			can_move = false
 			velocity.x = 0.0
+	state_changed.emit(previous_state, current_state)
 
 
 func update_state() -> void:
@@ -201,3 +213,19 @@ func get_health_percentage() -> float:
 func apply_character_data() -> void:
 	if character_data == null:
 		character_data = CharacterData.create_default()
+
+
+func _on_combat_health_changed(current_health: int, max_health: int) -> void:
+	health_changed.emit(current_health, max_health)
+
+
+func _on_combat_knocked_out() -> void:
+	knocked_out.emit()
+
+
+func _on_combat_attack_started(attack_name: StringName) -> void:
+	attack_started.emit(attack_name)
+
+
+func _on_combat_attack_finished() -> void:
+	attack_finished.emit()
