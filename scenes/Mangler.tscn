@@ -27,7 +27,7 @@ script = ExtResource("1_mangler")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(0, -120)
-scale = Vector2(0.35, 0.35)
+scale = Vector2(0.7, 0.7)
 texture = ExtResource("2_texture")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
