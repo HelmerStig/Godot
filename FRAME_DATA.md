@@ -41,15 +41,15 @@ In un picchiaduro, ogni azione è misurata in "frame". A 60 FPS, 1 frame = 1/60 
 | Condizione           | Modificatore | Note                                    |
 |----------------------|--------------|----------------------------------------|
 | Danno normale        | 100%         | Attacco va a segno                     |
-| Con blocco           | 20%          | 80% riduzione (danno chip)             |
+| Con blocco           | 0%           | Nessuna perdita di vita                 |
 | Counter Hit (futuro) | 125%         | Colpire durante startup avversario     |
 | Combo scaling (fut.) | 90%-50%      | Danno ridotto nei combo                |
 
 #### Calcolo Danno con Blocco
 ```
-danno_finale = danno_base * 0.2
+danno_finale = 0
 ```
-Esempio: Pugno Pesante (15 danno) → 3 danno se bloccato
+Esempio: Pugno Pesante (15 danno) → 0 danni se bloccato
 
 ### Stati del Personaggio
 

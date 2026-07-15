@@ -15,7 +15,7 @@ Un gioco picchiaduro 2D in stile Street Fighter sviluppato con Godot Engine 4.7 
 - **Sistema di Combattimento**
   - 4 tipi di attacchi (pugno leggero, pugno pesante, calcio leggero, calcio pesante)
   - Sistema hitbox/hurtbox per rilevamento colpi
-  - Sistema di danno con riduzione quando si blocca (80% riduzione)
+  - Sistema di guardia senza perdita di vita sui colpi bloccati
   - Reazione al colpo con stun temporaneo
 
 - **Sistema di Round**
@@ -48,7 +48,7 @@ Un gioco picchiaduro 2D in stile Street Fighter sviluppato con Godot Engine 4.7 
 - **I**: Calcio Pesante (20 danno, molto lento)
 
 #### Difesa
-- **Direzione opposta all'avversario**: Blocco (riduce danno dell'80%)
+- **Direzione opposta all'avversario**: Blocco (annulla il danno)
 
 #### Debug
 - **F3**: Mostra o nasconde corpo fisico, hurtbox e hitbox attive
@@ -169,7 +169,7 @@ Pugno Pesante: 15 danno, 0.6s durata
 Calcio Leggero:  8 danno, 0.4s durata
 Calcio Pesante: 20 danno, 0.7s durata
 
-Blocco: 80% riduzione danno
+Blocco: nessuna perdita di vita
 ```
 
 ## 📚 Risorse Utili

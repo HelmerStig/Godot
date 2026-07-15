@@ -127,8 +127,8 @@ func take_damage(damage: int, attacker: Mangler) -> void:
 		and fighter.is_on_floor()
 	)
 	if attack_was_blocked:
-		damage = int(damage * 0.2)
-		print("Attacco bloccato! Danno ridotto a: " + str(damage))
+		damage = 0
+		print("Attacco bloccato! Nessun danno subito.")
 
 	current_health = clampi(current_health - damage, 0, max_health)
 	health_changed.emit(current_health, max_health)
