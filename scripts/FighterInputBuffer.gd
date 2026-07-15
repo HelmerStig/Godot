@@ -34,6 +34,8 @@ var _consumed_attack_frames: Dictionary = {}
 var _horizontal := 0
 var _vertical := 0
 var _current_direction := Direction.NEUTRAL
+var _forward_was_held := false
+var _forward_just_pressed := false
 
 
 func _init(new_player_number: int = 1) -> void:
@@ -72,6 +74,9 @@ func record_input_snapshot(
 	_horizontal = clampi(absolute_horizontal, -1, 1)
 	_vertical = clampi(absolute_vertical, -1, 1)
 	_current_direction = _to_relative_direction(_horizontal, _vertical, is_facing_right)
+	var forward_is_held := _current_direction == Direction.FORWARD
+	_forward_just_pressed = forward_is_held and not _forward_was_held
+	_forward_was_held = forward_is_held
 
 	_history.push_front({
 		"frame": Engine.get_physics_frames(),
@@ -88,6 +93,8 @@ func clear() -> void:
 	_horizontal = 0
 	_vertical = 0
 	_current_direction = Direction.NEUTRAL
+	_forward_was_held = false
+	_forward_just_pressed = false
 
 
 func get_action(action_name: StringName) -> StringName:
@@ -108,6 +115,14 @@ func is_down_held() -> bool:
 
 func is_back_held() -> bool:
 	return _current_direction in [Direction.BACK, Direction.UP_BACK, Direction.DOWN_BACK]
+
+
+func is_forward_held() -> bool:
+	return _current_direction == Direction.FORWARD
+
+
+func is_forward_just_pressed() -> bool:
+	return _forward_just_pressed
 
 
 func consume_attack(

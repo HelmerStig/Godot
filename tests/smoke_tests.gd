@@ -77,6 +77,14 @@ func _test_input_buffer() -> void:
 		"la direzione viene invertita quando il fighter guarda a sinistra"
 	)
 	buffer.clear()
+	buffer.record_input_snapshot(1, 0, no_attacks, true)
+	_expect(buffer.is_forward_just_pressed(), "il primo tap avanti viene rilevato")
+	buffer.record_input_snapshot(1, 0, no_attacks, true)
+	_expect(not buffer.is_forward_just_pressed(), "mantenere avanti non genera nuovi tap")
+	buffer.record_input_snapshot(0, 0, no_attacks, true)
+	buffer.record_input_snapshot(1, 0, no_attacks, true)
+	_expect(buffer.is_forward_just_pressed(), "un secondo tap distinto viene rilevato")
+	buffer.clear()
 	buffer.record_input_snapshot(0, 1, no_attacks, true)
 	buffer.record_input_snapshot(1, 0, no_attacks, true)
 	_expect(
@@ -153,10 +161,29 @@ func _test_combat_flow() -> void:
 		player1.animated_sprite.sprite_frames.get_animation_loop(&"backwalk"),
 		"backwalk è configurato in loop"
 	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"run"),
+		"SpriteFrames contiene l'animazione run"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"run") == 22,
+		"run contiene 22 frame"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"run"), 12.0),
+		"run è configurato a 12 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_animation_loop(&"run"),
+		"run è configurato in loop"
+	)
 	player1.is_facing_right = true
 	player1.velocity.x = 100.0
 	player1.change_state(Mangler.State.WALKING)
 	_expect(player1.animated_sprite.animation == &"walk", "avanzando verso destra riproduce walk")
+	player1.velocity.x = player1.character_data.run_speed
+	player1.change_state(Mangler.State.RUNNING)
+	_expect(player1.animated_sprite.animation == &"run", "RUNNING riproduce run")
 	player1.velocity.x = -100.0
 	player1.change_state(Mangler.State.WALKING)
 	_expect(player1.animated_sprite.animation == &"backwalk", "arretrando verso sinistra riproduce backwalk")
@@ -180,6 +207,27 @@ func _test_combat_flow() -> void:
 		not player1.animated_sprite.flip_h and player2.animated_sprite.flip_h,
 		"AnimatedSprite2D segue l'orientamento verso l'avversario"
 	)
+	Input.action_press(&"p1_move_right")
+	await physics_frame
+	await process_frame
+	Input.action_release(&"p1_move_right")
+	await physics_frame
+	await process_frame
+	Input.action_press(&"p1_move_right")
+	await physics_frame
+	await process_frame
+	_expect(player1.current_state == Mangler.State.RUNNING, "il doppio tap avanti avvia RUNNING")
+	_expect(
+		is_equal_approx(player1.velocity.x, player1.character_data.run_speed),
+		"RUNNING usa la velocità di corsa"
+	)
+	await physics_frame
+	await process_frame
+	_expect(player1.current_state == Mangler.State.RUNNING, "mantenere il secondo avanti continua la corsa")
+	Input.action_release(&"p1_move_right")
+	await physics_frame
+	await process_frame
+	_expect(player1.current_state == Mangler.State.IDLE, "rilasciare avanti termina la corsa")
 	var light_punch := player1.character_data.get_attack(&"light_punch")
 	player1.combat.try_attack(&"light_punch")
 	_expect(player1.current_state == Mangler.State.ATTACKING, "AttackData avvia lo stato ATTACKING")
@@ -248,4 +296,5 @@ func _expect(condition: bool, description: String) -> void:
 
 
 func _release_test_actions() -> void:
+	Input.action_release(&"p1_move_right")
 	Input.action_release(&"p2_move_right")

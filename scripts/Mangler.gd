@@ -12,6 +12,7 @@ signal attack_finished
 enum State {
 	IDLE,
 	WALKING,
+	RUNNING,
 	JUMPING,
 	CROUCHING,
 	ATTACKING,
@@ -28,6 +29,7 @@ const SHADOW_GROUND_ALPHA := 0.3
 const SHADOW_AIR_ALPHA := 0.12
 const SHADOW_AIR_SCALE := 0.58
 const SHADOW_FLOOR_OFFSET_Y := 20.0
+const RUN_DOUBLE_TAP_WINDOW_FRAMES := 15
 const ATTACK_PRIORITY := [
 	&"light_punch",
 	&"medium_punch",
@@ -51,6 +53,7 @@ var input_buffer: FighterInputBuffer
 var stage_left_limit := 0.0
 var stage_right_limit := 1152.0
 var shadow_ground_y := 0.0
+var last_forward_tap_frame := -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -118,12 +121,22 @@ func handle_input() -> void:
 		return
 
 	var direction := input_buffer.get_horizontal_axis()
+	if is_on_floor() and input_buffer.is_forward_just_pressed():
+		var current_frame := Engine.get_physics_frames()
+		if current_frame - last_forward_tap_frame <= RUN_DOUBLE_TAP_WINDOW_FRAMES:
+			change_state(State.RUNNING)
+		last_forward_tap_frame = current_frame
+
+	if current_state == State.RUNNING and not input_buffer.is_forward_held():
+		change_state(State.WALKING if direction != 0.0 else State.IDLE)
+
 	var movement_speed := (
 		character_data.air_speed if current_state == State.JUMPING
+		else character_data.run_speed if current_state == State.RUNNING
 		else character_data.walk_speed
 	)
 	velocity.x = direction * movement_speed
-	if is_on_floor():
+	if is_on_floor() and current_state != State.RUNNING:
 		change_state(State.WALKING if direction != 0 else State.IDLE)
 
 
@@ -136,7 +149,7 @@ func change_state(next_state: int) -> void:
 	var previous_state := current_state
 	current_state = next_state
 	match current_state:
-		State.IDLE, State.WALKING, State.JUMPING:
+		State.IDLE, State.WALKING, State.RUNNING, State.JUMPING:
 			can_move = true
 		State.CROUCHING:
 			can_move = true
@@ -153,6 +166,8 @@ func update_animation() -> void:
 	var next_animation: StringName = &"idle"
 	if current_state == State.WALKING:
 		next_animation = &"backwalk" if is_moving_backward() else &"walk"
+	elif current_state == State.RUNNING:
+		next_animation = &"run"
 	if (
 		animated_sprite.sprite_frames.has_animation(next_animation)
 		and (animated_sprite.animation != next_animation or not animated_sprite.is_playing())
@@ -174,7 +189,7 @@ func update_state() -> void:
 		change_state(State.JUMPING)
 	elif current_state == State.JUMPING:
 		change_state(State.IDLE)
-	elif is_zero_approx(velocity.x) and current_state == State.WALKING:
+	elif is_zero_approx(velocity.x) and current_state in [State.WALKING, State.RUNNING]:
 		change_state(State.IDLE)
 
 
@@ -248,6 +263,7 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	position = spawn_position
 	velocity = Vector2.ZERO
 	shadow_ground_y = spawn_position.y
+	last_forward_tap_frame = -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
 	combat.reset()
 	change_state(State.IDLE)
 	can_move = true
