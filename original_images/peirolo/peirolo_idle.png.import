@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bakctf2qnf7uf"
-path="res://.godot/imported/mileto_idle.png-36243c9053a9f2fe88a385537f067fa2.ctex"
+uid="uid://bu5bfhklq4p2v"
+path="res://.godot/imported/peirolo_idle.png-dbc457c8c250cff7769046c6cffcf6bb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/mileto/mileto_idle.png"
-dest_files=["res://.godot/imported/mileto_idle.png-36243c9053a9f2fe88a385537f067fa2.ctex"]
+source_file="res://original_images/peirolo/peirolo_idle.png"
+dest_files=["res://.godot/imported/peirolo_idle.png-dbc457c8c250cff7769046c6cffcf6bb.ctex"]
 
 [params]
 

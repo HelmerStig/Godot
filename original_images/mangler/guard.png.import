@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bu5bfhklq4p2v"
-path="res://.godot/imported/peirolo_idle.png-7908fc48403e4fe8df29511031c0d0cc.ctex"
+uid="uid://cya0dxnk7m5i"
+path="res://.godot/imported/guard.png-c5684ec5f7cabbe96b2940bd0dbdb39f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/peirolo/peirolo_idle.png"
-dest_files=["res://.godot/imported/peirolo_idle.png-7908fc48403e4fe8df29511031c0d0cc.ctex"]
+source_file="res://original_images/mangler/guard.png"
+dest_files=["res://.godot/imported/guard.png-c5684ec5f7cabbe96b2940bd0dbdb39f.ctex"]
 
 [params]
 

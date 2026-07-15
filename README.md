@@ -84,7 +84,7 @@ Esecuzione diretta, valida anche su altri sistemi:
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
-La suite verifica 28 condizioni relative a input buffer, danno, hit-stun, guardia, segnali UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK` e codice di uscita `0`.
+La suite verifica 46 condizioni relative a `AttackData`, input buffer, ciclo degli attacchi, danno, hit-stun, guardia, segnali UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK` e codice di uscita `0`.
 
 ## Architettura
 
@@ -102,7 +102,9 @@ ArenaUI
 - `scenes/Mangler.tscn`: corpo fisico, sprite, hitbox, hurtbox e componente combat.
 - `scenes/stages/DefaultStage.tscn`: sfondo ed effetti ambientali.
 - `scripts/Mangler.gd`: input, movimento, orientamento e transizioni di stato.
-- `scripts/FighterCombat.gd`: attacchi, hitbox, danno, guardia, hit-stun e KO.
+- `scripts/AttackData.gd`: schema di danno, timing, stun e hitbox di un attacco.
+- `data/attacks/*.tres`: sei risorse di attacco modificabili dall'Inspector.
+- `scripts/FighterCombat.gd`: esecuzione degli attacchi, danno, guardia, reazioni e KO.
 - `scripts/FighterInputBuffer.gd`: cronologia input, direzioni relative e riconoscimento sequenze.
 - `scripts/CharacterData.gd`: statistiche e configurazione del personaggio.
 - `scripts/MainArena.gd`: ciclo del training, camera, countdown, KO e reset.
@@ -137,14 +139,14 @@ In aria il corpo del fighter attraversa l'altro fighter, continuando però a col
 
 ## Parametri attuali
 
-| Attacco | Danno | Durata totale |
-|---|---:|---:|
-| Pugno leggero | 5 | 0,30 s |
-| Pugno medio | 10 | 0,45 s |
-| Pugno pesante | 15 | 0,60 s |
-| Calcio leggero | 8 | 0,40 s |
-| Calcio medio | 12 | 0,50 s |
-| Calcio pesante | 20 | 0,70 s |
+| Attacco | Danno | Startup | Active | Recovery | Totale |
+|---|---:|---:|---:|---:|---:|
+| Pugno leggero | 5 | 5f | 8f | 5f | 18f / 0,30 s |
+| Pugno medio | 10 | 7f | 10f | 10f | 27f / 0,45 s |
+| Pugno pesante | 15 | 10f | 15f | 11f | 36f / 0,60 s |
+| Calcio leggero | 8 | 6f | 10f | 8f | 24f / 0,40 s |
+| Calcio medio | 12 | 8f | 12f | 10f | 30f / 0,50 s |
+| Calcio pesante | 20 | 15f | 18f | 9f | 42f / 0,70 s |
 
 - Vita massima: 100 HP.
 - Velocità a terra: 200 px/s.
@@ -155,7 +157,7 @@ In aria il corpo del fighter attraversa l'altro fighter, continuando però a col
 - Hit-stun: 0,30 s.
 - Reazione di blocco: 0,15 s.
 
-I timing reali degli attacchi sono attualmente suddivisi in startup 30%, active 40% e recovery 30%. `FRAME_DATA.md` contiene le specifiche di riferimento per la futura risorsa `AttackData`.
+Ogni riga è una risorsa `AttackData` distinta che contiene anche hit-stun, block-stun, dimensione e posizione della hitbox. `FRAME_DATA.md` documenta gli stessi valori in forma tabellare.
 
 ## Asset dei personaggi
 
@@ -167,8 +169,7 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momen
 
 - Il progetto offre training locale, non ancora round completi o best-of-three.
 - Le animazioni non sono ancora collegate agli stati.
-- I dati degli attacchi sono divisi tra `CharacterData` e `FighterCombat`; manca `AttackData`.
-- `CharacterData` usa ancora un profilo predefinito creato in memoria, senza risorse `.tres` dedicate.
+- `CharacterData` usa ancora un profilo personaggio creato in memoria, anche se gli attacchi sono risorse `.tres` dedicate.
 - Combo e mosse speciali non sono ancora collegate al gameplay, anche se l'input buffer riconosce sequenze.
 - Non sono ancora presenti IA, audio, menu, selezione personaggio o multiplayer online.
 - `original_images/` conserva materiale sorgente e non fa parte del flusso runtime.

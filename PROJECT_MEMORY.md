@@ -4,7 +4,7 @@ Ultimo aggiornamento: 15 luglio 2026
 
 ## Obiettivo attuale
 
-Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La priorità corrente è mantenere stabile il combattimento locale in modalità training prima di introdurre animazioni complete, `AttackData`, IA, combo, menu o round competitivi.
+Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La priorità corrente è mantenere stabile il combattimento locale in modalità training prima di introdurre animazioni complete, IA, combo, menu o round competitivi.
 
 ## Baseline funzionante
 
@@ -12,6 +12,7 @@ Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La p
 - Player 1 usa tastiera o gamepad 0; Player 2 usa tastierino numerico o gamepad 1.
 - Movimento, salto, accovacciamento e guardia direzionale.
 - Sei attacchi a terra: pugni e calci leggeri, medi e pesanti.
+- Sei risorse `AttackData` con timing, stun e hitbox espliciti.
 - Hitbox diversa per ogni attacco e tre hurtbox per fighter.
 - La guardia riuscita annulla completamente il danno.
 - Hit-stun, reazione di blocco, KO e reset con `R`.
@@ -28,7 +29,9 @@ Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La p
 - `scenes/Mangler.tscn`: scena condivisa del fighter.
 - `scenes/stages/DefaultStage.tscn`: stage predefinito.
 - `scripts/Mangler.gd`: coordinatore del fighter; gestisce input, movimento, orientamento e stato.
-- `scripts/FighterCombat.gd`: attacchi, hitbox, vita, danno, guardia, reazioni e KO.
+- `scripts/AttackData.gd`: schema dati di un attacco.
+- `data/attacks/*.tres`: risorse dei sei attacchi base.
+- `scripts/FighterCombat.gd`: ciclo degli attacchi, vita, danno, guardia, reazioni e KO.
 - `scripts/FighterInputBuffer.gd`: snapshot input, direzioni relative, consumo attacchi e sequenze recenti.
 - `scripts/CharacterData.gd`: statistiche del fighter e parametri base degli attacchi.
 - `scripts/MainArena.gd`: ciclo del training, countdown, reset, camera e fine per KO.
@@ -51,7 +54,8 @@ FighterCombat → Mangler → MainArena → ArenaUI
 - Separare il blocco dei controlli imposto dall'arena da quello imposto dallo stato del fighter.
 - Conservare `Mangler` come autorità sulle transizioni tramite `change_state()`.
 - Isolare il combattimento in `FighterCombat`, evitando per ora una classe separata per ogni stato.
-- Usare `CharacterData` come fonte di movimento, vita, danni e durata totale degli attacchi.
+- Usare `CharacterData` come fonte di movimento, vita e lista degli attacchi disponibili.
+- Usare `AttackData` come unica fonte di danno, startup, active, recovery, hit-stun, block-stun e hitbox.
 - Proteggere coroutine di attacco, hit-stun e block-stun con un contatore di generazione.
 - Usare segnali tra combattimento, fighter, arena e UI.
 - Mantenere input separati per i due giocatori.
@@ -72,8 +76,10 @@ Esecuzione diretta:
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
-La suite corrente esegue 28 verifiche e copre:
+La suite corrente esegue 46 verifiche e copre:
 
+- caricamento, lookup e validazione delle sei risorse `AttackData`;
+- selezione della risorsa e completamento del ciclo startup/active/recovery;
 - conversione delle direzioni in base all'orientamento;
 - memorizzazione e consumo singolo degli attacchi;
 - riconoscimento di sequenze direzionali;
@@ -114,9 +120,6 @@ Ultimo risultato noto: `SMOKE_TESTS_OK`, codice di uscita `0`.
 
 ## Debito tecnico noto
 
-- Danno e durata risiedono in `CharacterData`, mentre hitbox e suddivisione startup/active/recovery risiedono in `FighterCombat`.
-- Startup, active e recovery sono percentuali fisse 30/40/30 della durata totale.
-- Non esiste ancora una risorsa `AttackData`.
 - `CharacterData` viene creato in memoria e non esistono profili `.tres` per i personaggi.
 - Le animazioni non sono collegate agli stati o agli attacchi.
 - Gli asset di Arianna, Bue, Mileto, Peirolo e Torpe non sono ancora collegati a fighter giocabili.
@@ -128,13 +131,12 @@ Ultimo risultato noto: `SMOKE_TESTS_OK`, codice di uscita `0`.
 
 ## Priorità successive
 
-1. Introdurre `AttackData` con danno, startup, active, recovery, hit-stun e hitbox.
-2. Collegare stati e attacchi ad animazioni e feedback visivi.
-3. Creare risorse `CharacterData` dedicate ai personaggi.
-4. Aggiungere un secondo tipo di fighter o una IA basilare.
-5. Implementare round, timeout, punteggio e best-of-three.
-6. Collegare combo e mosse speciali all'input buffer.
+1. Collegare stati e attacchi ad animazioni e feedback visivi.
+2. Creare risorse `CharacterData` dedicate ai personaggi.
+3. Aggiungere un secondo tipo di fighter o una IA basilare.
+4. Implementare round, timeout, punteggio e best-of-three.
+5. Collegare combo e mosse speciali all'input buffer.
 
 ## Nota per la prossima sessione
 
-Prima di nuove modifiche eseguire `tests/run_smoke_tests.cmd`. Il prossimo intervento tecnico consigliato è introdurre una risorsa `AttackData`.
+Prima di nuove modifiche eseguire `tests/run_smoke_tests.cmd`. Il prossimo intervento tecnico consigliato è collegare stati e attacchi alle animazioni.

@@ -13,6 +13,7 @@ func _initialize() -> void:
 func _run() -> void:
 	Engine.time_scale = 1.0
 	print("=== SANMO HEADLESS SMOKE TESTS ===")
+	_test_attack_data()
 	await _test_input_buffer()
 	await _test_combat_flow()
 	_release_test_actions()
@@ -23,6 +24,31 @@ func _run() -> void:
 	else:
 		push_error("SMOKE_TESTS_FAILED: %d assertion(s)" % failures)
 		quit(1)
+
+
+func _test_attack_data() -> void:
+	print("-- AttackData")
+	var character_data := CharacterData.create_default()
+	var attack_ids: Array[StringName] = [
+		&"light_punch",
+		&"medium_punch",
+		&"heavy_punch",
+		&"light_kick",
+		&"medium_kick",
+		&"heavy_kick",
+	]
+	_expect(character_data.attacks.size() == 6, "il profilo predefinito contiene sei AttackData")
+	for attack_id in attack_ids:
+		var attack := character_data.get_attack(attack_id)
+		_expect(attack != null, "risorsa caricata: " + str(attack_id))
+		if attack != null:
+			_expect(attack.is_valid(), "risorsa valida: " + str(attack_id))
+
+	var light_punch := character_data.get_attack(&"light_punch")
+	_expect(
+		light_punch != null and is_equal_approx(light_punch.get_total_duration(), 0.3),
+		"startup, active e recovery determinano la durata totale"
+	)
 
 
 func _test_input_buffer() -> void:
@@ -77,6 +103,18 @@ func _test_combat_flow() -> void:
 	_expect(player2_bar.value == 100.0, "vita iniziale Player 2 visualizzata")
 	await create_timer(3.1).timeout
 	_expect(bool(arena.get("round_active")), "training attivo dopo il countdown")
+	var light_punch := player1.character_data.get_attack(&"light_punch")
+	player1.combat.try_attack(&"light_punch")
+	_expect(player1.current_state == Mangler.State.ATTACKING, "AttackData avvia lo stato ATTACKING")
+	_expect(player1.combat.current_attack == light_punch, "FighterCombat usa la risorsa selezionata")
+	var attack_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		attack_shape.size == light_punch.hitbox_size
+		and player1.combat.hitbox_shape.position == light_punch.hitbox_position,
+		"AttackData configura geometria e posizione della hitbox"
+	)
+	await create_timer(light_punch.get_total_duration() + 0.05).timeout
+	_expect(player1.current_state == Mangler.State.IDLE, "i timing AttackData completano l'attacco")
 
 	player2.combat.take_damage(20, player1)
 	_expect(player2.combat.current_health == 80, "danno normale applicato")

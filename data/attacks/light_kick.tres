@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/AttackData.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+attack_id = &"light_kick"
+damage = 8
+startup = 0.1
+active = 0.166667
+recovery = 0.133333
+hitstun = 0.3
+blockstun = 0.15
+hitbox_size = Vector2(85, 35)
+hitbox_position = Vector2(47.5, -55)

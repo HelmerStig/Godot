@@ -9,8 +9,10 @@ In un picchiaduro, ogni azione è misurata in "frame". A 60 FPS, 1 frame = 1/60 
 | Attacco        | Startup | Active | Recovery | Totale | Danno | Velocità |
 |----------------|---------|--------|----------|--------|-------|----------|
 | Pugno Leggero  | 5f      | 8f     | 5f       | 18f    | 5     | 0.30s    |
-| Calcio Leggero | 6f      | 10f    | 8f       | 24f    | 8     | 0.40s    |
+| Pugno Medio    | 7f      | 10f    | 10f      | 27f    | 10    | 0.45s    |
 | Pugno Pesante  | 10f     | 15f    | 11f      | 36f    | 15    | 0.60s    |
+| Calcio Leggero | 6f      | 10f    | 8f       | 24f    | 8     | 0.40s    |
+| Calcio Medio   | 8f      | 12f    | 10f      | 30f    | 12    | 0.50s    |
 | Calcio Pesante | 15f     | 18f    | 9f       | 42f    | 20    | 0.70s    |
 
 **Legenda:**
@@ -18,6 +20,8 @@ In un picchiaduro, ogni azione è misurata in "frame". A 60 FPS, 1 frame = 1/60 
 - **Active**: Frame in cui l'hitbox può colpire
 - **Recovery**: Frame dopo l'attacco prima di poter agire di nuovo
 - **Totale**: Durata totale dell'animazione
+
+Questi valori sono implementati nelle risorse `data/attacks/*.tres`. Ogni `AttackData` contiene inoltre hit-stun, block-stun, dimensione e posizione della hitbox.
 
 ### Movimento
 
@@ -68,9 +72,10 @@ Esempio: Pugno Pesante (15 danno) → 0 danni se bloccato
 
 #### Collision Layers
 ```
-Layer 1: CharacterBody2D (corpo fisico del personaggio)
+Layer 1: Terreno
 Layer 2: Hitbox (attacchi)
 Layer 4: Hurtbox (zone vulnerabili)
+Layer 8: CharacterBody2D (corpo fisico del personaggio)
 ```
 
 #### Collision Masks

@@ -159,20 +159,15 @@ func flip_character():
 
 ### Animazioni Attacchi
 
-Modifica `perform_attack()` per riprodurre l'animazione:
+Collega il segnale pubblico `attack_started` di `Mangler` e usa l'identificatore proveniente da `AttackData`:
 ```gdscript
-func perform_attack(attack_name: String, damage: int, duration: float):
-	if not is_attacking and is_on_floor():
-		is_attacking = true
-		can_move = false
-		current_state = State.ATTACKING
-		velocity.x = 0
-		
-		# Riproduci animazione attacco
-		if animated_sprite:
-			animated_sprite.play(attack_name)
-		
-		# ... resto del codice ...
+func _ready() -> void:
+	attack_started.connect(_on_attack_started)
+
+
+func _on_attack_started(attack_name: StringName) -> void:
+	if animated_sprite:
+		animated_sprite.play(attack_name)
 ```
 
 ## 🎯 Step 4: Test e Regolazioni

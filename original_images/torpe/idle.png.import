@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dauh5vmlkm10n"
-path="res://.godot/imported/mangler.png-a68782b46abff279f3a71f625a6ab59a.ctex"
+uid="uid://d0hfd4ixuwqs0"
+path="res://.godot/imported/idle.png-77b32e8ab36ef9767ab2acf935b0e91a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://original_images/mangler.png"
-dest_files=["res://.godot/imported/mangler.png-a68782b46abff279f3a71f625a6ab59a.ctex"]
+source_file="res://original_images/torpe/idle.png"
+dest_files=["res://.godot/imported/idle.png-77b32e8ab36ef9767ab2acf935b0e91a.ctex"]
 
 [params]
 
