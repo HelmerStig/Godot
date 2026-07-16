@@ -31,6 +31,22 @@ const SHADOW_AIR_ALPHA := 0.12
 const SHADOW_AIR_SCALE := 0.58
 const SHADOW_FLOOR_OFFSET_Y := 20.0
 const RUN_DOUBLE_TAP_WINDOW_FRAMES := 15
+const STANDING_COLLISION_SIZE := Vector2(70.0, 240.0)
+const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
+const CROUCH_COLLISION_SIZE := Vector2(80.0, 175.0)
+const CROUCH_COLLISION_POSITION := Vector2(0.0, -87.5)
+const STANDING_HEAD_SIZE := Vector2(55.0, 55.0)
+const STANDING_HEAD_POSITION := Vector2(0.0, -252.5)
+const CROUCH_HEAD_SIZE := Vector2(55.0, 50.0)
+const CROUCH_HEAD_POSITION := Vector2(0.0, -190.0)
+const STANDING_TORSO_SIZE := Vector2(115.0, 155.0)
+const STANDING_TORSO_POSITION := Vector2(0.0, -166.0)
+const CROUCH_TORSO_SIZE := Vector2(115.0, 105.0)
+const CROUCH_TORSO_POSITION := Vector2(0.0, -126.0)
+const STANDING_LEGS_SIZE := Vector2(100.0, 135.0)
+const STANDING_LEGS_POSITION := Vector2(0.0, -67.5)
+const CROUCH_LEGS_SIZE := Vector2(100.0, 100.0)
+const CROUCH_LEGS_POSITION := Vector2(0.0, -50.0)
 const ATTACK_PRIORITY := [
 	&"light_punch",
 	&"medium_punch",
@@ -58,6 +74,9 @@ var last_forward_tap_frame := -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var head_hurtbox: CollisionShape2D = $Hurtbox/HeadHurtbox
+@onready var torso_hurtbox: CollisionShape2D = $Hurtbox/TorsoHurtbox
+@onready var legs_hurtbox: CollisionShape2D = $Hurtbox/LegsHurtbox
 @onready var combat: FighterCombat = $Combat
 @onready var ground_shadow: Polygon2D = $GroundShadow
 
@@ -65,15 +84,18 @@ var last_forward_tap_frame := -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
 func _ready() -> void:
 	input_buffer = FighterInputBuffer.new(player_number)
 	shadow_ground_y = global_position.y
+	duplicate_collision_shapes()
 	apply_character_data()
 	combat.health_changed.connect(_on_combat_health_changed)
 	combat.knocked_out.connect(_on_combat_knocked_out)
 	combat.attack_started.connect(_on_combat_attack_started)
 	combat.attack_finished.connect(_on_combat_attack_finished)
 	animated_sprite.animation_finished.connect(_on_animation_finished)
+	animated_sprite.frame_changed.connect(_on_animation_frame_changed)
 	combat.configure(character_data)
 	add_to_group("fighters")
 	update_animation()
+	update_collision_profile()
 	update_ground_shadow()
 
 
@@ -167,6 +189,7 @@ func change_state(next_state: int) -> void:
 			can_move = false
 			velocity.x = 0.0
 	update_animation()
+	update_collision_profile()
 	state_changed.emit(previous_state, current_state)
 
 
@@ -230,6 +253,56 @@ func update_physical_collision() -> void:
 	else:
 		collision_layer = FIGHTER_COLLISION_LAYER
 		collision_mask = GROUND_COLLISION_LAYER | FIGHTER_COLLISION_LAYER
+
+
+func duplicate_collision_shapes() -> void:
+	"""Rende le forme modificabili per fighter senza alterare l'altro giocatore."""
+	for shape_node in [collision_shape, head_hurtbox, torso_hurtbox, legs_hurtbox]:
+		if shape_node.shape:
+			shape_node.shape = shape_node.shape.duplicate()
+
+
+func update_collision_profile() -> void:
+	"""Interpola pushbox e hurtbox seguendo i frame della transizione crouch."""
+	var crouch_ratio := get_crouch_progress()
+	set_box_profile(
+		collision_shape,
+		STANDING_COLLISION_SIZE.lerp(CROUCH_COLLISION_SIZE, crouch_ratio),
+		STANDING_COLLISION_POSITION.lerp(CROUCH_COLLISION_POSITION, crouch_ratio)
+	)
+	set_box_profile(
+		head_hurtbox,
+		STANDING_HEAD_SIZE.lerp(CROUCH_HEAD_SIZE, crouch_ratio),
+		STANDING_HEAD_POSITION.lerp(CROUCH_HEAD_POSITION, crouch_ratio)
+	)
+	set_box_profile(
+		torso_hurtbox,
+		STANDING_TORSO_SIZE.lerp(CROUCH_TORSO_SIZE, crouch_ratio),
+		STANDING_TORSO_POSITION.lerp(CROUCH_TORSO_POSITION, crouch_ratio)
+	)
+	set_box_profile(
+		legs_hurtbox,
+		STANDING_LEGS_SIZE.lerp(CROUCH_LEGS_SIZE, crouch_ratio),
+		STANDING_LEGS_POSITION.lerp(CROUCH_LEGS_POSITION, crouch_ratio)
+	)
+
+
+func get_crouch_progress() -> float:
+	if current_state not in [State.CROUCHING, State.STANDING_UP]:
+		return 0.0
+	if animated_sprite.animation != &"crouch":
+		return 0.0
+	var final_frame := animated_sprite.sprite_frames.get_frame_count(&"crouch") - 1
+	if final_frame <= 0:
+		return 1.0
+	return clampf(float(animated_sprite.frame) / float(final_frame), 0.0, 1.0)
+
+
+func set_box_profile(shape_node: CollisionShape2D, size: Vector2, box_position: Vector2) -> void:
+	var rectangle := shape_node.shape as RectangleShape2D
+	if rectangle:
+		rectangle.size = size
+		shape_node.position = box_position
 
 
 func update_ground_shadow() -> void:
@@ -328,3 +401,8 @@ func _on_combat_attack_finished() -> void:
 func _on_animation_finished() -> void:
 	if current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
 		change_state(State.IDLE)
+
+
+func _on_animation_frame_changed() -> void:
+	if animated_sprite.animation == &"crouch":
+		update_collision_profile()

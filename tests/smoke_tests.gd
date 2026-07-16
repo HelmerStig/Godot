@@ -257,6 +257,30 @@ func _test_combat_flow() -> void:
 		and not player1.animated_sprite.is_playing(),
 		"crouch mantiene l'ultimo frame mentre giù resta premuto"
 	)
+	var crouch_collision := player1.collision_shape.shape as RectangleShape2D
+	var crouch_head := player1.head_hurtbox.shape as RectangleShape2D
+	var crouch_torso := player1.torso_hurtbox.shape as RectangleShape2D
+	var crouch_legs := player1.legs_hurtbox.shape as RectangleShape2D
+	_expect(
+		crouch_collision.size == Mangler.CROUCH_COLLISION_SIZE
+		and player1.collision_shape.position == Mangler.CROUCH_COLLISION_POSITION,
+		"CROUCHING riduce e abbassa la collisione fisica"
+	)
+	_expect(
+		crouch_head.size == Mangler.CROUCH_HEAD_SIZE
+		and player1.head_hurtbox.position == Mangler.CROUCH_HEAD_POSITION,
+		"CROUCHING abbassa la hurtbox della testa"
+	)
+	_expect(
+		crouch_torso.size == Mangler.CROUCH_TORSO_SIZE
+		and player1.torso_hurtbox.position == Mangler.CROUCH_TORSO_POSITION,
+		"CROUCHING riduce e abbassa la hurtbox del torso"
+	)
+	_expect(
+		crouch_legs.size == Mangler.CROUCH_LEGS_SIZE
+		and player1.legs_hurtbox.position == Mangler.CROUCH_LEGS_POSITION,
+		"CROUCHING riduce la hurtbox delle gambe"
+	)
 	Input.action_release(&"p1_crouch")
 	await physics_frame
 	await process_frame
@@ -264,6 +288,17 @@ func _test_combat_flow() -> void:
 	_expect(player1.animated_sprite.get_playing_speed() < 0.0, "STANDING_UP riproduce crouch al contrario")
 	await create_timer(0.75).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "la rialzata termina in IDLE")
+	_expect(
+		crouch_collision.size == Mangler.STANDING_COLLISION_SIZE
+		and player1.collision_shape.position == Mangler.STANDING_COLLISION_POSITION,
+		"la rialzata ripristina la collisione fisica normale"
+	)
+	_expect(
+		crouch_head.size == Mangler.STANDING_HEAD_SIZE
+		and crouch_torso.size == Mangler.STANDING_TORSO_SIZE
+		and crouch_legs.size == Mangler.STANDING_LEGS_SIZE,
+		"la rialzata ripristina tutte le hurtbox normali"
+	)
 
 	var light_punch := player1.character_data.get_attack(&"light_punch")
 	player1.combat.try_attack(&"light_punch")
