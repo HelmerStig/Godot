@@ -1001,19 +1001,19 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_dodge_11")
 }, {
-"duration": 1.782857,
+"duration": 3.565714,
 "texture": SubResource("AtlasTexture_dodge_12")
 }, {
-"duration": 1.782857,
+"duration": 3.565714,
 "texture": SubResource("AtlasTexture_dodge_13")
 }, {
-"duration": 1.782857,
+"duration": 3.565714,
 "texture": SubResource("AtlasTexture_dodge_14")
 }, {
-"duration": 1.782857,
+"duration": 3.565714,
 "texture": SubResource("AtlasTexture_dodge_15")
 }, {
-"duration": 1.782857,
+"duration": 3.565714,
 "texture": SubResource("AtlasTexture_dodge_16")
 }, {
 "duration": 1.0,
@@ -1042,7 +1042,7 @@ animations = [{
 }],
 "loop": 0,
 "name": &"dodge",
-"speed": 24.0
+"speed": 48.0
 }, {
 "frames": [{
 "duration": 1.0,

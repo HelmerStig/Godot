@@ -210,8 +210,8 @@ func _test_combat_flow() -> void:
 		"dodge contiene le 25 celle da 512"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"dodge"), 24.0),
-		"dodge è configurato a 24 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"dodge"), 48.0),
+		"dodge è configurato a 48 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"dodge"),
