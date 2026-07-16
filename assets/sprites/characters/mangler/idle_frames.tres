@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/run.png" id="4_run"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouch.png" id="5_crouch"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/front-flip-custom.png" id="6_jump"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/dodge.png" id="7_dodge"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouch_00"]
 atlas = ExtResource("5_crouch")
@@ -133,6 +134,106 @@ region = Rect2(1536, 2048, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jump_24"]
 atlas = ExtResource("6_jump")
+region = Rect2(2048, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_00"]
+atlas = ExtResource("7_dodge")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_01"]
+atlas = ExtResource("7_dodge")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_02"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_03"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_04"]
+atlas = ExtResource("7_dodge")
+region = Rect2(2048, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_05"]
+atlas = ExtResource("7_dodge")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_06"]
+atlas = ExtResource("7_dodge")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_07"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_08"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_09"]
+atlas = ExtResource("7_dodge")
+region = Rect2(2048, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_10"]
+atlas = ExtResource("7_dodge")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_11"]
+atlas = ExtResource("7_dodge")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_12"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_13"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_14"]
+atlas = ExtResource("7_dodge")
+region = Rect2(2048, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_15"]
+atlas = ExtResource("7_dodge")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_16"]
+atlas = ExtResource("7_dodge")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_17"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_18"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1536, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_19"]
+atlas = ExtResource("7_dodge")
+region = Rect2(2048, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_20"]
+atlas = ExtResource("7_dodge")
+region = Rect2(0, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_21"]
+atlas = ExtResource("7_dodge")
+region = Rect2(512, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_22"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1024, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_23"]
+atlas = ExtResource("7_dodge")
+region = Rect2(1536, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dodge_24"]
+atlas = ExtResource("7_dodge")
 region = Rect2(2048, 2048, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_run_00"]
@@ -862,6 +963,86 @@ animations = [{
 "loop": 0,
 "name": &"crouch",
 "speed":24.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_00")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_11")
+}, {
+"duration": 1.782857,
+"texture": SubResource("AtlasTexture_dodge_12")
+}, {
+"duration": 1.782857,
+"texture": SubResource("AtlasTexture_dodge_13")
+}, {
+"duration": 1.782857,
+"texture": SubResource("AtlasTexture_dodge_14")
+}, {
+"duration": 1.782857,
+"texture": SubResource("AtlasTexture_dodge_15")
+}, {
+"duration": 1.782857,
+"texture": SubResource("AtlasTexture_dodge_16")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_17")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_18")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_19")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_20")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_21")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_22")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_23")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dodge_24")
+}],
+"loop": 0,
+"name": &"dodge",
+"speed": 24.0
 }, {
 "frames": [{
 "duration": 1.0,

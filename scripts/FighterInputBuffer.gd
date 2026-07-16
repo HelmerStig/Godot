@@ -36,6 +36,8 @@ var _vertical := 0
 var _current_direction := Direction.NEUTRAL
 var _forward_was_held := false
 var _forward_just_pressed := false
+var _back_was_held := false
+var _back_just_pressed := false
 
 
 func _init(new_player_number: int = 1) -> void:
@@ -77,6 +79,9 @@ func record_input_snapshot(
 	var forward_is_held := _current_direction == Direction.FORWARD
 	_forward_just_pressed = forward_is_held and not _forward_was_held
 	_forward_was_held = forward_is_held
+	var back_is_held := _current_direction == Direction.BACK
+	_back_just_pressed = back_is_held and not _back_was_held
+	_back_was_held = back_is_held
 
 	_history.push_front({
 		"frame": Engine.get_physics_frames(),
@@ -95,6 +100,8 @@ func clear() -> void:
 	_current_direction = Direction.NEUTRAL
 	_forward_was_held = false
 	_forward_just_pressed = false
+	_back_was_held = false
+	_back_just_pressed = false
 
 
 func get_action(action_name: StringName) -> StringName:
@@ -123,6 +130,10 @@ func is_forward_held() -> bool:
 
 func is_forward_just_pressed() -> bool:
 	return _forward_just_pressed
+
+
+func is_back_just_pressed() -> bool:
+	return _back_just_pressed
 
 
 func consume_attack(

@@ -85,6 +85,14 @@ func _test_input_buffer() -> void:
 	buffer.record_input_snapshot(1, 0, no_attacks, true)
 	_expect(buffer.is_forward_just_pressed(), "un secondo tap distinto viene rilevato")
 	buffer.clear()
+	buffer.record_input_snapshot(-1, 0, no_attacks, true)
+	_expect(buffer.is_back_just_pressed(), "il primo tap indietro viene rilevato")
+	buffer.record_input_snapshot(-1, 0, no_attacks, true)
+	_expect(not buffer.is_back_just_pressed(), "mantenere indietro non genera nuovi tap")
+	buffer.record_input_snapshot(0, 0, no_attacks, true)
+	buffer.record_input_snapshot(-1, 0, no_attacks, true)
+	_expect(buffer.is_back_just_pressed(), "un secondo tap indietro distinto viene rilevato")
+	buffer.clear()
 	buffer.record_input_snapshot(0, 1, no_attacks, true)
 	buffer.record_input_snapshot(1, 0, no_attacks, true)
 	_expect(
@@ -194,6 +202,22 @@ func _test_combat_flow() -> void:
 		"crouch non è configurato in loop"
 	)
 	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"dodge"),
+		"SpriteFrames contiene l'animazione dodge"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"dodge") == 25,
+		"dodge contiene le 25 celle da 512"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"dodge"), 24.0),
+		"dodge è configurato a 24 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"dodge"),
+		"dodge non è configurato in loop"
+	)
+	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"jump"),
 		"SpriteFrames contiene l'animazione jump"
 	)
@@ -260,6 +284,40 @@ func _test_combat_flow() -> void:
 	await physics_frame
 	await process_frame
 	_expect(player1.current_state == Mangler.State.IDLE, "rilasciare avanti termina la corsa")
+
+	player1.input_buffer.clear()
+	player1.input_buffer.record_input_snapshot(-1, 0, [], player1.is_facing_right)
+	player1.handle_input()
+	player1.input_buffer.record_input_snapshot(0, 0, [], player1.is_facing_right)
+	player1.handle_input()
+	player1.input_buffer.record_input_snapshot(-1, 0, [], player1.is_facing_right)
+	player1.handle_input()
+	_expect(
+		player1.current_state == Mangler.State.BACK_HOP_STARTUP,
+		"il doppio tap indietro avvia la preparazione di BACK_HOP"
+	)
+	_expect(
+		player1.velocity == Vector2.ZERO and player1.animated_sprite.animation == &"dodge",
+		"la preparazione riproduce dodge restando a terra"
+	)
+	player1.animated_sprite.frame = Mangler.BACK_HOP_TAKEOFF_FRAME - 1
+	player1._on_animation_frame_changed()
+	_expect(
+		player1.current_state == Mangler.State.BACK_HOP_STARTUP and player1.velocity == Vector2.ZERO,
+		"dodge resta a terra fino al frame precedente allo stacco"
+	)
+	player1.animated_sprite.frame = Mangler.BACK_HOP_TAKEOFF_FRAME
+	player1._on_animation_frame_changed()
+	_expect(player1.current_state == Mangler.State.BACK_HOP, "il frame di stacco avvia BACK_HOP")
+	_expect(
+		is_equal_approx(player1.velocity.x, -Mangler.BACK_HOP_HORIZONTAL_SPEED)
+		and is_equal_approx(player1.velocity.y, Mangler.BACK_HOP_VERTICAL_SPEED),
+		"BACK_HOP applica un impulso breve indietro e verso l'alto"
+	)
+	_expect(not player1.can_move, "BACK_HOP blocca il controllo fino all'atterraggio")
+	_expect(player1.animated_sprite.animation == &"dodge", "BACK_HOP continua dodge senza riavviarlo")
+	player1.velocity = Vector2.ZERO
+	player1.change_state(Mangler.State.IDLE)
 
 	Input.action_press(&"p1_crouch")
 	await physics_frame

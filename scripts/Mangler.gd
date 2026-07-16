@@ -13,6 +13,8 @@ enum State {
 	IDLE,
 	WALKING,
 	RUNNING,
+	BACK_HOP_STARTUP,
+	BACK_HOP,
 	JUMP_STARTUP,
 	JUMPING,
 	CROUCHING,
@@ -33,6 +35,10 @@ const SHADOW_AIR_SCALE := 0.58
 const SHADOW_FLOOR_OFFSET_Y := 20.0
 const RUN_DOUBLE_TAP_WINDOW_FRAMES := 15
 const RUN_JUMP_HORIZONTAL_MULTIPLIER := 1.35
+const BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES := 15
+const BACK_HOP_HORIZONTAL_SPEED := 360.0
+const BACK_HOP_VERTICAL_SPEED := -260.0
+const BACK_HOP_TAKEOFF_FRAME := 12
 const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
 const STANDING_COLLISION_SIZE := Vector2(70.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -74,6 +80,7 @@ var stage_left_limit := 0.0
 var stage_right_limit := 1152.0
 var shadow_ground_y := 0.0
 var last_forward_tap_frame := -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
+var last_back_tap_frame := -BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES - 1
 var pending_jump_direction := 0.0
 var pending_jump_horizontal_multiplier := 1.0
 
@@ -126,6 +133,8 @@ func _physics_process(delta: float) -> void:
 func handle_input() -> void:
 	"""Gestisce un'unica azione per frame secondo una priorità esplicita."""
 	if current_state in [
+		State.BACK_HOP_STARTUP,
+		State.BACK_HOP,
 		State.JUMP_STARTUP,
 		State.STANDING_UP,
 		State.ATTACKING,
@@ -161,6 +170,14 @@ func handle_input() -> void:
 		return
 
 	var direction := input_buffer.get_horizontal_axis()
+	if is_on_floor() and input_buffer.is_back_just_pressed():
+		var current_frame := Engine.get_physics_frames()
+		if current_frame - last_back_tap_frame <= BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES:
+			start_back_hop(direction)
+			last_back_tap_frame = -BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES - 1
+			return
+		last_back_tap_frame = current_frame
+
 	if is_on_floor() and input_buffer.is_forward_just_pressed():
 		var current_frame := Engine.get_physics_frames()
 		if current_frame - last_forward_tap_frame <= RUN_DOUBLE_TAP_WINDOW_FRAMES:
@@ -177,6 +194,30 @@ func handle_input() -> void:
 	velocity.x = direction * movement_speed
 	if is_on_floor() and current_state != State.RUNNING:
 		change_state(State.WALKING if direction != 0 else State.IDLE)
+
+
+func start_back_hop(horizontal_direction: float) -> void:
+	"""Avvia la preparazione visiva del balzo nella direzione opposta all'avversario."""
+	var back_direction := signf(horizontal_direction)
+	if is_zero_approx(back_direction):
+		back_direction = -1.0 if is_facing_right else 1.0
+	combat.set_guarding(false)
+	pending_jump_direction = back_direction
+	velocity = Vector2.ZERO
+	change_state(State.BACK_HOP_STARTUP)
+	if not animated_sprite.sprite_frames.has_animation(&"dodge"):
+		begin_back_hop()
+
+
+func begin_back_hop() -> void:
+	"""Applica l'impulso quando dodge raggiunge il primo frame sospeso."""
+	if current_state != State.BACK_HOP_STARTUP:
+		return
+	velocity = Vector2(
+		pending_jump_direction * BACK_HOP_HORIZONTAL_SPEED,
+		BACK_HOP_VERTICAL_SPEED
+	)
+	change_state(State.BACK_HOP)
 
 
 func start_jump(horizontal_direction: float) -> void:
@@ -213,6 +254,10 @@ func change_state(next_state: int) -> void:
 	match current_state:
 		State.IDLE, State.WALKING, State.RUNNING, State.JUMPING:
 			can_move = true
+		State.BACK_HOP_STARTUP, State.BACK_HOP:
+			can_move = false
+			if current_state == State.BACK_HOP_STARTUP:
+				velocity = Vector2.ZERO
 		State.JUMP_STARTUP:
 			can_move = false
 			velocity = Vector2.ZERO
@@ -240,6 +285,17 @@ func update_animation() -> void:
 	if current_state == State.STANDING_UP:
 		if animated_sprite.sprite_frames.has_animation(&"crouch"):
 			animated_sprite.play(&"crouch", -1.0)
+		return
+
+	if current_state == State.BACK_HOP and animated_sprite.animation == &"dodge":
+		return
+
+	if current_state in [State.BACK_HOP_STARTUP, State.BACK_HOP]:
+		var back_hop_animation: StringName = &"dodge" if (
+			animated_sprite.sprite_frames.has_animation(&"dodge")
+		) else &"backwalk"
+		if animated_sprite.animation != back_hop_animation or not animated_sprite.is_playing():
+			animated_sprite.play(back_hop_animation)
 		return
 
 	# JUMP_STARTUP e JUMPING sono due fasi fisiche della stessa animazione.
@@ -271,6 +327,14 @@ func is_moving_backward() -> bool:
 
 
 func update_state() -> void:
+	if current_state == State.BACK_HOP_STARTUP:
+		return
+	if current_state == State.BACK_HOP:
+		if is_on_floor() and velocity.y >= 0.0:
+			velocity = Vector2.ZERO
+			if not animated_sprite.is_playing():
+				change_state(State.IDLE)
+		return
 	if current_state == State.JUMP_STARTUP:
 		return
 	if current_state in [
@@ -293,7 +357,11 @@ func update_state() -> void:
 
 func update_physical_collision() -> void:
 	"""In aria attraversa gli altri fighter, ma continua a collidere col terreno."""
-	var is_airborne := current_state == State.JUMPING or not is_on_floor()
+	var is_airborne := (
+		current_state == State.JUMPING
+		or not is_on_floor()
+		or (current_state == State.BACK_HOP and velocity.y < 0.0)
+	)
 	if is_airborne:
 		collision_layer = 0
 		collision_mask = GROUND_COLLISION_LAYER
@@ -412,6 +480,7 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	velocity = Vector2.ZERO
 	shadow_ground_y = spawn_position.y
 	last_forward_tap_frame = -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
+	last_back_tap_frame = -BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES - 1
 	pending_jump_direction = 0.0
 	pending_jump_horizontal_multiplier = 1.0
 	combat.reset()
@@ -450,11 +519,19 @@ func _on_combat_attack_finished() -> void:
 func _on_animation_finished() -> void:
 	if current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
 		change_state(State.IDLE)
+	elif current_state == State.BACK_HOP and animated_sprite.animation == &"dodge" and is_on_floor():
+		change_state(State.IDLE)
 
 
 func _on_animation_frame_changed() -> void:
 	if animated_sprite.animation == &"crouch":
 		update_collision_profile()
+	elif (
+		animated_sprite.animation == &"dodge"
+		and current_state == State.BACK_HOP_STARTUP
+		and animated_sprite.frame >= BACK_HOP_TAKEOFF_FRAME
+	):
+		begin_back_hop()
 	elif (
 		animated_sprite.animation == &"jump"
 		and current_state == State.JUMP_STARTUP
