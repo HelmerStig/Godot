@@ -332,7 +332,7 @@ func _test_combat_flow() -> void:
 	_expect(
 		player1.current_state == Mangler.State.JUMP_STARTUP
 		and player1.velocity == Vector2.ZERO,
-		"i primi nove frame restano a terra"
+		"i primi cinque frame restano a terra"
 	)
 	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
 	player1._on_animation_frame_changed()
@@ -342,7 +342,7 @@ func _test_combat_flow() -> void:
 		and is_equal_approx(player1.velocity.y, player1.character_data.jump_velocity)
 		and player1.animated_sprite.frame == Mangler.JUMP_TAKEOFF_FRAME
 		and player1.animated_sprite.is_playing(),
-		"il decimo frame avvia il salto senza riavviare l'animazione"
+		"il sesto frame avvia il salto senza riavviare l'animazione"
 	)
 	player1.update_state()
 	_expect(
@@ -375,6 +375,20 @@ func _test_combat_flow() -> void:
 	_expect(
 		is_equal_approx(player1.velocity.x, -player1.character_data.air_speed),
 		"UP+sinistra avvia un salto diagonale verso sinistra"
+	)
+	player1.velocity = Vector2.ZERO
+	player1.change_state(Mangler.State.IDLE)
+	player1.change_state(Mangler.State.RUNNING)
+	player1.start_jump(1.0)
+	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	player1._on_animation_frame_changed()
+	_expect(
+		is_equal_approx(
+			player1.velocity.x,
+			player1.character_data.air_speed * Mangler.RUN_JUMP_HORIZONTAL_MULTIPLIER
+		)
+		and is_equal_approx(player1.velocity.y, player1.character_data.jump_velocity),
+		"saltare durante RUNNING aumenta solo la velocità orizzontale"
 	)
 	player1.velocity = Vector2.ZERO
 	player1.change_state(Mangler.State.IDLE)

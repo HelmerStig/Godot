@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cfvgb05rd4fpj"
-path="res://.godot/imported/front-flip.png-6e62da643bc6306c752c21effc5cf767.ctex"
+uid="uid://bltsf2xr7dcx7"
+path="res://.godot/imported/_front-flip-custom.png-0fce638a04eebe228eec45936fd20cf0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/mangler/front-flip.png"
-dest_files=["res://.godot/imported/front-flip.png-6e62da643bc6306c752c21effc5cf767.ctex"]
+source_file="res://assets/sprites/characters/mangler/_front-flip-custom.png"
+dest_files=["res://.godot/imported/_front-flip-custom.png-0fce638a04eebe228eec45936fd20cf0.ctex"]
 
 [params]
 

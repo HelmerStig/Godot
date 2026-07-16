@@ -32,7 +32,8 @@ const SHADOW_AIR_ALPHA := 0.12
 const SHADOW_AIR_SCALE := 0.58
 const SHADOW_FLOOR_OFFSET_Y := 20.0
 const RUN_DOUBLE_TAP_WINDOW_FRAMES := 15
-const JUMP_TAKEOFF_FRAME := 9 # Indice zero-based: decimo frame, primo con i piedi staccati.
+const RUN_JUMP_HORIZONTAL_MULTIPLIER := 1.35
+const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
 const STANDING_COLLISION_SIZE := Vector2(70.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
 const CROUCH_COLLISION_SIZE := Vector2(80.0, 175.0)
@@ -74,6 +75,7 @@ var stage_right_limit := 1152.0
 var shadow_ground_y := 0.0
 var last_forward_tap_frame := -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
 var pending_jump_direction := 0.0
+var pending_jump_horizontal_multiplier := 1.0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -180,6 +182,9 @@ func handle_input() -> void:
 func start_jump(horizontal_direction: float) -> void:
 	"""Riproduce la preparazione e memorizza la direzione scelta allo stacco."""
 	pending_jump_direction = signf(horizontal_direction)
+	pending_jump_horizontal_multiplier = (
+		RUN_JUMP_HORIZONTAL_MULTIPLIER if current_state == State.RUNNING else 1.0
+	)
 	velocity = Vector2.ZERO
 	change_state(State.JUMP_STARTUP)
 	if not animated_sprite.sprite_frames.has_animation(&"jump"):
@@ -191,7 +196,7 @@ func begin_jump_ascent() -> void:
 	if current_state != State.JUMP_STARTUP:
 		return
 	velocity = Vector2(
-		pending_jump_direction * character_data.air_speed,
+		pending_jump_direction * character_data.air_speed * pending_jump_horizontal_multiplier,
 		character_data.jump_velocity
 	)
 	change_state(State.JUMPING)
@@ -408,6 +413,7 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	shadow_ground_y = spawn_position.y
 	last_forward_tap_frame = -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
 	pending_jump_direction = 0.0
+	pending_jump_horizontal_multiplier = 1.0
 	combat.reset()
 	change_state(State.IDLE)
 	can_move = true
