@@ -177,6 +177,22 @@ func _test_combat_flow() -> void:
 		player1.animated_sprite.sprite_frames.get_animation_loop(&"run"),
 		"run è configurato in loop"
 	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"crouch"),
+		"SpriteFrames contiene l'animazione crouch"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"crouch") == 7,
+		"crouch contiene i primi 7 frame dello spritesheet"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"crouch"), 24.0),
+		"crouch è configurato a 24 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouch"),
+		"crouch non è configurato in loop"
+	)
 	player1.is_facing_right = true
 	player1.velocity.x = 100.0
 	player1.change_state(Mangler.State.WALKING)
@@ -228,6 +244,27 @@ func _test_combat_flow() -> void:
 	await physics_frame
 	await process_frame
 	_expect(player1.current_state == Mangler.State.IDLE, "rilasciare avanti termina la corsa")
+
+	Input.action_press(&"p1_crouch")
+	await physics_frame
+	await process_frame
+	_expect(player1.current_state == Mangler.State.CROUCHING, "tenere giù avvia CROUCHING")
+	_expect(player1.animated_sprite.animation == &"crouch", "CROUCHING riproduce crouch")
+	await create_timer(0.75).timeout
+	_expect(
+		player1.current_state == Mangler.State.CROUCHING
+		and player1.animated_sprite.frame == 6
+		and not player1.animated_sprite.is_playing(),
+		"crouch mantiene l'ultimo frame mentre giù resta premuto"
+	)
+	Input.action_release(&"p1_crouch")
+	await physics_frame
+	await process_frame
+	_expect(player1.current_state == Mangler.State.STANDING_UP, "rilasciare giù avvia STANDING_UP")
+	_expect(player1.animated_sprite.get_playing_speed() < 0.0, "STANDING_UP riproduce crouch al contrario")
+	await create_timer(0.75).timeout
+	_expect(player1.current_state == Mangler.State.IDLE, "la rialzata termina in IDLE")
+
 	var light_punch := player1.character_data.get_attack(&"light_punch")
 	player1.combat.try_attack(&"light_punch")
 	_expect(player1.current_state == Mangler.State.ATTACKING, "AttackData avvia lo stato ATTACKING")
@@ -297,4 +334,5 @@ func _expect(condition: bool, description: String) -> void:
 
 func _release_test_actions() -> void:
 	Input.action_release(&"p1_move_right")
+	Input.action_release(&"p1_crouch")
 	Input.action_release(&"p2_move_right")

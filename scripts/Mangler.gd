@@ -15,6 +15,7 @@ enum State {
 	RUNNING,
 	JUMPING,
 	CROUCHING,
+	STANDING_UP,
 	ATTACKING,
 	BLOCKING,
 	HIT,
@@ -69,6 +70,7 @@ func _ready() -> void:
 	combat.knocked_out.connect(_on_combat_knocked_out)
 	combat.attack_started.connect(_on_combat_attack_started)
 	combat.attack_finished.connect(_on_combat_attack_finished)
+	animated_sprite.animation_finished.connect(_on_animation_finished)
 	combat.configure(character_data)
 	add_to_group("fighters")
 	update_animation()
@@ -96,7 +98,13 @@ func _physics_process(delta: float) -> void:
 
 func handle_input() -> void:
 	"""Gestisce un'unica azione per frame secondo una priorità esplicita."""
-	if current_state in [State.ATTACKING, State.BLOCKING, State.HIT, State.KNOCKED_DOWN]:
+	if current_state in [
+		State.STANDING_UP,
+		State.ATTACKING,
+		State.BLOCKING,
+		State.HIT,
+		State.KNOCKED_DOWN,
+	]:
 		return
 
 	# Tenere indietro prepara la guardia, ma permette ancora di arretrare.
@@ -113,7 +121,8 @@ func handle_input() -> void:
 		change_state(State.CROUCHING)
 		return
 	elif current_state == State.CROUCHING:
-		change_state(State.IDLE)
+		change_state(State.STANDING_UP)
+		return
 
 	if Input.is_action_just_pressed(get_input_action("jump")) and is_on_floor():
 		velocity.y = character_data.jump_velocity
@@ -154,7 +163,7 @@ func change_state(next_state: int) -> void:
 		State.CROUCHING:
 			can_move = true
 			velocity.x = 0.0
-		State.ATTACKING, State.BLOCKING, State.HIT, State.KNOCKED_DOWN:
+		State.STANDING_UP, State.ATTACKING, State.BLOCKING, State.HIT, State.KNOCKED_DOWN:
 			can_move = false
 			velocity.x = 0.0
 	update_animation()
@@ -163,6 +172,19 @@ func change_state(next_state: int) -> void:
 
 func update_animation() -> void:
 	"""Riproduce l'animazione associata allo stato, senza riavviarla ogni frame."""
+	if current_state == State.CROUCHING:
+		if (
+			animated_sprite.sprite_frames.has_animation(&"crouch")
+			and animated_sprite.animation != &"crouch"
+		):
+			animated_sprite.play(&"crouch")
+		return
+
+	if current_state == State.STANDING_UP:
+		if animated_sprite.sprite_frames.has_animation(&"crouch"):
+			animated_sprite.play(&"crouch", -1.0)
+		return
+
 	var next_animation: StringName = &"idle"
 	if current_state == State.WALKING:
 		next_animation = &"backwalk" if is_moving_backward() else &"walk"
@@ -182,7 +204,13 @@ func is_moving_backward() -> bool:
 
 
 func update_state() -> void:
-	if current_state in [State.ATTACKING, State.BLOCKING, State.HIT, State.KNOCKED_DOWN]:
+	if current_state in [
+		State.STANDING_UP,
+		State.ATTACKING,
+		State.BLOCKING,
+		State.HIT,
+		State.KNOCKED_DOWN,
+	]:
 		return
 
 	if not is_on_floor():
@@ -295,3 +323,8 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 
 func _on_combat_attack_finished() -> void:
 	attack_finished.emit()
+
+
+func _on_animation_finished() -> void:
+	if current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
+		change_state(State.IDLE)
