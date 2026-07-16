@@ -13,6 +13,7 @@ enum State {
 	IDLE,
 	WALKING,
 	RUNNING,
+	JUMP_STARTUP,
 	JUMPING,
 	CROUCHING,
 	STANDING_UP,
@@ -31,6 +32,9 @@ const SHADOW_AIR_ALPHA := 0.12
 const SHADOW_AIR_SCALE := 0.58
 const SHADOW_FLOOR_OFFSET_Y := 20.0
 const RUN_DOUBLE_TAP_WINDOW_FRAMES := 15
+const JUMP_TAKEOFF_FRAME := 10 # Indice zero-based: undicesimo frame visibile.
+const DEFAULT_SPRITE_SCALE := Vector2(0.7, 0.7)
+const JUMP_SPRITE_SCALE := Vector2(0.35, 0.35)
 const STANDING_COLLISION_SIZE := Vector2(70.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
 const CROUCH_COLLISION_SIZE := Vector2(80.0, 175.0)
@@ -71,6 +75,7 @@ var stage_left_limit := 0.0
 var stage_right_limit := 1152.0
 var shadow_ground_y := 0.0
 var last_forward_tap_frame := -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
+var pending_jump_direction := 0.0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -121,12 +126,17 @@ func _physics_process(delta: float) -> void:
 func handle_input() -> void:
 	"""Gestisce un'unica azione per frame secondo una priorità esplicita."""
 	if current_state in [
+		State.JUMP_STARTUP,
 		State.STANDING_UP,
 		State.ATTACKING,
 		State.BLOCKING,
 		State.HIT,
 		State.KNOCKED_DOWN,
 	]:
+		return
+	# Come nei fighting game classici, l'arco viene deciso allo stacco:
+	# nessun cambio di direzione è consentito durante il volo.
+	if current_state == State.JUMPING:
 		return
 
 	# Tenere indietro prepara la guardia, ma permette ancora di arretrare.
@@ -147,8 +157,7 @@ func handle_input() -> void:
 		return
 
 	if Input.is_action_just_pressed(get_input_action("jump")) and is_on_floor():
-		velocity.y = character_data.jump_velocity
-		change_state(State.JUMPING)
+		start_jump(input_buffer.get_horizontal_axis())
 		return
 
 	var direction := input_buffer.get_horizontal_axis()
@@ -162,13 +171,32 @@ func handle_input() -> void:
 		change_state(State.WALKING if direction != 0.0 else State.IDLE)
 
 	var movement_speed := (
-		character_data.air_speed if current_state == State.JUMPING
-		else character_data.run_speed if current_state == State.RUNNING
+		character_data.run_speed if current_state == State.RUNNING
 		else character_data.walk_speed
 	)
 	velocity.x = direction * movement_speed
 	if is_on_floor() and current_state != State.RUNNING:
 		change_state(State.WALKING if direction != 0 else State.IDLE)
+
+
+func start_jump(horizontal_direction: float) -> void:
+	"""Riproduce la preparazione e memorizza la direzione scelta allo stacco."""
+	pending_jump_direction = signf(horizontal_direction)
+	velocity = Vector2.ZERO
+	change_state(State.JUMP_STARTUP)
+	if not animated_sprite.sprite_frames.has_animation(&"jump"):
+		begin_jump_ascent()
+
+
+func begin_jump_ascent() -> void:
+	"""Applica l'impulso quando l'animazione raggiunge l'undicesimo frame."""
+	if current_state != State.JUMP_STARTUP:
+		return
+	velocity = Vector2(
+		pending_jump_direction * character_data.air_speed,
+		character_data.jump_velocity
+	)
+	change_state(State.JUMPING)
 
 
 func change_state(next_state: int) -> void:
@@ -182,6 +210,9 @@ func change_state(next_state: int) -> void:
 	match current_state:
 		State.IDLE, State.WALKING, State.RUNNING, State.JUMPING:
 			can_move = true
+		State.JUMP_STARTUP:
+			can_move = false
+			velocity = Vector2.ZERO
 		State.CROUCHING:
 			can_move = true
 			velocity.x = 0.0
@@ -195,6 +226,12 @@ func change_state(next_state: int) -> void:
 
 func update_animation() -> void:
 	"""Riproduce l'animazione associata allo stato, senza riavviarla ogni frame."""
+	animated_sprite.scale = (
+		JUMP_SPRITE_SCALE
+		if current_state in [State.JUMP_STARTUP, State.JUMPING]
+		and animated_sprite.sprite_frames.has_animation(&"jump")
+		else DEFAULT_SPRITE_SCALE
+	)
 	if current_state == State.CROUCHING:
 		if (
 			animated_sprite.sprite_frames.has_animation(&"crouch")
@@ -213,6 +250,11 @@ func update_animation() -> void:
 		next_animation = &"backwalk" if is_moving_backward() else &"walk"
 	elif current_state == State.RUNNING:
 		next_animation = &"run"
+	elif (
+		current_state in [State.JUMP_STARTUP, State.JUMPING]
+		and animated_sprite.sprite_frames.has_animation(&"jump")
+	):
+		next_animation = &"jump"
 	if (
 		animated_sprite.sprite_frames.has_animation(next_animation)
 		and (animated_sprite.animation != next_animation or not animated_sprite.is_playing())
@@ -227,6 +269,8 @@ func is_moving_backward() -> bool:
 
 
 func update_state() -> void:
+	if current_state == State.JUMP_STARTUP:
+		return
 	if current_state in [
 		State.STANDING_UP,
 		State.ATTACKING,
@@ -239,6 +283,7 @@ func update_state() -> void:
 	if not is_on_floor():
 		change_state(State.JUMPING)
 	elif current_state == State.JUMPING:
+		velocity.x = 0.0
 		change_state(State.IDLE)
 	elif is_zero_approx(velocity.x) and current_state in [State.WALKING, State.RUNNING]:
 		change_state(State.IDLE)
@@ -365,6 +410,7 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	velocity = Vector2.ZERO
 	shadow_ground_y = spawn_position.y
 	last_forward_tap_frame = -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
+	pending_jump_direction = 0.0
 	combat.reset()
 	change_state(State.IDLE)
 	can_move = true
@@ -406,3 +452,9 @@ func _on_animation_finished() -> void:
 func _on_animation_frame_changed() -> void:
 	if animated_sprite.animation == &"crouch":
 		update_collision_profile()
+	elif (
+		animated_sprite.animation == &"jump"
+		and current_state == State.JUMP_STARTUP
+		and animated_sprite.frame >= JUMP_TAKEOFF_FRAME
+	):
+		begin_jump_ascent()

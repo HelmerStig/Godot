@@ -193,6 +193,22 @@ func _test_combat_flow() -> void:
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouch"),
 		"crouch non è configurato in loop"
 	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"jump"),
+		"SpriteFrames contiene l'animazione jump"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"jump") == 25,
+		"jump contiene 25 frame"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"jump"), 24.0),
+		"la preparazione del jump è configurata a 24 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump"),
+		"jump non è configurato in loop"
+	)
 	player1.is_facing_right = true
 	player1.velocity.x = 100.0
 	player1.change_state(Mangler.State.WALKING)
@@ -299,6 +315,65 @@ func _test_combat_flow() -> void:
 		and crouch_legs.size == Mangler.STANDING_LEGS_SIZE,
 		"la rialzata ripristina tutte le hurtbox normali"
 	)
+
+	player1.start_jump(0.0)
+	_expect(
+		player1.current_state == Mangler.State.JUMP_STARTUP
+		and player1.velocity == Vector2.ZERO,
+		"UP avvia prima la preparazione a terra"
+	)
+	_expect(
+		player1.animated_sprite.animation == &"jump"
+		and player1.animated_sprite.is_playing()
+		and player1.animated_sprite.scale == Mangler.JUMP_SPRITE_SCALE,
+		"JUMP_STARTUP riproduce jump alla scala corretta per celle da 1024"
+	)
+	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME - 1
+	player1._on_animation_frame_changed()
+	_expect(
+		player1.current_state == Mangler.State.JUMP_STARTUP
+		and player1.velocity == Vector2.ZERO,
+		"i primi dieci frame restano a terra"
+	)
+	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	player1._on_animation_frame_changed()
+	_expect(
+		player1.current_state == Mangler.State.JUMPING
+		and is_zero_approx(player1.velocity.x)
+		and is_equal_approx(player1.velocity.y, player1.character_data.jump_velocity),
+		"l'undicesimo frame avvia il salto verticale"
+	)
+	player1.velocity = Vector2.ZERO
+	player1.change_state(Mangler.State.IDLE)
+	_expect(
+		player1.animated_sprite.scale == Mangler.DEFAULT_SPRITE_SCALE,
+		"atterrando viene ripristinata la scala normale"
+	)
+	player1.start_jump(1.0)
+	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	player1._on_animation_frame_changed()
+	var forward_jump_speed := player1.velocity.x
+	_expect(
+		is_equal_approx(forward_jump_speed, player1.character_data.air_speed),
+		"UP+destra avvia un salto diagonale verso destra"
+	)
+	player1.input_buffer.record_input_snapshot(-1, 0, [], player1.is_facing_right)
+	player1.handle_input()
+	_expect(
+		is_equal_approx(player1.velocity.x, forward_jump_speed),
+		"la direzione del salto non cambia durante il volo"
+	)
+	player1.velocity = Vector2.ZERO
+	player1.change_state(Mangler.State.IDLE)
+	player1.start_jump(-1.0)
+	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	player1._on_animation_frame_changed()
+	_expect(
+		is_equal_approx(player1.velocity.x, -player1.character_data.air_speed),
+		"UP+sinistra avvia un salto diagonale verso sinistra"
+	)
+	player1.velocity = Vector2.ZERO
+	player1.change_state(Mangler.State.IDLE)
 
 	var light_punch := player1.character_data.get_attack(&"light_punch")
 	player1.combat.try_attack(&"light_punch")

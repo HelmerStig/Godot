@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/backwalk.png" id="3_backwalk"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/run.png" id="4_run"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouch.png" id="5_crouch"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/mangler-jump.png" id="6_jump"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouch_00"]
 atlas = ExtResource("5_crouch")
@@ -33,6 +34,106 @@ region = Rect2(512, 512, 512, 512)
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouch_06"]
 atlas = ExtResource("5_crouch")
 region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_00"]
+atlas = ExtResource("6_jump")
+region = Rect2(0, 0, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_01"]
+atlas = ExtResource("6_jump")
+region = Rect2(1024, 0, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_02"]
+atlas = ExtResource("6_jump")
+region = Rect2(2048, 0, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_03"]
+atlas = ExtResource("6_jump")
+region = Rect2(3072, 0, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_04"]
+atlas = ExtResource("6_jump")
+region = Rect2(4096, 0, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_05"]
+atlas = ExtResource("6_jump")
+region = Rect2(0, 1024, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_06"]
+atlas = ExtResource("6_jump")
+region = Rect2(1024, 1024, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_07"]
+atlas = ExtResource("6_jump")
+region = Rect2(2048, 1024, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_08"]
+atlas = ExtResource("6_jump")
+region = Rect2(3072, 1024, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_09"]
+atlas = ExtResource("6_jump")
+region = Rect2(4096, 1024, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_10"]
+atlas = ExtResource("6_jump")
+region = Rect2(0, 2048, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_11"]
+atlas = ExtResource("6_jump")
+region = Rect2(1024, 2048, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_12"]
+atlas = ExtResource("6_jump")
+region = Rect2(2048, 2048, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_13"]
+atlas = ExtResource("6_jump")
+region = Rect2(3072, 2048, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_14"]
+atlas = ExtResource("6_jump")
+region = Rect2(4096, 2048, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_15"]
+atlas = ExtResource("6_jump")
+region = Rect2(0, 3072, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_16"]
+atlas = ExtResource("6_jump")
+region = Rect2(1024, 3072, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_17"]
+atlas = ExtResource("6_jump")
+region = Rect2(2048, 3072, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_18"]
+atlas = ExtResource("6_jump")
+region = Rect2(3072, 3072, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_19"]
+atlas = ExtResource("6_jump")
+region = Rect2(4096, 3072, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_20"]
+atlas = ExtResource("6_jump")
+region = Rect2(0, 4096, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_21"]
+atlas = ExtResource("6_jump")
+region = Rect2(1024, 4096, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_22"]
+atlas = ExtResource("6_jump")
+region = Rect2(2048, 4096, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_23"]
+atlas = ExtResource("6_jump")
+region = Rect2(3072, 4096, 1024, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_24"]
+atlas = ExtResource("6_jump")
+region = Rect2(4096, 4096, 1024, 1024)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_run_00"]
 atlas = ExtResource("4_run")
@@ -761,4 +862,84 @@ animations = [{
 "loop": 0,
 "name": &"crouch",
 "speed":24.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_00")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_09")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_10")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_11")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_12")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_13")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_14")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_15")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_16")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_17")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_18")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_19")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_20")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_21")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_22")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_23")
+}, {
+"duration": 1.942857,
+"texture": SubResource("AtlasTexture_jump_24")
+}],
+"loop": 0,
+"name": &"jump",
+"speed": 24.0
 }]
