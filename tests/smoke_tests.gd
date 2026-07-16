@@ -324,31 +324,35 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.animation == &"jump"
-		and player1.animated_sprite.is_playing()
-		and player1.animated_sprite.scale == Mangler.JUMP_SPRITE_SCALE,
-		"JUMP_STARTUP riproduce jump alla scala corretta per celle da 1024"
+		and player1.animated_sprite.is_playing(),
+		"JUMP_STARTUP riproduce jump con celle da 512"
 	)
 	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME - 1
 	player1._on_animation_frame_changed()
 	_expect(
 		player1.current_state == Mangler.State.JUMP_STARTUP
 		and player1.velocity == Vector2.ZERO,
-		"i primi dieci frame restano a terra"
+		"i primi undici frame restano a terra"
 	)
 	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
 	player1._on_animation_frame_changed()
 	_expect(
 		player1.current_state == Mangler.State.JUMPING
 		and is_zero_approx(player1.velocity.x)
-		and is_equal_approx(player1.velocity.y, player1.character_data.jump_velocity),
-		"l'undicesimo frame avvia il salto verticale"
+		and is_equal_approx(player1.velocity.y, player1.character_data.jump_velocity)
+		and player1.animated_sprite.frame == Mangler.JUMP_TAKEOFF_FRAME
+		and player1.animated_sprite.is_playing(),
+		"il dodicesimo frame avvia il salto senza riavviare l'animazione"
+	)
+	player1.update_state()
+	_expect(
+		player1.current_state == Mangler.State.JUMPING
+		and player1.animated_sprite.frame == Mangler.JUMP_TAKEOFF_FRAME
+		and player1.animated_sprite.is_playing(),
+		"il primo frame di salita non viene scambiato per un atterraggio"
 	)
 	player1.velocity = Vector2.ZERO
 	player1.change_state(Mangler.State.IDLE)
-	_expect(
-		player1.animated_sprite.scale == Mangler.DEFAULT_SPRITE_SCALE,
-		"atterrando viene ripristinata la scala normale"
-	)
 	player1.start_jump(1.0)
 	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
 	player1._on_animation_frame_changed()

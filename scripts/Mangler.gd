@@ -32,9 +32,7 @@ const SHADOW_AIR_ALPHA := 0.12
 const SHADOW_AIR_SCALE := 0.58
 const SHADOW_FLOOR_OFFSET_Y := 20.0
 const RUN_DOUBLE_TAP_WINDOW_FRAMES := 15
-const JUMP_TAKEOFF_FRAME := 10 # Indice zero-based: undicesimo frame visibile.
-const DEFAULT_SPRITE_SCALE := Vector2(0.7, 0.7)
-const JUMP_SPRITE_SCALE := Vector2(0.35, 0.35)
+const JUMP_TAKEOFF_FRAME := 11 # Indice zero-based: dodicesimo frame visibile.
 const STANDING_COLLISION_SIZE := Vector2(70.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
 const CROUCH_COLLISION_SIZE := Vector2(80.0, 175.0)
@@ -189,7 +187,7 @@ func start_jump(horizontal_direction: float) -> void:
 
 
 func begin_jump_ascent() -> void:
-	"""Applica l'impulso quando l'animazione raggiunge l'undicesimo frame."""
+	"""Applica l'impulso quando l'animazione raggiunge il dodicesimo frame."""
 	if current_state != State.JUMP_STARTUP:
 		return
 	velocity = Vector2(
@@ -226,12 +224,6 @@ func change_state(next_state: int) -> void:
 
 func update_animation() -> void:
 	"""Riproduce l'animazione associata allo stato, senza riavviarla ogni frame."""
-	animated_sprite.scale = (
-		JUMP_SPRITE_SCALE
-		if current_state in [State.JUMP_STARTUP, State.JUMPING]
-		and animated_sprite.sprite_frames.has_animation(&"jump")
-		else DEFAULT_SPRITE_SCALE
-	)
 	if current_state == State.CROUCHING:
 		if (
 			animated_sprite.sprite_frames.has_animation(&"crouch")
@@ -243,6 +235,11 @@ func update_animation() -> void:
 	if current_state == State.STANDING_UP:
 		if animated_sprite.sprite_frames.has_animation(&"crouch"):
 			animated_sprite.play(&"crouch", -1.0)
+		return
+
+	# JUMP_STARTUP e JUMPING sono due fasi fisiche della stessa animazione.
+	# Al momento dello stacco deve continuare dal frame corrente, senza play().
+	if current_state == State.JUMPING and animated_sprite.animation == &"jump":
 		return
 
 	var next_animation: StringName = &"idle"
@@ -282,7 +279,7 @@ func update_state() -> void:
 
 	if not is_on_floor():
 		change_state(State.JUMPING)
-	elif current_state == State.JUMPING:
+	elif current_state == State.JUMPING and velocity.y >= 0.0:
 		velocity.x = 0.0
 		change_state(State.IDLE)
 	elif is_zero_approx(velocity.x) and current_state in [State.WALKING, State.RUNNING]:
