@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://g7y7ux0m85lh"
-path="res://.godot/imported/mangler-jump-no-flip.png-00950c06a29f27c4e5701e43371491a9.ctex"
+uid="uid://cdu3k4dscoyp1"
+path="res://.godot/imported/mangler-simple-jump.png-c5ed2fabb87a69eb62d6d5069fbbfce2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/mangler/mangler-jump-no-flip.png"
-dest_files=["res://.godot/imported/mangler-jump-no-flip.png-00950c06a29f27c4e5701e43371491a9.ctex"]
+source_file="res://assets/sprites/characters/mangler/mangler-simple-jump.png"
+dest_files=["res://.godot/imported/mangler-simple-jump.png-c5ed2fabb87a69eb62d6d5069fbbfce2.ctex"]
 
 [params]
 

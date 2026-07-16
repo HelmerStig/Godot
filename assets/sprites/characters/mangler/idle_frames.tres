@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/backwalk.png" id="3_backwalk"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/run.png" id="4_run"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouch.png" id="5_crouch"]
-[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/front-flip-tagliato.png" id="6_jump"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/mangler-simple-jump.png" id="6_jump"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouch_00"]
 atlas = ExtResource("5_crouch")
@@ -126,6 +126,14 @@ region = Rect2(512, 2048, 512, 512)
 [sub_resource type="AtlasTexture" id="AtlasTexture_jump_22"]
 atlas = ExtResource("6_jump")
 region = Rect2(1024, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_23"]
+atlas = ExtResource("6_jump")
+region = Rect2(1536, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jump_24"]
+atlas = ExtResource("6_jump")
+region = Rect2(2048, 2048, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_run_00"]
 atlas = ExtResource("4_run")
@@ -883,47 +891,53 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_08")
 }, {
-"duration": 2.081633,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_09")
 }, {
-"duration": 2.081633,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_10")
 }, {
-"duration": 2.081633,
+"duration": 5.828571,
 "texture": SubResource("AtlasTexture_jump_11")
 }, {
-"duration": 2.081633,
+"duration": 5.828571,
 "texture": SubResource("AtlasTexture_jump_12")
 }, {
-"duration": 2.081633,
+"duration": 5.828571,
 "texture": SubResource("AtlasTexture_jump_13")
 }, {
-"duration": 2.081633,
+"duration": 5.828571,
 "texture": SubResource("AtlasTexture_jump_14")
 }, {
-"duration": 2.081633,
+"duration": 5.828571,
 "texture": SubResource("AtlasTexture_jump_15")
 }, {
-"duration": 2.081633,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_16")
 }, {
-"duration": 2.081633,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_17")
 }, {
-"duration": 2.081633,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_18")
 }, {
-"duration": 2.081633,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_19")
 }, {
-"duration": 2.081633,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_20")
 }, {
-"duration": 2.081633,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_21")
 }, {
-"duration": 2.081633,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_22")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_23")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jump_24")
 }],
 "loop": 0,
 "name": &"jump",

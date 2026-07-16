@@ -198,8 +198,8 @@ func _test_combat_flow() -> void:
 		"SpriteFrames contiene l'animazione jump"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.get_frame_count(&"jump") == 23,
-		"jump contiene i 23 frame di front-flip-tagliato"
+		player1.animated_sprite.sprite_frames.get_frame_count(&"jump") == 25,
+		"jump contiene i 25 frame di mangler-simple-jump"
 	)
 	_expect(
 		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"jump"), 24.0),
@@ -332,7 +332,7 @@ func _test_combat_flow() -> void:
 	_expect(
 		player1.current_state == Mangler.State.JUMP_STARTUP
 		and player1.velocity == Vector2.ZERO,
-		"i primi nove frame restano a terra"
+		"i primi undici frame restano a terra"
 	)
 	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
 	player1._on_animation_frame_changed()
@@ -342,7 +342,7 @@ func _test_combat_flow() -> void:
 		and is_equal_approx(player1.velocity.y, player1.character_data.jump_velocity)
 		and player1.animated_sprite.frame == Mangler.JUMP_TAKEOFF_FRAME
 		and player1.animated_sprite.is_playing(),
-		"il decimo frame avvia il salto senza riavviare l'animazione"
+		"il dodicesimo frame avvia il salto senza riavviare l'animazione"
 	)
 	player1.update_state()
 	_expect(
