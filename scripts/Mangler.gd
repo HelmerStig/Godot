@@ -32,7 +32,7 @@ const SHADOW_AIR_ALPHA := 0.12
 const SHADOW_AIR_SCALE := 0.58
 const SHADOW_FLOOR_OFFSET_Y := 20.0
 const RUN_DOUBLE_TAP_WINDOW_FRAMES := 15
-const JUMP_TAKEOFF_FRAME := 11 # Indice zero-based: dodicesimo frame visibile.
+const JUMP_TAKEOFF_FRAME := 9 # Indice zero-based: decimo frame, primo con i piedi staccati.
 const STANDING_COLLISION_SIZE := Vector2(70.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
 const CROUCH_COLLISION_SIZE := Vector2(80.0, 175.0)
@@ -187,7 +187,7 @@ func start_jump(horizontal_direction: float) -> void:
 
 
 func begin_jump_ascent() -> void:
-	"""Applica l'impulso quando l'animazione raggiunge il dodicesimo frame."""
+	"""Applica l'impulso al primo frame in cui entrambi i piedi lasciano il terreno."""
 	if current_state != State.JUMP_STARTUP:
 		return
 	velocity = Vector2(

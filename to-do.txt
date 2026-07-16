@@ -1,0 +1,6 @@
+crouch - ok
+jump
+block_hit
+hit
+ko
+light_punch
