@@ -1,0 +1,15 @@
+interface:
+  display_name: "Sanmo AutoSprite Pipeline"
+  short_description: "Genera e integra spritesheet AutoSprite in Sanmo"
+  default_prompt: "Use $sanmo-autosprite-pipeline to generate and integrate a character animation into the Sanmo Godot project."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "autosprite"
+      description: "AutoSprite character and spritesheet generation tools"
+      transport: "streamable_http"
+      url: "https://www.autosprite.io/api/mcp"
+
+policy:
+  allow_implicit_invocation: true
