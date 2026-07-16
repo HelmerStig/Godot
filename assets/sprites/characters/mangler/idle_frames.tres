@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/backwalk.png" id="3_backwalk"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/run.png" id="4_run"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouch.png" id="5_crouch"]
-[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/mangler-simple-jump.png" id="6_jump"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/front-flip-custom.png" id="6_jump"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouch_00"]
 atlas = ExtResource("5_crouch")
@@ -891,37 +891,37 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_jump_08")
 }, {
-"duration": 1.0,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_09")
 }, {
-"duration": 1.0,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_10")
 }, {
-"duration": 5.828571,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_11")
 }, {
-"duration": 5.828571,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_12")
 }, {
-"duration": 5.828571,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_13")
 }, {
-"duration": 5.828571,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_14")
 }, {
-"duration": 5.828571,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_15")
 }, {
-"duration": 1.0,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_16")
 }, {
-"duration": 1.0,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_17")
 }, {
-"duration": 1.0,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_18")
 }, {
-"duration": 1.0,
+"duration": 2.649351,
 "texture": SubResource("AtlasTexture_jump_19")
 }, {
 "duration": 1.0,
