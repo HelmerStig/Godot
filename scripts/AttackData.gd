@@ -3,6 +3,12 @@ class_name AttackData
 
 ## Dati completi di un attacco, indipendenti dal controller del fighter.
 
+enum HitHeight {
+	HIGH,
+	MID,
+	LOW,
+}
+
 @export var attack_id: StringName
 @export_range(0, 999, 1, "or_greater") var damage := 0
 
@@ -14,6 +20,7 @@ class_name AttackData
 @export_range(0.0, 5.0, 0.001, "or_greater") var blockstun := 0.15
 
 @export_group("Hitbox")
+@export var hit_height := HitHeight.MID
 @export var hitbox_size := Vector2(70.0, 35.0)
 @export var hitbox_position := Vector2(35.0, -110.0)
 

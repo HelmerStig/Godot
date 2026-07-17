@@ -98,7 +98,8 @@ func take_damage(
 	damage: int,
 	attacker: Mangler,
 	hitstun: float = DEFAULT_HITSTUN,
-	blockstun: float = DEFAULT_BLOCKSTUN
+	blockstun: float = DEFAULT_BLOCKSTUN,
+	hit_height: AttackData.HitHeight = AttackData.HitHeight.MID
 ) -> void:
 	if fighter.current_state == Mangler.State.KNOCKED_DOWN:
 		return
@@ -122,7 +123,7 @@ func take_damage(
 	elif attack_was_blocked:
 		block_reaction(blockstun)
 	else:
-		hit_reaction(hitstun)
+		hit_reaction(hitstun, hit_height, attacker)
 
 
 func block_reaction(duration: float) -> void:
@@ -136,14 +137,20 @@ func block_reaction(duration: float) -> void:
 	fighter.change_state(Mangler.State.IDLE)
 
 
-func hit_reaction(duration: float) -> void:
+func hit_reaction(
+	duration: float,
+	hit_height: AttackData.HitHeight,
+	attacker: Mangler
+) -> void:
 	cancel_current_action()
 	var hit_generation := action_generation
-	fighter.change_state(Mangler.State.HIT)
+	var animation_duration := fighter.start_hit_reaction(hit_height, attacker)
+	var reaction_duration := maxf(duration, animation_duration)
 
-	await get_tree().create_timer(duration).timeout
+	await get_tree().create_timer(reaction_duration).timeout
 	if hit_generation != action_generation or current_health <= 0:
 		return
+	fighter.velocity.x = 0.0
 	fighter.change_state(Mangler.State.IDLE)
 
 
@@ -204,5 +211,6 @@ func _on_hitbox_area_entered(area: Area2D) -> void:
 		current_attack.damage,
 		fighter,
 		current_attack.hitstun,
-		current_attack.blockstun
+		current_attack.blockstun,
+		current_attack.hit_height
 	)

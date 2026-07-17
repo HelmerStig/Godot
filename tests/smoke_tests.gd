@@ -49,6 +49,15 @@ func _test_attack_data() -> void:
 		light_punch != null and is_equal_approx(light_punch.get_total_duration(), 0.3),
 		"startup, active e recovery determinano la durata totale"
 	)
+	_expect(
+		light_punch != null and light_punch.hit_height == AttackData.HitHeight.MID,
+		"gli attacchi senza altezza esplicita colpiscono al centro"
+	)
+	var heavy_punch := character_data.get_attack(&"heavy_punch")
+	_expect(
+		heavy_punch != null and heavy_punch.hit_height == AttackData.HitHeight.HIGH,
+		"il pugno pesante colpisce in alto al volto"
+	)
 
 
 func _test_input_buffer() -> void:
@@ -232,6 +241,38 @@ func _test_combat_flow() -> void:
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump"),
 		"jump non è configurato in loop"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"hurt_mid"),
+		"SpriteFrames contiene la reazione hurt_mid"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"hurt_mid") == 16,
+		"hurt_mid contiene le 16 celle da 512"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"hurt_mid"), 16.0),
+		"hurt_mid è configurato a 16 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurt_mid"),
+		"hurt_mid non è configurato in loop"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"hurt_high"),
+		"SpriteFrames contiene la reazione hurt_high"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"hurt_high") == 16,
+		"hurt_high contiene le 16 celle da 512"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"hurt_high"), 16.0),
+		"hurt_high è configurato a 16 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurt_high"),
+		"hurt_high non è configurato in loop"
 	)
 	player1.is_facing_right = true
 	player1.velocity.x = 100.0
@@ -464,12 +505,35 @@ func _test_combat_flow() -> void:
 	await create_timer(light_punch.get_total_duration() + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "i timing AttackData completano l'attacco")
 
+	var position_before_hit := player2.position.x
 	player2.combat.take_damage(20, player1)
 	_expect(player2.combat.current_health == 80, "danno normale applicato")
 	_expect(player2.current_state == Mangler.State.HIT, "danno normale attiva HIT")
+	_expect(
+		player2.animated_sprite.animation == &"hurt_mid",
+		"un colpo medio riproduce hurt_mid"
+	)
 	_expect(player2_bar.value == 80.0, "segnale di danno aggiorna la UI")
 	await create_timer(0.35).timeout
-	_expect(player2.current_state == Mangler.State.IDLE, "hit-stun termina in IDLE")
+	_expect(player2.current_state == Mangler.State.HIT, "HIT resta attivo fino alla fine dell'animazione")
+	_expect(player2.position.x > position_before_hit, "il colpo spinge leggermente lontano dall'attaccante")
+	await create_timer(0.75).timeout
+	_expect(player2.current_state == Mangler.State.IDLE, "l'animazione completa termina in IDLE")
+
+	player2.combat.take_damage(
+		0,
+		player1,
+		FighterCombat.DEFAULT_HITSTUN,
+		FighterCombat.DEFAULT_BLOCKSTUN,
+		AttackData.HitHeight.HIGH
+	)
+	_expect(
+		player2.current_state == Mangler.State.HIT
+		and player2.animated_sprite.animation == &"hurt_high",
+		"un colpo alto potente al volto riproduce hurt_high"
+	)
+	await create_timer(1.05).timeout
+	_expect(player2.current_state == Mangler.State.IDLE, "hurt_high completa tutti i 16 frame")
 
 	var health_before_guard := player2.combat.current_health
 	Input.action_press(&"p2_move_right")

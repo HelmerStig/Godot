@@ -40,6 +40,8 @@ const BACK_HOP_HORIZONTAL_SPEED := 360.0
 const BACK_HOP_VERTICAL_SPEED := -260.0
 const BACK_HOP_TAKEOFF_FRAME := 12
 const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
+const HIT_PUSHBACK_SPEED := 180.0
+const HIT_PUSHBACK_DECELERATION := 720.0
 const STANDING_COLLISION_SIZE := Vector2(70.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
 const CROUCH_COLLISION_SIZE := Vector2(80.0, 175.0)
@@ -83,6 +85,7 @@ var last_forward_tap_frame := -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
 var last_back_tap_frame := -BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES - 1
 var pending_jump_direction := 0.0
 var pending_jump_horizontal_multiplier := 1.0
+var received_hit_height := AttackData.HitHeight.MID
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -114,6 +117,8 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
+	if current_state == State.HIT:
+		velocity.x = move_toward(velocity.x, 0.0, HIT_PUSHBACK_DECELERATION * delta)
 
 	# Il buffer continua a registrare durante startup, recovery e hit-stun.
 	if is_player_controlled:
@@ -303,6 +308,13 @@ func update_animation() -> void:
 	if current_state == State.JUMPING and animated_sprite.animation == &"jump":
 		return
 
+	if current_state == State.HIT:
+		var hit_animation := get_hit_animation(received_hit_height)
+		if animated_sprite.sprite_frames.has_animation(hit_animation):
+			if animated_sprite.animation != hit_animation or not animated_sprite.is_playing():
+				animated_sprite.play(hit_animation)
+			return
+
 	var next_animation: StringName = &"idle"
 	if current_state == State.WALKING:
 		next_animation = &"backwalk" if is_moving_backward() else &"walk"
@@ -318,6 +330,46 @@ func update_animation() -> void:
 		and (animated_sprite.animation != next_animation or not animated_sprite.is_playing())
 	):
 		animated_sprite.play(next_animation)
+
+
+func get_hit_animation(hit_height: AttackData.HitHeight) -> StringName:
+	match hit_height:
+		AttackData.HitHeight.HIGH:
+			return &"hurt_high"
+		AttackData.HitHeight.LOW:
+			return &"hurt_low"
+		_:
+			return &"hurt_mid"
+
+
+func start_hit_reaction(hit_height: AttackData.HitHeight, attacker: Mangler) -> float:
+	"""Avvia da capo la reazione e applica un breve rinculo opposto all'attaccante."""
+	received_hit_height = hit_height
+	change_state(State.HIT)
+	var hit_animation := get_hit_animation(hit_height)
+	if animated_sprite.sprite_frames.has_animation(hit_animation):
+		animated_sprite.play(hit_animation)
+
+	var push_direction := -1.0 if is_facing_right else 1.0
+	if attacker != null and is_instance_valid(attacker):
+		push_direction = signf(global_position.x - attacker.global_position.x)
+		if is_zero_approx(push_direction):
+			push_direction = -1.0 if is_facing_right else 1.0
+	velocity.x = push_direction * HIT_PUSHBACK_SPEED
+	return get_animation_duration(hit_animation)
+
+
+func get_animation_duration(animation_name: StringName) -> float:
+	if not animated_sprite.sprite_frames.has_animation(animation_name):
+		return 0.0
+	var frames := animated_sprite.sprite_frames
+	var speed := frames.get_animation_speed(animation_name)
+	if speed <= 0.0:
+		return 0.0
+	var duration := 0.0
+	for frame_index in frames.get_frame_count(animation_name):
+		duration += frames.get_frame_duration(animation_name, frame_index) / speed
+	return duration
 
 
 func is_moving_backward() -> bool:
