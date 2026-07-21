@@ -116,7 +116,8 @@ func take_damage(
 	blockstun: float = DEFAULT_BLOCKSTUN,
 	hit_height: AttackData.HitHeight = AttackData.HitHeight.MID,
 	causes_knockdown: bool = false,
-	hit_reaction_start_frame: int = 0
+	hit_reaction_start_frame: int = 0,
+	ko_start_frame: int = 0
 ) -> void:
 	if fighter.current_state in [Mangler.State.KNOCKDOWN_RECOVERY, Mangler.State.KNOCKED_DOWN]:
 		return
@@ -136,7 +137,7 @@ func take_damage(
 	print("Vita rimanente: %d/%d" % [current_health, max_health])
 
 	if current_health <= 0:
-		die()
+		die(ko_start_frame)
 	elif attack_was_blocked:
 		block_reaction(blockstun, hit_height)
 	elif causes_knockdown:
@@ -202,9 +203,13 @@ func sweep_knockdown_reaction(attacker: Mangler) -> void:
 	fighter.change_state(Mangler.State.IDLE)
 
 
-func die() -> void:
+func die(start_frame: int = 0) -> void:
 	cancel_current_action()
 	fighter.change_state(Mangler.State.KNOCKED_DOWN)
+	if fighter.animated_sprite.sprite_frames.has_animation(&"ko"):
+		fighter.animated_sprite.play(&"ko")
+		var final_frame := fighter.animated_sprite.sprite_frames.get_frame_count(&"ko") - 1
+		fighter.animated_sprite.frame = clampi(start_frame, 0, final_frame)
 	knocked_out.emit()
 	print("KO!")
 
@@ -267,7 +272,8 @@ func perform_light_punch_followup() -> void:
 			current_attack.blockstun,
 			current_attack.hit_height,
 			current_attack.causes_knockdown,
-			4
+			4,
+			10
 		)
 
 

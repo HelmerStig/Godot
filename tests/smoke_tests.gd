@@ -710,14 +710,24 @@ func _test_combat_flow() -> void:
 		and player1.animated_sprite.animation == &"light_punch_double",
 		"un secondo light ravvicinato converte il jab nella combo da 16 frame"
 	)
+	player2.combat.take_damage(
+		light_punch.damage,
+		player1,
+		light_punch.hitstun,
+		light_punch.blockstun,
+		light_punch.hit_height,
+		false,
+		light_punch.hit_reaction_start_frame
+	)
 	player1.combat.light_punch_connected_targets.append(player2)
 	player1.animated_sprite.frame = 7
 	player1._on_animation_frame_changed()
 	_expect(
 		player1.combat.light_punch_followup_done
+		and player2.combat.current_health == 90
 		and player2.animated_sprite.animation == &"hurt_high"
 		and player2.animated_sprite.frame == 4,
-		"il frame 8 della combo riavvia hurt_high del primo bersaglio dal frame 5"
+		"la combo infligge due danni light e al frame 8 riavvia hurt_high dal frame 5"
 	)
 	player2.combat.reset()
 	player2.change_state(Mangler.State.IDLE)
@@ -891,10 +901,22 @@ func _test_combat_flow() -> void:
 	player2.input_buffer.clear()
 	player2.change_state(Mangler.State.IDLE)
 
-	player2.combat.take_damage(player2.combat.current_health, player1)
+	player2.combat.take_damage(
+		player2.combat.current_health,
+		player1,
+		FighterCombat.DEFAULT_HITSTUN,
+		FighterCombat.DEFAULT_BLOCKSTUN,
+		AttackData.HitHeight.HIGH,
+		false,
+		4,
+		10
+	)
 	_expect(player2.combat.current_health == 0, "danno letale porta la vita a zero")
 	_expect(player2.current_state == Mangler.State.KNOCKED_DOWN, "danno letale attiva KO")
-	_expect(player2.animated_sprite.animation == &"ko", "il danno letale riproduce ko")
+	_expect(
+		player2.animated_sprite.animation == &"ko" and player2.animated_sprite.frame == 10,
+		"l'ultimo light della combo avvia ko dal fotogramma 11"
+	)
 	_expect(not bool(arena.get("round_active")), "KO ferma il training")
 	_expect(not player1.controls_enabled and not player2.controls_enabled, "KO blocca i controlli")
 	_expect(
