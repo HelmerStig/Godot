@@ -3,5 +3,5 @@ jump - ok
 block_hit <-ok
 
 hit
-ko
+ko <-ok
 light_punch

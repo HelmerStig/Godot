@@ -14,6 +14,71 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/knockdown_recovery.png" id="12_knockdown_recovery"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/block_mid.png" id="13_block_mid"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/ko.png" id="14_ko"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/block_high.png" id="15_block_high"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_00"]
+atlas = ExtResource("15_block_high")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_01"]
+atlas = ExtResource("15_block_high")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_02"]
+atlas = ExtResource("15_block_high")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_03"]
+atlas = ExtResource("15_block_high")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_04"]
+atlas = ExtResource("15_block_high")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_05"]
+atlas = ExtResource("15_block_high")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_06"]
+atlas = ExtResource("15_block_high")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_07"]
+atlas = ExtResource("15_block_high")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_08"]
+atlas = ExtResource("15_block_high")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_09"]
+atlas = ExtResource("15_block_high")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_10"]
+atlas = ExtResource("15_block_high")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_11"]
+atlas = ExtResource("15_block_high")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_12"]
+atlas = ExtResource("15_block_high")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_13"]
+atlas = ExtResource("15_block_high")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_14"]
+atlas = ExtResource("15_block_high")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_high_15"]
+atlas = ExtResource("15_block_high")
+region = Rect2(1536, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ko_00"]
 atlas = ExtResource("14_ko")
@@ -1995,6 +2060,70 @@ animations = [{
 ],
 "loop": 0,
 "name": &"block_mid_recovery",
+"speed": 16.0
+}, {
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_04")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_05")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_06")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_07")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_08")
+}
+],
+"loop": 0,
+"name": &"block_high",
+"speed": 16.0
+}, {
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_07")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_06")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_05")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_04")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_03")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_02")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_01")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_high_00")
+}
+],
+"loop": 0,
+"name": &"block_high_recovery",
 "speed": 16.0
 }, {
 "frames": [

@@ -375,6 +375,29 @@ func _test_combat_flow() -> void:
 		"block_mid_recovery è non ciclica a 16 FPS"
 	)
 	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"block_high")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_high") == 5,
+		"block_high usa i fotogrammi 5-9"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"block_high"), 16.0)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"block_high"),
+		"block_high è non ciclica a 16 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"block_high_recovery")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_high_recovery") == 8,
+		"block_high_recovery torna indietro dai fotogrammi 8-1"
+	)
+	_expect(
+		is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"block_high_recovery"),
+			16.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"block_high_recovery"),
+		"block_high_recovery è non ciclica a 16 FPS"
+	)
+	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"ko"),
 		"SpriteFrames contiene ko"
 	)
@@ -724,6 +747,31 @@ func _test_combat_flow() -> void:
 	)
 	await create_timer(0.6).timeout
 	_expect(player2.current_state == Mangler.State.IDLE, "block_mid_recovery termina in IDLE")
+
+	Input.action_press(&"p2_move_right")
+	await physics_frame
+	await physics_frame
+	player2.combat.take_damage(
+		20,
+		player1,
+		FighterCombat.DEFAULT_HITSTUN,
+		FighterCombat.DEFAULT_BLOCKSTUN,
+		AttackData.HitHeight.HIGH
+	)
+	Input.action_release(&"p2_move_right")
+	_expect(
+		player2.current_state == Mangler.State.BLOCKING
+		and player2.animated_sprite.animation == &"block_high",
+		"un colpo alto bloccato riproduce i fotogrammi 5-9 di block_high"
+	)
+	await create_timer(0.35).timeout
+	_expect(
+		player2.current_state == Mangler.State.BLOCK_RECOVERY
+		and player2.animated_sprite.animation == &"block_high_recovery",
+		"a fine parata alta riproduce i fotogrammi inversi fino al primo"
+	)
+	await create_timer(0.55).timeout
+	_expect(player2.current_state == Mangler.State.IDLE, "block_high_recovery termina in IDLE")
 
 	player2.combat.take_damage(player2.combat.current_health, player1)
 	_expect(player2.combat.current_health == 0, "danno letale porta la vita a zero")
