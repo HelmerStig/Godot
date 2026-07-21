@@ -22,6 +22,8 @@ enum State {
 	ATTACKING,
 	BLOCKING,
 	HIT,
+	SWEEP_KNOCKDOWN,
+	KNOCKDOWN_RECOVERY,
 	KNOCKED_DOWN
 }
 
@@ -42,6 +44,7 @@ const BACK_HOP_TAKEOFF_FRAME := 12
 const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
 const HIT_PUSHBACK_SPEED := 180.0
 const HIT_PUSHBACK_DECELERATION := 720.0
+const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(70.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
 const CROUCH_COLLISION_SIZE := Vector2(80.0, 175.0)
@@ -117,7 +120,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
-	if current_state == State.HIT:
+	if current_state in [State.HIT, State.SWEEP_KNOCKDOWN]:
 		velocity.x = move_toward(velocity.x, 0.0, HIT_PUSHBACK_DECELERATION * delta)
 
 	# Il buffer continua a registrare durante startup, recovery e hit-stun.
@@ -145,6 +148,8 @@ func handle_input() -> void:
 		State.ATTACKING,
 		State.BLOCKING,
 		State.HIT,
+		State.SWEEP_KNOCKDOWN,
+		State.KNOCKDOWN_RECOVERY,
 		State.KNOCKED_DOWN,
 	]:
 		return
@@ -269,7 +274,7 @@ func change_state(next_state: int) -> void:
 		State.CROUCHING:
 			can_move = true
 			velocity.x = 0.0
-		State.STANDING_UP, State.ATTACKING, State.BLOCKING, State.HIT, State.KNOCKED_DOWN:
+		State.STANDING_UP, State.ATTACKING, State.BLOCKING, State.HIT, State.SWEEP_KNOCKDOWN, State.KNOCKDOWN_RECOVERY, State.KNOCKED_DOWN:
 			can_move = false
 			velocity.x = 0.0
 	update_animation()
@@ -313,6 +318,18 @@ func update_animation() -> void:
 		if animated_sprite.sprite_frames.has_animation(hit_animation):
 			if animated_sprite.animation != hit_animation or not animated_sprite.is_playing():
 				animated_sprite.play(hit_animation)
+			return
+
+	if current_state == State.SWEEP_KNOCKDOWN:
+		if animated_sprite.sprite_frames.has_animation(&"sweep_knockdown"):
+			if animated_sprite.animation != &"sweep_knockdown" or not animated_sprite.is_playing():
+				animated_sprite.play(&"sweep_knockdown")
+			return
+
+	if current_state == State.KNOCKDOWN_RECOVERY:
+		if animated_sprite.sprite_frames.has_animation(&"knockdown_recovery"):
+			if animated_sprite.animation != &"knockdown_recovery" or not animated_sprite.is_playing():
+				animated_sprite.play(&"knockdown_recovery")
 			return
 
 	var next_animation: StringName = &"idle"
@@ -359,6 +376,30 @@ func start_hit_reaction(hit_height: AttackData.HitHeight, attacker: Mangler) -> 
 	return get_animation_duration(hit_animation)
 
 
+func start_sweep_knockdown(attacker: Mangler) -> float:
+	"""Avvia la caduta da spazzata e applica un rinculo più deciso."""
+	change_state(State.SWEEP_KNOCKDOWN)
+	if animated_sprite.sprite_frames.has_animation(&"sweep_knockdown"):
+		animated_sprite.play(&"sweep_knockdown")
+
+	var push_direction := -1.0 if is_facing_right else 1.0
+	if attacker != null and is_instance_valid(attacker):
+		push_direction = signf(global_position.x - attacker.global_position.x)
+		if is_zero_approx(push_direction):
+			push_direction = -1.0 if is_facing_right else 1.0
+	velocity.x = push_direction * SWEEP_PUSHBACK_SPEED
+	return get_animation_duration(&"sweep_knockdown")
+
+
+func start_knockdown_recovery() -> float:
+	"""Avvia la rialzata non interrompibile dalla posa finale della spazzata."""
+	velocity.x = 0.0
+	change_state(State.KNOCKDOWN_RECOVERY)
+	if animated_sprite.sprite_frames.has_animation(&"knockdown_recovery"):
+		animated_sprite.play(&"knockdown_recovery")
+	return get_animation_duration(&"knockdown_recovery")
+
+
 func get_animation_duration(animation_name: StringName) -> float:
 	if not animated_sprite.sprite_frames.has_animation(animation_name):
 		return 0.0
@@ -394,6 +435,8 @@ func update_state() -> void:
 		State.ATTACKING,
 		State.BLOCKING,
 		State.HIT,
+		State.SWEEP_KNOCKDOWN,
+		State.KNOCKDOWN_RECOVERY,
 		State.KNOCKED_DOWN,
 	]:
 		return

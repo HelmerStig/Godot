@@ -68,6 +68,13 @@ func _test_attack_data() -> void:
 		medium_kick != null and medium_kick.hit_height == AttackData.HitHeight.LOW,
 		"il calcio medio colpisce in basso"
 	)
+	var heavy_kick := character_data.get_attack(&"heavy_kick")
+	_expect(
+		heavy_kick != null
+		and heavy_kick.hit_height == AttackData.HitHeight.LOW
+		and heavy_kick.causes_knockdown,
+		"il calcio pesante è una spazzata bassa con knockdown"
+	)
 
 
 func _test_input_buffer() -> void:
@@ -299,6 +306,44 @@ func _test_combat_flow() -> void:
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurt_low"),
 		"hurt_low non è configurato in loop"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"sweep_knockdown"),
+		"SpriteFrames contiene sweep_knockdown"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"sweep_knockdown") == 25,
+		"sweep_knockdown contiene le 25 celle da 512"
+	)
+	_expect(
+		is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"sweep_knockdown"),
+			16.0
+		),
+		"sweep_knockdown è configurato a 16 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"sweep_knockdown"),
+		"sweep_knockdown non è configurato in loop"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"knockdown_recovery"),
+		"SpriteFrames contiene knockdown_recovery"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"knockdown_recovery") == 16,
+		"knockdown_recovery contiene le 16 celle da 512"
+	)
+	_expect(
+		is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"knockdown_recovery"),
+			16.0
+		),
+		"knockdown_recovery è configurato a 16 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"knockdown_recovery"),
+		"knockdown_recovery non è configurato in loop"
 	)
 	player1.is_facing_right = true
 	player1.velocity.x = 100.0
@@ -575,6 +620,41 @@ func _test_combat_flow() -> void:
 	)
 	await create_timer(0.7).timeout
 	_expect(player2.current_state == Mangler.State.IDLE, "hurt_low completa i frame 7-16")
+
+	player2.combat.take_damage(
+		0,
+		player1,
+		FighterCombat.DEFAULT_HITSTUN,
+		FighterCombat.DEFAULT_BLOCKSTUN,
+		AttackData.HitHeight.LOW,
+		true
+	)
+	_expect(
+		player2.current_state == Mangler.State.SWEEP_KNOCKDOWN
+		and player2.animated_sprite.animation == &"sweep_knockdown",
+		"il calcio basso potente avvia sweep_knockdown"
+	)
+	await create_timer(1.65).timeout
+	_expect(
+		player2.current_state == Mangler.State.SWEEP_KNOCKDOWN
+		and player2.animated_sprite.frame == 24,
+		"la spazzata completa i 25 frame e mantiene brevemente la posa a terra"
+	)
+	await create_timer(0.35).timeout
+	_expect(
+		player2.current_state == Mangler.State.KNOCKDOWN_RECOVERY
+		and player2.animated_sprite.animation == &"knockdown_recovery",
+		"dopo la pausa a terra parte knockdown_recovery"
+	)
+	var health_during_recovery := player2.combat.current_health
+	player2.combat.take_damage(10, player1)
+	_expect(
+		player2.combat.current_health == health_during_recovery
+		and player2.current_state == Mangler.State.KNOCKDOWN_RECOVERY,
+		"la rialzata è invulnerabile"
+	)
+	await create_timer(1.05).timeout
+	_expect(player2.current_state == Mangler.State.IDLE, "la rialzata completa torna in IDLE")
 
 	var health_before_guard := player2.combat.current_health
 	Input.action_press(&"p2_move_right")

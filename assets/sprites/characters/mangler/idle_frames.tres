@@ -10,6 +10,172 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/hurt-medium.png" id="8_hurt_mid"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/hurt-high.png" id="9_hurt_high"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/hurt_low.png" id="10_hurt_low"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/sweep_knockdown.png" id="11_sweep_knockdown"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/knockdown_recovery.png" id="12_knockdown_recovery"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_00"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_01"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_02"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_03"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_04"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_05"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_06"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_07"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_08"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_09"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_10"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_11"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_12"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_13"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_14"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_15"]
+atlas = ExtResource("12_knockdown_recovery")
+region = Rect2(1536, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_00"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_01"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_02"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_03"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_04"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(2048, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_05"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_06"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_07"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_08"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_09"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(2048, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_10"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_11"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_12"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_13"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_14"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(2048, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_15"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_16"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_17"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_18"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1536, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_19"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(2048, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_20"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(0, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_21"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(512, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_22"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1024, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_23"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(1536, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sweep_knockdown_24"]
+atlas = ExtResource("11_sweep_knockdown")
+region = Rect2(2048, 2048, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hurt_low_00"]
 atlas = ExtResource("10_hurt_low")
@@ -1423,6 +1589,182 @@ animations = [{
 ],
 "loop": 0,
 "name": &"hurt_low",
+"speed": 16.0
+}, {
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_00")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_01")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_02")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_03")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_04")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_05")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_06")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_07")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_08")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_09")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_10")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_11")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_12")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_13")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_14")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_15")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_16")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_17")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_18")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_19")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_20")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_21")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_22")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_23")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sweep_knockdown_24")
+}
+],
+"loop": 0,
+"name": &"sweep_knockdown",
+"speed": 16.0
+}, {
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_00")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_01")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_02")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_03")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_04")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_05")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_06")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_07")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_08")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_09")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_10")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_11")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_12")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_13")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_14")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knockdown_recovery_15")
+}
+],
+"loop": 0,
+"name": &"knockdown_recovery",
 "speed": 16.0
 }, {
 "frames": [{

@@ -10,6 +10,7 @@ signal attack_finished
 
 const DEFAULT_HITSTUN := 0.3
 const DEFAULT_BLOCKSTUN := 0.15
+const SWEEP_GROUNDED_HOLD := 0.35
 
 var fighter: Mangler
 var character_data: CharacterData
@@ -99,9 +100,10 @@ func take_damage(
 	attacker: Mangler,
 	hitstun: float = DEFAULT_HITSTUN,
 	blockstun: float = DEFAULT_BLOCKSTUN,
-	hit_height: AttackData.HitHeight = AttackData.HitHeight.MID
+	hit_height: AttackData.HitHeight = AttackData.HitHeight.MID,
+	causes_knockdown: bool = false
 ) -> void:
-	if fighter.current_state == Mangler.State.KNOCKED_DOWN:
+	if fighter.current_state in [Mangler.State.KNOCKDOWN_RECOVERY, Mangler.State.KNOCKED_DOWN]:
 		return
 
 	var attack_was_blocked := (
@@ -122,6 +124,8 @@ func take_damage(
 		die()
 	elif attack_was_blocked:
 		block_reaction(blockstun)
+	elif causes_knockdown:
+		sweep_knockdown_reaction(attacker)
 	else:
 		hit_reaction(hitstun, hit_height, attacker)
 
@@ -151,6 +155,21 @@ func hit_reaction(
 	if hit_generation != action_generation or current_health <= 0:
 		return
 	fighter.velocity.x = 0.0
+	fighter.change_state(Mangler.State.IDLE)
+
+
+func sweep_knockdown_reaction(attacker: Mangler) -> void:
+	cancel_current_action()
+	var knockdown_generation := action_generation
+	var animation_duration := fighter.start_sweep_knockdown(attacker)
+
+	await get_tree().create_timer(animation_duration + SWEEP_GROUNDED_HOLD).timeout
+	if knockdown_generation != action_generation or current_health <= 0:
+		return
+	var recovery_duration := fighter.start_knockdown_recovery()
+	await get_tree().create_timer(recovery_duration).timeout
+	if knockdown_generation != action_generation or current_health <= 0:
+		return
 	fighter.change_state(Mangler.State.IDLE)
 
 
@@ -212,5 +231,6 @@ func _on_hitbox_area_entered(area: Area2D) -> void:
 		fighter,
 		current_attack.hitstun,
 		current_attack.blockstun,
-		current_attack.hit_height
+		current_attack.hit_height,
+		current_attack.causes_knockdown
 	)

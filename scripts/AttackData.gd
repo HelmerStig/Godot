@@ -21,6 +21,7 @@ enum HitHeight {
 
 @export_group("Hitbox")
 @export var hit_height := HitHeight.MID
+@export var causes_knockdown := false
 @export var hitbox_size := Vector2(70.0, 35.0)
 @export var hitbox_position := Vector2(35.0, -110.0)
 
