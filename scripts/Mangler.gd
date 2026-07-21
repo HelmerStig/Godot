@@ -92,6 +92,7 @@ var pending_jump_horizontal_multiplier := 1.0
 var received_hit_height := AttackData.HitHeight.MID
 var received_block_height := AttackData.HitHeight.MID
 var block_started_crouched := false
+var light_punch_combo_queued := false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -129,6 +130,8 @@ func _physics_process(delta: float) -> void:
 	# Il buffer continua a registrare durante startup, recovery e hit-stun.
 	if is_player_controlled:
 		input_buffer.update(is_facing_right)
+	if is_player_controlled and controls_enabled and current_state == State.ATTACKING:
+		try_queue_light_punch_combo()
 
 	if is_player_controlled and controls_enabled and can_move:
 		handle_input()
@@ -508,6 +511,23 @@ func get_animation_duration(animation_name: StringName) -> float:
 	return duration
 
 
+func try_queue_light_punch_combo() -> void:
+	"""Converte il jab singolo nella combo se il secondo input arriva entro il sesto frame."""
+	if light_punch_combo_queued or not combat.is_attacking or combat.current_attack == null:
+		return
+	if combat.current_attack.attack_id != &"light_punch":
+		return
+	if animated_sprite.animation != &"light_punch_single" or animated_sprite.frame > 5:
+		return
+	if input_buffer.consume_attack(&"light_punch", 1) == FighterInputBuffer.NO_DIRECTION:
+		return
+
+	light_punch_combo_queued = true
+	var continuation_frame := animated_sprite.frame
+	animated_sprite.play(&"light_punch_double")
+	animated_sprite.frame = continuation_frame
+
+
 func is_moving_backward() -> bool:
 	if is_zero_approx(velocity.x):
 		return false
@@ -700,10 +720,14 @@ func _on_combat_knocked_out() -> void:
 
 
 func _on_combat_attack_started(attack_name: StringName) -> void:
+	light_punch_combo_queued = false
+	if attack_name == &"light_punch" and animated_sprite.sprite_frames.has_animation(&"light_punch_single"):
+		animated_sprite.play(&"light_punch_single")
 	attack_started.emit(attack_name)
 
 
 func _on_combat_attack_finished() -> void:
+	light_punch_combo_queued = false
 	attack_finished.emit()
 
 

@@ -88,6 +88,15 @@ func try_attack(
 	await get_tree().create_timer(attack.recovery).timeout
 	if attack_generation != action_generation:
 		return
+	if attack.attack_id == &"light_punch":
+		while (
+			attack_generation == action_generation
+			and fighter.animated_sprite.animation in [&"light_punch_single", &"light_punch_double"]
+			and fighter.animated_sprite.is_playing()
+		):
+			await get_tree().process_frame
+		if attack_generation != action_generation:
+			return
 	is_attacking = false
 	current_attack = null
 	hit_targets.clear()

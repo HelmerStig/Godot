@@ -162,6 +162,29 @@ func _test_combat_flow() -> void:
 		player1.animated_sprite.animation == &"idle" and player1.animated_sprite.is_playing(),
 		"idle parte automaticamente"
 	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_single")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_single") == 11,
+		"il pugno light singolo usa i frame 1-6 e torna indietro fino al primo"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_double")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_double") == 16,
+		"la combo light usa tutti i 16 frame"
+	)
+	_expect(
+		is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"light_punch_single"),
+			24.0
+		)
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"light_punch_double"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_punch_single")
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_punch_double"),
+		"entrambe le animazioni light sono non cicliche a 24 FPS"
+	)
 
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"walk"),
@@ -668,8 +691,20 @@ func _test_combat_flow() -> void:
 		and player1.combat.hitbox_shape.position == light_punch.hitbox_position,
 		"AttackData configura geometria e posizione della hitbox"
 	)
-	await create_timer(light_punch.get_total_duration() + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "i timing AttackData completano l'attacco")
+	await create_timer(player1.get_animation_duration(&"light_punch_single") + 0.05).timeout
+	_expect(player1.current_state == Mangler.State.IDLE, "il jab singolo completa anche il ritorno 6-1")
+
+	player1.combat.try_attack(&"light_punch")
+	await create_timer(0.05).timeout
+	player1.input_buffer.record_input_snapshot(0, 0, [&"light_punch"], true)
+	player1.try_queue_light_punch_combo()
+	_expect(
+		player1.light_punch_combo_queued
+		and player1.animated_sprite.animation == &"light_punch_double",
+		"un secondo light ravvicinato converte il jab nella combo da 16 frame"
+	)
+	await create_timer(player1.get_animation_duration(&"light_punch_double") + 0.05).timeout
+	_expect(player1.current_state == Mangler.State.IDLE, "la combo light completa torna in IDLE")
 
 	var position_before_hit := player2.position.x
 	player2.combat.take_damage(20, player1)
