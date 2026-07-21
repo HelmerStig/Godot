@@ -398,6 +398,33 @@ func _test_combat_flow() -> void:
 		"block_high_recovery è non ciclica a 16 FPS"
 	)
 	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"block_low")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_low") == 16,
+		"block_low da posizione alta parte dal fotogramma 1"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"block_low_crouched")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_low_crouched") == 8,
+		"block_low da posizione bassa parte dal fotogramma 9"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"block_low_recovery")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_low_recovery") == 15,
+		"block_low_recovery torna indietro dai fotogrammi 15-1"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"block_low"), 16.0)
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"block_low_crouched"),
+			16.0
+		)
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"block_low_recovery"),
+			16.0
+		),
+		"le varianti block_low sono configurate a 16 FPS"
+	)
+	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"ko"),
 		"SpriteFrames contiene ko"
 	)
@@ -772,6 +799,21 @@ func _test_combat_flow() -> void:
 	)
 	await create_timer(0.55).timeout
 	_expect(player2.current_state == Mangler.State.IDLE, "block_high_recovery termina in IDLE")
+
+	player2.start_block_reaction(AttackData.HitHeight.LOW, false)
+	_expect(
+		player2.current_state == Mangler.State.BLOCKING
+		and player2.animated_sprite.animation == &"block_low",
+		"da posizione alta la parata bassa parte dal fotogramma 1"
+	)
+	player2.change_state(Mangler.State.IDLE)
+	player2.start_block_reaction(AttackData.HitHeight.LOW, true)
+	_expect(
+		player2.current_state == Mangler.State.BLOCKING
+		and player2.animated_sprite.animation == &"block_low_crouched",
+		"da posizione già bassa la parata parte dal fotogramma 9"
+	)
+	player2.change_state(Mangler.State.IDLE)
 
 	player2.combat.take_damage(player2.combat.current_health, player1)
 	_expect(player2.combat.current_health == 0, "danno letale porta la vita a zero")

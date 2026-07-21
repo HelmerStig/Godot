@@ -91,6 +91,7 @@ var pending_jump_direction := 0.0
 var pending_jump_horizontal_multiplier := 1.0
 var received_hit_height := AttackData.HitHeight.MID
 var received_block_height := AttackData.HitHeight.MID
+var block_started_crouched := false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -324,7 +325,7 @@ func update_animation() -> void:
 			return
 
 	if current_state == State.BLOCKING:
-		var block_animation := get_block_animation(received_block_height)
+		var block_animation := get_block_animation(received_block_height, block_started_crouched)
 		if animated_sprite.sprite_frames.has_animation(block_animation):
 			if animated_sprite.animation != block_animation or not animated_sprite.is_playing():
 				animated_sprite.play(block_animation)
@@ -383,13 +384,16 @@ func get_hit_animation(hit_height: AttackData.HitHeight) -> StringName:
 			return &"hurt_mid"
 
 
-func get_block_animation(block_height: AttackData.HitHeight) -> StringName:
+func get_block_animation(
+	block_height: AttackData.HitHeight,
+	started_crouched: bool = false
+) -> StringName:
 	var animation_name: StringName
 	match block_height:
 		AttackData.HitHeight.HIGH:
 			animation_name = &"block_high"
 		AttackData.HitHeight.LOW:
-			animation_name = &"block_low"
+			animation_name = &"block_low_crouched" if started_crouched else &"block_low"
 		_:
 			animation_name = &"block_mid"
 	if animated_sprite.sprite_frames.has_animation(animation_name):
@@ -411,10 +415,14 @@ func get_block_recovery_animation(block_height: AttackData.HitHeight) -> StringN
 	return &"block_mid_recovery"
 
 
-func start_block_reaction(block_height: AttackData.HitHeight) -> float:
+func start_block_reaction(
+	block_height: AttackData.HitHeight,
+	started_crouched: bool = false
+) -> float:
 	received_block_height = block_height
+	block_started_crouched = started_crouched
 	change_state(State.BLOCKING)
-	var block_animation := get_block_animation(block_height)
+	var block_animation := get_block_animation(block_height, started_crouched)
 	if animated_sprite.sprite_frames.has_animation(block_animation):
 		animated_sprite.play(block_animation)
 	return get_animation_duration(block_animation)

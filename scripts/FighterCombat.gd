@@ -131,9 +131,10 @@ func take_damage(
 
 
 func block_reaction(duration: float, hit_height: AttackData.HitHeight) -> void:
+	var started_crouched := fighter.current_state == Mangler.State.CROUCHING
 	cancel_current_action()
 	var block_generation := action_generation
-	var animation_duration := fighter.start_block_reaction(hit_height)
+	var animation_duration := fighter.start_block_reaction(hit_height, started_crouched)
 	var reaction_duration := maxf(duration, animation_duration)
 
 	await get_tree().create_timer(reaction_duration).timeout
