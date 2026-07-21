@@ -144,6 +144,12 @@ func _test_combat_flow() -> void:
 	var round_label := arena.get_node("CanvasLayer/UI/RoundLabel") as Label
 
 	_expect(player1.animated_sprite != null, "Mangler usa AnimatedSprite2D")
+	var initial_body_collision := player1.collision_shape.shape as RectangleShape2D
+	_expect(
+		initial_body_collision.size == Vector2(150.0, 240.0)
+		and Mangler.CROUCH_COLLISION_SIZE == Vector2(160.0, 175.0),
+		"la collisione fisica di Mangler è più larga di 80 px in piedi e in crouch"
+	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"idle"),
 		"SpriteFrames contiene l'animazione idle"
