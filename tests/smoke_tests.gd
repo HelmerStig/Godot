@@ -58,6 +58,16 @@ func _test_attack_data() -> void:
 		heavy_punch != null and heavy_punch.hit_height == AttackData.HitHeight.HIGH,
 		"il pugno pesante colpisce in alto al volto"
 	)
+	var light_kick := character_data.get_attack(&"light_kick")
+	var medium_kick := character_data.get_attack(&"medium_kick")
+	_expect(
+		light_kick != null and light_kick.hit_height == AttackData.HitHeight.LOW,
+		"il calcio leggero colpisce in basso"
+	)
+	_expect(
+		medium_kick != null and medium_kick.hit_height == AttackData.HitHeight.LOW,
+		"il calcio medio colpisce in basso"
+	)
 
 
 func _test_input_buffer() -> void:
@@ -273,6 +283,22 @@ func _test_combat_flow() -> void:
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurt_high"),
 		"hurt_high non è configurato in loop"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"hurt_low"),
+		"SpriteFrames contiene la reazione hurt_low"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"hurt_low") == 10,
+		"hurt_low usa le celle 7-16 dello spritesheet"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"hurt_low"), 16.0),
+		"hurt_low è configurato a 16 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurt_low"),
+		"hurt_low non è configurato in loop"
 	)
 	player1.is_facing_right = true
 	player1.velocity.x = 100.0
@@ -534,6 +560,21 @@ func _test_combat_flow() -> void:
 	)
 	await create_timer(1.05).timeout
 	_expect(player2.current_state == Mangler.State.IDLE, "hurt_high completa tutti i 16 frame")
+
+	player2.combat.take_damage(
+		0,
+		player1,
+		FighterCombat.DEFAULT_HITSTUN,
+		FighterCombat.DEFAULT_BLOCKSTUN,
+		AttackData.HitHeight.LOW
+	)
+	_expect(
+		player2.current_state == Mangler.State.HIT
+		and player2.animated_sprite.animation == &"hurt_low",
+		"un calcio basso leggero o medio riproduce hurt_low"
+	)
+	await create_timer(0.7).timeout
+	_expect(player2.current_state == Mangler.State.IDLE, "hurt_low completa i frame 7-16")
 
 	var health_before_guard := player2.combat.current_health
 	Input.action_press(&"p2_move_right")

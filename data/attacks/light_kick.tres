@@ -11,5 +11,6 @@ active = 0.166667
 recovery = 0.133333
 hitstun = 0.3
 blockstun = 0.15
+hit_height = 2
 hitbox_size = Vector2(85, 35)
 hitbox_position = Vector2(47.5, -55)
