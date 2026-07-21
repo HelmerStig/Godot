@@ -123,19 +123,24 @@ func take_damage(
 	if current_health <= 0:
 		die()
 	elif attack_was_blocked:
-		block_reaction(blockstun)
+		block_reaction(blockstun, hit_height)
 	elif causes_knockdown:
 		sweep_knockdown_reaction(attacker)
 	else:
 		hit_reaction(hitstun, hit_height, attacker)
 
 
-func block_reaction(duration: float) -> void:
+func block_reaction(duration: float, hit_height: AttackData.HitHeight) -> void:
 	cancel_current_action()
 	var block_generation := action_generation
-	fighter.change_state(Mangler.State.BLOCKING)
+	var animation_duration := fighter.start_block_reaction(hit_height)
+	var reaction_duration := maxf(duration, animation_duration)
 
-	await get_tree().create_timer(duration).timeout
+	await get_tree().create_timer(reaction_duration).timeout
+	if block_generation != action_generation or current_health <= 0:
+		return
+	var recovery_duration := fighter.start_block_recovery()
+	await get_tree().create_timer(recovery_duration).timeout
 	if block_generation != action_generation or current_health <= 0:
 		return
 	fighter.change_state(Mangler.State.IDLE)

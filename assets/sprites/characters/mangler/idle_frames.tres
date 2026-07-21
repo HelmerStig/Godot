@@ -12,6 +12,71 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/hurt_low.png" id="10_hurt_low"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/sweep_knockdown.png" id="11_sweep_knockdown"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/knockdown_recovery.png" id="12_knockdown_recovery"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/block_mid.png" id="13_block_mid"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_00"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_01"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_02"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_03"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_04"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_05"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_06"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_07"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_08"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_09"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_10"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_11"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_12"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_13"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_14"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_15"]
+atlas = ExtResource("13_block_mid")
+region = Rect2(1536, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_knockdown_recovery_00"]
 atlas = ExtResource("12_knockdown_recovery")
@@ -1765,6 +1830,70 @@ animations = [{
 ],
 "loop": 0,
 "name": &"knockdown_recovery",
+"speed": 16.0
+}, {
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_03")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_04")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_05")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_06")
+}
+],
+"loop": 0,
+"name": &"block_mid",
+"speed": 16.0
+}, {
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_07")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_08")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_09")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_10")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_11")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_12")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_13")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_14")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_block_mid_15")
+}
+],
+"loop": 0,
+"name": &"block_mid_recovery",
 "speed": 16.0
 }, {
 "frames": [{

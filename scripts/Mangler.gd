@@ -21,6 +21,7 @@ enum State {
 	STANDING_UP,
 	ATTACKING,
 	BLOCKING,
+	BLOCK_RECOVERY,
 	HIT,
 	SWEEP_KNOCKDOWN,
 	KNOCKDOWN_RECOVERY,
@@ -89,6 +90,7 @@ var last_back_tap_frame := -BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES - 1
 var pending_jump_direction := 0.0
 var pending_jump_horizontal_multiplier := 1.0
 var received_hit_height := AttackData.HitHeight.MID
+var received_block_height := AttackData.HitHeight.MID
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -147,6 +149,7 @@ func handle_input() -> void:
 		State.STANDING_UP,
 		State.ATTACKING,
 		State.BLOCKING,
+		State.BLOCK_RECOVERY,
 		State.HIT,
 		State.SWEEP_KNOCKDOWN,
 		State.KNOCKDOWN_RECOVERY,
@@ -274,7 +277,7 @@ func change_state(next_state: int) -> void:
 		State.CROUCHING:
 			can_move = true
 			velocity.x = 0.0
-		State.STANDING_UP, State.ATTACKING, State.BLOCKING, State.HIT, State.SWEEP_KNOCKDOWN, State.KNOCKDOWN_RECOVERY, State.KNOCKED_DOWN:
+		State.STANDING_UP, State.ATTACKING, State.BLOCKING, State.BLOCK_RECOVERY, State.HIT, State.SWEEP_KNOCKDOWN, State.KNOCKDOWN_RECOVERY, State.KNOCKED_DOWN:
 			can_move = false
 			velocity.x = 0.0
 	update_animation()
@@ -320,6 +323,20 @@ func update_animation() -> void:
 				animated_sprite.play(hit_animation)
 			return
 
+	if current_state == State.BLOCKING:
+		var block_animation := get_block_animation(received_block_height)
+		if animated_sprite.sprite_frames.has_animation(block_animation):
+			if animated_sprite.animation != block_animation or not animated_sprite.is_playing():
+				animated_sprite.play(block_animation)
+			return
+
+	if current_state == State.BLOCK_RECOVERY:
+		var recovery_animation := get_block_recovery_animation(received_block_height)
+		if animated_sprite.sprite_frames.has_animation(recovery_animation):
+			if animated_sprite.animation != recovery_animation or not animated_sprite.is_playing():
+				animated_sprite.play(recovery_animation)
+			return
+
 	if current_state == State.SWEEP_KNOCKDOWN:
 		if animated_sprite.sprite_frames.has_animation(&"sweep_knockdown"):
 			if animated_sprite.animation != &"sweep_knockdown" or not animated_sprite.is_playing():
@@ -357,6 +374,51 @@ func get_hit_animation(hit_height: AttackData.HitHeight) -> StringName:
 			return &"hurt_low"
 		_:
 			return &"hurt_mid"
+
+
+func get_block_animation(block_height: AttackData.HitHeight) -> StringName:
+	var animation_name: StringName
+	match block_height:
+		AttackData.HitHeight.HIGH:
+			animation_name = &"block_high"
+		AttackData.HitHeight.LOW:
+			animation_name = &"block_low"
+		_:
+			animation_name = &"block_mid"
+	if animated_sprite.sprite_frames.has_animation(animation_name):
+		return animation_name
+	return &"block_mid"
+
+
+func get_block_recovery_animation(block_height: AttackData.HitHeight) -> StringName:
+	var animation_name: StringName
+	match block_height:
+		AttackData.HitHeight.HIGH:
+			animation_name = &"block_high_recovery"
+		AttackData.HitHeight.LOW:
+			animation_name = &"block_low_recovery"
+		_:
+			animation_name = &"block_mid_recovery"
+	if animated_sprite.sprite_frames.has_animation(animation_name):
+		return animation_name
+	return &"block_mid_recovery"
+
+
+func start_block_reaction(block_height: AttackData.HitHeight) -> float:
+	received_block_height = block_height
+	change_state(State.BLOCKING)
+	var block_animation := get_block_animation(block_height)
+	if animated_sprite.sprite_frames.has_animation(block_animation):
+		animated_sprite.play(block_animation)
+	return get_animation_duration(block_animation)
+
+
+func start_block_recovery() -> float:
+	change_state(State.BLOCK_RECOVERY)
+	var recovery_animation := get_block_recovery_animation(received_block_height)
+	if animated_sprite.sprite_frames.has_animation(recovery_animation):
+		animated_sprite.play(recovery_animation)
+	return get_animation_duration(recovery_animation)
 
 
 func start_hit_reaction(hit_height: AttackData.HitHeight, attacker: Mangler) -> float:
@@ -434,6 +496,7 @@ func update_state() -> void:
 		State.STANDING_UP,
 		State.ATTACKING,
 		State.BLOCKING,
+		State.BLOCK_RECOVERY,
 		State.HIT,
 		State.SWEEP_KNOCKDOWN,
 		State.KNOCKDOWN_RECOVERY,

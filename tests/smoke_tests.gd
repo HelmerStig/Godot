@@ -345,6 +345,35 @@ func _test_combat_flow() -> void:
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"knockdown_recovery"),
 		"knockdown_recovery non è configurato in loop"
 	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"block_mid"),
+		"SpriteFrames contiene block_mid"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"block_mid") == 4,
+		"block_mid usa soltanto i fotogrammi 4-7"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"block_mid"), 16.0),
+		"block_mid è configurato a 16 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"block_mid"),
+		"block_mid non è configurato in loop"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"block_mid_recovery")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_mid_recovery") == 9,
+		"block_mid_recovery usa i fotogrammi 8-16"
+	)
+	_expect(
+		is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"block_mid_recovery"),
+			16.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"block_mid_recovery"),
+		"block_mid_recovery è non ciclica a 16 FPS"
+	)
 	player1.is_facing_right = true
 	player1.velocity.x = 100.0
 	player1.change_state(Mangler.State.WALKING)
@@ -667,8 +696,18 @@ func _test_combat_flow() -> void:
 		"la guardia riuscita non infligge danno"
 	)
 	_expect(player2.current_state == Mangler.State.BLOCKING, "guardia attiva BLOCKING")
+	_expect(player2.animated_sprite.animation == &"block_mid", "la guardia centrale riproduce block_mid")
 	_expect(player2_bar.value == 80.0, "la barra non cala durante la guardia")
 	await create_timer(0.2).timeout
+	_expect(player2.current_state == Mangler.State.BLOCKING, "BLOCKING mantiene i fotogrammi 4-7")
+	await create_timer(0.1).timeout
+	_expect(
+		player2.current_state == Mangler.State.BLOCK_RECOVERY
+		and player2.animated_sprite.animation == &"block_mid_recovery",
+		"a fine blocco prosegue dai fotogrammi 8-16"
+	)
+	await create_timer(0.6).timeout
+	_expect(player2.current_state == Mangler.State.IDLE, "block_mid_recovery termina in IDLE")
 
 	player2.combat.take_damage(player2.combat.current_health, player1)
 	_expect(player2.combat.current_health == 0, "danno letale porta la vita a zero")
