@@ -22,6 +22,8 @@ var current_attack: AttackData
 var current_attack_direction := FighterInputBuffer.Direction.NEUTRAL
 var action_generation := 0
 var hit_targets: Array[Mangler] = []
+var light_punch_connected_targets: Array[Mangler] = []
+var light_punch_followup_done := false
 
 @onready var hitbox: Area2D = get_parent().get_node("Hitbox")
 @onready var hitbox_shape: CollisionShape2D = get_parent().get_node("Hitbox/HitboxShape")
@@ -67,6 +69,8 @@ func try_attack(
 	current_attack = attack
 	current_attack_direction = input_direction
 	hit_targets.clear()
+	light_punch_connected_targets.clear()
+	light_punch_followup_done = false
 	configure_hitbox(attack)
 	fighter.change_state(Mangler.State.ATTACKING)
 	attack_started.emit(attack_name)
@@ -100,6 +104,7 @@ func try_attack(
 	is_attacking = false
 	current_attack = null
 	hit_targets.clear()
+	light_punch_connected_targets.clear()
 	fighter.change_state(Mangler.State.IDLE)
 	attack_finished.emit()
 
@@ -110,7 +115,8 @@ func take_damage(
 	hitstun: float = DEFAULT_HITSTUN,
 	blockstun: float = DEFAULT_BLOCKSTUN,
 	hit_height: AttackData.HitHeight = AttackData.HitHeight.MID,
-	causes_knockdown: bool = false
+	causes_knockdown: bool = false,
+	hit_reaction_start_frame: int = 0
 ) -> void:
 	if fighter.current_state in [Mangler.State.KNOCKDOWN_RECOVERY, Mangler.State.KNOCKED_DOWN]:
 		return
@@ -136,7 +142,7 @@ func take_damage(
 	elif causes_knockdown:
 		sweep_knockdown_reaction(attacker)
 	else:
-		hit_reaction(hitstun, hit_height, attacker)
+		hit_reaction(hitstun, hit_height, attacker, hit_reaction_start_frame)
 
 
 func block_reaction(duration: float, hit_height: AttackData.HitHeight) -> void:
@@ -162,11 +168,16 @@ func block_reaction(duration: float, hit_height: AttackData.HitHeight) -> void:
 func hit_reaction(
 	duration: float,
 	hit_height: AttackData.HitHeight,
-	attacker: Mangler
+	attacker: Mangler,
+	hit_reaction_start_frame: int = 0
 ) -> void:
 	cancel_current_action()
 	var hit_generation := action_generation
-	var animation_duration := fighter.start_hit_reaction(hit_height, attacker)
+	var animation_duration := fighter.start_hit_reaction(
+		hit_height,
+		attacker,
+		hit_reaction_start_frame
+	)
 	var reaction_duration := maxf(duration, animation_duration)
 
 	await get_tree().create_timer(reaction_duration).timeout
@@ -211,6 +222,8 @@ func cancel_current_action() -> void:
 	current_attack = null
 	current_attack_direction = FighterInputBuffer.Direction.NEUTRAL
 	hit_targets.clear()
+	light_punch_connected_targets.clear()
+	light_punch_followup_done = false
 	disable_hitbox()
 
 
@@ -236,7 +249,33 @@ func configure_hitbox(attack: AttackData) -> void:
 		hitbox_shape.position = attack.hitbox_position
 
 
+func perform_light_punch_followup() -> void:
+	"""Al frame 8 riavvia la reazione dei bersagli colpiti dal primo pugno."""
+	if light_punch_followup_done or not is_attacking or current_attack == null:
+		return
+	if current_attack.attack_id != &"light_punch":
+		return
+
+	light_punch_followup_done = true
+	for target in light_punch_connected_targets.duplicate():
+		if target == null or not is_instance_valid(target):
+			continue
+		target.combat.take_damage(
+			current_attack.damage,
+			fighter,
+			current_attack.hitstun,
+			current_attack.blockstun,
+			current_attack.hit_height,
+			current_attack.causes_knockdown,
+			4
+		)
+
+
 func _on_hitbox_area_entered(area: Area2D) -> void:
+	_apply_hit_to_area(area)
+
+
+func _apply_hit_to_area(area: Area2D) -> void:
 	if not area.is_in_group("hurtbox") or not is_attacking:
 		return
 
@@ -244,11 +283,17 @@ func _on_hitbox_area_entered(area: Area2D) -> void:
 	if target == null or target == fighter or hit_targets.has(target) or current_attack == null:
 		return
 	hit_targets.append(target)
+	if (
+		current_attack.attack_id == &"light_punch"
+		and not light_punch_connected_targets.has(target)
+	):
+		light_punch_connected_targets.append(target)
 	target.combat.take_damage(
 		current_attack.damage,
 		fighter,
 		current_attack.hitstun,
 		current_attack.blockstun,
 		current_attack.hit_height,
-		current_attack.causes_knockdown
+		current_attack.causes_knockdown,
+		current_attack.hit_reaction_start_frame
 	)

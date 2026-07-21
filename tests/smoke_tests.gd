@@ -50,8 +50,10 @@ func _test_attack_data() -> void:
 		"startup, active e recovery determinano la durata totale"
 	)
 	_expect(
-		light_punch != null and light_punch.hit_height == AttackData.HitHeight.MID,
-		"gli attacchi senza altezza esplicita colpiscono al centro"
+		light_punch != null
+		and light_punch.hit_height == AttackData.HitHeight.HIGH
+		and light_punch.hit_reaction_start_frame == 3,
+		"il light punch colpisce alto e avvia la reazione dal quarto frame"
 	)
 	var heavy_punch := character_data.get_attack(&"heavy_punch")
 	_expect(
@@ -691,6 +693,11 @@ func _test_combat_flow() -> void:
 		and player1.combat.hitbox_shape.position == light_punch.hitbox_position,
 		"AttackData configura geometria e posizione della hitbox"
 	)
+	_expect(
+		light_punch.hitbox_size == Vector2(150.0, 35.0)
+		and light_punch.hitbox_position == Vector2(75.0, -110.0),
+		"il light punch ha 150 px di portata soltanto verso l'avversario"
+	)
 	await create_timer(player1.get_animation_duration(&"light_punch_single") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "il jab singolo completa anche il ritorno 6-1")
 
@@ -703,6 +710,17 @@ func _test_combat_flow() -> void:
 		and player1.animated_sprite.animation == &"light_punch_double",
 		"un secondo light ravvicinato converte il jab nella combo da 16 frame"
 	)
+	player1.combat.light_punch_connected_targets.append(player2)
+	player1.animated_sprite.frame = 7
+	player1._on_animation_frame_changed()
+	_expect(
+		player1.combat.light_punch_followup_done
+		and player2.animated_sprite.animation == &"hurt_high"
+		and player2.animated_sprite.frame == 4,
+		"il frame 8 della combo riavvia hurt_high del primo bersaglio dal frame 5"
+	)
+	player2.combat.reset()
+	player2.change_state(Mangler.State.IDLE)
 	await create_timer(player1.get_animation_duration(&"light_punch_double") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "la combo light completa torna in IDLE")
 
@@ -726,15 +744,18 @@ func _test_combat_flow() -> void:
 		player1,
 		FighterCombat.DEFAULT_HITSTUN,
 		FighterCombat.DEFAULT_BLOCKSTUN,
-		AttackData.HitHeight.HIGH
+		AttackData.HitHeight.HIGH,
+		false,
+		3
 	)
 	_expect(
 		player2.current_state == Mangler.State.HIT
-		and player2.animated_sprite.animation == &"hurt_high",
-		"un colpo alto potente al volto riproduce hurt_high"
+		and player2.animated_sprite.animation == &"hurt_high"
+		and player2.animated_sprite.frame == 3,
+		"il light punch riproduce hurt_high partendo dal fotogramma 4"
 	)
-	await create_timer(1.05).timeout
-	_expect(player2.current_state == Mangler.State.IDLE, "hurt_high completa tutti i 16 frame")
+	await create_timer(0.85).timeout
+	_expect(player2.current_state == Mangler.State.IDLE, "hurt_high completa i fotogrammi 4-16")
 
 	player2.combat.take_damage(
 		0,

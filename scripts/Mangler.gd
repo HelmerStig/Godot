@@ -457,13 +457,19 @@ func return_to_crouch_after_low_block() -> void:
 	update_collision_profile()
 
 
-func start_hit_reaction(hit_height: AttackData.HitHeight, attacker: Mangler) -> float:
+func start_hit_reaction(
+	hit_height: AttackData.HitHeight,
+	attacker: Mangler,
+	start_frame: int = 0
+) -> float:
 	"""Avvia da capo la reazione e applica un breve rinculo opposto all'attaccante."""
 	received_hit_height = hit_height
 	change_state(State.HIT)
 	var hit_animation := get_hit_animation(hit_height)
 	if animated_sprite.sprite_frames.has_animation(hit_animation):
 		animated_sprite.play(hit_animation)
+		var final_frame := animated_sprite.sprite_frames.get_frame_count(hit_animation) - 1
+		animated_sprite.frame = clampi(start_frame, 0, final_frame)
 
 	var push_direction := -1.0 if is_facing_right else 1.0
 	if attacker != null and is_instance_valid(attacker):
@@ -471,7 +477,7 @@ func start_hit_reaction(hit_height: AttackData.HitHeight, attacker: Mangler) -> 
 		if is_zero_approx(push_direction):
 			push_direction = -1.0 if is_facing_right else 1.0
 	velocity.x = push_direction * HIT_PUSHBACK_SPEED
-	return get_animation_duration(hit_animation)
+	return get_animation_duration(hit_animation, start_frame)
 
 
 func start_sweep_knockdown(attacker: Mangler) -> float:
@@ -498,7 +504,7 @@ func start_knockdown_recovery() -> float:
 	return get_animation_duration(&"knockdown_recovery")
 
 
-func get_animation_duration(animation_name: StringName) -> float:
+func get_animation_duration(animation_name: StringName, start_frame: int = 0) -> float:
 	if not animated_sprite.sprite_frames.has_animation(animation_name):
 		return 0.0
 	var frames := animated_sprite.sprite_frames
@@ -506,7 +512,8 @@ func get_animation_duration(animation_name: StringName) -> float:
 	if speed <= 0.0:
 		return 0.0
 	var duration := 0.0
-	for frame_index in frames.get_frame_count(animation_name):
+	var first_frame := clampi(start_frame, 0, frames.get_frame_count(animation_name) - 1)
+	for frame_index in range(first_frame, frames.get_frame_count(animation_name)):
 		duration += frames.get_frame_duration(animation_name, frame_index) / speed
 	return duration
 
@@ -739,7 +746,13 @@ func _on_animation_finished() -> void:
 
 
 func _on_animation_frame_changed() -> void:
-	if animated_sprite.animation == &"crouch":
+	if (
+		animated_sprite.animation == &"light_punch_double"
+		and animated_sprite.frame >= 7
+		and current_state == State.ATTACKING
+	):
+		combat.perform_light_punch_followup()
+	elif animated_sprite.animation == &"crouch":
 		update_collision_profile()
 	elif (
 		animated_sprite.animation == &"dodge"
