@@ -457,6 +457,16 @@ func return_to_crouch_after_low_block() -> void:
 	update_collision_profile()
 
 
+func return_to_crouch_pose() -> void:
+	"""Ripristina e mantiene il settimo frame di crouch dopo un attacco basso."""
+	change_state(State.CROUCHING)
+	if animated_sprite.sprite_frames.has_animation(&"crouch"):
+		animated_sprite.play(&"crouch")
+		animated_sprite.frame = animated_sprite.sprite_frames.get_frame_count(&"crouch") - 1
+		animated_sprite.pause()
+	update_collision_profile()
+
+
 func start_hit_reaction(
 	hit_height: AttackData.HitHeight,
 	attacker: Mangler,
@@ -728,7 +738,15 @@ func _on_combat_knocked_out() -> void:
 
 func _on_combat_attack_started(attack_name: StringName) -> void:
 	light_punch_combo_queued = false
-	if attack_name == &"light_punch" and animated_sprite.sprite_frames.has_animation(&"light_punch_single"):
+	if attack_name == &"light_punch" and combat.is_crouched_light_punch:
+		var crouched_animation := (
+			&"crouched_punch_crouched"
+			if combat.crouched_punch_started_crouched
+			else &"crouched_punch"
+		)
+		if animated_sprite.sprite_frames.has_animation(crouched_animation):
+			animated_sprite.play(crouched_animation)
+	elif attack_name == &"light_punch" and animated_sprite.sprite_frames.has_animation(&"light_punch_single"):
 		animated_sprite.play(&"light_punch_single")
 	attack_started.emit(attack_name)
 

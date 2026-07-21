@@ -187,6 +187,27 @@ func _test_combat_flow() -> void:
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_punch_double"),
 		"entrambe le animazioni light sono non cicliche a 24 FPS"
 	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"crouched_punch")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_punch") == 16,
+		"il pugno basso da posizione alta usa i fotogrammi 1-16"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"crouched_punch_crouched")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_punch_crouched") == 8,
+		"il pugno basso da crouch usa i fotogrammi 9-16"
+	)
+	_expect(
+		is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_punch"),
+			24.0
+		)
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_punch_crouched"),
+			24.0
+		),
+		"le due varianti del pugno basso sono configurate a 24 FPS"
+	)
 
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"walk"),
@@ -733,6 +754,26 @@ func _test_combat_flow() -> void:
 	player2.change_state(Mangler.State.IDLE)
 	await create_timer(player1.get_animation_duration(&"light_punch_double") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "la combo light completa torna in IDLE")
+
+	player1.combat.try_attack(&"light_punch", FighterInputBuffer.Direction.DOWN)
+	_expect(
+		player1.combat.is_crouched_light_punch
+		and not player1.combat.crouched_punch_started_crouched
+		and player1.animated_sprite.animation == &"crouched_punch",
+		"DOWN+light da posizione alta parte dal fotogramma 1 di crouched_punch"
+	)
+	await create_timer(player1.get_animation_duration(&"crouched_punch") + 0.05).timeout
+	player1.change_state(Mangler.State.CROUCHING)
+	player1.animated_sprite.frame = 6
+	player1.animated_sprite.pause()
+	player1.combat.try_attack(&"light_punch", FighterInputBuffer.Direction.DOWN)
+	_expect(
+		player1.combat.is_crouched_light_punch
+		and player1.combat.crouched_punch_started_crouched
+		and player1.animated_sprite.animation == &"crouched_punch_crouched",
+		"DOWN+light dal frame 7 di crouch passa al fotogramma 9 di crouched_punch"
+	)
+	await create_timer(player1.get_animation_duration(&"crouched_punch_crouched") + 0.05).timeout
 
 	var position_before_hit := player2.position.x
 	player2.combat.take_damage(20, player1)

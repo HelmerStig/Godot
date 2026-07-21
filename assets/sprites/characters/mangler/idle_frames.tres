@@ -17,6 +17,71 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/block_high.png" id="15_block_high"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/block_low.png" id="16_block_low"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/light_punch_double.png" id="17_light_punch_double"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouched_punch.png" id="18_crouched_punch"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_00"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_01"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_02"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_03"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_04"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_05"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_06"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_07"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_08"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_09"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_10"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_11"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_12"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_13"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_14"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_15"]
+atlas = ExtResource("18_crouched_punch")
+region = Rect2(1536, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_00"]
 atlas = ExtResource("17_light_punch_double")
@@ -1349,6 +1414,88 @@ region = Rect2(2048, 2048, 512, 512)
 [resource]
 resource_name = "ManglerIdleFrames"
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_00")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_15")
+}],
+"loop": 0,
+"name": &"crouched_punch",
+"speed": 24.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_punch_15")
+}],
+"loop": 0,
+"name": &"crouched_punch_crouched",
+"speed": 24.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_light_punch_00")

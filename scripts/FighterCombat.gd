@@ -24,6 +24,8 @@ var action_generation := 0
 var hit_targets: Array[Mangler] = []
 var light_punch_connected_targets: Array[Mangler] = []
 var light_punch_followup_done := false
+var is_crouched_light_punch := false
+var crouched_punch_started_crouched := false
 
 @onready var hitbox: Area2D = get_parent().get_node("Hitbox")
 @onready var hitbox_shape: CollisionShape2D = get_parent().get_node("Hitbox/HitboxShape")
@@ -53,7 +55,18 @@ func try_attack(
 	attack_name: StringName,
 	input_direction: int = FighterInputBuffer.Direction.NEUTRAL
 ) -> void:
-	if fighter.current_state not in [Mangler.State.IDLE, Mangler.State.WALKING]:
+	var wants_crouched_punch := (
+		attack_name == &"light_punch"
+		and input_direction in [
+			FighterInputBuffer.Direction.DOWN,
+			FighterInputBuffer.Direction.DOWN_FORWARD,
+			FighterInputBuffer.Direction.DOWN_BACK,
+		]
+	)
+	var starts_crouched := fighter.current_state == Mangler.State.CROUCHING
+	if fighter.current_state not in [Mangler.State.IDLE, Mangler.State.WALKING] and not (
+		wants_crouched_punch and starts_crouched
+	):
 		return
 	if is_attacking or not fighter.is_on_floor():
 		return
@@ -68,6 +81,8 @@ func try_attack(
 	is_blocking = false
 	current_attack = attack
 	current_attack_direction = input_direction
+	is_crouched_light_punch = wants_crouched_punch
+	crouched_punch_started_crouched = wants_crouched_punch and starts_crouched
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	light_punch_followup_done = false
@@ -95,7 +110,12 @@ func try_attack(
 	if attack.attack_id == &"light_punch":
 		while (
 			attack_generation == action_generation
-			and fighter.animated_sprite.animation in [&"light_punch_single", &"light_punch_double"]
+			and fighter.animated_sprite.animation in [
+				&"light_punch_single",
+				&"light_punch_double",
+				&"crouched_punch",
+				&"crouched_punch_crouched",
+			]
 			and fighter.animated_sprite.is_playing()
 		):
 			await get_tree().process_frame
@@ -105,7 +125,17 @@ func try_attack(
 	current_attack = null
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
-	fighter.change_state(Mangler.State.IDLE)
+	var should_return_to_crouch := (
+		is_crouched_light_punch
+		and fighter.input_buffer != null
+		and fighter.input_buffer.is_down_held()
+	)
+	is_crouched_light_punch = false
+	crouched_punch_started_crouched = false
+	if should_return_to_crouch:
+		fighter.return_to_crouch_pose()
+	else:
+		fighter.change_state(Mangler.State.IDLE)
 	attack_finished.emit()
 
 
@@ -226,6 +256,8 @@ func cancel_current_action() -> void:
 	is_blocking = false
 	current_attack = null
 	current_attack_direction = FighterInputBuffer.Direction.NEUTRAL
+	is_crouched_light_punch = false
+	crouched_punch_started_crouched = false
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	light_punch_followup_done = false
@@ -291,15 +323,21 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	hit_targets.append(target)
 	if (
 		current_attack.attack_id == &"light_punch"
+		and not is_crouched_light_punch
 		and not light_punch_connected_targets.has(target)
 	):
 		light_punch_connected_targets.append(target)
+	var effective_hit_height := current_attack.hit_height
+	var effective_reaction_frame := current_attack.hit_reaction_start_frame
+	if current_attack.attack_id == &"light_punch" and is_crouched_light_punch:
+		effective_hit_height = AttackData.HitHeight.MID
+		effective_reaction_frame = 3
 	target.combat.take_damage(
 		current_attack.damage,
 		fighter,
 		current_attack.hitstun,
 		current_attack.blockstun,
-		current_attack.hit_height,
+		effective_hit_height,
 		current_attack.causes_knockdown,
-		current_attack.hit_reaction_start_frame
+		effective_reaction_frame
 	)
