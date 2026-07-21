@@ -195,13 +195,23 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_punch")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_punch") == 16,
-		"il pugno basso da posizione alta usa i fotogrammi 1-16"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_punch") == 23,
+		"il pugno basso da posizione alta usa i fotogrammi 1-12 e torna fino al primo"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_punch_crouched")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_punch_crouched") == 8,
-		"il pugno basso da crouch usa i fotogrammi 9-16"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_punch_crouched") == 15,
+		"il pugno basso da crouch usa 9-12 e torna fino al primo"
+	)
+	var crouched_sheet_frames := player1.animated_sprite.sprite_frames
+	var crouched_peak := crouched_sheet_frames.get_frame_texture(&"crouched_punch", 11) as AtlasTexture
+	var crouched_reverse := crouched_sheet_frames.get_frame_texture(&"crouched_punch", 12) as AtlasTexture
+	var crouched_last := crouched_sheet_frames.get_frame_texture(&"crouched_punch", 22) as AtlasTexture
+	_expect(
+		crouched_peak.region.position == Vector2(1536.0, 1024.0)
+		and crouched_reverse.region.position == Vector2(1024.0, 1024.0)
+		and crouched_last.region.position == Vector2.ZERO,
+		"crouched_punch raggiunge il frame 12, inverte e termina sul frame 1"
 	)
 	_expect(
 		is_equal_approx(
