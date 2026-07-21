@@ -436,6 +436,24 @@ func start_block_recovery() -> float:
 	return get_animation_duration(recovery_animation)
 
 
+func is_holding_low_guard() -> bool:
+	return (
+		input_buffer != null
+		and input_buffer.is_down_held()
+		and input_buffer.is_back_held()
+	)
+
+
+func return_to_crouch_after_low_block() -> void:
+	"""Passa dal frame finale della parata al settimo frame fermo di crouch."""
+	change_state(State.CROUCHING)
+	if animated_sprite.sprite_frames.has_animation(&"crouch"):
+		animated_sprite.play(&"crouch")
+		animated_sprite.frame = animated_sprite.sprite_frames.get_frame_count(&"crouch") - 1
+		animated_sprite.pause()
+	update_collision_profile()
+
+
 func start_hit_reaction(hit_height: AttackData.HitHeight, attacker: Mangler) -> float:
 	"""Avvia da capo la reazione e applica un breve rinculo opposto all'attaccante."""
 	received_hit_height = hit_height

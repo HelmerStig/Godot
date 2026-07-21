@@ -815,6 +815,26 @@ func _test_combat_flow() -> void:
 	)
 	player2.change_state(Mangler.State.IDLE)
 
+	player2.change_state(Mangler.State.CROUCHING)
+	Input.action_press(&"p2_move_right")
+	Input.action_press(&"p2_crouch")
+	await physics_frame
+	player2.combat.block_reaction(FighterCombat.DEFAULT_BLOCKSTUN, AttackData.HitHeight.LOW)
+	await create_timer(0.55).timeout
+	_expect(
+		player2.current_state == Mangler.State.CROUCHING
+		and player2.animated_sprite.animation == &"crouch"
+		and player2.animated_sprite.frame == 6
+		and not player2.animated_sprite.is_playing(),
+		"mantenere basso e indietro passa dal frame 16 al frame 7 di crouch"
+	)
+	Input.action_release(&"p2_move_right")
+	Input.action_release(&"p2_crouch")
+	await physics_frame
+	player2.combat.set_guarding(false)
+	player2.input_buffer.clear()
+	player2.change_state(Mangler.State.IDLE)
+
 	player2.combat.take_damage(player2.combat.current_health, player1)
 	_expect(player2.combat.current_health == 0, "danno letale porta la vita a zero")
 	_expect(player2.current_state == Mangler.State.KNOCKED_DOWN, "danno letale attiva KO")

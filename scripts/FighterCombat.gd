@@ -140,6 +140,9 @@ func block_reaction(duration: float, hit_height: AttackData.HitHeight) -> void:
 	await get_tree().create_timer(reaction_duration).timeout
 	if block_generation != action_generation or current_health <= 0:
 		return
+	if hit_height == AttackData.HitHeight.LOW and fighter.is_holding_low_guard():
+		fighter.return_to_crouch_after_low_block()
+		return
 	var recovery_duration := fighter.start_block_recovery()
 	await get_tree().create_timer(recovery_duration).timeout
 	if block_generation != action_generation or current_health <= 0:
