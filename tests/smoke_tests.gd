@@ -374,6 +374,22 @@ func _test_combat_flow() -> void:
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"block_mid_recovery"),
 		"block_mid_recovery è non ciclica a 16 FPS"
 	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"ko"),
+		"SpriteFrames contiene ko"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"ko") == 25,
+		"ko contiene le 25 celle da 512"
+	)
+	_expect(
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"ko"), 16.0),
+		"ko è configurato a 16 FPS"
+	)
+	_expect(
+		not player1.animated_sprite.sprite_frames.get_animation_loop(&"ko"),
+		"ko non è configurato in loop"
+	)
 	player1.is_facing_right = true
 	player1.velocity.x = 100.0
 	player1.change_state(Mangler.State.WALKING)
@@ -712,11 +728,20 @@ func _test_combat_flow() -> void:
 	player2.combat.take_damage(player2.combat.current_health, player1)
 	_expect(player2.combat.current_health == 0, "danno letale porta la vita a zero")
 	_expect(player2.current_state == Mangler.State.KNOCKED_DOWN, "danno letale attiva KO")
+	_expect(player2.animated_sprite.animation == &"ko", "il danno letale riproduce ko")
 	_expect(not bool(arena.get("round_active")), "KO ferma il training")
 	_expect(not player1.controls_enabled and not player2.controls_enabled, "KO blocca i controlli")
 	_expect(
 		round_label.visible and round_label.text.begins_with("PLAYER 1 WINS"),
 		"KO aggiorna il messaggio UI"
+	)
+	await create_timer(1.65).timeout
+	_expect(
+		player2.current_state == Mangler.State.KNOCKED_DOWN
+		and player2.animated_sprite.animation == &"ko"
+		and player2.animated_sprite.frame == 24
+		and not player2.animated_sprite.is_playing(),
+		"KO completa i 25 frame e mantiene la posa finale"
 	)
 
 	arena.call("start_round")

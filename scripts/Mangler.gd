@@ -349,6 +349,13 @@ func update_animation() -> void:
 				animated_sprite.play(&"knockdown_recovery")
 			return
 
+	if current_state == State.KNOCKED_DOWN:
+		if animated_sprite.sprite_frames.has_animation(&"ko"):
+			# Non riavviare il KO quando ha raggiunto la posa finale a terra.
+			if animated_sprite.animation != &"ko":
+				animated_sprite.play(&"ko")
+			return
+
 	var next_animation: StringName = &"idle"
 	if current_state == State.WALKING:
 		next_animation = &"backwalk" if is_moving_backward() else &"walk"

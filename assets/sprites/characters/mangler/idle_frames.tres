@@ -13,6 +13,107 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/sweep_knockdown.png" id="11_sweep_knockdown"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/knockdown_recovery.png" id="12_knockdown_recovery"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/block_mid.png" id="13_block_mid"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/ko.png" id="14_ko"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_00"]
+atlas = ExtResource("14_ko")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_01"]
+atlas = ExtResource("14_ko")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_02"]
+atlas = ExtResource("14_ko")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_03"]
+atlas = ExtResource("14_ko")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_04"]
+atlas = ExtResource("14_ko")
+region = Rect2(2048, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_05"]
+atlas = ExtResource("14_ko")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_06"]
+atlas = ExtResource("14_ko")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_07"]
+atlas = ExtResource("14_ko")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_08"]
+atlas = ExtResource("14_ko")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_09"]
+atlas = ExtResource("14_ko")
+region = Rect2(2048, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_10"]
+atlas = ExtResource("14_ko")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_11"]
+atlas = ExtResource("14_ko")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_12"]
+atlas = ExtResource("14_ko")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_13"]
+atlas = ExtResource("14_ko")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_14"]
+atlas = ExtResource("14_ko")
+region = Rect2(2048, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_15"]
+atlas = ExtResource("14_ko")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_16"]
+atlas = ExtResource("14_ko")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_17"]
+atlas = ExtResource("14_ko")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_18"]
+atlas = ExtResource("14_ko")
+region = Rect2(1536, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_19"]
+atlas = ExtResource("14_ko")
+region = Rect2(2048, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_20"]
+atlas = ExtResource("14_ko")
+region = Rect2(0, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_21"]
+atlas = ExtResource("14_ko")
+region = Rect2(512, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_22"]
+atlas = ExtResource("14_ko")
+region = Rect2(1024, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_23"]
+atlas = ExtResource("14_ko")
+region = Rect2(1536, 2048, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko_24"]
+atlas = ExtResource("14_ko")
+region = Rect2(2048, 2048, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_block_mid_00"]
 atlas = ExtResource("13_block_mid")
@@ -1894,6 +1995,112 @@ animations = [{
 ],
 "loop": 0,
 "name": &"block_mid_recovery",
+"speed": 16.0
+}, {
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_00")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_01")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_02")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_03")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_04")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_05")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_06")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_07")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_08")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_09")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_10")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_11")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_12")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_13")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_14")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_15")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_16")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_17")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_18")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_19")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_20")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_21")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_22")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_23")
+},
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko_24")
+}
+],
+"loop": 0,
+"name": &"ko",
 "speed": 16.0
 }, {
 "frames": [{
