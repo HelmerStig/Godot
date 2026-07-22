@@ -194,6 +194,44 @@ func _test_combat_flow() -> void:
 		"entrambe le animazioni light sono non cicliche a 24 FPS"
 	)
 	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"medium_open_hand_slap")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_open_hand_slap") == 16
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"medium_open_hand_slap"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"medium_open_hand_slap"),
+		"lo schiaffo medio usa tutti i 16 frame, non ciclici, a 24 FPS"
+	)
+	var medium_slap_last := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"medium_open_hand_slap", 15)
+		as AtlasTexture
+	)
+	_expect(
+		medium_slap_last.region.position == Vector2(1536.0, 1536.0),
+		"lo schiaffo medio termina sul sedicesimo fotogramma del foglio"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_punch")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_punch") == 16
+		and player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_punch_crouched")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_punch_crouched") == 12,
+		"il medio basso usa 1-16 da posizione alta e 5-16 dal crouch"
+	)
+	var crouched_medium_first := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"crouched_medium_punch_crouched", 0)
+		as AtlasTexture
+	)
+	_expect(
+		crouched_medium_first.region.position == Vector2(0.0, 512.0)
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_medium_punch"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_medium_punch"),
+		"dal crouch il medio basso parte dal frame 5 ed entrambe le varianti sono non cicliche a 24 FPS"
+	)
+	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_punch")
 		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_punch") == 23,
 		"il pugno basso da posizione alta usa i fotogrammi 1-12 e torna fino al primo"
@@ -737,6 +775,50 @@ func _test_combat_flow() -> void:
 	)
 	await create_timer(player1.get_animation_duration(&"light_punch_single") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "il jab singolo completa anche il ritorno 6-1")
+
+	var medium_punch := player1.character_data.get_attack(&"medium_punch")
+	player1.combat.try_attack(&"medium_punch")
+	_expect(
+		player1.animated_sprite.animation == &"medium_open_hand_slap"
+		and medium_punch.hit_height == AttackData.HitHeight.HIGH,
+		"il pugno medio avvia lo schiaffo a mano aperta come colpo alto"
+	)
+	await create_timer(player1.get_animation_duration(&"medium_open_hand_slap") + 0.05).timeout
+	_expect(player1.current_state == Mangler.State.IDLE, "lo schiaffo medio completa tutti i 16 frame")
+
+	player1.combat.try_attack(&"medium_punch", FighterInputBuffer.Direction.DOWN)
+	_expect(
+		player1.combat.is_crouched_medium_punch
+		and not player1.combat.crouched_medium_punch_started_crouched
+		and player1.animated_sprite.animation == &"crouched_medium_punch",
+		"DOWN+medio da posizione alta avvia il gancio ai reni dal frame 1"
+	)
+	var crouched_medium_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		crouched_medium_shape.size == medium_punch.hitbox_size + Vector2(80.0, 0.0)
+		and player1.combat.hitbox_shape.position
+		== medium_punch.hitbox_position + Vector2(40.0, 0.0),
+		"il gancio medio basso estende la hitbox di 80 px soltanto verso l'avversario"
+	)
+	var crouched_medium_phases := player1.combat.get_attack_phase_durations(medium_punch)
+	_expect(
+		is_equal_approx(crouched_medium_phases.x, 8.0 / 24.0)
+		and is_equal_approx(crouched_medium_phases.y, 3.0 / 24.0)
+		and player1.combat.get_hit_reaction_start_frame(medium_punch) == 4,
+		"al frame 9 il medio basso diventa attivo e hurt-medium parte dal frame 5"
+	)
+	await create_timer(player1.get_animation_duration(&"crouched_medium_punch") + 0.05).timeout
+	player1.change_state(Mangler.State.CROUCHING)
+	player1.animated_sprite.pause()
+	player1.animated_sprite.frame = 6
+	player1.combat.try_attack(&"medium_punch", FighterInputBuffer.Direction.DOWN)
+	_expect(
+		player1.combat.is_crouched_medium_punch
+		and player1.combat.crouched_medium_punch_started_crouched
+		and player1.animated_sprite.animation == &"crouched_medium_punch_crouched",
+		"DOWN+medio dal crouch avvia il gancio ai reni dal frame 5"
+	)
+	await create_timer(medium_punch.get_total_duration() + 0.05).timeout
 
 	player1.combat.try_attack(&"light_punch")
 	await create_timer(0.05).timeout

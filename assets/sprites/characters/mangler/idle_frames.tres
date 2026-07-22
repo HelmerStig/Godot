@@ -18,6 +18,136 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/block_low.png" id="16_block_low"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/light_punch_double.png" id="17_light_punch_double"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouched_punch.png" id="18_crouched_punch"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/medium_open-hand_slap.png" id="19_medium_open_hand_slap"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouched_medium_punch.png" id="20_crouched_medium_punch"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_00"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_01"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_02"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_03"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_04"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_05"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_06"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_07"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_08"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_09"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_10"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_11"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_12"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_13"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_14"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouched_medium_15"]
+atlas = ExtResource("20_crouched_medium_punch")
+region = Rect2(1536, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_00"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_01"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_02"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_03"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_04"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_05"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_06"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_07"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_08"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_09"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_10"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_11"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_12"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_13"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_14"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_medium_slap_15"]
+atlas = ExtResource("19_medium_open_hand_slap")
+region = Rect2(1536, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouched_punch_00"]
 atlas = ExtResource("18_crouched_punch")
@@ -2815,6 +2945,153 @@ animations = [{
 "loop": 0,
 "name": &"ko",
 "speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_00")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_15")
+}],
+"loop": 0,
+"name": &"crouched_medium_punch",
+"speed": 24.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouched_medium_15")
+}],
+"loop": 0,
+"name": &"crouched_medium_punch_crouched",
+"speed": 24.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_00")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_medium_slap_15")
+}],
+"loop": 0,
+"name": &"medium_open_hand_slap",
+"speed": 24.0
 }, {
 "frames": [{
 "duration": 1.0,

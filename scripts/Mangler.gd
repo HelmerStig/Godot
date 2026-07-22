@@ -748,6 +748,16 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 			animated_sprite.play(crouched_animation)
 	elif attack_name == &"light_punch" and animated_sprite.sprite_frames.has_animation(&"light_punch_single"):
 		animated_sprite.play(&"light_punch_single")
+	elif attack_name == &"medium_punch" and combat.is_crouched_medium_punch:
+		var crouched_medium_animation := (
+			&"crouched_medium_punch_crouched"
+			if combat.crouched_medium_punch_started_crouched
+			else &"crouched_medium_punch"
+		)
+		if animated_sprite.sprite_frames.has_animation(crouched_medium_animation):
+			animated_sprite.play(crouched_medium_animation)
+	elif attack_name == &"medium_punch" and animated_sprite.sprite_frames.has_animation(&"medium_open_hand_slap"):
+		animated_sprite.play(&"medium_open_hand_slap")
 	attack_started.emit(attack_name)
 
 

@@ -11,6 +11,8 @@ signal attack_finished
 const DEFAULT_HITSTUN := 0.3
 const DEFAULT_BLOCKSTUN := 0.15
 const SWEEP_GROUNDED_HOLD := 0.35
+const CROUCHED_MEDIUM_FORWARD_EXTENSION := 80.0
+const ATTACK_ANIMATION_FPS := 24.0
 
 var fighter: Mangler
 var character_data: CharacterData
@@ -26,6 +28,8 @@ var light_punch_connected_targets: Array[Mangler] = []
 var light_punch_followup_done := false
 var is_crouched_light_punch := false
 var crouched_punch_started_crouched := false
+var is_crouched_medium_punch := false
+var crouched_medium_punch_started_crouched := false
 
 @onready var hitbox: Area2D = get_parent().get_node("Hitbox")
 @onready var hitbox_shape: CollisionShape2D = get_parent().get_node("Hitbox/HitboxShape")
@@ -63,9 +67,17 @@ func try_attack(
 			FighterInputBuffer.Direction.DOWN_BACK,
 		]
 	)
+	var wants_crouched_medium_punch := (
+		attack_name == &"medium_punch"
+		and input_direction in [
+			FighterInputBuffer.Direction.DOWN,
+			FighterInputBuffer.Direction.DOWN_FORWARD,
+			FighterInputBuffer.Direction.DOWN_BACK,
+		]
+	)
 	var starts_crouched := fighter.current_state == Mangler.State.CROUCHING
 	if fighter.current_state not in [Mangler.State.IDLE, Mangler.State.WALKING] and not (
-		wants_crouched_punch and starts_crouched
+		(wants_crouched_punch or wants_crouched_medium_punch) and starts_crouched
 	):
 		return
 	if is_attacking or not fighter.is_on_floor():
@@ -83,31 +95,34 @@ func try_attack(
 	current_attack_direction = input_direction
 	is_crouched_light_punch = wants_crouched_punch
 	crouched_punch_started_crouched = wants_crouched_punch and starts_crouched
+	is_crouched_medium_punch = wants_crouched_medium_punch
+	crouched_medium_punch_started_crouched = wants_crouched_medium_punch and starts_crouched
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	light_punch_followup_done = false
 	configure_hitbox(attack)
 	fighter.change_state(Mangler.State.ATTACKING)
 	attack_started.emit(attack_name)
+	var phase_durations := get_attack_phase_durations(attack)
 
 	# Startup.
-	await get_tree().create_timer(attack.startup).timeout
+	await get_tree().create_timer(phase_durations.x).timeout
 	if attack_generation != action_generation:
 		return
 	enable_hitbox()
 	print("Eseguendo attacco: %s (danno: %d)" % [attack_name, attack.damage])
 
 	# Frame attivi.
-	await get_tree().create_timer(attack.active).timeout
+	await get_tree().create_timer(phase_durations.y).timeout
 	if attack_generation != action_generation:
 		return
 	disable_hitbox()
 
 	# Recovery.
-	await get_tree().create_timer(attack.recovery).timeout
+	await get_tree().create_timer(phase_durations.z).timeout
 	if attack_generation != action_generation:
 		return
-	if attack.attack_id == &"light_punch":
+	if attack.attack_id in [&"light_punch", &"medium_punch"]:
 		while (
 			attack_generation == action_generation
 			and fighter.animated_sprite.animation in [
@@ -115,6 +130,9 @@ func try_attack(
 				&"light_punch_double",
 				&"crouched_punch",
 				&"crouched_punch_crouched",
+				&"medium_open_hand_slap",
+				&"crouched_medium_punch",
+				&"crouched_medium_punch_crouched",
 			]
 			and fighter.animated_sprite.is_playing()
 		):
@@ -126,12 +144,14 @@ func try_attack(
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	var should_return_to_crouch := (
-		is_crouched_light_punch
+		(is_crouched_light_punch or is_crouched_medium_punch)
 		and fighter.input_buffer != null
 		and fighter.input_buffer.is_down_held()
 	)
 	is_crouched_light_punch = false
 	crouched_punch_started_crouched = false
+	is_crouched_medium_punch = false
+	crouched_medium_punch_started_crouched = false
 	if should_return_to_crouch:
 		fighter.return_to_crouch_pose()
 	else:
@@ -258,6 +278,8 @@ func cancel_current_action() -> void:
 	current_attack_direction = FighterInputBuffer.Direction.NEUTRAL
 	is_crouched_light_punch = false
 	crouched_punch_started_crouched = false
+	is_crouched_medium_punch = false
+	crouched_medium_punch_started_crouched = false
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	light_punch_followup_done = false
@@ -284,6 +306,24 @@ func configure_hitbox(attack: AttackData) -> void:
 	if attack_shape:
 		attack_shape.size = attack.hitbox_size
 		hitbox_shape.position = attack.hitbox_position
+		if is_crouched_medium_punch:
+			attack_shape.size.x += CROUCHED_MEDIUM_FORWARD_EXTENSION
+			hitbox_shape.position.x += CROUCHED_MEDIUM_FORWARD_EXTENSION * 0.5
+
+
+func get_attack_phase_durations(attack: AttackData) -> Vector3:
+	if attack.attack_id == &"medium_punch" and is_crouched_medium_punch:
+		var startup_frames := 4.0 if crouched_medium_punch_started_crouched else 8.0
+		return Vector3(startup_frames, 3.0, 5.0) / ATTACK_ANIMATION_FPS
+	return Vector3(attack.startup, attack.active, attack.recovery)
+
+
+func get_hit_reaction_start_frame(attack: AttackData) -> int:
+	if attack.attack_id == &"medium_punch" and is_crouched_medium_punch:
+		return 4
+	if attack.attack_id == &"light_punch" and is_crouched_light_punch:
+		return 3
+	return attack.hit_reaction_start_frame
 
 
 func perform_light_punch_followup() -> void:
@@ -328,10 +368,11 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	):
 		light_punch_connected_targets.append(target)
 	var effective_hit_height := current_attack.hit_height
-	var effective_reaction_frame := current_attack.hit_reaction_start_frame
+	var effective_reaction_frame := get_hit_reaction_start_frame(current_attack)
 	if current_attack.attack_id == &"light_punch" and is_crouched_light_punch:
 		effective_hit_height = AttackData.HitHeight.MID
-		effective_reaction_frame = 3
+	elif current_attack.attack_id == &"medium_punch" and is_crouched_medium_punch:
+		effective_hit_height = AttackData.HitHeight.MID
 	target.combat.take_damage(
 		current_attack.damage,
 		fighter,
