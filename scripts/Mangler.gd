@@ -473,7 +473,8 @@ func return_to_crouch_pose() -> void:
 func start_hit_reaction(
 	hit_height: AttackData.HitHeight,
 	attacker: Mangler,
-	start_frame: int = 0
+	start_frame: int = 0,
+	apply_pushback: bool = true
 ) -> float:
 	"""Avvia da capo la reazione e applica un breve rinculo opposto all'attaccante."""
 	received_hit_height = hit_height
@@ -484,12 +485,15 @@ func start_hit_reaction(
 		var final_frame := animated_sprite.sprite_frames.get_frame_count(hit_animation) - 1
 		animated_sprite.frame = clampi(start_frame, 0, final_frame)
 
-	var push_direction := -1.0 if is_facing_right else 1.0
-	if attacker != null and is_instance_valid(attacker):
-		push_direction = signf(global_position.x - attacker.global_position.x)
-		if is_zero_approx(push_direction):
-			push_direction = -1.0 if is_facing_right else 1.0
-	velocity.x = push_direction * HIT_PUSHBACK_SPEED
+	if apply_pushback:
+		var push_direction := -1.0 if is_facing_right else 1.0
+		if attacker != null and is_instance_valid(attacker):
+			push_direction = signf(global_position.x - attacker.global_position.x)
+			if is_zero_approx(push_direction):
+				push_direction = -1.0 if is_facing_right else 1.0
+		velocity.x = push_direction * HIT_PUSHBACK_SPEED
+	else:
+		velocity.x = 0.0
 	return get_animation_duration(hit_animation, start_frame)
 
 

@@ -187,7 +187,8 @@ func take_damage(
 	hit_height: AttackData.HitHeight = AttackData.HitHeight.MID,
 	causes_knockdown: bool = false,
 	hit_reaction_start_frame: int = 0,
-	ko_start_frame: int = 0
+	ko_start_frame: int = 0,
+	apply_pushback: bool = true
 ) -> void:
 	if fighter.current_state in [Mangler.State.KNOCKDOWN_RECOVERY, Mangler.State.KNOCKED_DOWN]:
 		return
@@ -213,7 +214,7 @@ func take_damage(
 	elif causes_knockdown:
 		sweep_knockdown_reaction(attacker)
 	else:
-		hit_reaction(hitstun, hit_height, attacker, hit_reaction_start_frame)
+		hit_reaction(hitstun, hit_height, attacker, hit_reaction_start_frame, apply_pushback)
 
 
 func block_reaction(duration: float, hit_height: AttackData.HitHeight) -> void:
@@ -240,14 +241,16 @@ func hit_reaction(
 	duration: float,
 	hit_height: AttackData.HitHeight,
 	attacker: Mangler,
-	hit_reaction_start_frame: int = 0
+	hit_reaction_start_frame: int = 0,
+	apply_pushback: bool = true
 ) -> void:
 	cancel_current_action()
 	var hit_generation := action_generation
 	var animation_duration := fighter.start_hit_reaction(
 		hit_height,
 		attacker,
-		hit_reaction_start_frame
+		hit_reaction_start_frame,
+		apply_pushback
 	)
 	var reaction_duration := maxf(duration, animation_duration)
 
@@ -375,7 +378,8 @@ func perform_light_punch_followup() -> void:
 			current_attack.hit_height,
 			current_attack.causes_knockdown,
 			4,
-			10
+			10,
+			false
 		)
 
 
@@ -410,5 +414,7 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		current_attack.blockstun,
 		effective_hit_height,
 		current_attack.causes_knockdown,
-		effective_reaction_frame
+		effective_reaction_frame,
+		0,
+		not (current_attack.attack_id == &"light_punch" and not is_crouched_light_punch)
 	)

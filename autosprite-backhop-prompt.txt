@@ -1,19 +1,3 @@
-Strict side-view impact pose of the supplied character facing right.
 
-The character is striking both sides of an invisible opponent’s head with two open palms simultaneously.
 
-Place an imaginary human head directly in front of the character’s chest and face, approximately 35 centimeters to his right. Do not draw the imaginary head or another character.
-
-The upper hand approaches diagonally downward and rests against the upper far side of the imaginary head.
-
-The lower hand approaches diagonally upward and rests against the lower near side of the imaginary head.
-
-The two open palms face inward toward each other. They are parallel, separated by approximately the width of one human head. The palms must not touch each other.
-
-Both elbows point outward in opposite vertical directions. One elbow is raised; the other elbow is lowered. The arms form a visible open diamond shape around the empty space occupied by the imaginary head.
-
-This is a two-handed crushing head impact pose. It is not a push, grab, hug, guard or punch.
-
-Keep the character facing right in strict profile. Keep both feet planted, preserve the original ground line, scale, identity, clothing and proportions.
-
-NEGATIVE PROMPT: Both arms moving in the same direction, parallel arms, both hands reaching straight forward, zombie pose, pushing, grabbing, hugging, choking, covering own face, defensive guard, crossed arms, palms touching each other, applause, closed fists, punch, one arm extended backward, asymmetric unrelated gestures, front-facing character, walking, lunging, sliding feet, extra person, visible opponent, visible head, mannequin, extra limbs, malformed hands, background, effects, text.
+Side-scrolling animation facing right (east). Camera locked, character centered with full body visible. Character performs the following action in place: character throwing a cross punch charged from ovest facing image-right (east), camera elevation 0 degrees. Plain grey background. No camera movement, no parallax, no extra characters or props. Keep scale, lighting, and proportions consistent throughout. One punch only, the punch must be very powerful and exaggerated

@@ -931,8 +931,11 @@ func _test_combat_flow() -> void:
 		light_punch.blockstun,
 		light_punch.hit_height,
 		false,
-		light_punch.hit_reaction_start_frame
+		light_punch.hit_reaction_start_frame,
+		0,
+		false
 	)
+	_expect(is_zero_approx(player2.velocity.x), "il light punch non spinge indietro l'avversario")
 	player1.combat.light_punch_connected_targets.append(player2)
 	player1.animated_sprite.frame = 7
 	player1._on_animation_frame_changed()
