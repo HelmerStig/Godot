@@ -212,6 +212,44 @@ func _test_combat_flow() -> void:
 		"lo schiaffo medio termina sul sedicesimo fotogramma del foglio"
 	)
 	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"heavy_punch")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_punch") == 17
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"heavy_punch"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"heavy_punch"),
+		"il pugno pesante usa i frame 1, 4, 7 fino a 49, non ciclici, a 24 FPS"
+	)
+	var heavy_impact := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"heavy_punch", 9)
+		as AtlasTexture
+	)
+	_expect(
+		heavy_impact.region.position == Vector2(3072.0, 1536.0),
+		"il contatto del pugno pesante coincide con il frame sorgente 28"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"crouched_heavy_uppercut")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_heavy_uppercut") == 16
+		and player1.animated_sprite.sprite_frames.has_animation(&"crouched_heavy_uppercut_crouched")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_heavy_uppercut_crouched") == 12,
+		"l'uppercut pesante usa 1-16 da posizione alta e 5-16 dal crouch"
+	)
+	var crouched_heavy_first := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"crouched_heavy_uppercut_crouched", 0)
+		as AtlasTexture
+	)
+	_expect(
+		crouched_heavy_first.region.position == Vector2(0.0, 512.0)
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_heavy_uppercut"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_heavy_uppercut"),
+		"dal crouch l'uppercut parte dal frame 5 ed è non ciclico a 24 FPS"
+	)
+	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_punch")
 		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_punch") == 16
 		and player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_punch_crouched")
@@ -759,8 +797,13 @@ func _test_combat_flow() -> void:
 	player1.change_state(Mangler.State.IDLE)
 
 	var light_punch := player1.character_data.get_attack(&"light_punch")
+	var player1_default_z := player1.z_index
 	player1.combat.try_attack(&"light_punch")
 	_expect(player1.current_state == Mangler.State.ATTACKING, "AttackData avvia lo stato ATTACKING")
+	_expect(
+		player1.z_index > player2.z_index,
+		"Player 1 passa in primo piano durante qualsiasi attacco"
+	)
 	_expect(player1.combat.current_attack == light_punch, "FighterCombat usa la risorsa selezionata")
 	var attack_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
@@ -775,6 +818,10 @@ func _test_combat_flow() -> void:
 	)
 	await create_timer(player1.get_animation_duration(&"light_punch_single") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "il jab singolo completa anche il ritorno 6-1")
+	_expect(
+		player1.z_index == player1_default_z,
+		"Player 1 ripristina l'ordine grafico normale al termine dell'attacco"
+	)
 
 	var medium_punch := player1.character_data.get_attack(&"medium_punch")
 	player1.combat.try_attack(&"medium_punch")
@@ -785,6 +832,54 @@ func _test_combat_flow() -> void:
 	)
 	await create_timer(player1.get_animation_duration(&"medium_open_hand_slap") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "lo schiaffo medio completa tutti i 16 frame")
+
+	var heavy_punch := player1.character_data.get_attack(&"heavy_punch")
+	player1.combat.try_attack(&"heavy_punch")
+	_expect(
+		player1.animated_sprite.animation == &"heavy_punch"
+		and heavy_punch.hit_height == AttackData.HitHeight.HIGH
+		and is_equal_approx(heavy_punch.startup, 9.0 / 24.0),
+		"il pugno potente alto usa un frame ogni tre e diventa attivo sul sorgente 28"
+	)
+	var heavy_punch_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		heavy_punch_shape.size == Vector2(125.0, 45.0)
+		and player1.combat.hitbox_shape.position == Vector2(67.5, -105.0),
+		"il pugno potente alto ha un'area d'impatto di 125 px verso l'avversario"
+	)
+	await create_timer(player1.get_animation_duration(&"heavy_punch") + 0.05).timeout
+	_expect(player1.current_state == Mangler.State.IDLE, "il pugno pesante completa tutti i 17 frame selezionati")
+
+	player1.combat.try_attack(&"heavy_punch", FighterInputBuffer.Direction.DOWN)
+	_expect(
+		player1.combat.is_crouched_heavy_punch
+		and not player1.combat.crouched_heavy_punch_started_crouched
+		and player1.animated_sprite.animation == &"crouched_heavy_uppercut",
+		"DOWN+pesante da posizione alta avvia l'uppercut dal frame 1"
+	)
+	var crouched_heavy_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		crouched_heavy_shape.size == FighterCombat.CROUCHED_HEAVY_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position == FighterCombat.CROUCHED_HEAVY_HITBOX_POSITION,
+		"l'uppercut pesante usa una hitbox verticale lungo la traiettoria del pugno"
+	)
+	var crouched_heavy_phases := player1.combat.get_attack_phase_durations(heavy_punch)
+	_expect(
+		is_equal_approx(crouched_heavy_phases.x, 10.0 / 24.0)
+		and is_equal_approx(crouched_heavy_phases.y, 2.0 / 24.0),
+		"l'uppercut pesante diventa attivo al frame 11"
+	)
+	await create_timer(player1.get_animation_duration(&"crouched_heavy_uppercut") + 0.05).timeout
+	player1.change_state(Mangler.State.CROUCHING)
+	player1.animated_sprite.pause()
+	player1.animated_sprite.frame = 6
+	player1.combat.try_attack(&"heavy_punch", FighterInputBuffer.Direction.DOWN)
+	_expect(
+		player1.combat.crouched_heavy_punch_started_crouched
+		and player1.animated_sprite.animation == &"crouched_heavy_uppercut_crouched",
+		"DOWN+pesante dal crouch avvia l'uppercut dal frame 5"
+	)
+	await create_timer(12.0 / 24.0 + 0.05).timeout
 
 	player1.combat.try_attack(&"medium_punch", FighterInputBuffer.Direction.DOWN)
 	_expect(

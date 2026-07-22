@@ -45,6 +45,7 @@ const BACK_HOP_TAKEOFF_FRAME := 12
 const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
 const HIT_PUSHBACK_SPEED := 180.0
 const HIT_PUSHBACK_DECELERATION := 720.0
+const ATTACK_FOREGROUND_Z_OFFSET := 1
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -93,6 +94,7 @@ var received_hit_height := AttackData.HitHeight.MID
 var received_block_height := AttackData.HitHeight.MID
 var block_started_crouched := false
 var light_punch_combo_queued := false
+var default_z_index := 0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -104,6 +106,7 @@ var light_punch_combo_queued := false
 
 
 func _ready() -> void:
+	default_z_index = z_index
 	input_buffer = FighterInputBuffer.new(player_number)
 	shadow_ground_y = global_position.y
 	duplicate_collision_shapes()
@@ -737,6 +740,7 @@ func _on_combat_knocked_out() -> void:
 
 
 func _on_combat_attack_started(attack_name: StringName) -> void:
+	bring_player_one_to_foreground()
 	light_punch_combo_queued = false
 	if attack_name == &"light_punch" and combat.is_crouched_light_punch:
 		var crouched_animation := (
@@ -758,12 +762,35 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 			animated_sprite.play(crouched_medium_animation)
 	elif attack_name == &"medium_punch" and animated_sprite.sprite_frames.has_animation(&"medium_open_hand_slap"):
 		animated_sprite.play(&"medium_open_hand_slap")
+	elif attack_name == &"heavy_punch" and combat.is_crouched_heavy_punch:
+		var crouched_heavy_animation := (
+			&"crouched_heavy_uppercut_crouched"
+			if combat.crouched_heavy_punch_started_crouched
+			else &"crouched_heavy_uppercut"
+		)
+		if animated_sprite.sprite_frames.has_animation(crouched_heavy_animation):
+			animated_sprite.play(crouched_heavy_animation)
+	elif attack_name == &"heavy_punch" and animated_sprite.sprite_frames.has_animation(&"heavy_punch"):
+		animated_sprite.play(&"heavy_punch")
 	attack_started.emit(attack_name)
 
 
 func _on_combat_attack_finished() -> void:
+	restore_default_render_order()
 	light_punch_combo_queued = false
 	attack_finished.emit()
+
+
+func bring_player_one_to_foreground() -> void:
+	if player_number != 1:
+		return
+	var opponent_z := opponent.z_index if is_instance_valid(opponent) else default_z_index
+	z_index = maxi(default_z_index, opponent_z + ATTACK_FOREGROUND_Z_OFFSET)
+
+
+func restore_default_render_order() -> void:
+	if player_number == 1:
+		z_index = default_z_index
 
 
 func _on_animation_finished() -> void:

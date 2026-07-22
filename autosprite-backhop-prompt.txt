@@ -1,33 +1,19 @@
-Back hop / back dash - quick defensive retreat animation. Reference: Street Fighter back dash.
+Strict side-view impact pose of the supplied character facing right.
 
-10 frames sequence (fast evasive movement):
-Frame 1 (0%): Standing guard stance, feet on ground, facing RIGHT
-Frame 2 (10%): Crouch slightly, preparing to push back
-Frame 3 (20%): Push off ground, legs compress, body leans back
-Frame 4 (30%): Light hop - feet slightly off ground, body moving BACKWARD (LEFT), still facing RIGHT
-Frame 5 (40%): Airborne peak - knees slightly bent, floating backward
-Frame 6 (50%): Mid-air backward drift, body upright
-Frame 7 (60%): Beginning descent, legs extending for landing
-Frame 8 (70%): Landing preparation, feet approaching ground
-Frame 9 (80%): Touch down, knees bent absorbing impact
-Frame 10 (100%): Return to guard stance, feet on ground
+The character is striking both sides of an invisible opponent’s head with two open palms simultaneously.
 
-Movement characteristics:
-- Character ALWAYS faces RIGHT (toward opponent)
-- NO horizontal translation - character stays centered at X:256, Y:256 in ALL frames
-- Vertical: slight hop animation (body rises ~40px at frame 5, feet off ground)
-- Low trajectory - NOT a high jump, quick defensive hop
-- Body stays mostly upright, no flips or spins
-- Pose shows backward evasive motion (lean back, legs push off/land)
+Place an imaginary human head directly in front of the character’s chest and face, approximately 35 centimeters to his right. Do not draw the imaginary head or another character.
 
-Requirements:
-- Hip/body center FIXED at X:256, Y:256 in all frames (NO horizontal drift)
-- 512×512 per cell, 4×3 grid (first 10 cells used, last 2 empty)
-- Transparent background, 50px padding
-- Frame order: left→right, top→bottom
-- Side-view, character faces RIGHT throughout
-- Godot engine will handle actual backward movement via velocity
+The upper hand approaches diagonally downward and rests against the upper far side of the imaginary head.
 
-Negative: horizontal translation, moving across canvas, forward movement, turning around, flipping, high jump, slow motion
+The lower hand approaches diagonally upward and rests against the lower near side of the imaginary head.
 
-Style: Street Fighter III quality, 24 FPS, fast defensive dash
+The two open palms face inward toward each other. They are parallel, separated by approximately the width of one human head. The palms must not touch each other.
+
+Both elbows point outward in opposite vertical directions. One elbow is raised; the other elbow is lowered. The arms form a visible open diamond shape around the empty space occupied by the imaginary head.
+
+This is a two-handed crushing head impact pose. It is not a push, grab, hug, guard or punch.
+
+Keep the character facing right in strict profile. Keep both feet planted, preserve the original ground line, scale, identity, clothing and proportions.
+
+NEGATIVE PROMPT: Both arms moving in the same direction, parallel arms, both hands reaching straight forward, zombie pose, pushing, grabbing, hugging, choking, covering own face, defensive guard, crossed arms, palms touching each other, applause, closed fists, punch, one arm extended backward, asymmetric unrelated gestures, front-facing character, walking, lunging, sliding feet, extra person, visible opponent, visible head, mannequin, extra limbs, malformed hands, background, effects, text.
