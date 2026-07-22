@@ -172,13 +172,13 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_single")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_single") == 11,
-		"il pugno light singolo usa i frame 1-6 e torna indietro fino al primo"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_single") == 7,
+		"il pugno light singolo usa i frame 1-7 del nuovo foglio"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_double")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_double") == 16,
-		"la combo light usa tutti i 16 frame"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_double") == 19,
+		"la combo light prosegue dal frame 7 fino al frame 19"
 	)
 	_expect(
 		is_equal_approx(
@@ -817,7 +817,7 @@ func _test_combat_flow() -> void:
 		"il light punch ha 150 px di portata soltanto verso l'avversario"
 	)
 	await create_timer(player1.get_animation_duration(&"light_punch_single") + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "il jab singolo completa anche il ritorno 6-1")
+	_expect(player1.current_state == Mangler.State.IDLE, "il jab singolo completa i frame 1-7")
 	_expect(
 		player1.z_index == player1_default_z,
 		"Player 1 ripristina l'ordine grafico normale al termine dell'attacco"
@@ -922,7 +922,7 @@ func _test_combat_flow() -> void:
 	_expect(
 		player1.light_punch_combo_queued
 		and player1.animated_sprite.animation == &"light_punch_double",
-		"un secondo light ravvicinato converte il jab nella combo da 16 frame"
+		"un secondo light ravvicinato converte il jab nella combo da 19 frame"
 	)
 	player2.combat.take_damage(
 		light_punch.damage,

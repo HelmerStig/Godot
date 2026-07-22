@@ -532,12 +532,12 @@ func get_animation_duration(animation_name: StringName, start_frame: int = 0) ->
 
 
 func try_queue_light_punch_combo() -> void:
-	"""Converte il jab singolo nella combo se il secondo input arriva entro il sesto frame."""
+	"""Converte il jab singolo nella combo se il secondo input arriva entro il settimo frame."""
 	if light_punch_combo_queued or not combat.is_attacking or combat.current_attack == null:
 		return
 	if combat.current_attack.attack_id != &"light_punch":
 		return
-	if animated_sprite.animation != &"light_punch_single" or animated_sprite.frame > 5:
+	if animated_sprite.animation != &"light_punch_single" or animated_sprite.frame > 6:
 		return
 	if input_buffer.consume_attack(&"light_punch", 1) == FighterInputBuffer.NO_DIRECTION:
 		return
