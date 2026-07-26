@@ -16,8 +16,8 @@ const CROUCHED_LIGHT_HITBOX_SIZE := Vector2(150.0, 35.0)
 const CROUCHED_LIGHT_HITBOX_POSITION := Vector2(75.0, -110.0)
 const CROUCHED_MEDIUM_HITBOX_SIZE := Vector2(165.0, 40.0)
 const CROUCHED_MEDIUM_HITBOX_POSITION := Vector2(85.0, -108.0)
-const CROUCHED_HEAVY_HITBOX_SIZE := Vector2(110.0, 170.0)
-const CROUCHED_HEAVY_HITBOX_POSITION := Vector2(55.0, -155.0)
+const CROUCHED_HEAVY_HITBOX_SIZE := Vector2(180.0, 170.0)
+const CROUCHED_HEAVY_HITBOX_POSITION := Vector2(90.0, -155.0)
 
 var fighter: Mangler
 var character_data: CharacterData
@@ -152,8 +152,7 @@ func try_attack(
 				&"crouched_medium_punch",
 				&"crouched_medium_punch_crouched",
 				&"heavy_punch",
-				&"crouched_heavy_uppercut",
-				&"crouched_heavy_uppercut_crouched",
+				&"crouched_power_punch",
 			]
 			and fighter.animated_sprite.is_playing()
 		):
@@ -352,8 +351,7 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 		var startup_frames := 4.0 if crouched_medium_punch_started_crouched else 8.0
 		return Vector3(startup_frames, 3.0, 5.0) / ATTACK_ANIMATION_FPS
 	if attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
-		var startup_frames := 6.0 if crouched_heavy_punch_started_crouched else 10.0
-		return Vector3(startup_frames, 2.0, 4.0) / ATTACK_ANIMATION_FPS
+		return Vector3(9.0, 2.0, 5.0) / ATTACK_ANIMATION_FPS
 	return Vector3(attack.startup, attack.active, attack.recovery)
 
 
@@ -363,6 +361,16 @@ func get_hit_reaction_start_frame(attack: AttackData) -> int:
 	if attack.attack_id == &"light_punch" and is_crouched_light_punch:
 		return 3
 	return attack.hit_reaction_start_frame
+
+
+func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
+	if attack.attack_id == &"light_punch" and is_crouched_light_punch:
+		return AttackData.HitHeight.MID
+	if attack.attack_id == &"medium_punch" and is_crouched_medium_punch:
+		return AttackData.HitHeight.MID
+	if attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
+		return AttackData.HitHeight.LOW
+	return attack.hit_height
 
 
 func perform_light_punch_followup() -> void:
@@ -407,12 +415,8 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		and not light_punch_connected_targets.has(target)
 	):
 		light_punch_connected_targets.append(target)
-	var effective_hit_height := current_attack.hit_height
+	var effective_hit_height := get_effective_hit_height(current_attack)
 	var effective_reaction_frame := get_hit_reaction_start_frame(current_attack)
-	if current_attack.attack_id == &"light_punch" and is_crouched_light_punch:
-		effective_hit_height = AttackData.HitHeight.MID
-	elif current_attack.attack_id == &"medium_punch" and is_crouched_medium_punch:
-		effective_hit_height = AttackData.HitHeight.MID
 	target.combat.take_damage(
 		current_attack.damage,
 		fighter,

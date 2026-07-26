@@ -20,7 +20,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/medium_open-hand_slap.png" id="19_medium_open_hand_slap"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouched_medium_punch.png" id="20_crouched_medium_punch"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/heavy_punch.png" id="21_heavy_punch"]
-[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouched_heavy_uppercut.png" id="22_crouched_heavy_uppercut"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouched_power_punch.png" id="22_crouched_heavy_uppercut"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/light-punch-okay.png" id="23_light_punch_okay"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_okay_00"]
@@ -3356,48 +3356,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_crouched_heavy_15")
 }],
 "loop": 0,
-"name": &"crouched_heavy_uppercut",
-"speed": 24.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_04")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_05")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_06")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_07")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_08")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_09")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_10")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_11")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_12")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_13")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_14")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_crouched_heavy_15")
-}],
-"loop": 0,
-"name": &"crouched_heavy_uppercut_crouched",
+"name": &"crouched_power_punch",
 "speed": 24.0
 }, {
 "frames": [{

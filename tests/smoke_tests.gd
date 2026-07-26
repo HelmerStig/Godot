@@ -256,24 +256,17 @@ func _test_combat_flow() -> void:
 		"il contatto del pugno pesante coincide con il frame sorgente 28"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.has_animation(&"crouched_heavy_uppercut")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_heavy_uppercut") == 16
-		and player1.animated_sprite.sprite_frames.has_animation(&"crouched_heavy_uppercut_crouched")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_heavy_uppercut_crouched") == 12,
-		"l'uppercut pesante usa 1-16 da posizione alta e 5-16 dal crouch"
-	)
-	var crouched_heavy_first := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"crouched_heavy_uppercut_crouched", 0)
-		as AtlasTexture
+		player1.animated_sprite.sprite_frames.has_animation(&"crouched_power_punch")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_power_punch") == 16,
+		"il pugno potente abbassato usa l'intera animazione 1-16"
 	)
 	_expect(
-		crouched_heavy_first.region.position == Vector2(0.0, 512.0)
-		and is_equal_approx(
-			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_heavy_uppercut"),
+		is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_power_punch"),
 			24.0
 		)
-		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_heavy_uppercut"),
-		"dal crouch l'uppercut parte dal frame 5 ed è non ciclico a 24 FPS"
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_power_punch"),
+		"il pugno potente abbassato è non ciclico a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_punch")
@@ -886,32 +879,37 @@ func _test_combat_flow() -> void:
 	_expect(
 		player1.combat.is_crouched_heavy_punch
 		and not player1.combat.crouched_heavy_punch_started_crouched
-		and player1.animated_sprite.animation == &"crouched_heavy_uppercut",
-		"DOWN+pesante da posizione alta avvia l'uppercut dal frame 1"
+		and player1.animated_sprite.animation == &"crouched_power_punch",
+		"DOWN+pesante da posizione alta avvia il pugno abbassato dal frame 1"
 	)
 	var crouched_heavy_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
-		crouched_heavy_shape.size == FighterCombat.CROUCHED_HEAVY_HITBOX_SIZE
-		and player1.combat.hitbox_shape.position == FighterCombat.CROUCHED_HEAVY_HITBOX_POSITION,
-		"l'uppercut pesante usa una hitbox verticale lungo la traiettoria del pugno"
+		crouched_heavy_shape.size == Vector2(180.0, 170.0)
+		and player1.combat.hitbox_shape.position == Vector2(90.0, -155.0),
+		"il pugno potente abbassato ha una hitbox ridotta di 30 px"
+	)
+	_expect(
+		player1.combat.get_effective_hit_height(heavy_punch) == AttackData.HitHeight.LOW,
+		"il pugno potente abbassato provoca la reazione hurt_low"
 	)
 	var crouched_heavy_phases := player1.combat.get_attack_phase_durations(heavy_punch)
 	_expect(
-		is_equal_approx(crouched_heavy_phases.x, 10.0 / 24.0)
+		is_equal_approx(crouched_heavy_phases.x, 9.0 / 24.0)
 		and is_equal_approx(crouched_heavy_phases.y, 2.0 / 24.0),
-		"l'uppercut pesante diventa attivo al frame 11"
+		"il pugno potente abbassato diventa attivo al frame 10"
 	)
-	await create_timer(player1.get_animation_duration(&"crouched_heavy_uppercut") + 0.05).timeout
+	await create_timer(player1.get_animation_duration(&"crouched_power_punch") + 0.05).timeout
 	player1.change_state(Mangler.State.CROUCHING)
 	player1.animated_sprite.pause()
 	player1.animated_sprite.frame = 6
 	player1.combat.try_attack(&"heavy_punch", FighterInputBuffer.Direction.DOWN)
 	_expect(
 		player1.combat.crouched_heavy_punch_started_crouched
-		and player1.animated_sprite.animation == &"crouched_heavy_uppercut_crouched",
-		"DOWN+pesante dal crouch avvia l'uppercut dal frame 5"
+		and player1.animated_sprite.animation == &"crouched_power_punch"
+		and player1.animated_sprite.frame == 0,
+		"DOWN+pesante dal crouch avvia l'intera animazione dal frame 1"
 	)
-	await create_timer(12.0 / 24.0 + 0.05).timeout
+	await create_timer(16.0 / 24.0 + 0.05).timeout
 
 	player1.combat.try_attack(&"medium_punch", FighterInputBuffer.Direction.DOWN)
 	_expect(

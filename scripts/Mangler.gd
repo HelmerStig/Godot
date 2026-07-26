@@ -767,13 +767,8 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 	elif attack_name == &"medium_punch" and animated_sprite.sprite_frames.has_animation(&"medium_open_hand_slap"):
 		animated_sprite.play(&"medium_open_hand_slap")
 	elif attack_name == &"heavy_punch" and combat.is_crouched_heavy_punch:
-		var crouched_heavy_animation := (
-			&"crouched_heavy_uppercut_crouched"
-			if combat.crouched_heavy_punch_started_crouched
-			else &"crouched_heavy_uppercut"
-		)
-		if animated_sprite.sprite_frames.has_animation(crouched_heavy_animation):
-			animated_sprite.play(crouched_heavy_animation)
+		if animated_sprite.sprite_frames.has_animation(&"crouched_power_punch"):
+			animated_sprite.play(&"crouched_power_punch")
 	elif attack_name == &"heavy_punch" and animated_sprite.sprite_frames.has_animation(&"heavy_punch"):
 		animated_sprite.play(&"heavy_punch")
 	attack_started.emit(attack_name)
