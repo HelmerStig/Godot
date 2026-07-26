@@ -13,5 +13,5 @@ hitstun = 0.3
 blockstun = 0.15
 hit_height = 0
 hit_reaction_start_frame = 3
-hitbox_size = Vector2(150, 35)
-hitbox_position = Vector2(75, -110)
+hitbox_size = Vector2(100, 35)
+hitbox_position = Vector2(50, -110)

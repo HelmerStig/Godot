@@ -172,13 +172,34 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_single")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_single") == 7,
-		"il pugno light singolo usa i frame 1-7 del nuovo foglio"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_single") == 12,
+		"il pugno light singolo usa 1-6 e torna indietro da 6 a 1"
+	)
+	var light_single_impact := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 5)
+		as AtlasTexture
+	)
+	var light_single_last := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 11)
+		as AtlasTexture
+	)
+	_expect(
+		light_single_impact.region.position == Vector2(512.0, 512.0)
+		and light_single_last.region.position == Vector2.ZERO,
+		"il light singolo raggiunge il frame 6 e termina tornando al frame 1"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_double")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_double") == 19,
-		"la combo light prosegue dal frame 7 fino al frame 19"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_double") == 16,
+		"la combo light usa 1-6 e prosegue dal frame 7 fino al frame 16"
+	)
+	var light_combo_last := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_double", 15)
+		as AtlasTexture
+	)
+	_expect(
+		light_combo_last.region.position == Vector2(1536.0, 1536.0),
+		"la combo light termina sul frame 16 del nuovo foglio"
 	)
 	_expect(
 		is_equal_approx(
@@ -195,21 +216,26 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"medium_open_hand_slap")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_open_hand_slap") == 16
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_open_hand_slap") == 26
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"medium_open_hand_slap"),
 			24.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"medium_open_hand_slap"),
-		"lo schiaffo medio usa tutti i 16 frame, non ciclici, a 24 FPS"
+		"lo schiaffo medio usa 1-13 e torna indietro da 13 a 1, a 24 FPS"
+	)
+	var medium_slap_peak := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"medium_open_hand_slap", 12)
+		as AtlasTexture
 	)
 	var medium_slap_last := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"medium_open_hand_slap", 15)
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"medium_open_hand_slap", 25)
 		as AtlasTexture
 	)
 	_expect(
-		medium_slap_last.region.position == Vector2(1536.0, 1536.0),
-		"lo schiaffo medio termina sul sedicesimo fotogramma del foglio"
+		medium_slap_peak.region.position == Vector2(0.0, 1536.0)
+		and medium_slap_last.region.position == Vector2.ZERO,
+		"lo schiaffo medio raggiunge il frame 13 e termina tornando al frame 1"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"heavy_punch")
@@ -812,12 +838,12 @@ func _test_combat_flow() -> void:
 		"AttackData configura geometria e posizione della hitbox"
 	)
 	_expect(
-		light_punch.hitbox_size == Vector2(150.0, 35.0)
-		and light_punch.hitbox_position == Vector2(75.0, -110.0),
-		"il light punch ha 150 px di portata soltanto verso l'avversario"
+		light_punch.hitbox_size == Vector2(100.0, 35.0)
+		and light_punch.hitbox_position == Vector2(50.0, -110.0),
+		"il light punch è accorciato di 50 px soltanto verso l'avversario"
 	)
 	await create_timer(player1.get_animation_duration(&"light_punch_single") + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "il jab singolo completa i frame 1-7")
+	_expect(player1.current_state == Mangler.State.IDLE, "il jab singolo completa 1-6 e il ritorno 6-1")
 	_expect(
 		player1.z_index == player1_default_z,
 		"Player 1 ripristina l'ordine grafico normale al termine dell'attacco"
@@ -830,8 +856,14 @@ func _test_combat_flow() -> void:
 		and medium_punch.hit_height == AttackData.HitHeight.HIGH,
 		"il pugno medio avvia lo schiaffo a mano aperta come colpo alto"
 	)
+	var standing_medium_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		standing_medium_shape.size == Vector2(105.0, 40.0)
+		and player1.combat.hitbox_shape.position == Vector2(55.0, -108.0),
+		"il medium punch in piedi estende la hitbox di 20 px verso l'avversario"
+	)
 	await create_timer(player1.get_animation_duration(&"medium_open_hand_slap") + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "lo schiaffo medio completa tutti i 16 frame")
+	_expect(player1.current_state == Mangler.State.IDLE, "lo schiaffo medio completa 1-13 e il ritorno 13-1")
 
 	var heavy_punch := player1.character_data.get_attack(&"heavy_punch")
 	player1.combat.try_attack(&"heavy_punch")
@@ -890,10 +922,9 @@ func _test_combat_flow() -> void:
 	)
 	var crouched_medium_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
-		crouched_medium_shape.size == medium_punch.hitbox_size + Vector2(80.0, 0.0)
-		and player1.combat.hitbox_shape.position
-		== medium_punch.hitbox_position + Vector2(40.0, 0.0),
-		"il gancio medio basso estende la hitbox di 80 px soltanto verso l'avversario"
+		crouched_medium_shape.size == FighterCombat.CROUCHED_MEDIUM_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position == FighterCombat.CROUCHED_MEDIUM_HITBOX_POSITION,
+		"il gancio medio basso mantiene invariata la propria hitbox"
 	)
 	var crouched_medium_phases := player1.combat.get_attack_phase_durations(medium_punch)
 	_expect(
@@ -922,7 +953,7 @@ func _test_combat_flow() -> void:
 	_expect(
 		player1.light_punch_combo_queued
 		and player1.animated_sprite.animation == &"light_punch_double",
-		"un secondo light ravvicinato converte il jab nella combo da 19 frame"
+		"un secondo light ravvicinato continua dal jab nella combo da 16 frame"
 	)
 	player2.combat.take_damage(
 		light_punch.damage,
@@ -957,6 +988,12 @@ func _test_combat_flow() -> void:
 		and not player1.combat.crouched_punch_started_crouched
 		and player1.animated_sprite.animation == &"crouched_punch",
 		"DOWN+light da posizione alta parte dal fotogramma 1 di crouched_punch"
+	)
+	var crouched_light_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		crouched_light_shape.size == FighterCombat.CROUCHED_LIGHT_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position == FighterCombat.CROUCHED_LIGHT_HITBOX_POSITION,
+		"il light punch abbassato ripristina la hitbox a 150 px verso l'avversario"
 	)
 	await create_timer(player1.get_animation_duration(&"crouched_punch") + 0.05).timeout
 	player1.change_state(Mangler.State.CROUCHING)

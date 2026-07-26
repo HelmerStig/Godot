@@ -11,8 +11,11 @@ signal attack_finished
 const DEFAULT_HITSTUN := 0.3
 const DEFAULT_BLOCKSTUN := 0.15
 const SWEEP_GROUNDED_HOLD := 0.35
-const CROUCHED_MEDIUM_FORWARD_EXTENSION := 80.0
 const ATTACK_ANIMATION_FPS := 24.0
+const CROUCHED_LIGHT_HITBOX_SIZE := Vector2(150.0, 35.0)
+const CROUCHED_LIGHT_HITBOX_POSITION := Vector2(75.0, -110.0)
+const CROUCHED_MEDIUM_HITBOX_SIZE := Vector2(165.0, 40.0)
+const CROUCHED_MEDIUM_HITBOX_POSITION := Vector2(85.0, -108.0)
 const CROUCHED_HEAVY_HITBOX_SIZE := Vector2(110.0, 170.0)
 const CROUCHED_HEAVY_HITBOX_POSITION := Vector2(55.0, -155.0)
 
@@ -333,9 +336,12 @@ func configure_hitbox(attack: AttackData) -> void:
 	if attack_shape:
 		attack_shape.size = attack.hitbox_size
 		hitbox_shape.position = attack.hitbox_position
-		if is_crouched_medium_punch:
-			attack_shape.size.x += CROUCHED_MEDIUM_FORWARD_EXTENSION
-			hitbox_shape.position.x += CROUCHED_MEDIUM_FORWARD_EXTENSION * 0.5
+		if is_crouched_light_punch:
+			attack_shape.size = CROUCHED_LIGHT_HITBOX_SIZE
+			hitbox_shape.position = CROUCHED_LIGHT_HITBOX_POSITION
+		elif is_crouched_medium_punch:
+			attack_shape.size = CROUCHED_MEDIUM_HITBOX_SIZE
+			hitbox_shape.position = CROUCHED_MEDIUM_HITBOX_POSITION
 		elif is_crouched_heavy_punch:
 			attack_shape.size = CROUCHED_HEAVY_HITBOX_SIZE
 			hitbox_shape.position = CROUCHED_HEAVY_HITBOX_POSITION
