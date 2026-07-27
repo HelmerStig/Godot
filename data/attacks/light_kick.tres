@@ -6,11 +6,11 @@
 script = ExtResource("1_attack")
 attack_id = &"light_kick"
 damage = 8
-startup = 0.1
+startup = 0.25
 active = 0.166667
-recovery = 0.133333
+recovery = 0.25
 hitstun = 0.3
 blockstun = 0.15
-hit_height = 2
-hitbox_size = Vector2(85, 35)
-hitbox_position = Vector2(47.5, -55)
+hit_height = 1
+hitbox_size = Vector2(185, 35)
+hitbox_position = Vector2(97.5, -55)

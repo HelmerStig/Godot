@@ -46,6 +46,13 @@ const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
 const HIT_PUSHBACK_SPEED := 180.0
 const HIT_PUSHBACK_DECELERATION := 720.0
 const ATTACK_FOREGROUND_Z_OFFSET := 1
+const HEAVY_PUNCH_HOP_HEIGHT := 20.0
+const HEAVY_PUNCH_HOP_DISTANCE := 30.0
+const HEAVY_PUNCH_HOP_DURATION := 4.0 / 24.0
+const HEAVY_PUNCH_HOP_GRAVITY := (
+	8.0 * HEAVY_PUNCH_HOP_HEIGHT / (HEAVY_PUNCH_HOP_DURATION * HEAVY_PUNCH_HOP_DURATION)
+)
+const HEAVY_PUNCH_HOP_FRAME := 8 # Indice zero-based: nono fotogramma.
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -94,6 +101,7 @@ var received_hit_height := AttackData.HitHeight.MID
 var received_block_height := AttackData.HitHeight.MID
 var block_started_crouched := false
 var light_punch_combo_queued := false
+var heavy_punch_hop_started := false
 var default_z_index := 0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -126,7 +134,18 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
-		velocity.y += GRAVITY * delta
+		var current_gravity := (
+			HEAVY_PUNCH_HOP_GRAVITY
+			if heavy_punch_hop_started and animated_sprite.animation == &"heavy_punch"
+			else GRAVITY
+		)
+		velocity.y += current_gravity * delta
+	elif (
+		heavy_punch_hop_started
+		and animated_sprite.animation == &"heavy_punch"
+		and velocity.y >= 0.0
+	):
+		velocity.x = 0.0
 	if current_state in [State.HIT, State.SWEEP_KNOCKDOWN]:
 		velocity.x = move_toward(velocity.x, 0.0, HIT_PUSHBACK_DECELERATION * delta)
 
@@ -746,6 +765,7 @@ func _on_combat_knocked_out() -> void:
 func _on_combat_attack_started(attack_name: StringName) -> void:
 	bring_player_one_to_foreground()
 	light_punch_combo_queued = false
+	heavy_punch_hop_started = false
 	if attack_name == &"light_punch" and combat.is_crouched_light_punch:
 		var crouched_animation := (
 			&"crouched_punch_crouched"
@@ -771,6 +791,12 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 			animated_sprite.play(&"crouched_power_punch")
 	elif attack_name == &"heavy_punch" and animated_sprite.sprite_frames.has_animation(&"heavy_punch"):
 		animated_sprite.play(&"heavy_punch")
+	elif attack_name == &"light_kick" and animated_sprite.sprite_frames.has_animation(&"light_kick"):
+		animated_sprite.play(&"light_kick")
+	elif attack_name == &"medium_kick" and animated_sprite.sprite_frames.has_animation(&"medium_kick"):
+		animated_sprite.play(&"medium_kick")
+	elif attack_name == &"heavy_kick" and animated_sprite.sprite_frames.has_animation(&"heavy_kick"):
+		animated_sprite.play(&"heavy_kick")
 	attack_started.emit(attack_name)
 
 
@@ -806,6 +832,19 @@ func _on_animation_frame_changed() -> void:
 		and current_state == State.ATTACKING
 	):
 		combat.perform_light_punch_followup()
+	elif (
+		animated_sprite.animation == &"medium_kick"
+		and animated_sprite.frame >= 7
+		and current_state == State.ATTACKING
+	):
+		combat.perform_medium_kick_followup()
+	elif (
+		animated_sprite.animation == &"heavy_punch"
+		and animated_sprite.frame >= HEAVY_PUNCH_HOP_FRAME
+		and current_state == State.ATTACKING
+		and not combat.is_crouched_heavy_punch
+	):
+		begin_heavy_punch_hop()
 	elif animated_sprite.animation == &"crouch":
 		update_collision_profile()
 	elif (
@@ -820,3 +859,12 @@ func _on_animation_frame_changed() -> void:
 		and animated_sprite.frame >= JUMP_TAKEOFF_FRAME
 	):
 		begin_jump_ascent()
+
+
+func begin_heavy_punch_hop() -> void:
+	if heavy_punch_hop_started or not is_on_floor():
+		return
+	heavy_punch_hop_started = true
+	var forward_direction := 1.0 if is_facing_right else -1.0
+	velocity.x = forward_direction * HEAVY_PUNCH_HOP_DISTANCE / HEAVY_PUNCH_HOP_DURATION
+	velocity.y = -HEAVY_PUNCH_HOP_GRAVITY * HEAVY_PUNCH_HOP_DURATION / 2.0

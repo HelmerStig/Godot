@@ -6,9 +6,9 @@
 script = ExtResource("1_attack")
 attack_id = &"heavy_kick"
 damage = 20
-startup = 0.25
-active = 0.3
-recovery = 0.15
+startup = 0.333333
+active = 0.083333
+recovery = 0.25
 hitstun = 0.3
 blockstun = 0.15
 hit_height = 2

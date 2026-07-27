@@ -19,9 +19,204 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouched_punch.png" id="18_crouched_punch"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/medium_open-hand_slap.png" id="19_medium_open_hand_slap"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouched_medium_punch.png" id="20_crouched_medium_punch"]
-[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/heavy_punch.png" id="21_heavy_punch"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/heavy-punch-ok.png" id="21_heavy_punch"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/crouched_power_punch.png" id="22_crouched_heavy_uppercut"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/light-punch-okay.png" id="23_light_punch_okay"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/light-kick.png" id="24_light_kick"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/heavy-kick.png" id="25_heavy_kick"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/heavy-kick-ok.png" id="26_heavy_kick_ok"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_00"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_01"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_02"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_03"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_04"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_05"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_06"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_07"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_08"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_09"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_10"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_11"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_12"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_13"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_14"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_ok_15"]
+atlas = ExtResource("26_heavy_kick_ok")
+region = Rect2(1536, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_00"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_01"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_02"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_03"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_04"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_05"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_06"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_07"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_08"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_09"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_10"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_11"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_12"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_13"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_14"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_heavy_kick_15"]
+atlas = ExtResource("25_heavy_kick")
+region = Rect2(1536, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_00"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_01"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_02"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_03"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_04"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_05"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_06"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_07"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_08"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_09"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_10"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_11"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_12"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_13"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_14"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_kick_15"]
+atlas = ExtResource("24_light_kick")
+region = Rect2(1536, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_okay_00"]
 atlas = ExtResource("23_light_punch_okay")
@@ -169,51 +364,51 @@ region = Rect2(1536, 0, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_04"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(2048, 0, 512, 512)
+region = Rect2(0, 512, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_05"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(2560, 0, 512, 512)
+region = Rect2(512, 512, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_06"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(3072, 0, 512, 512)
+region = Rect2(1024, 512, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_07"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(0, 512, 512, 512)
+region = Rect2(1536, 512, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_08"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(512, 512, 512, 512)
+region = Rect2(0, 1024, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_09"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(1024, 512, 512, 512)
+region = Rect2(512, 1024, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_10"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(1536, 512, 512, 512)
+region = Rect2(1024, 1024, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_11"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(2048, 512, 512, 512)
+region = Rect2(1536, 1024, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_12"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(2560, 512, 512, 512)
+region = Rect2(0, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_13"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(3072, 512, 512, 512)
+region = Rect2(512, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_14"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(0, 1024, 512, 512)
+region = Rect2(1024, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_15"]
 atlas = ExtResource("21_heavy_punch")
-region = Rect2(512, 1024, 512, 512)
+region = Rect2(1536, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_heavy_punch_16"]
 atlas = ExtResource("21_heavy_punch")
@@ -3364,55 +3559,199 @@ animations = [{
 "texture": SubResource("AtlasTexture_heavy_punch_00")
 }, {
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_02")
+}, {
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_heavy_punch_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_05")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_heavy_punch_06")
 }, {
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_08")
+}, {
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_heavy_punch_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_11")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_heavy_punch_12")
 }, {
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_punch_14")
+}, {
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_heavy_punch_15")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_18")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_21")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_24")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_27")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_30")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_33")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_36")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_39")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_42")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_45")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_heavy_punch_48")
 }],
 "loop": 0,
 "name": &"heavy_punch",
+"speed": 24.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_00")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_kick_15")
+}],
+"loop": 0,
+"name": &"light_kick",
+"speed": 24.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_00")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_11")
+}],
+"loop": 0,
+"name": &"medium_kick",
+"speed": 24.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_00")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_heavy_kick_ok_15")
+}],
+"loop": 0,
+"name": &"heavy_kick",
 "speed": 24.0
 }, {
 "frames": [{

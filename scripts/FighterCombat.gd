@@ -31,6 +31,7 @@ var action_generation := 0
 var hit_targets: Array[Mangler] = []
 var light_punch_connected_targets: Array[Mangler] = []
 var light_punch_followup_done := false
+var medium_kick_followup_done := false
 var is_crouched_light_punch := false
 var crouched_punch_started_crouched := false
 var is_crouched_medium_punch := false
@@ -118,6 +119,7 @@ func try_attack(
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	light_punch_followup_done = false
+	medium_kick_followup_done = false
 	configure_hitbox(attack)
 	fighter.change_state(Mangler.State.ATTACKING)
 	attack_started.emit(attack_name)
@@ -140,7 +142,7 @@ func try_attack(
 	await get_tree().create_timer(phase_durations.z).timeout
 	if attack_generation != action_generation:
 		return
-	if attack.attack_id in [&"light_punch", &"medium_punch", &"heavy_punch"]:
+	if attack.attack_id in [&"light_punch", &"medium_punch", &"heavy_punch", &"light_kick", &"medium_kick", &"heavy_kick"]:
 		while (
 			attack_generation == action_generation
 			and fighter.animated_sprite.animation in [
@@ -153,6 +155,9 @@ func try_attack(
 				&"crouched_medium_punch_crouched",
 				&"heavy_punch",
 				&"crouched_power_punch",
+				&"light_kick",
+				&"medium_kick",
+				&"heavy_kick",
 			]
 			and fighter.animated_sprite.is_playing()
 		):
@@ -216,6 +221,8 @@ func take_damage(
 	elif causes_knockdown:
 		sweep_knockdown_reaction(attacker)
 	else:
+		if hit_height == AttackData.HitHeight.MID:
+			hit_reaction_start_frame = 4
 		hit_reaction(hitstun, hit_height, attacker, hit_reaction_start_frame, apply_pushback)
 
 
@@ -356,10 +363,8 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 
 
 func get_hit_reaction_start_frame(attack: AttackData) -> int:
-	if attack.attack_id == &"medium_punch" and is_crouched_medium_punch:
+	if get_effective_hit_height(attack) == AttackData.HitHeight.MID:
 		return 4
-	if attack.attack_id == &"light_punch" and is_crouched_light_punch:
-		return 3
 	return attack.hit_reaction_start_frame
 
 
@@ -397,6 +402,27 @@ func perform_light_punch_followup() -> void:
 		)
 
 
+func perform_medium_kick_followup() -> void:
+	if medium_kick_followup_done or not is_attacking or current_attack == null:
+		return
+	if current_attack.attack_id != &"medium_kick":
+		return
+
+	medium_kick_followup_done = true
+	for target in hit_targets.duplicate():
+		if target == null or not is_instance_valid(target):
+			continue
+		target.combat.take_damage(
+			int(current_attack.damage / 2),
+			fighter,
+			current_attack.hitstun,
+			current_attack.blockstun,
+			AttackData.HitHeight.MID,
+			false,
+			4
+		)
+
+
 func _on_hitbox_area_entered(area: Area2D) -> void:
 	_apply_hit_to_area(area)
 
@@ -417,13 +443,24 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		light_punch_connected_targets.append(target)
 	var effective_hit_height := get_effective_hit_height(current_attack)
 	var effective_reaction_frame := get_hit_reaction_start_frame(current_attack)
+	var effective_damage := current_attack.damage
+	var effective_knockdown := current_attack.causes_knockdown
+	if current_attack.attack_id == &"medium_kick":
+		effective_damage = int(current_attack.damage / 2)
+		effective_hit_height = (
+			AttackData.HitHeight.MID
+			if medium_kick_followup_done
+			else AttackData.HitHeight.HIGH
+		)
+		effective_reaction_frame = 4 if medium_kick_followup_done else 0
+		effective_knockdown = false
 	target.combat.take_damage(
-		current_attack.damage,
+		effective_damage,
 		fighter,
 		current_attack.hitstun,
 		current_attack.blockstun,
 		effective_hit_height,
-		current_attack.causes_knockdown,
+		effective_knockdown,
 		effective_reaction_frame,
 		0,
 		not (current_attack.attack_id == &"light_punch" and not is_crouched_light_punch)

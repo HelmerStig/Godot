@@ -63,8 +63,8 @@ func _test_attack_data() -> void:
 	var light_kick := character_data.get_attack(&"light_kick")
 	var medium_kick := character_data.get_attack(&"medium_kick")
 	_expect(
-		light_kick != null and light_kick.hit_height == AttackData.HitHeight.LOW,
-		"il calcio leggero colpisce in basso"
+		light_kick != null and light_kick.hit_height == AttackData.HitHeight.MID,
+		"il calcio leggero in piedi provoca hurt-medium"
 	)
 	_expect(
 		medium_kick != null and medium_kick.hit_height == AttackData.HitHeight.LOW,
@@ -239,21 +239,51 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"heavy_punch")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_punch") == 17
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_punch") == 16
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"heavy_punch"),
 			24.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"heavy_punch"),
-		"il pugno pesante usa i frame 1, 4, 7 fino a 49, non ciclici, a 24 FPS"
+		"il pugno pesante usa tutti i 16 frame di heavy-punch-ok, non ciclici, a 24 FPS"
 	)
 	var heavy_impact := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"heavy_punch", 9)
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"heavy_punch", 8)
 		as AtlasTexture
 	)
 	_expect(
-		heavy_impact.region.position == Vector2(3072.0, 1536.0),
-		"il contatto del pugno pesante coincide con il frame sorgente 28"
+		heavy_impact.region.position == Vector2(0.0, 1024.0),
+		"il salto del pugno pesante coincide con il fotogramma 9"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"light_kick")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_kick") == 16
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"light_kick"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_kick"),
+		"il light kick in piedi usa tutti i 16 frame, non ciclici, a 24 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"medium_kick")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_kick") == 12
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"medium_kick"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"medium_kick"),
+		"il medium kick usa soltanto i primi 12 frame, non ciclici, a 24 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"heavy_kick")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_kick") == 16
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"heavy_kick"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"heavy_kick"),
+		"il nuovo heavy kick usa tutti i 16 frame, non ciclici, a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_power_punch")
@@ -864,7 +894,7 @@ func _test_combat_flow() -> void:
 		player1.animated_sprite.animation == &"heavy_punch"
 		and heavy_punch.hit_height == AttackData.HitHeight.HIGH
 		and is_equal_approx(heavy_punch.startup, 9.0 / 24.0),
-		"il pugno potente alto usa un frame ogni tre e diventa attivo sul sorgente 28"
+		"il nuovo pugno potente alto conserva danno alto e timing di contatto"
 	)
 	var heavy_punch_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
@@ -872,8 +902,85 @@ func _test_combat_flow() -> void:
 		and player1.combat.hitbox_shape.position == Vector2(67.5, -105.0),
 		"il pugno potente alto ha un'area d'impatto di 125 px verso l'avversario"
 	)
+	await create_timer(9.5 / 24.0).timeout
+	_expect(
+		player1.heavy_punch_hop_started
+		and player1.velocity.y < 0.0
+		and signf(player1.velocity.x) == (1.0 if player1.is_facing_right else -1.0),
+		"dal fotogramma 9 il pugno potente salta di 20 px e avanza di 30 px"
+	)
+	_expect(
+		is_equal_approx(Mangler.HEAVY_PUNCH_HOP_DURATION, 4.0 / 24.0),
+		"il salto del pugno potente dura la metà del tempo precedente"
+	)
 	await create_timer(player1.get_animation_duration(&"heavy_punch") + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "il pugno pesante completa tutti i 17 frame selezionati")
+	_expect(player1.current_state == Mangler.State.IDLE, "il pugno pesante completa tutti i 16 frame")
+
+	var standing_light_kick := player1.character_data.get_attack(&"light_kick")
+	player1.combat.try_attack(&"light_kick")
+	_expect(
+		player1.animated_sprite.animation == &"light_kick"
+		and standing_light_kick.hit_height == AttackData.HitHeight.MID
+		and player1.combat.get_hit_reaction_start_frame(standing_light_kick) == 4
+		and is_equal_approx(standing_light_kick.startup, 6.0 / 24.0)
+		and is_equal_approx(standing_light_kick.active, 4.0 / 24.0)
+		and is_equal_approx(standing_light_kick.recovery, 6.0 / 24.0),
+		"il light kick in piedi sincronizza startup, hurt-medium e recupero sui 16 frame"
+	)
+	var standing_light_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		standing_light_kick_shape.size == Vector2(185.0, 35.0)
+		and player1.combat.hitbox_shape.position == Vector2(97.5, -55.0),
+		"il light kick estende la hitbox di 100 px verso l'avversario"
+	)
+	await create_timer(player1.get_animation_duration(&"light_kick") + 0.05).timeout
+	_expect(player1.current_state == Mangler.State.IDLE, "il light kick completa l'intera animazione")
+
+	var standing_medium_kick := player1.character_data.get_attack(&"medium_kick")
+	player1.combat.try_attack(&"medium_kick")
+	_expect(
+		player1.animated_sprite.animation == &"medium_kick"
+		and is_zero_approx(standing_medium_kick.startup)
+		and is_equal_approx(standing_medium_kick.active, 8.0 / 24.0)
+		and is_equal_approx(standing_medium_kick.recovery, 4.0 / 24.0),
+		"il medium kick sincronizza i due impatti sui fotogrammi 1 e 8"
+	)
+	var standing_medium_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		standing_medium_kick_shape.size == Vector2(165.0, 45.0)
+		and player1.combat.hitbox_shape.position == Vector2(97.5, -65.0),
+		"il medium kick usa la hitbox estesa verso l'avversario"
+	)
+	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	_expect(
+		player2.combat.current_health == 94
+		and player2.animated_sprite.animation == &"hurt_high"
+		and player2.animated_sprite.frame == 0,
+		"il primo impatto del medium kick infligge 6 danni e avvia hurt-high dal frame 1"
+	)
+	player1.animated_sprite.frame = 7
+	_expect(
+		player2.combat.current_health == 88
+		and player2.animated_sprite.animation == &"hurt_mid"
+		and player2.animated_sprite.frame == 4,
+		"al fotogramma 8 il secondo impatto infligge 6 danni e avvia hurt-medium"
+	)
+	await create_timer(player1.get_animation_duration(&"medium_kick") + 0.05).timeout
+	_expect(player1.current_state == Mangler.State.IDLE, "il medium kick torna in idle dopo il fotogramma 12")
+	player2.combat.reset()
+
+	var standing_heavy_kick := player1.character_data.get_attack(&"heavy_kick")
+	player1.combat.try_attack(&"heavy_kick")
+	_expect(
+		player1.animated_sprite.animation == &"heavy_kick"
+		and standing_heavy_kick.causes_knockdown
+		and is_equal_approx(standing_heavy_kick.startup, 8.0 / 24.0)
+		and is_equal_approx(standing_heavy_kick.active, 2.0 / 24.0)
+		and is_equal_approx(standing_heavy_kick.recovery, 6.0 / 24.0),
+		"il nuovo heavy kick colpisce sui fotogrammi 9-10 e mantiene il knockdown"
+	)
+	await create_timer(player1.get_animation_duration(&"heavy_kick") + 0.05).timeout
+	_expect(player1.current_state == Mangler.State.IDLE, "il nuovo heavy kick completa tutti i 16 frame")
 
 	player1.combat.try_attack(&"heavy_punch", FighterInputBuffer.Direction.DOWN)
 	_expect(
@@ -1014,6 +1121,7 @@ func _test_combat_flow() -> void:
 		player2.animated_sprite.animation == &"hurt_mid",
 		"un colpo medio riproduce hurt_mid"
 	)
+	_expect(player2.animated_sprite.frame == 4, "hurt-medium parte sempre dal fotogramma 5")
 	_expect(player2_bar.value == 80.0, "segnale di danno aggiorna la UI")
 	await create_timer(0.35).timeout
 	_expect(player2.current_state == Mangler.State.HIT, "HIT resta attivo fino alla fine dell'animazione")
