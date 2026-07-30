@@ -73,9 +73,9 @@ func _test_attack_data() -> void:
 	var heavy_kick := character_data.get_attack(&"heavy_kick")
 	_expect(
 		heavy_kick != null
-		and heavy_kick.hit_height == AttackData.HitHeight.LOW
-		and heavy_kick.causes_knockdown,
-		"il calcio pesante è una spazzata bassa con knockdown"
+		and heavy_kick.hit_height == AttackData.HitHeight.MID
+		and not heavy_kick.causes_knockdown,
+		"il calcio pesante provoca hurt-medium senza knockdown"
 	)
 
 
@@ -284,6 +284,16 @@ func _test_combat_flow() -> void:
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"heavy_kick"),
 		"il nuovo heavy kick usa tutti i 16 frame, non ciclici, a 24 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"crouched_heavy_kick")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_heavy_kick") == 15
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_heavy_kick"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_heavy_kick"),
+		"la spazzata rotante usa i frame sorgente 11-25, non ciclici, a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_power_punch")
@@ -973,14 +983,52 @@ func _test_combat_flow() -> void:
 	player1.combat.try_attack(&"heavy_kick")
 	_expect(
 		player1.animated_sprite.animation == &"heavy_kick"
-		and standing_heavy_kick.causes_knockdown
+		and not standing_heavy_kick.causes_knockdown
+		and standing_heavy_kick.hit_height == AttackData.HitHeight.MID
+		and player1.combat.get_hit_reaction_start_frame(standing_heavy_kick) == 4
 		and is_equal_approx(standing_heavy_kick.startup, 8.0 / 24.0)
 		and is_equal_approx(standing_heavy_kick.active, 2.0 / 24.0)
 		and is_equal_approx(standing_heavy_kick.recovery, 6.0 / 24.0),
-		"il nuovo heavy kick colpisce sui fotogrammi 9-10 e mantiene il knockdown"
+		"il nuovo heavy kick colpisce sui fotogrammi 9-10 con hurt-medium"
+	)
+	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	_expect(
+		player2.combat.current_health == 80
+		and player2.current_state == Mangler.State.HIT
+		and player2.animated_sprite.animation == &"hurt_mid"
+		and player2.animated_sprite.frame == 4,
+		"l'heavy kick infligge 20 danni e avvia hurt-medium dal fotogramma 5"
 	)
 	await create_timer(player1.get_animation_duration(&"heavy_kick") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "il nuovo heavy kick completa tutti i 16 frame")
+	player2.combat.reset()
+
+	player1.combat.try_attack(&"heavy_kick", FighterInputBuffer.Direction.DOWN)
+	_expect(
+		player1.combat.is_crouched_heavy_kick
+		and player1.animated_sprite.animation == &"crouched_heavy_kick",
+		"DOWN+calcio potente avvia la spazzata rotante"
+	)
+	var crouched_heavy_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		crouched_heavy_kick_shape.size == FighterCombat.CROUCHED_HEAVY_KICK_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position == FighterCombat.CROUCHED_HEAVY_KICK_HITBOX_POSITION,
+		"la spazzata usa una hitbox bassa estesa in avanti"
+	)
+	var crouched_heavy_kick_phases := player1.combat.get_attack_phase_durations(standing_heavy_kick)
+	_expect(
+		is_equal_approx(crouched_heavy_kick_phases.x, 3.0 / 24.0)
+		and is_equal_approx(crouched_heavy_kick_phases.y, 2.0 / 24.0)
+		and player1.combat.get_effective_hit_height(standing_heavy_kick) == AttackData.HitHeight.LOW,
+		"la spazzata riprodotta dal frame 11 provoca il knockdown al frame sorgente 14"
+	)
+	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	_expect(
+		player2.current_state == Mangler.State.SWEEP_KNOCKDOWN,
+		"la spazzata potente provoca knockdown"
+	)
+	await create_timer(player1.get_animation_duration(&"crouched_heavy_kick") + 0.05).timeout
+	player2.combat.reset()
 
 	player1.combat.try_attack(&"heavy_punch", FighterInputBuffer.Direction.DOWN)
 	_expect(

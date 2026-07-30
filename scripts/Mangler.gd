@@ -795,6 +795,12 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 		animated_sprite.play(&"light_kick")
 	elif attack_name == &"medium_kick" and animated_sprite.sprite_frames.has_animation(&"medium_kick"):
 		animated_sprite.play(&"medium_kick")
+	elif (
+		attack_name == &"heavy_kick"
+		and combat.is_crouched_heavy_kick
+		and animated_sprite.sprite_frames.has_animation(&"crouched_heavy_kick")
+	):
+		animated_sprite.play(&"crouched_heavy_kick")
 	elif attack_name == &"heavy_kick" and animated_sprite.sprite_frames.has_animation(&"heavy_kick"):
 		animated_sprite.play(&"heavy_kick")
 	attack_started.emit(attack_name)
