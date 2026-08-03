@@ -339,7 +339,8 @@ func try_attack(
 	is_airborne_medium_punch = false
 	is_airborne_heavy_punch = false
 	if canceled_near_ground:
-		fighter.change_state(Mangler.State.IDLE)
+		fighter.force_idle_until_landing = true
+		fighter.change_state(Mangler.State.JUMPING)
 	elif should_return_to_jump:
 		fighter.change_state(Mangler.State.JUMPING)
 	elif should_return_to_crouch:

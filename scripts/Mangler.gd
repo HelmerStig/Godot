@@ -184,6 +184,7 @@ var default_z_index := 0
 var sweep_afterimage_spawn_count := 0
 var attack_afterimage_spawn_count := 0
 var aerial_attack_used := false
+var force_idle_until_landing := false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -385,6 +386,8 @@ func configure_jump_heavy_punch_frames() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if force_idle_until_landing and is_on_floor():
+		force_idle_until_landing = false
 	if not is_on_floor():
 		var current_gravity := (
 			HEAVY_PUNCH_HOP_GRAVITY
@@ -521,6 +524,7 @@ func begin_back_hop() -> void:
 func start_jump(horizontal_direction: float) -> void:
 	"""Riproduce la preparazione e memorizza la direzione scelta allo stacco."""
 	aerial_attack_used = false
+	force_idle_until_landing = false
 	pending_jump_direction = signf(horizontal_direction)
 	pending_jump_horizontal_multiplier = (
 		RUN_JUMP_HORIZONTAL_MULTIPLIER if current_state == State.RUNNING else 1.0
@@ -573,6 +577,10 @@ func change_state(next_state: int) -> void:
 
 func update_animation() -> void:
 	"""Riproduce l'animazione associata allo stato, senza riavviarla ogni frame."""
+	if force_idle_until_landing:
+		if animated_sprite.animation != &"idle" or not animated_sprite.is_playing():
+			animated_sprite.play(&"idle")
+		return
 	if current_state == State.CROUCHING:
 		if (
 			animated_sprite.sprite_frames.has_animation(&"crouch")
@@ -992,6 +1000,7 @@ func is_attack_in_front(attacker: Mangler) -> bool:
 func reset_fighter(spawn_position: Vector2) -> void:
 	clear_attack_afterimages()
 	aerial_attack_used = false
+	force_idle_until_landing = false
 	position = spawn_position
 	velocity = Vector2.ZERO
 	shadow_ground_y = spawn_position.y

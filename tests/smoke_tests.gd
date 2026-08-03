@@ -1065,7 +1065,7 @@ func _test_combat_flow() -> void:
 	player1.velocity.y = 1.0
 	await create_timer(0.1).timeout
 	_expect(
-		player1.current_state == Mangler.State.IDLE
+		player1.current_state == Mangler.State.JUMPING
 		and player1.animated_sprite.animation == &"idle"
 		and player1.combat.hitbox_shape.disabled,
 		"a 40 px dal terreno il colpo aereo termina anche mantenendo premuto il tasto"
