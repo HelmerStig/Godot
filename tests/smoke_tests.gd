@@ -266,6 +266,41 @@ func _test_combat_flow() -> void:
 		"il light kick in piedi usa tutti i 16 frame, non ciclici, a 24 FPS"
 	)
 	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"crouched_light_kick")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_light_kick") == 16
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_light_kick"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_light_kick"),
+		"il calcio leggero basso usa tutti i 16 frame, non ciclici, a 24 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"jump_light_kick")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_light_kick") == 9
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"jump_light_kick"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump_light_kick"),
+		"il light kick aereo usa 12-16 e torna indietro fino al 12 a 24 FPS"
+	)
+	var jump_kick_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_light_kick", 0
+	) as AtlasTexture
+	var jump_kick_peak := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_light_kick", 4
+	) as AtlasTexture
+	var jump_kick_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_light_kick", 8
+	) as AtlasTexture
+	_expect(
+		jump_kick_first.region == Rect2(1536.0, 1024.0, 512.0, 512.0)
+		and jump_kick_peak.region == Rect2(1536.0, 1536.0, 512.0, 512.0)
+		and jump_kick_last.region == jump_kick_first.region,
+		"il light kick aereo raggiunge il frame 16 e torna al frame 12"
+	)
+	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"medium_kick")
 		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_kick") == 12
 		and is_equal_approx(
@@ -307,6 +342,16 @@ func _test_combat_flow() -> void:
 		and sweep_last != null
 		and sweep_last.region == Rect2(3584.0, 2560.0, 512.0, 512.0),
 		"la spazzata parte esattamente dal fotogramma 32 e termina al 48"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_kick")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_kick") == 16
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_medium_kick"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_medium_kick"),
+		"il calcio medio basso usa tutti i 16 frame, non ciclici, a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_power_punch")
@@ -868,6 +913,49 @@ func _test_combat_flow() -> void:
 	player1.velocity = Vector2.ZERO
 	player1.change_state(Mangler.State.IDLE)
 
+	var aerial_test_position := player1.position
+	player1.combat.cancel_current_action()
+	player1.start_jump(1.0)
+	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	player1._on_animation_frame_changed()
+	player1.move_and_slide()
+	player1.change_state(Mangler.State.JUMPING)
+	var aerial_velocity_before_attack := player1.velocity
+	player1.combat.try_attack(&"light_kick")
+	_expect(
+		player1.combat.is_airborne_light_kick
+		and player1.current_state == Mangler.State.ATTACKING
+		and player1.animated_sprite.animation == &"jump_light_kick",
+		"LIGHT KICK durante JUMPING avvia il calcio leggero aereo"
+	)
+	_expect(
+		is_equal_approx(player1.velocity.x, aerial_velocity_before_attack.x),
+		"il calcio aereo conserva la traiettoria orizzontale del salto"
+	)
+	var jump_light_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		jump_light_kick_shape.size == FighterCombat.JUMP_LIGHT_KICK_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position == FighterCombat.JUMP_LIGHT_KICK_HITBOX_POSITION,
+		"il calcio leggero aereo usa la propria hitbox"
+	)
+	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	_expect(
+		player2.combat.current_health == 92
+		and player2.animated_sprite.animation == &"hurt_high",
+		"il calcio leggero aereo infligge danno light e provoca hurt_high"
+	)
+	await create_timer(player1.get_animation_duration(&"jump_light_kick") + 0.05).timeout
+	_expect(
+		player1.current_state == Mangler.State.JUMPING,
+		"se ancora sospeso, al termine del calcio Mangler torna all'animazione di salto"
+	)
+	player1.position = aerial_test_position
+	player1.velocity = Vector2(0.0, 1.0)
+	player1.move_and_slide()
+	player1.velocity = Vector2.ZERO
+	player1.change_state(Mangler.State.IDLE)
+	player2.combat.reset()
+
 	var light_punch := player1.character_data.get_attack(&"light_punch")
 	var player1_default_z := player1.z_index
 	player1.combat.try_attack(&"light_punch")
@@ -959,6 +1047,29 @@ func _test_combat_flow() -> void:
 	await create_timer(player1.get_animation_duration(&"light_kick") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "il light kick completa l'intera animazione")
 
+	player1.combat.try_attack(&"light_kick", FighterInputBuffer.Direction.DOWN)
+	_expect(
+		player1.combat.is_crouched_light_kick
+		and player1.animated_sprite.animation == &"crouched_light_kick",
+		"DOWN+calcio leggero avvia il nuovo calcio leggero basso"
+	)
+	var crouched_light_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		crouched_light_kick_shape.size == FighterCombat.CROUCHED_LIGHT_KICK_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position == FighterCombat.CROUCHED_LIGHT_KICK_HITBOX_POSITION,
+		"il calcio leggero basso usa una hitbox all'altezza delle gambe"
+	)
+	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	_expect(
+		player2.combat.current_health == 92
+		and player2.current_state == Mangler.State.HIT
+		and player2.animated_sprite.animation == &"hurt_mid"
+		and player2.animated_sprite.frame == 4,
+		"il calcio leggero basso provoca hurt_medium dal fotogramma 5"
+	)
+	await create_timer(player1.get_animation_duration(&"crouched_light_kick") + 0.05).timeout
+	player2.combat.reset()
+
 	var standing_medium_kick := player1.character_data.get_attack(&"medium_kick")
 	player1.combat.try_attack(&"medium_kick")
 	_expect(
@@ -990,6 +1101,29 @@ func _test_combat_flow() -> void:
 	)
 	await create_timer(player1.get_animation_duration(&"medium_kick") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "il medium kick torna in idle dopo il fotogramma 12")
+	player2.combat.reset()
+
+	player1.combat.try_attack(&"medium_kick", FighterInputBuffer.Direction.DOWN)
+	_expect(
+		player1.combat.is_crouched_medium_kick
+		and player1.animated_sprite.animation == &"crouched_medium_kick",
+		"DOWN+calcio medio avvia il nuovo calcio medio basso"
+	)
+	var crouched_medium_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		crouched_medium_kick_shape.size == FighterCombat.CROUCHED_MEDIUM_KICK_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position == FighterCombat.CROUCHED_MEDIUM_KICK_HITBOX_POSITION,
+		"il calcio medio basso usa una hitbox all'altezza delle gambe"
+	)
+	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	_expect(
+		player2.combat.current_health == 88
+		and player2.current_state == Mangler.State.HIT
+		and player2.animated_sprite.animation == &"hurt_mid"
+		and player2.animated_sprite.frame == 4,
+		"il calcio medio basso infligge il danno completo e provoca hurt_medium"
+	)
+	await create_timer(player1.get_animation_duration(&"crouched_medium_kick") + 0.05).timeout
 	player2.combat.reset()
 
 	var standing_heavy_kick := player1.character_data.get_attack(&"heavy_kick")

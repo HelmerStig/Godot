@@ -60,6 +60,24 @@ const CROUCHED_HEAVY_KICK_SOURCE_START := 31 # Indice zero-based: fotogramma 32.
 const CROUCHED_HEAVY_KICK_SOURCE_END := 47 # Indice zero-based: fotogramma 48.
 const CROUCHED_HEAVY_KICK_COLUMNS := 8
 const CROUCHED_HEAVY_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const CROUCHED_MEDIUM_KICK_SHEET := preload(
+	"res://assets/sprites/characters/mangler/medium-kick-low.png"
+)
+const CROUCHED_MEDIUM_KICK_FRAME_COUNT := 16
+const CROUCHED_MEDIUM_KICK_COLUMNS := 4
+const CROUCHED_MEDIUM_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const CROUCHED_LIGHT_KICK_SHEET := preload(
+	"res://assets/sprites/characters/mangler/light_kick_low.png"
+)
+const CROUCHED_LIGHT_KICK_FRAME_COUNT := 16
+const CROUCHED_LIGHT_KICK_COLUMNS := 4
+const CROUCHED_LIGHT_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const JUMP_LIGHT_KICK_SHEET := preload(
+	"res://assets/sprites/characters/mangler/jump-kick-light.png"
+)
+const JUMP_LIGHT_KICK_COLUMNS := 4
+const JUMP_LIGHT_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const JUMP_LIGHT_KICK_SOURCE_SEQUENCE := [11, 12, 13, 14, 15, 14, 13, 12, 11]
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -123,6 +141,9 @@ var default_z_index := 0
 func _ready() -> void:
 	default_z_index = z_index
 	configure_crouched_heavy_kick_frames()
+	configure_crouched_medium_kick_frames()
+	configure_crouched_light_kick_frames()
+	configure_jump_light_kick_frames()
 	input_buffer = FighterInputBuffer.new(player_number)
 	shadow_ground_y = global_position.y
 	duplicate_collision_shapes()
@@ -161,6 +182,66 @@ func configure_crouched_heavy_kick_frames() -> void:
 			CROUCHED_HEAVY_KICK_CELL_SIZE
 		)
 		frames.add_frame(&"crouched_heavy_kick", atlas_frame)
+
+
+func configure_crouched_medium_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"crouched_medium_kick"):
+		frames.remove_animation(&"crouched_medium_kick")
+	frames.add_animation(&"crouched_medium_kick")
+	frames.set_animation_speed(&"crouched_medium_kick", 24.0)
+	frames.set_animation_loop(&"crouched_medium_kick", false)
+	for source_index in range(CROUCHED_MEDIUM_KICK_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_MEDIUM_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_MEDIUM_KICK_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_MEDIUM_KICK_COLUMNS))
+			) * CROUCHED_MEDIUM_KICK_CELL_SIZE,
+			CROUCHED_MEDIUM_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_medium_kick", atlas_frame)
+
+
+func configure_crouched_light_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"crouched_light_kick"):
+		frames.remove_animation(&"crouched_light_kick")
+	frames.add_animation(&"crouched_light_kick")
+	frames.set_animation_speed(&"crouched_light_kick", 24.0)
+	frames.set_animation_loop(&"crouched_light_kick", false)
+	for source_index in range(CROUCHED_LIGHT_KICK_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_LIGHT_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_LIGHT_KICK_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_LIGHT_KICK_COLUMNS))
+			) * CROUCHED_LIGHT_KICK_CELL_SIZE,
+			CROUCHED_LIGHT_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_light_kick", atlas_frame)
+
+
+func configure_jump_light_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"jump_light_kick"):
+		frames.remove_animation(&"jump_light_kick")
+	frames.add_animation(&"jump_light_kick")
+	frames.set_animation_speed(&"jump_light_kick", 24.0)
+	frames.set_animation_loop(&"jump_light_kick", false)
+	for source_index in JUMP_LIGHT_KICK_SOURCE_SEQUENCE:
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = JUMP_LIGHT_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % JUMP_LIGHT_KICK_COLUMNS),
+				float(floori(float(source_index) / JUMP_LIGHT_KICK_COLUMNS))
+			) * JUMP_LIGHT_KICK_CELL_SIZE,
+			JUMP_LIGHT_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"jump_light_kick", atlas_frame)
 
 
 func _physics_process(delta: float) -> void:
@@ -216,6 +297,9 @@ func handle_input() -> void:
 	# Come nei fighting game classici, l'arco viene deciso allo stacco:
 	# nessun cambio di direzione è consentito durante il volo.
 	if current_state == State.JUMPING:
+		var aerial_attack_direction := input_buffer.consume_attack(&"light_kick")
+		if aerial_attack_direction != FighterInputBuffer.NO_DIRECTION:
+			combat.try_attack(&"light_kick", aerial_attack_direction)
 		return
 
 	# Tenere indietro prepara la guardia, ma permette ancora di arretrare.
@@ -822,10 +906,17 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 			animated_sprite.play(&"crouched_power_punch")
 	elif attack_name == &"heavy_punch" and animated_sprite.sprite_frames.has_animation(&"heavy_punch"):
 		animated_sprite.play(&"heavy_punch")
+	elif attack_name == &"light_kick" and combat.is_airborne_light_kick:
+		animated_sprite.play(&"jump_light_kick")
+	elif attack_name == &"light_kick" and combat.is_crouched_light_kick:
+		animated_sprite.play(&"crouched_light_kick")
 	elif attack_name == &"light_kick" and animated_sprite.sprite_frames.has_animation(&"light_kick"):
 		animated_sprite.play(&"light_kick")
 	elif attack_name == &"medium_kick" and animated_sprite.sprite_frames.has_animation(&"medium_kick"):
-		animated_sprite.play(&"medium_kick")
+		if combat.is_crouched_medium_kick:
+			animated_sprite.play(&"crouched_medium_kick")
+		else:
+			animated_sprite.play(&"medium_kick")
 	elif (
 		attack_name == &"heavy_kick"
 		and combat.is_crouched_heavy_kick
