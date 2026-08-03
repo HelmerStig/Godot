@@ -148,19 +148,24 @@ func _test_combat_flow() -> void:
 	_expect(
 		initial_body_collision.size == Vector2(120.0, 240.0)
 		and Mangler.CROUCH_COLLISION_SIZE == Vector2(130.0, 175.0),
-		"la collisione fisica di Mangler misura 120 px in piedi e 130 px in crouch"
+		"la collisione fisica segue l'altezza ripristinata del nuovo idle"
+	)
+	_expect(
+		player1.animated_sprite.scale == Mangler.REWORK_SPRITE_SCALE
+		and player1.animated_sprite.position == Mangler.REWORK_SPRITE_POSITION,
+		"il nuovo idle recupera altezza e linea dei piedi precedenti"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"idle"),
 		"SpriteFrames contiene l'animazione idle"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.get_frame_count(&"idle") == 25,
-		"idle contiene 25 frame"
+		player1.animated_sprite.sprite_frames.get_frame_count(&"idle") == 49,
+		"idle contiene tutti i 49 frame del foglio 7x7"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"idle"), 12.0),
-		"idle è configurato a 12 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"idle"), 24.0),
+		"idle è configurato a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.get_animation_loop(&"idle"),
@@ -520,12 +525,12 @@ func _test_combat_flow() -> void:
 		"SpriteFrames contiene l'animazione walk"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.get_frame_count(&"walk") == 25,
-		"walk contiene 25 frame"
+		player1.animated_sprite.sprite_frames.get_frame_count(&"walk") == 48,
+		"walk contiene i 48 frame non vuoti del foglio 7x7"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"walk"), 12.0),
-		"walk è configurato a 12 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"walk"), 24.0),
+		"walk è configurato a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.get_animation_loop(&"walk"),
@@ -536,12 +541,12 @@ func _test_combat_flow() -> void:
 		"SpriteFrames contiene l'animazione backwalk"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.get_frame_count(&"backwalk") == 25,
-		"backwalk contiene 25 frame"
+		player1.animated_sprite.sprite_frames.get_frame_count(&"backwalk") == 26,
+		"backwalk usa i primi 26 frame del nuovo foglio"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"backwalk"), 12.0),
-		"backwalk è configurato a 12 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"backwalk"), 24.0),
+		"backwalk è configurato a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.get_animation_loop(&"backwalk"),

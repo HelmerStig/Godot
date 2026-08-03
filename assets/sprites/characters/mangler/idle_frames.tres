@@ -1,6 +1,6 @@
 [gd_resource type="SpriteFrames" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/idle.png" id="1_gdrow"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/01-mangler-idle.png" id="1_gdrow"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/walk.png" id="2_walk"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/backwalk.png" id="3_backwalk"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/run.png" id="4_run"]
@@ -2359,7 +2359,7 @@ animations = [{
 }],
 "loop": 1,
 "name": &"idle",
-"speed": 12.0
+"speed": 24.0
 }, {
 "frames": [{
 "duration": 1.0,

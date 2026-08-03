@@ -30,6 +30,10 @@ enum State {
 
 const BASE_GRAVITY := 1400.0
 const JUMP_SPEED_MULTIPLIER := 1.2
+const LEGACY_SPRITE_SCALE := Vector2(0.7, 0.7)
+const LEGACY_SPRITE_POSITION := Vector2(0.0, -120.0)
+const REWORK_SPRITE_SCALE := Vector2(0.85, 0.85)
+const REWORK_SPRITE_POSITION := Vector2(0.0, -115.0)
 const GRAVITY := BASE_GRAVITY * JUMP_SPEED_MULTIPLIER * JUMP_SPEED_MULTIPLIER
 const GROUND_COLLISION_LAYER := 1
 const FIGHTER_COLLISION_LAYER := 8
@@ -55,6 +59,18 @@ const HEAVY_PUNCH_HOP_GRAVITY := (
 	8.0 * HEAVY_PUNCH_HOP_HEIGHT / (HEAVY_PUNCH_HOP_DURATION * HEAVY_PUNCH_HOP_DURATION)
 )
 const HEAVY_PUNCH_HOP_FRAME := 8 # Indice zero-based: nono fotogramma.
+const IDLE_SHEET := preload("res://assets/sprites/characters/mangler/01-mangler-idle.png")
+const IDLE_FRAME_COUNT := 49
+const IDLE_COLUMNS := 7
+const IDLE_CELL_SIZE := Vector2(512.0, 512.0)
+const WALK_SHEET := preload("res://assets/sprites/characters/mangler/02-walk.png")
+const WALK_FRAME_COUNT := 48
+const WALK_COLUMNS := 7
+const WALK_CELL_SIZE := Vector2(512.0, 512.0)
+const BACKWALK_SHEET := preload("res://assets/sprites/characters/mangler/03-back-walk.png")
+const BACKWALK_FRAME_COUNT := 26
+const BACKWALK_COLUMNS := 7
+const BACKWALK_CELL_SIZE := Vector2(512.0, 512.0)
 const CROUCHED_HEAVY_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/test-spazzata.png"
 )
@@ -197,6 +213,9 @@ var force_idle_until_landing := false
 
 func _ready() -> void:
 	default_z_index = z_index
+	configure_idle_frames()
+	configure_walk_frames()
+	configure_backwalk_frames()
 	configure_crouched_heavy_kick_frames()
 	configure_crouched_medium_kick_frames()
 	configure_crouched_light_kick_frames()
@@ -215,11 +234,72 @@ func _ready() -> void:
 	combat.attack_finished.connect(_on_combat_attack_finished)
 	animated_sprite.animation_finished.connect(_on_animation_finished)
 	animated_sprite.frame_changed.connect(_on_animation_frame_changed)
+	animated_sprite.animation_changed.connect(update_sprite_scale)
 	combat.configure(character_data)
 	add_to_group("fighters")
 	update_animation()
 	update_collision_profile()
 	update_ground_shadow()
+
+
+func configure_idle_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"idle"):
+		frames.remove_animation(&"idle")
+	frames.add_animation(&"idle")
+	frames.set_animation_speed(&"idle", 24.0)
+	frames.set_animation_loop(&"idle", true)
+	for source_index in range(IDLE_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = IDLE_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % IDLE_COLUMNS) * IDLE_CELL_SIZE.x,
+				(source_index / IDLE_COLUMNS) * IDLE_CELL_SIZE.y
+			),
+			IDLE_CELL_SIZE
+		)
+		frames.add_frame(&"idle", atlas_frame)
+
+
+func configure_walk_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"walk"):
+		frames.remove_animation(&"walk")
+	frames.add_animation(&"walk")
+	frames.set_animation_speed(&"walk", 24.0)
+	frames.set_animation_loop(&"walk", true)
+	for source_index in range(WALK_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = WALK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % WALK_COLUMNS) * WALK_CELL_SIZE.x,
+				(source_index / WALK_COLUMNS) * WALK_CELL_SIZE.y
+			),
+			WALK_CELL_SIZE
+		)
+		frames.add_frame(&"walk", atlas_frame)
+
+
+func configure_backwalk_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"backwalk"):
+		frames.remove_animation(&"backwalk")
+	frames.add_animation(&"backwalk")
+	frames.set_animation_speed(&"backwalk", 24.0)
+	frames.set_animation_loop(&"backwalk", true)
+	for source_index in range(BACKWALK_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = BACKWALK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % BACKWALK_COLUMNS) * BACKWALK_CELL_SIZE.x,
+				(source_index / BACKWALK_COLUMNS) * BACKWALK_CELL_SIZE.y
+			),
+			BACKWALK_CELL_SIZE
+		)
+		frames.add_frame(&"backwalk", atlas_frame)
 
 
 func configure_crouched_heavy_kick_frames() -> void:
@@ -665,6 +745,15 @@ func update_animation() -> void:
 		and (animated_sprite.animation != next_animation or not animated_sprite.is_playing())
 	):
 		animated_sprite.play(next_animation)
+
+
+func update_sprite_scale() -> void:
+	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
+	var uses_reworked_art := animated_sprite.animation == &"idle"
+	animated_sprite.scale = REWORK_SPRITE_SCALE if uses_reworked_art else LEGACY_SPRITE_SCALE
+	animated_sprite.position = (
+		REWORK_SPRITE_POSITION if uses_reworked_art else LEGACY_SPRITE_POSITION
+	)
 
 
 func get_hit_animation(hit_height: AttackData.HitHeight) -> StringName:
