@@ -12,6 +12,7 @@ const DEFAULT_HITSTUN := 0.3
 const DEFAULT_BLOCKSTUN := 0.15
 const SWEEP_GROUNDED_HOLD := 0.35
 const ATTACK_ANIMATION_FPS := 24.0
+const JUMP_KICK_ANIMATION_FPS := 30.0
 const CROUCHED_LIGHT_HITBOX_SIZE := Vector2(150.0, 35.0)
 const CROUCHED_LIGHT_HITBOX_POSITION := Vector2(75.0, -110.0)
 const CROUCHED_MEDIUM_HITBOX_SIZE := Vector2(165.0, 40.0)
@@ -26,6 +27,10 @@ const CROUCHED_LIGHT_KICK_HITBOX_SIZE := Vector2(150.0, 35.0)
 const CROUCHED_LIGHT_KICK_HITBOX_POSITION := Vector2(75.0, -45.0)
 const JUMP_LIGHT_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
 const JUMP_LIGHT_KICK_HITBOX_POSITION := Vector2(85.0, -105.0)
+const JUMP_HEAVY_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
+const JUMP_HEAVY_KICK_HITBOX_POSITION := Vector2(85.0, -105.0)
+const JUMP_MEDIUM_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
+const JUMP_MEDIUM_KICK_HITBOX_POSITION := Vector2(85.0, -105.0)
 
 var fighter: Mangler
 var character_data: CharacterData
@@ -50,6 +55,8 @@ var is_crouched_heavy_kick := false
 var is_crouched_medium_kick := false
 var is_crouched_light_kick := false
 var is_airborne_light_kick := false
+var is_airborne_heavy_kick := false
+var is_airborne_medium_kick := false
 
 @onready var hitbox: Area2D = get_parent().get_node("Hitbox")
 @onready var hitbox_shape: CollisionShape2D = get_parent().get_node("Hitbox/HitboxShape")
@@ -133,7 +140,22 @@ func try_attack(
 		and fighter.current_state == Mangler.State.JUMPING
 		and not fighter.is_on_floor()
 	)
-	if fighter.current_state not in [Mangler.State.IDLE, Mangler.State.WALKING] and not wants_airborne_light_kick and not (
+	var wants_airborne_heavy_kick := (
+		attack_name == &"heavy_kick"
+		and fighter.current_state == Mangler.State.JUMPING
+		and not fighter.is_on_floor()
+	)
+	var wants_airborne_medium_kick := (
+		attack_name == &"medium_kick"
+		and fighter.current_state == Mangler.State.JUMPING
+		and not fighter.is_on_floor()
+	)
+	var wants_airborne_kick := (
+		wants_airborne_light_kick
+		or wants_airborne_medium_kick
+		or wants_airborne_heavy_kick
+	)
+	if fighter.current_state not in [Mangler.State.IDLE, Mangler.State.WALKING] and not wants_airborne_kick and not (
 		(
 			wants_crouched_punch
 			or wants_crouched_medium_punch
@@ -145,7 +167,7 @@ func try_attack(
 		and starts_crouched
 	):
 		return
-	if is_attacking or (not fighter.is_on_floor() and not wants_airborne_light_kick):
+	if is_attacking or (not fighter.is_on_floor() and not wants_airborne_kick):
 		return
 	var attack := character_data.get_attack(attack_name)
 	if attack == null or not attack.is_valid():
@@ -168,6 +190,8 @@ func try_attack(
 	is_crouched_medium_kick = wants_crouched_medium_kick
 	is_crouched_light_kick = wants_crouched_light_kick
 	is_airborne_light_kick = wants_airborne_light_kick
+	is_airborne_heavy_kick = wants_airborne_heavy_kick
+	is_airborne_medium_kick = wants_airborne_medium_kick
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	light_punch_followup_done = false
@@ -175,7 +199,7 @@ func try_attack(
 	configure_hitbox(attack)
 	var preserved_air_velocity := fighter.velocity
 	fighter.change_state(Mangler.State.ATTACKING)
-	if is_airborne_light_kick:
+	if is_airborne_light_kick or is_airborne_medium_kick or is_airborne_heavy_kick:
 		fighter.velocity = preserved_air_velocity
 	attack_started.emit(attack_name)
 	var phase_durations := get_attack_phase_durations(attack)
@@ -217,6 +241,8 @@ func try_attack(
 				&"crouched_medium_kick",
 				&"crouched_light_kick",
 				&"jump_light_kick",
+				&"jump_heavy_kick",
+				&"jump_medium_kick",
 			]
 			and fighter.animated_sprite.is_playing()
 		):
@@ -239,7 +265,14 @@ func try_attack(
 		and fighter.input_buffer != null
 		and fighter.input_buffer.is_down_held()
 	)
-	var should_return_to_jump := is_airborne_light_kick and not fighter.is_on_floor()
+	var should_return_to_jump := (
+		(
+			is_airborne_light_kick
+			or is_airborne_medium_kick
+			or is_airborne_heavy_kick
+		)
+		and not fighter.is_on_floor()
+	)
 	is_crouched_light_punch = false
 	crouched_punch_started_crouched = false
 	is_crouched_medium_punch = false
@@ -250,6 +283,8 @@ func try_attack(
 	is_crouched_medium_kick = false
 	is_crouched_light_kick = false
 	is_airborne_light_kick = false
+	is_airborne_heavy_kick = false
+	is_airborne_medium_kick = false
 	if should_return_to_jump:
 		fighter.change_state(Mangler.State.JUMPING)
 	elif should_return_to_crouch:
@@ -393,6 +428,8 @@ func cancel_current_action() -> void:
 	is_crouched_medium_kick = false
 	is_crouched_light_kick = false
 	is_airborne_light_kick = false
+	is_airborne_heavy_kick = false
+	is_airborne_medium_kick = false
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	light_punch_followup_done = false
@@ -440,6 +477,12 @@ func configure_hitbox(attack: AttackData) -> void:
 		elif is_airborne_light_kick:
 			attack_shape.size = JUMP_LIGHT_KICK_HITBOX_SIZE
 			hitbox_shape.position = JUMP_LIGHT_KICK_HITBOX_POSITION
+		elif is_airborne_heavy_kick:
+			attack_shape.size = JUMP_HEAVY_KICK_HITBOX_SIZE
+			hitbox_shape.position = JUMP_HEAVY_KICK_HITBOX_POSITION
+		elif is_airborne_medium_kick:
+			attack_shape.size = JUMP_MEDIUM_KICK_HITBOX_SIZE
+			hitbox_shape.position = JUMP_MEDIUM_KICK_HITBOX_POSITION
 
 
 func get_attack_phase_durations(attack: AttackData) -> Vector3:
@@ -456,6 +499,10 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 		return Vector3(5.0, 3.0, 8.0) / ATTACK_ANIMATION_FPS
 	if attack.attack_id == &"light_kick" and is_airborne_light_kick:
 		return Vector3(4.0, 2.0, 3.0) / ATTACK_ANIMATION_FPS
+	if attack.attack_id == &"heavy_kick" and is_airborne_heavy_kick:
+		return Vector3(7.0, 3.0, 6.0) / JUMP_KICK_ANIMATION_FPS
+	if attack.attack_id == &"medium_kick" and is_airborne_medium_kick:
+		return Vector3(6.0, 3.0, 7.0) / JUMP_KICK_ANIMATION_FPS
 	return Vector3(attack.startup, attack.active, attack.recovery)
 
 
@@ -479,6 +526,10 @@ func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 	if attack.attack_id == &"light_kick" and is_crouched_light_kick:
 		return AttackData.HitHeight.MID
 	if attack.attack_id == &"light_kick" and is_airborne_light_kick:
+		return AttackData.HitHeight.HIGH
+	if attack.attack_id == &"heavy_kick" and is_airborne_heavy_kick:
+		return AttackData.HitHeight.HIGH
+	if attack.attack_id == &"medium_kick" and is_airborne_medium_kick:
 		return AttackData.HitHeight.HIGH
 	return attack.hit_height
 
@@ -552,7 +603,11 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	var effective_knockdown := current_attack.causes_knockdown
 	if current_attack.attack_id == &"heavy_kick" and is_crouched_heavy_kick:
 		effective_knockdown = true
-	if current_attack.attack_id == &"medium_kick" and not is_crouched_medium_kick:
+	if (
+		current_attack.attack_id == &"medium_kick"
+		and not is_crouched_medium_kick
+		and not is_airborne_medium_kick
+	):
 		effective_damage = int(current_attack.damage / 2)
 		effective_hit_height = (
 			AttackData.HitHeight.MID
