@@ -367,6 +367,37 @@ func _test_combat_flow() -> void:
 		"il pugno medio aereo riproduce lo spritesheet dal primo all'ultimo frame"
 	)
 	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"jump_heavy_punch")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_heavy_punch") == 16
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"jump_heavy_punch"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump_heavy_punch"),
+		"il pugno potente aereo usa tutti i 16 frame a 24 FPS"
+	)
+	var jump_heavy_punch_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_heavy_punch", 0
+	) as AtlasTexture
+	var jump_heavy_punch_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_heavy_punch", 15
+	) as AtlasTexture
+	_expect(
+		jump_heavy_punch_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and jump_heavy_punch_last.region == Rect2(1536.0, 1536.0, 512.0, 512.0)
+		and jump_heavy_punch_first.atlas.resource_path.ends_with("heavy_punch_jump.png"),
+		"il pugno potente aereo riproduce heavy_punch_jump dal primo all'ultimo frame"
+	)
+	var all_attacks_have_motion_effects := true
+	for attack_animation in Mangler.ATTACK_EFFECT_ANIMATIONS:
+		if not player1.has_attack_motion_effect(attack_animation):
+			all_attacks_have_motion_effects = false
+			break
+	_expect(
+		all_attacks_have_motion_effects,
+		"ogni animazione d'attacco di Mangler ha un profilo di scia dedicato"
+	)
+	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"medium_kick")
 		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_kick") == 12
 		and is_equal_approx(
@@ -993,6 +1024,7 @@ func _test_combat_flow() -> void:
 	player1.move_and_slide()
 	player1.change_state(Mangler.State.JUMPING)
 	var aerial_velocity_before_attack := player1.velocity
+	Input.action_press(player1.get_input_action("light_kick"))
 	player1.combat.try_attack(&"light_kick")
 	_expect(
 		player1.combat.is_airborne_light_kick
@@ -1017,9 +1049,35 @@ func _test_combat_flow() -> void:
 		"il calcio leggero aereo infligge danno light e provoca hurt_high"
 	)
 	await create_timer(player1.get_animation_duration(&"jump_light_kick") + 0.05).timeout
+	var jump_light_last_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_count(&"jump_light_kick") - 1
+	)
 	_expect(
-		player1.current_state == Mangler.State.JUMPING,
-		"se ancora sospeso, al termine del calcio Mangler torna all'animazione di salto"
+		player1.current_state == Mangler.State.ATTACKING
+		and player1.animated_sprite.frame == jump_light_last_frame
+		and not player1.animated_sprite.is_playing()
+		and not player1.combat.hitbox_shape.disabled,
+		"tenendo premuto il calcio aereo conserva ultimo frame e hitbox attiva"
+	)
+	player1.global_position.y = (
+		player1.shadow_ground_y - FighterCombat.AIRBORNE_ATTACK_GROUND_CANCEL_HEIGHT + 1.0
+	)
+	player1.velocity.y = 1.0
+	await create_timer(0.1).timeout
+	_expect(
+		player1.current_state == Mangler.State.IDLE
+		and player1.animated_sprite.animation == &"idle"
+		and player1.combat.hitbox_shape.disabled,
+		"a 40 px dal terreno il colpo aereo termina anche mantenendo premuto il tasto"
+	)
+	Input.action_release(player1.get_input_action("light_kick"))
+	var health_after_first_aerial_attack := player2.combat.current_health
+	player1.combat.try_attack(&"medium_kick")
+	_expect(
+		player1.current_state == Mangler.State.JUMPING
+		and not player1.combat.is_attacking
+		and player2.combat.current_health == health_after_first_aerial_attack,
+		"un secondo attacco aereo nello stesso salto viene ignorato"
 	)
 	player1.position = aerial_test_position
 	player1.velocity = Vector2(0.0, 1.0)
@@ -1064,6 +1122,38 @@ func _test_combat_flow() -> void:
 		player1.current_state == Mangler.State.JUMPING,
 		"al termine del pugno medio aereo Mangler torna allo stato di salto"
 	)
+	player1.position = aerial_test_position
+	player1.velocity = Vector2(0.0, 1.0)
+	player1.move_and_slide()
+	player1.velocity = Vector2.ZERO
+	player1.change_state(Mangler.State.IDLE)
+	player2.combat.reset()
+
+	player1.combat.cancel_current_action()
+	player1.start_jump(1.0)
+	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	player1._on_animation_frame_changed()
+	player1.move_and_slide()
+	player1.change_state(Mangler.State.JUMPING)
+	var aerial_heavy_punch_velocity_before_attack := player1.velocity
+	player1.combat.try_attack(&"heavy_punch")
+	_expect(
+		player1.combat.is_airborne_heavy_punch
+		and player1.current_state == Mangler.State.ATTACKING
+		and player1.animated_sprite.animation == &"jump_heavy_punch",
+		"HEAVY PUNCH durante JUMPING avvia il pugno potente aereo"
+	)
+	_expect(
+		is_equal_approx(player1.velocity.x, aerial_heavy_punch_velocity_before_attack.x),
+		"il pugno potente aereo conserva la traiettoria del salto"
+	)
+	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	_expect(
+		player2.combat.current_health == 85
+		and player2.animated_sprite.animation == &"hurt_high",
+		"il pugno potente aereo infligge danno heavy e provoca hurt_high"
+	)
+	await create_timer(player1.get_animation_duration(&"jump_heavy_punch") + 0.05).timeout
 	player1.position = aerial_test_position
 	player1.velocity = Vector2(0.0, 1.0)
 	player1.move_and_slide()
@@ -1360,6 +1450,14 @@ func _test_combat_flow() -> void:
 		crouched_heavy_kick_shape.size == FighterCombat.CROUCHED_HEAVY_KICK_HITBOX_SIZE
 		and player1.combat.hitbox_shape.position == FighterCombat.CROUCHED_HEAVY_KICK_HITBOX_POSITION,
 		"la spazzata usa una hitbox bassa estesa in avanti"
+	)
+	var sweep_afterimages_before := player1.sweep_afterimage_spawn_count
+	player1.animated_sprite.frame = Mangler.SWEEP_AFTERIMAGE_START_FRAME
+	player1.spawn_sweep_motion_afterimage()
+	_expect(
+		player1.sweep_afterimage_spawn_count > sweep_afterimages_before
+		and player1.get_tree().get_node_count_in_group("sweep_afterimage") > 0,
+		"la rotazione della spazzata genera una breve scia semitrasparente"
 	)
 	var crouched_heavy_kick_phases := player1.combat.get_attack_phase_durations(standing_heavy_kick)
 	_expect(

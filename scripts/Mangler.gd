@@ -62,6 +62,33 @@ const CROUCHED_HEAVY_KICK_SOURCE_START := 31 # Indice zero-based: fotogramma 32.
 const CROUCHED_HEAVY_KICK_SOURCE_END := 47 # Indice zero-based: fotogramma 48.
 const CROUCHED_HEAVY_KICK_COLUMNS := 8
 const CROUCHED_HEAVY_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const SWEEP_AFTERIMAGE_START_FRAME := 2
+const SWEEP_AFTERIMAGE_END_FRAME := 10
+const SWEEP_AFTERIMAGE_LIFETIME := 0.14
+const SWEEP_AFTERIMAGE_ALPHA := 0.28
+const SWEEP_AFTERIMAGE_OFFSET := 8.0
+const ATTACK_EFFECT_ANIMATIONS := [
+	&"light_punch_single",
+	&"light_punch_double",
+	&"crouched_punch",
+	&"crouched_punch_crouched",
+	&"medium_open_hand_slap",
+	&"crouched_medium_punch",
+	&"crouched_medium_punch_crouched",
+	&"jump_medium_punch",
+	&"jump_heavy_punch",
+	&"heavy_punch",
+	&"crouched_power_punch",
+	&"light_kick",
+	&"crouched_light_kick",
+	&"jump_light_kick",
+	&"medium_kick",
+	&"crouched_medium_kick",
+	&"jump_medium_kick",
+	&"heavy_kick",
+	&"crouched_heavy_kick",
+	&"jump_heavy_kick",
+]
 const CROUCHED_MEDIUM_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/medium-kick-low.png"
 )
@@ -98,6 +125,12 @@ const JUMP_MEDIUM_PUNCH_SHEET := preload(
 const JUMP_MEDIUM_PUNCH_FRAME_COUNT := 16
 const JUMP_MEDIUM_PUNCH_COLUMNS := 4
 const JUMP_MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const JUMP_HEAVY_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/mangler/heavy_punch_jump.png"
+)
+const JUMP_HEAVY_PUNCH_FRAME_COUNT := 16
+const JUMP_HEAVY_PUNCH_COLUMNS := 4
+const JUMP_HEAVY_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -148,6 +181,9 @@ var block_started_crouched := false
 var light_punch_combo_queued := false
 var heavy_punch_hop_started := false
 var default_z_index := 0
+var sweep_afterimage_spawn_count := 0
+var attack_afterimage_spawn_count := 0
+var aerial_attack_used := false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -167,6 +203,7 @@ func _ready() -> void:
 	configure_jump_medium_kick_frames()
 	configure_jump_heavy_kick_frames()
 	configure_jump_medium_punch_frames()
+	configure_jump_heavy_punch_frames()
 	input_buffer = FighterInputBuffer.new(player_number)
 	shadow_ground_y = global_position.y
 	duplicate_collision_shapes()
@@ -327,6 +364,26 @@ func configure_jump_medium_punch_frames() -> void:
 		frames.add_frame(&"jump_medium_punch", atlas_frame)
 
 
+func configure_jump_heavy_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"jump_heavy_punch"):
+		frames.remove_animation(&"jump_heavy_punch")
+	frames.add_animation(&"jump_heavy_punch")
+	frames.set_animation_speed(&"jump_heavy_punch", 24.0)
+	frames.set_animation_loop(&"jump_heavy_punch", false)
+	for source_index in range(JUMP_HEAVY_PUNCH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = JUMP_HEAVY_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % JUMP_HEAVY_PUNCH_COLUMNS),
+				float(floori(float(source_index) / JUMP_HEAVY_PUNCH_COLUMNS))
+			) * JUMP_HEAVY_PUNCH_CELL_SIZE,
+			JUMP_HEAVY_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"jump_heavy_punch", atlas_frame)
+
+
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		var current_gravity := (
@@ -381,7 +438,7 @@ func handle_input() -> void:
 	# nessun cambio di direzione è consentito durante il volo.
 	if current_state == State.JUMPING:
 		for aerial_attack_name in [
-			&"medium_punch", &"heavy_kick", &"medium_kick", &"light_kick"
+			&"heavy_punch", &"medium_punch", &"heavy_kick", &"medium_kick", &"light_kick"
 		]:
 			var aerial_attack_direction := input_buffer.consume_attack(aerial_attack_name)
 			if aerial_attack_direction != FighterInputBuffer.NO_DIRECTION:
@@ -463,6 +520,7 @@ func begin_back_hop() -> void:
 
 func start_jump(horizontal_direction: float) -> void:
 	"""Riproduce la preparazione e memorizza la direzione scelta allo stacco."""
+	aerial_attack_used = false
 	pending_jump_direction = signf(horizontal_direction)
 	pending_jump_horizontal_multiplier = (
 		RUN_JUMP_HORIZONTAL_MULTIPLIER if current_state == State.RUNNING else 1.0
@@ -932,6 +990,8 @@ func is_attack_in_front(attacker: Mangler) -> bool:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	clear_attack_afterimages()
+	aerial_attack_used = false
 	position = spawn_position
 	velocity = Vector2.ZERO
 	shadow_ground_y = spawn_position.y
@@ -980,6 +1040,8 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 		animated_sprite.play(&"light_punch_single")
 	elif attack_name == &"medium_punch" and combat.is_airborne_medium_punch:
 		animated_sprite.play(&"jump_medium_punch")
+	elif attack_name == &"heavy_punch" and combat.is_airborne_heavy_punch:
+		animated_sprite.play(&"jump_heavy_punch")
 	elif attack_name == &"medium_punch" and combat.is_crouched_medium_punch:
 		var crouched_medium_animation := (
 			&"crouched_medium_punch_crouched"
@@ -1039,6 +1101,149 @@ func restore_default_render_order() -> void:
 		z_index = default_z_index
 
 
+func get_attack_motion_profile(animation_name: StringName) -> Dictionary:
+	if animation_name == &"crouched_heavy_kick":
+		return {
+			"start_ratio": 0.12,
+			"end_ratio": 0.63,
+			"tint": Color(0.82, 0.9, 1.0),
+			"alpha": SWEEP_AFTERIMAGE_ALPHA,
+			"lifetime": SWEEP_AFTERIMAGE_LIFETIME,
+			"offset": SWEEP_AFTERIMAGE_OFFSET,
+			"stretch": 1.04,
+		}
+	if animation_name in [
+		&"jump_light_kick", &"jump_medium_kick", &"jump_heavy_kick", &"jump_medium_punch",
+		&"jump_heavy_punch"
+	]:
+		return {
+			"start_ratio": 0.18,
+			"end_ratio": 0.78,
+			"tint": Color(0.72, 0.88, 1.0),
+			"alpha": 0.24,
+			"lifetime": 0.13,
+			"offset": 7.0,
+			"stretch": 1.03,
+		}
+	if animation_name in [
+		&"heavy_punch", &"crouched_power_punch", &"heavy_kick"
+	]:
+		return {
+			"start_ratio": 0.28,
+			"end_ratio": 0.78,
+			"tint": Color(1.0, 0.78, 0.55),
+			"alpha": 0.3,
+			"lifetime": 0.16,
+			"offset": 10.0,
+			"stretch": 1.06,
+		}
+	if animation_name in [
+		&"medium_open_hand_slap",
+		&"crouched_medium_punch",
+		&"crouched_medium_punch_crouched",
+		&"medium_kick",
+		&"crouched_medium_kick",
+	]:
+		return {
+			"start_ratio": 0.24,
+			"end_ratio": 0.72,
+			"tint": Color(0.86, 0.92, 1.0),
+			"alpha": 0.22,
+			"lifetime": 0.12,
+			"offset": 6.0,
+			"stretch": 1.025,
+		}
+	if animation_name in [
+		&"light_punch_single",
+		&"light_punch_double",
+		&"crouched_punch",
+		&"crouched_punch_crouched",
+		&"light_kick",
+		&"crouched_light_kick",
+	]:
+		return {
+			"start_ratio": 0.2,
+			"end_ratio": 0.62,
+			"tint": Color.WHITE,
+			"alpha": 0.16,
+			"lifetime": 0.09,
+			"offset": 4.0,
+			"stretch": 1.01,
+		}
+	return {}
+
+
+func has_attack_motion_effect(animation_name: StringName) -> bool:
+	return not get_attack_motion_profile(animation_name).is_empty()
+
+
+func emit_attack_motion_effect() -> void:
+	if current_state != State.ATTACKING:
+		return
+	var profile := get_attack_motion_profile(animated_sprite.animation)
+	if profile.is_empty():
+		return
+	var frame_count := animated_sprite.sprite_frames.get_frame_count(animated_sprite.animation)
+	if frame_count <= 1:
+		return
+	var last_frame := frame_count - 1
+	var effect_start := floori(float(last_frame) * float(profile["start_ratio"]))
+	var effect_end := ceili(float(last_frame) * float(profile["end_ratio"]))
+	if animated_sprite.frame >= effect_start and animated_sprite.frame <= effect_end:
+		spawn_attack_motion_afterimage(profile)
+
+
+func spawn_attack_motion_afterimage(profile: Dictionary) -> void:
+	var frame_texture := animated_sprite.sprite_frames.get_frame_texture(
+		animated_sprite.animation, animated_sprite.frame
+	)
+	if frame_texture == null:
+		return
+	var ghost := Sprite2D.new()
+	ghost.name = "AttackAfterimage"
+	ghost.add_to_group("attack_afterimage")
+	if animated_sprite.animation == &"crouched_heavy_kick":
+		ghost.add_to_group("sweep_afterimage")
+	ghost.texture = frame_texture
+	ghost.centered = animated_sprite.centered
+	ghost.offset = animated_sprite.offset
+	ghost.position = animated_sprite.position
+	ghost.rotation = animated_sprite.rotation
+	ghost.scale = animated_sprite.scale
+	ghost.scale.x *= float(profile["stretch"])
+	ghost.flip_h = animated_sprite.flip_h
+	ghost.flip_v = animated_sprite.flip_v
+	ghost.texture_filter = animated_sprite.texture_filter
+	ghost.z_index = animated_sprite.z_index - 1
+	var tint: Color = profile["tint"]
+	ghost.modulate = Color(tint.r, tint.g, tint.b, float(profile["alpha"]))
+	add_child(ghost)
+	attack_afterimage_spawn_count += 1
+	if animated_sprite.animation == &"crouched_heavy_kick":
+		sweep_afterimage_spawn_count += 1
+	var trail_direction := 1.0 if is_facing_right else -1.0
+	var tween := ghost.create_tween()
+	var lifetime := float(profile["lifetime"])
+	tween.tween_property(ghost, "modulate:a", 0.0, lifetime)
+	tween.parallel().tween_property(
+		ghost,
+		"position:x",
+		ghost.position.x - trail_direction * float(profile["offset"]),
+		lifetime
+	)
+	tween.tween_callback(ghost.queue_free)
+
+
+func spawn_sweep_motion_afterimage() -> void:
+	spawn_attack_motion_afterimage(get_attack_motion_profile(&"crouched_heavy_kick"))
+
+
+func clear_attack_afterimages() -> void:
+	for child in get_children():
+		if child.is_in_group("attack_afterimage"):
+			child.queue_free()
+
+
 func _on_animation_finished() -> void:
 	if current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
 		change_state(State.IDLE)
@@ -1047,6 +1252,7 @@ func _on_animation_finished() -> void:
 
 
 func _on_animation_frame_changed() -> void:
+	emit_attack_motion_effect()
 	if (
 		animated_sprite.animation == &"light_punch_double"
 		and animated_sprite.frame >= 7
