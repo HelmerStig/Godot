@@ -92,6 +92,12 @@ const JUMP_MEDIUM_KICK_SHEET := preload(
 const JUMP_MEDIUM_KICK_FRAME_COUNT := 16
 const JUMP_MEDIUM_KICK_COLUMNS := 4
 const JUMP_MEDIUM_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const JUMP_MEDIUM_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/mangler/medium-punch-jump.png"
+)
+const JUMP_MEDIUM_PUNCH_FRAME_COUNT := 16
+const JUMP_MEDIUM_PUNCH_COLUMNS := 4
+const JUMP_MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -160,6 +166,7 @@ func _ready() -> void:
 	configure_jump_light_kick_frames()
 	configure_jump_medium_kick_frames()
 	configure_jump_heavy_kick_frames()
+	configure_jump_medium_punch_frames()
 	input_buffer = FighterInputBuffer.new(player_number)
 	shadow_ground_y = global_position.y
 	duplicate_collision_shapes()
@@ -300,6 +307,26 @@ func configure_jump_medium_kick_frames() -> void:
 		frames.add_frame(&"jump_medium_kick", atlas_frame)
 
 
+func configure_jump_medium_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"jump_medium_punch"):
+		frames.remove_animation(&"jump_medium_punch")
+	frames.add_animation(&"jump_medium_punch")
+	frames.set_animation_speed(&"jump_medium_punch", 24.0)
+	frames.set_animation_loop(&"jump_medium_punch", false)
+	for source_index in range(JUMP_MEDIUM_PUNCH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = JUMP_MEDIUM_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % JUMP_MEDIUM_PUNCH_COLUMNS),
+				float(floori(float(source_index) / JUMP_MEDIUM_PUNCH_COLUMNS))
+			) * JUMP_MEDIUM_PUNCH_CELL_SIZE,
+			JUMP_MEDIUM_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"jump_medium_punch", atlas_frame)
+
+
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		var current_gravity := (
@@ -353,7 +380,9 @@ func handle_input() -> void:
 	# Come nei fighting game classici, l'arco viene deciso allo stacco:
 	# nessun cambio di direzione è consentito durante il volo.
 	if current_state == State.JUMPING:
-		for aerial_attack_name in [&"heavy_kick", &"medium_kick", &"light_kick"]:
+		for aerial_attack_name in [
+			&"medium_punch", &"heavy_kick", &"medium_kick", &"light_kick"
+		]:
 			var aerial_attack_direction := input_buffer.consume_attack(aerial_attack_name)
 			if aerial_attack_direction != FighterInputBuffer.NO_DIRECTION:
 				combat.try_attack(aerial_attack_name, aerial_attack_direction)
@@ -949,6 +978,8 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 			animated_sprite.play(crouched_animation)
 	elif attack_name == &"light_punch" and animated_sprite.sprite_frames.has_animation(&"light_punch_single"):
 		animated_sprite.play(&"light_punch_single")
+	elif attack_name == &"medium_punch" and combat.is_airborne_medium_punch:
+		animated_sprite.play(&"jump_medium_punch")
 	elif attack_name == &"medium_punch" and combat.is_crouched_medium_punch:
 		var crouched_medium_animation := (
 			&"crouched_medium_punch_crouched"

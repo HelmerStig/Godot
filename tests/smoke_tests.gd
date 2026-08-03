@@ -345,6 +345,28 @@ func _test_combat_flow() -> void:
 		"il calcio medio aereo riproduce il foglio dal primo all'ultimo frame"
 	)
 	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"jump_medium_punch")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_medium_punch") == 16
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"jump_medium_punch"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump_medium_punch"),
+		"il pugno medio aereo usa tutti i 16 frame di medium-punch-jump a 24 FPS"
+	)
+	var jump_medium_punch_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_medium_punch", 0
+	) as AtlasTexture
+	var jump_medium_punch_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_medium_punch", 15
+	) as AtlasTexture
+	_expect(
+		jump_medium_punch_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and jump_medium_punch_last.region == Rect2(1536.0, 1536.0, 512.0, 512.0)
+		and jump_medium_punch_first.atlas.resource_path.ends_with("medium-punch-jump.png"),
+		"il pugno medio aereo riproduce lo spritesheet dal primo all'ultimo frame"
+	)
+	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"medium_kick")
 		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_kick") == 12
 		and is_equal_approx(
@@ -998,6 +1020,49 @@ func _test_combat_flow() -> void:
 	_expect(
 		player1.current_state == Mangler.State.JUMPING,
 		"se ancora sospeso, al termine del calcio Mangler torna all'animazione di salto"
+	)
+	player1.position = aerial_test_position
+	player1.velocity = Vector2(0.0, 1.0)
+	player1.move_and_slide()
+	player1.velocity = Vector2.ZERO
+	player1.change_state(Mangler.State.IDLE)
+	player2.combat.reset()
+
+	player1.combat.cancel_current_action()
+	player1.start_jump(1.0)
+	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	player1._on_animation_frame_changed()
+	player1.move_and_slide()
+	player1.change_state(Mangler.State.JUMPING)
+	var aerial_medium_punch_velocity_before_attack := player1.velocity
+	var aerial_medium_punch := player1.character_data.get_attack(&"medium_punch")
+	player1.combat.try_attack(&"medium_punch")
+	_expect(
+		player1.combat.is_airborne_medium_punch
+		and player1.current_state == Mangler.State.ATTACKING
+		and player1.animated_sprite.animation == &"jump_medium_punch",
+		"MEDIUM PUNCH durante JUMPING avvia il pugno medio aereo"
+	)
+	_expect(
+		is_equal_approx(player1.velocity.x, aerial_medium_punch_velocity_before_attack.x),
+		"il pugno medio aereo conserva la traiettoria del salto"
+	)
+	var jump_medium_punch_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		jump_medium_punch_shape.size == aerial_medium_punch.hitbox_size
+		and player1.combat.hitbox_shape.position == aerial_medium_punch.hitbox_position,
+		"il pugno medio aereo usa la hitbox del danno medium"
+	)
+	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	_expect(
+		player2.combat.current_health == 90
+		and player2.animated_sprite.animation == &"hurt_high",
+		"il pugno medio aereo infligge danno medium e provoca hurt_high"
+	)
+	await create_timer(player1.get_animation_duration(&"jump_medium_punch") + 0.05).timeout
+	_expect(
+		player1.current_state == Mangler.State.JUMPING,
+		"al termine del pugno medio aereo Mangler torna allo stato di salto"
 	)
 	player1.position = aerial_test_position
 	player1.velocity = Vector2(0.0, 1.0)

@@ -57,6 +57,7 @@ var is_crouched_light_kick := false
 var is_airborne_light_kick := false
 var is_airborne_heavy_kick := false
 var is_airborne_medium_kick := false
+var is_airborne_medium_punch := false
 
 @onready var hitbox: Area2D = get_parent().get_node("Hitbox")
 @onready var hitbox_shape: CollisionShape2D = get_parent().get_node("Hitbox/HitboxShape")
@@ -135,6 +136,11 @@ func try_attack(
 		]
 	)
 	var starts_crouched := fighter.current_state == Mangler.State.CROUCHING
+	var wants_airborne_medium_punch := (
+		attack_name == &"medium_punch"
+		and fighter.current_state == Mangler.State.JUMPING
+		and not fighter.is_on_floor()
+	)
 	var wants_airborne_light_kick := (
 		attack_name == &"light_kick"
 		and fighter.current_state == Mangler.State.JUMPING
@@ -155,7 +161,8 @@ func try_attack(
 		or wants_airborne_medium_kick
 		or wants_airborne_heavy_kick
 	)
-	if fighter.current_state not in [Mangler.State.IDLE, Mangler.State.WALKING] and not wants_airborne_kick and not (
+	var wants_airborne_attack := wants_airborne_kick or wants_airborne_medium_punch
+	if fighter.current_state not in [Mangler.State.IDLE, Mangler.State.WALKING] and not wants_airborne_attack and not (
 		(
 			wants_crouched_punch
 			or wants_crouched_medium_punch
@@ -167,7 +174,7 @@ func try_attack(
 		and starts_crouched
 	):
 		return
-	if is_attacking or (not fighter.is_on_floor() and not wants_airborne_kick):
+	if is_attacking or (not fighter.is_on_floor() and not wants_airborne_attack):
 		return
 	var attack := character_data.get_attack(attack_name)
 	if attack == null or not attack.is_valid():
@@ -182,7 +189,7 @@ func try_attack(
 	current_attack_direction = input_direction
 	is_crouched_light_punch = wants_crouched_punch
 	crouched_punch_started_crouched = wants_crouched_punch and starts_crouched
-	is_crouched_medium_punch = wants_crouched_medium_punch
+	is_crouched_medium_punch = wants_crouched_medium_punch and not wants_airborne_medium_punch
 	crouched_medium_punch_started_crouched = wants_crouched_medium_punch and starts_crouched
 	is_crouched_heavy_punch = wants_crouched_heavy_punch
 	crouched_heavy_punch_started_crouched = wants_crouched_heavy_punch and starts_crouched
@@ -192,6 +199,7 @@ func try_attack(
 	is_airborne_light_kick = wants_airborne_light_kick
 	is_airborne_heavy_kick = wants_airborne_heavy_kick
 	is_airborne_medium_kick = wants_airborne_medium_kick
+	is_airborne_medium_punch = wants_airborne_medium_punch
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	light_punch_followup_done = false
@@ -199,7 +207,12 @@ func try_attack(
 	configure_hitbox(attack)
 	var preserved_air_velocity := fighter.velocity
 	fighter.change_state(Mangler.State.ATTACKING)
-	if is_airborne_light_kick or is_airborne_medium_kick or is_airborne_heavy_kick:
+	if (
+		is_airborne_light_kick
+		or is_airborne_medium_kick
+		or is_airborne_heavy_kick
+		or is_airborne_medium_punch
+	):
 		fighter.velocity = preserved_air_velocity
 	attack_started.emit(attack_name)
 	var phase_durations := get_attack_phase_durations(attack)
@@ -243,6 +256,7 @@ func try_attack(
 				&"jump_light_kick",
 				&"jump_heavy_kick",
 				&"jump_medium_kick",
+				&"jump_medium_punch",
 			]
 			and fighter.animated_sprite.is_playing()
 		):
@@ -270,6 +284,7 @@ func try_attack(
 			is_airborne_light_kick
 			or is_airborne_medium_kick
 			or is_airborne_heavy_kick
+			or is_airborne_medium_punch
 		)
 		and not fighter.is_on_floor()
 	)
@@ -285,6 +300,7 @@ func try_attack(
 	is_airborne_light_kick = false
 	is_airborne_heavy_kick = false
 	is_airborne_medium_kick = false
+	is_airborne_medium_punch = false
 	if should_return_to_jump:
 		fighter.change_state(Mangler.State.JUMPING)
 	elif should_return_to_crouch:
@@ -430,6 +446,7 @@ func cancel_current_action() -> void:
 	is_airborne_light_kick = false
 	is_airborne_heavy_kick = false
 	is_airborne_medium_kick = false
+	is_airborne_medium_punch = false
 	hit_targets.clear()
 	light_punch_connected_targets.clear()
 	light_punch_followup_done = false
