@@ -287,13 +287,26 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_heavy_kick")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_heavy_kick") == 15
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_heavy_kick") == 17
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_heavy_kick"),
 			24.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_heavy_kick"),
-		"la spazzata rotante usa i frame sorgente 11-25, non ciclici, a 24 FPS"
+		"la spazzata rotante usa i frame sorgente 32-48, non ciclici, a 24 FPS"
+	)
+	var sweep_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"crouched_heavy_kick", 0
+	) as AtlasTexture
+	var sweep_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"crouched_heavy_kick", 16
+	) as AtlasTexture
+	_expect(
+		sweep_first != null
+		and sweep_first.region == Rect2(3584.0, 1536.0, 512.0, 512.0)
+		and sweep_last != null
+		and sweep_last.region == Rect2(3584.0, 2560.0, 512.0, 512.0),
+		"la spazzata parte esattamente dal fotogramma 32 e termina al 48"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_power_punch")
@@ -1020,7 +1033,7 @@ func _test_combat_flow() -> void:
 		is_equal_approx(crouched_heavy_kick_phases.x, 3.0 / 24.0)
 		and is_equal_approx(crouched_heavy_kick_phases.y, 2.0 / 24.0)
 		and player1.combat.get_effective_hit_height(standing_heavy_kick) == AttackData.HitHeight.LOW,
-		"la spazzata riprodotta dal frame 11 provoca il knockdown al frame sorgente 14"
+		"la nuova spazzata attiva il colpo sul quarto frame della sequenza 32-48"
 	)
 	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
 	_expect(
@@ -1028,6 +1041,10 @@ func _test_combat_flow() -> void:
 		"la spazzata potente provoca knockdown"
 	)
 	await create_timer(player1.get_animation_duration(&"crouched_heavy_kick") + 0.05).timeout
+	_expect(
+		player1.current_state == Mangler.State.IDLE,
+		"la spazzata termina al frame 48 e libera il fighter; mantenendo giù torna all'idle basso"
+	)
 	player2.combat.reset()
 
 	player1.combat.try_attack(&"heavy_punch", FighterInputBuffer.Direction.DOWN)

@@ -25,7 +25,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/light-kick.png" id="24_light_kick"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/heavy-kick.png" id="25_heavy_kick"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/heavy-kick-ok.png" id="26_heavy_kick_ok"]
-[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/calcio_spazzata_basso.png" id="27_crouched_heavy_kick"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/test-spazzata.png" id="27_crouched_heavy_kick"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouched_heavy_kick_00"]
 atlas = ExtResource("27_crouched_heavy_kick")

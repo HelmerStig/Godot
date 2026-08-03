@@ -53,6 +53,13 @@ const HEAVY_PUNCH_HOP_GRAVITY := (
 	8.0 * HEAVY_PUNCH_HOP_HEIGHT / (HEAVY_PUNCH_HOP_DURATION * HEAVY_PUNCH_HOP_DURATION)
 )
 const HEAVY_PUNCH_HOP_FRAME := 8 # Indice zero-based: nono fotogramma.
+const CROUCHED_HEAVY_KICK_SHEET := preload(
+	"res://assets/sprites/characters/mangler/test-spazzata.png"
+)
+const CROUCHED_HEAVY_KICK_SOURCE_START := 31 # Indice zero-based: fotogramma 32.
+const CROUCHED_HEAVY_KICK_SOURCE_END := 47 # Indice zero-based: fotogramma 48.
+const CROUCHED_HEAVY_KICK_COLUMNS := 8
+const CROUCHED_HEAVY_KICK_CELL_SIZE := Vector2(512.0, 512.0)
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -115,6 +122,7 @@ var default_z_index := 0
 
 func _ready() -> void:
 	default_z_index = z_index
+	configure_crouched_heavy_kick_frames()
 	input_buffer = FighterInputBuffer.new(player_number)
 	shadow_ground_y = global_position.y
 	duplicate_collision_shapes()
@@ -130,6 +138,29 @@ func _ready() -> void:
 	update_animation()
 	update_collision_profile()
 	update_ground_shadow()
+
+
+func configure_crouched_heavy_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"crouched_heavy_kick"):
+		frames.remove_animation(&"crouched_heavy_kick")
+	frames.add_animation(&"crouched_heavy_kick")
+	frames.set_animation_speed(&"crouched_heavy_kick", 24.0)
+	frames.set_animation_loop(&"crouched_heavy_kick", false)
+	for source_index in range(
+		CROUCHED_HEAVY_KICK_SOURCE_START,
+		CROUCHED_HEAVY_KICK_SOURCE_END + 1
+	):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_HEAVY_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_HEAVY_KICK_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_HEAVY_KICK_COLUMNS))
+			) * CROUCHED_HEAVY_KICK_CELL_SIZE,
+			CROUCHED_HEAVY_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_heavy_kick", atlas_frame)
 
 
 func _physics_process(delta: float) -> void:

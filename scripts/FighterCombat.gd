@@ -388,7 +388,7 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 	if attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
 		return Vector3(9.0, 2.0, 5.0) / ATTACK_ANIMATION_FPS
 	if attack.attack_id == &"heavy_kick" and is_crouched_heavy_kick:
-		return Vector3(3.0, 2.0, 10.0) / ATTACK_ANIMATION_FPS
+		return Vector3(3.0, 2.0, 12.0) / ATTACK_ANIMATION_FPS
 	return Vector3(attack.startup, attack.active, attack.recovery)
 
 
