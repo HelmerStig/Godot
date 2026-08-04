@@ -1,6 +1,7 @@
-idle
+idle <--ok
 crouch
-walk
+walk <--ok
+walk-back <--ok
 run
 strafe-back
 jump
@@ -17,7 +18,7 @@ hurted_air <--
 moves
 light-punch
 medium-punch
-strong-punch
+strong-punch <--ok
 light-kick
 medium-kick
 strong-kick

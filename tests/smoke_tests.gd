@@ -244,21 +244,25 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"heavy_punch")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_punch") == 16
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_punch") == 78
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"heavy_punch"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"heavy_punch"),
-		"il pugno pesante usa tutti i 16 frame di heavy-punch-ok, non ciclici, a 24 FPS"
+		"il pugno pesante alto usa 1-49 e torna indietro fino al frame 21 a 48 FPS"
 	)
-	var heavy_impact := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"heavy_punch", 8)
-		as AtlasTexture
-	)
+	var heavy_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"heavy_punch", 0
+	) as AtlasTexture
+	var heavy_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"heavy_punch", 77
+	) as AtlasTexture
 	_expect(
-		heavy_impact.region.position == Vector2(0.0, 1024.0),
-		"il salto del pugno pesante coincide con il fotogramma 9"
+		heavy_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and heavy_last.region == Rect2(3072.0, 1024.0, 512.0, 512.0)
+		and heavy_first.atlas.resource_path.ends_with("moves/00-heavy_punch_high.png"),
+		"il pugno pesante alto termina sul fotogramma sorgente 21 prima dell'idle"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"light_kick")
@@ -1297,29 +1301,30 @@ func _test_combat_flow() -> void:
 	player1.combat.try_attack(&"heavy_punch")
 	_expect(
 		player1.animated_sprite.animation == &"heavy_punch"
-		and heavy_punch.hit_height == AttackData.HitHeight.HIGH
-		and is_equal_approx(heavy_punch.startup, 9.0 / 24.0),
-		"il nuovo pugno potente alto conserva danno alto e timing di contatto"
+		and player1.combat.get_effective_hit_height(heavy_punch) == AttackData.HitHeight.MID
+		and player1.combat.get_hit_reaction_start_frame(heavy_punch) == 4
+		and player1.combat.get_attack_phase_durations(heavy_punch)
+		== Vector3(38.0, 4.0, 36.0) / 48.0,
+		"il nuovo pugno potente provoca hurt-medium e sincronizza il contatto finale"
 	)
 	var heavy_punch_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
-		heavy_punch_shape.size == Vector2(125.0, 45.0)
-		and player1.combat.hitbox_shape.position == Vector2(67.5, -105.0),
-		"il pugno potente alto ha un'area d'impatto di 125 px verso l'avversario"
+		heavy_punch_shape.size == FighterCombat.STANDING_HEAVY_PUNCH_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position
+		== FighterCombat.STANDING_HEAVY_PUNCH_HITBOX_POSITION,
+		"il pugno potente alto estende la hitbox di 100 px verso l'avversario"
 	)
 	await create_timer(9.5 / 24.0).timeout
 	_expect(
-		player1.heavy_punch_hop_started
-		and player1.velocity.y < 0.0
-		and signf(player1.velocity.x) == (1.0 if player1.is_facing_right else -1.0),
-		"dal fotogramma 9 il pugno potente salta di 20 px e avanza di 30 px"
+		player1.velocity == Vector2.ZERO and player1.is_on_floor(),
+		"il nuovo pugno potente resta a terra perché l'affondo è già nello sprite"
 	)
 	_expect(
-		is_equal_approx(Mangler.HEAVY_PUNCH_HOP_DURATION, 4.0 / 24.0),
-		"il salto del pugno potente dura la metà del tempo precedente"
+		player1.animated_sprite.frame < 38,
+		"la lunga preparazione resta nella fase di startup"
 	)
 	await create_timer(player1.get_animation_duration(&"heavy_punch") + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "il pugno pesante completa tutti i 16 frame")
+	_expect(player1.current_state == Mangler.State.IDLE, "il pugno pesante completa anche il recupero inverso")
 
 	var standing_light_kick := player1.character_data.get_attack(&"light_kick")
 	player1.combat.try_attack(&"light_kick")

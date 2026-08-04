@@ -32,6 +32,8 @@ const JUMP_HEAVY_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
 const JUMP_HEAVY_KICK_HITBOX_POSITION := Vector2(85.0, -105.0)
 const JUMP_MEDIUM_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
 const JUMP_MEDIUM_KICK_HITBOX_POSITION := Vector2(85.0, -105.0)
+const STANDING_HEAVY_PUNCH_HITBOX_SIZE := Vector2(225.0, 45.0)
+const STANDING_HEAVY_PUNCH_HITBOX_POSITION := Vector2(117.5, -105.0)
 
 var fighter: Mangler
 var character_data: CharacterData
@@ -590,6 +592,9 @@ func configure_hitbox(attack: AttackData) -> void:
 		elif is_airborne_medium_kick:
 			attack_shape.size = JUMP_MEDIUM_KICK_HITBOX_SIZE
 			hitbox_shape.position = JUMP_MEDIUM_KICK_HITBOX_POSITION
+		elif attack.attack_id == &"heavy_punch" and not is_airborne_heavy_punch:
+			attack_shape.size = STANDING_HEAVY_PUNCH_HITBOX_SIZE
+			hitbox_shape.position = STANDING_HEAVY_PUNCH_HITBOX_POSITION
 
 
 func get_attack_phase_durations(attack: AttackData) -> Vector3:
@@ -612,6 +617,8 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 		return Vector3(6.0, 3.0, 7.0) / JUMP_KICK_ANIMATION_FPS
 	if attack.attack_id == &"heavy_punch" and is_airborne_heavy_punch:
 		return Vector3(8.0, 4.0, 4.0) / ATTACK_ANIMATION_FPS
+	if attack.attack_id == &"heavy_punch":
+		return Vector3(38.0, 4.0, 36.0) / 48.0
 	return Vector3(attack.startup, attack.active, attack.recovery)
 
 
@@ -628,6 +635,8 @@ func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 		return AttackData.HitHeight.MID
 	if attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
 		return AttackData.HitHeight.LOW
+	if attack.attack_id == &"heavy_punch" and not is_airborne_heavy_punch:
+		return AttackData.HitHeight.MID
 	if attack.attack_id == &"heavy_kick" and is_crouched_heavy_kick:
 		return AttackData.HitHeight.LOW
 	if attack.attack_id == &"medium_kick" and is_crouched_medium_kick:

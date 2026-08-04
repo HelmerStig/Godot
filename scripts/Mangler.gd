@@ -52,13 +52,6 @@ const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
 const HIT_PUSHBACK_SPEED := 180.0
 const HIT_PUSHBACK_DECELERATION := 720.0
 const ATTACK_FOREGROUND_Z_OFFSET := 1
-const HEAVY_PUNCH_HOP_HEIGHT := 20.0
-const HEAVY_PUNCH_HOP_DISTANCE := 30.0
-const HEAVY_PUNCH_HOP_DURATION := 4.0 / 24.0
-const HEAVY_PUNCH_HOP_GRAVITY := (
-	8.0 * HEAVY_PUNCH_HOP_HEIGHT / (HEAVY_PUNCH_HOP_DURATION * HEAVY_PUNCH_HOP_DURATION)
-)
-const HEAVY_PUNCH_HOP_FRAME := 8 # Indice zero-based: nono fotogramma.
 const IDLE_SHEET := preload("res://assets/sprites/characters/mangler/01-mangler-idle.png")
 const IDLE_FRAME_COUNT := 49
 const IDLE_COLUMNS := 7
@@ -71,6 +64,12 @@ const BACKWALK_SHEET := preload("res://assets/sprites/characters/mangler/03-back
 const BACKWALK_FRAME_COUNT := 26
 const BACKWALK_COLUMNS := 7
 const BACKWALK_CELL_SIZE := Vector2(512.0, 512.0)
+const HEAVY_PUNCH_HIGH_SHEET := preload(
+	"res://assets/sprites/characters/mangler/moves/00-heavy_punch_high.png"
+)
+const HEAVY_PUNCH_HIGH_FRAME_COUNT := 49
+const HEAVY_PUNCH_HIGH_COLUMNS := 7
+const HEAVY_PUNCH_HIGH_CELL_SIZE := Vector2(512.0, 512.0)
 const CROUCHED_HEAVY_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/test-spazzata.png"
 )
@@ -195,7 +194,6 @@ var received_hit_height := AttackData.HitHeight.MID
 var received_block_height := AttackData.HitHeight.MID
 var block_started_crouched := false
 var light_punch_combo_queued := false
-var heavy_punch_hop_started := false
 var default_z_index := 0
 var sweep_afterimage_spawn_count := 0
 var attack_afterimage_spawn_count := 0
@@ -216,6 +214,7 @@ func _ready() -> void:
 	configure_idle_frames()
 	configure_walk_frames()
 	configure_backwalk_frames()
+	configure_heavy_punch_high_frames()
 	configure_crouched_heavy_kick_frames()
 	configure_crouched_medium_kick_frames()
 	configure_crouched_light_kick_frames()
@@ -300,6 +299,37 @@ func configure_backwalk_frames() -> void:
 			BACKWALK_CELL_SIZE
 		)
 		frames.add_frame(&"backwalk", atlas_frame)
+
+
+func configure_heavy_punch_high_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"heavy_punch"):
+		frames.remove_animation(&"heavy_punch")
+	frames.add_animation(&"heavy_punch")
+	frames.set_animation_speed(&"heavy_punch", 48.0)
+	frames.set_animation_loop(&"heavy_punch", false)
+	for source_index in range(HEAVY_PUNCH_HIGH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = HEAVY_PUNCH_HIGH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % HEAVY_PUNCH_HIGH_COLUMNS) * HEAVY_PUNCH_HIGH_CELL_SIZE.x,
+				(source_index / HEAVY_PUNCH_HIGH_COLUMNS) * HEAVY_PUNCH_HIGH_CELL_SIZE.y
+			),
+			HEAVY_PUNCH_HIGH_CELL_SIZE
+		)
+		frames.add_frame(&"heavy_punch", atlas_frame)
+	for source_index in range(HEAVY_PUNCH_HIGH_FRAME_COUNT - 1, 19, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = HEAVY_PUNCH_HIGH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % HEAVY_PUNCH_HIGH_COLUMNS) * HEAVY_PUNCH_HIGH_CELL_SIZE.x,
+				(source_index / HEAVY_PUNCH_HIGH_COLUMNS) * HEAVY_PUNCH_HIGH_CELL_SIZE.y
+			),
+			HEAVY_PUNCH_HIGH_CELL_SIZE
+		)
+		frames.add_frame(&"heavy_punch", atlas_frame)
 
 
 func configure_crouched_heavy_kick_frames() -> void:
@@ -469,18 +499,7 @@ func _physics_process(delta: float) -> void:
 	if force_idle_until_landing and is_on_floor():
 		force_idle_until_landing = false
 	if not is_on_floor():
-		var current_gravity := (
-			HEAVY_PUNCH_HOP_GRAVITY
-			if heavy_punch_hop_started and animated_sprite.animation == &"heavy_punch"
-			else GRAVITY
-		)
-		velocity.y += current_gravity * delta
-	elif (
-		heavy_punch_hop_started
-		and animated_sprite.animation == &"heavy_punch"
-		and velocity.y >= 0.0
-	):
-		velocity.x = 0.0
+		velocity.y += GRAVITY * delta
 	if current_state in [State.HIT, State.SWEEP_KNOCKDOWN]:
 		velocity.x = move_toward(velocity.x, 0.0, HIT_PUSHBACK_DECELERATION * delta)
 
@@ -749,7 +768,7 @@ func update_animation() -> void:
 
 func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
-	var uses_reworked_art := animated_sprite.animation == &"idle"
+	var uses_reworked_art := animated_sprite.animation in [&"idle", &"heavy_punch"]
 	animated_sprite.scale = REWORK_SPRITE_SCALE if uses_reworked_art else LEGACY_SPRITE_SCALE
 	animated_sprite.position = (
 		REWORK_SPRITE_POSITION if uses_reworked_art else LEGACY_SPRITE_POSITION
@@ -1125,7 +1144,6 @@ func _on_combat_knocked_out() -> void:
 func _on_combat_attack_started(attack_name: StringName) -> void:
 	bring_player_one_to_foreground()
 	light_punch_combo_queued = false
-	heavy_punch_hop_started = false
 	if attack_name == &"light_punch" and combat.is_crouched_light_punch:
 		var crouched_animation := (
 			&"crouched_punch_crouched"
@@ -1363,13 +1381,6 @@ func _on_animation_frame_changed() -> void:
 		and current_state == State.ATTACKING
 	):
 		combat.perform_medium_kick_followup()
-	elif (
-		animated_sprite.animation == &"heavy_punch"
-		and animated_sprite.frame >= HEAVY_PUNCH_HOP_FRAME
-		and current_state == State.ATTACKING
-		and not combat.is_crouched_heavy_punch
-	):
-		begin_heavy_punch_hop()
 	elif animated_sprite.animation == &"crouch":
 		update_collision_profile()
 	elif (
@@ -1384,12 +1395,3 @@ func _on_animation_frame_changed() -> void:
 		and animated_sprite.frame >= JUMP_TAKEOFF_FRAME
 	):
 		begin_jump_ascent()
-
-
-func begin_heavy_punch_hop() -> void:
-	if heavy_punch_hop_started or not is_on_floor():
-		return
-	heavy_punch_hop_started = true
-	var forward_direction := 1.0 if is_facing_right else -1.0
-	velocity.x = forward_direction * HEAVY_PUNCH_HOP_DISTANCE / HEAVY_PUNCH_HOP_DURATION
-	velocity.y = -HEAVY_PUNCH_HOP_GRAVITY * HEAVY_PUNCH_HOP_DURATION / 2.0
