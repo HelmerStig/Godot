@@ -1,45 +1,44 @@
-[gd_scene load_steps=6 format=3 uid="uid://b3k8rmv2xqwfp"]
+[gd_scene format=3 uid="uid://b3k8rmv2xqwfp"]
 
 [ext_resource type="PackedScene" uid="uid://cemh2xowvxf8g" path="res://scenes/Mangler.tscn" id="1_mangler"]
-[ext_resource type="Script" path="res://scripts/MainArena.gd" id="2_arena"]
+[ext_resource type="Script" uid="uid://cqoa56rikots8" path="res://scripts/MainArena.gd" id="2_arena"]
 [ext_resource type="PackedScene" path="res://scenes/stages/DefaultStage.tscn" id="3_stage"]
-[ext_resource type="Script" path="res://scripts/ArenaUI.gd" id="4_ui"]
+[ext_resource type="Script" uid="uid://bpl1g2vp1evh5" path="res://scripts/ArenaUI.gd" id="4_ui"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(2304, 50)
 
-[node name="MainArena" type="Node2D"]
+[node name="MainArena" type="Node2D" unique_id=206804748]
 script = ExtResource("2_arena")
 
-[node name="DefaultStage" parent="." instance=ExtResource("3_stage")]
+[node name="DefaultStage" parent="." unique_id=566572223 instance=ExtResource("3_stage")]
+position = Vector2(-129, -31)
 
-[node name="Ground" type="StaticBody2D" parent="."]
+[node name="Ground" type="StaticBody2D" parent="." unique_id=1204746480]
 position = Vector2(0, 600)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground" unique_id=1315209156]
 position = Vector2(1152, 25)
 shape = SubResource("RectangleShape2D_ground")
 
-[node name="Player1" parent="." instance=ExtResource("1_mangler")]
+[node name="Player1" parent="." unique_id=630232954 instance=ExtResource("1_mangler")]
 position = Vector2(876, 600)
 
-[node name="Player2" parent="." instance=ExtResource("1_mangler")]
+[node name="Player2" parent="." unique_id=297068697 instance=ExtResource("1_mangler")]
 position = Vector2(1428, 600)
 player_number = 2
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=377090818]
 position = Vector2(1152, 324)
-enabled = true
-position_smoothing_enabled = true
-position_smoothing_speed = 5.0
 limit_left = 0
-limit_right = 2304
 limit_top = 0
+limit_right = 2304
 limit_bottom = 648
+position_smoothing_enabled = true
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2100490061]
 
-[node name="UI" type="Control" parent="CanvasLayer"]
+[node name="UI" type="Control" parent="CanvasLayer" unique_id=647065860]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -48,7 +47,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("4_ui")
 
-[node name="Player1Health" type="ProgressBar" parent="CanvasLayer/UI"]
+[node name="Player1Health" type="ProgressBar" parent="CanvasLayer/UI" unique_id=1885325337]
 layout_mode = 0
 offset_left = 20.0
 offset_top = 20.0
@@ -57,7 +56,7 @@ offset_bottom = 47.0
 value = 100.0
 show_percentage = false
 
-[node name="Player2Health" type="ProgressBar" parent="CanvasLayer/UI"]
+[node name="Player2Health" type="ProgressBar" parent="CanvasLayer/UI" unique_id=102164070]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -71,7 +70,7 @@ value = 100.0
 fill_mode = 1
 show_percentage = false
 
-[node name="RoundTimer" type="Label" parent="CanvasLayer/UI"]
+[node name="RoundTimer" type="Label" parent="CanvasLayer/UI" unique_id=1820593509]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -85,7 +84,7 @@ theme_override_font_sizes/font_size = 32
 text = "99"
 horizontal_alignment = 1
 
-[node name="RoundLabel" type="Label" parent="CanvasLayer/UI"]
+[node name="RoundLabel" type="Label" parent="CanvasLayer/UI" unique_id=536800161]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5

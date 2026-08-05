@@ -166,6 +166,20 @@ const JUMP_HEAVY_PUNCH_SHEET := preload(
 const JUMP_HEAVY_PUNCH_FRAME_COUNT := 16
 const JUMP_HEAVY_PUNCH_COLUMNS := 4
 const JUMP_HEAVY_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const MEDIUM_PUNCH_PREPARATION_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/medium-punch/medium-punch-preparation.png"
+)
+const MEDIUM_PUNCH_PREPARATION_FRAME_COUNT := 10
+const MEDIUM_PUNCH_HIT_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/medium-punch/medium-punch-hit.png"
+)
+const MEDIUM_PUNCH_HIT_FRAME_COUNT := 16
+const MEDIUM_PUNCH_TO_IDLE_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/medium-punch/medium-punch-to-idle.png"
+)
+const MEDIUM_PUNCH_TO_IDLE_FRAME_COUNT := 16
+const MEDIUM_PUNCH_COLUMNS := 4
+const MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -246,6 +260,7 @@ func _ready() -> void:
 	configure_jump_light_kick_frames()
 	configure_jump_medium_kick_frames()
 	configure_jump_heavy_kick_frames()
+	configure_medium_punch_frames()
 	configure_jump_medium_punch_frames()
 	configure_jump_heavy_punch_frames()
 	input_buffer = FighterInputBuffer.new(player_number)
@@ -623,6 +638,54 @@ func configure_jump_medium_kick_frames() -> void:
 		frames.add_frame(&"jump_medium_kick", atlas_frame)
 
 
+func configure_medium_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"medium_open_hand_slap"):
+		frames.remove_animation(&"medium_open_hand_slap")
+	frames.add_animation(&"medium_open_hand_slap")
+	frames.set_animation_speed(&"medium_open_hand_slap", 48.0)
+	frames.set_animation_loop(&"medium_open_hand_slap", false)
+	
+	# Add preparation frames (10 frames)
+	for source_index in range(MEDIUM_PUNCH_PREPARATION_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = MEDIUM_PUNCH_PREPARATION_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % MEDIUM_PUNCH_COLUMNS),
+				float(floori(float(source_index) / float(MEDIUM_PUNCH_COLUMNS)))
+			) * MEDIUM_PUNCH_CELL_SIZE,
+			MEDIUM_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"medium_open_hand_slap", atlas_frame)
+	
+	# Add hit frames (16 frames)
+	for source_index in range(MEDIUM_PUNCH_HIT_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = MEDIUM_PUNCH_HIT_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % MEDIUM_PUNCH_COLUMNS),
+				float(floori(float(source_index) / float(MEDIUM_PUNCH_COLUMNS)))
+			) * MEDIUM_PUNCH_CELL_SIZE,
+			MEDIUM_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"medium_open_hand_slap", atlas_frame)
+	
+	# Add to-idle frames (16 frames)
+	for source_index in range(MEDIUM_PUNCH_TO_IDLE_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = MEDIUM_PUNCH_TO_IDLE_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % MEDIUM_PUNCH_COLUMNS),
+				float(floori(float(source_index) / float(MEDIUM_PUNCH_COLUMNS)))
+			) * MEDIUM_PUNCH_CELL_SIZE,
+			MEDIUM_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"medium_open_hand_slap", atlas_frame)
+
+
 func configure_jump_medium_punch_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"jump_medium_punch"):
@@ -938,7 +1001,7 @@ func update_animation() -> void:
 func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
-		&"idle", &"light_punch_single", &"heavy_punch", &"crouch", &"jump", &"block_high",
+		&"idle", &"light_punch_single", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery"
 	]
