@@ -14,14 +14,14 @@ hurted_high
 hurted_mid
 hurted_low
 hurted_sweep_knockdown <--ok
-knockdown_recovery <--da inserire e portare a 24fps
-knockdown <--da portare a 24fps
+knockdown_recovery <--ok
+knockdown <--ok
 
 hurted_air <--
 
 
 light-punch
-medium-punch
+medium-punch <--ok
 strong-punch <--ok
 light-kick
 medium-kick
