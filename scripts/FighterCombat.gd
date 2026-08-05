@@ -693,6 +693,8 @@ func get_hit_reaction_start_frame(attack: AttackData) -> int:
 func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 	if attack.attack_id == &"light_punch" and is_crouched_light_punch:
 		return AttackData.HitHeight.MID
+	if attack.attack_id == &"medium_punch" and not is_crouched_medium_punch and not is_airborne_medium_punch:
+		return AttackData.HitHeight.HIGH
 	if attack.attack_id == &"medium_punch" and is_crouched_medium_punch:
 		return AttackData.HitHeight.MID
 	if attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
