@@ -16,6 +16,9 @@ const JUMP_KICK_ANIMATION_FPS := 30.0
 const AIRBORNE_ATTACK_GROUND_CANCEL_HEIGHT := 40.0
 const CROUCHED_LIGHT_HITBOX_SIZE := Vector2(150.0, 35.0)
 const CROUCHED_LIGHT_HITBOX_POSITION := Vector2(75.0, -110.0)
+const STANDING_LIGHT_PUNCH_HITBOX_SIZE := Vector2(185.0, 35.0)
+const STANDING_LIGHT_PUNCH_HITBOX_POSITION := Vector2(92.5, -210.0)
+const STANDING_LIGHT_PUNCH_ACTIVE_FRAME := 17
 const CROUCHED_MEDIUM_HITBOX_SIZE := Vector2(165.0, 40.0)
 const CROUCHED_MEDIUM_HITBOX_POSITION := Vector2(85.0, -108.0)
 const CROUCHED_HEAVY_HITBOX_SIZE := Vector2(180.0, 170.0)
@@ -245,8 +248,12 @@ func try_attack(
 	attack_started.emit(attack_name)
 	var phase_durations := get_attack_phase_durations(attack)
 
-	# Startup.
-	await get_tree().create_timer(phase_durations.x).timeout
+	# Startup. Il nuovo light singolo si sincronizza direttamente al fotogramma
+	# d'impatto; se viene convertito nella combo, conserva il flusso precedente.
+	if attack.attack_id == &"light_punch" and not is_crouched_light_punch:
+		await wait_for_standing_light_punch_active_frame(attack_generation)
+	else:
+		await get_tree().create_timer(phase_durations.x).timeout
 	if attack_generation != action_generation:
 		return
 	enable_hitbox()
@@ -525,6 +532,15 @@ func enable_hitbox() -> void:
 	hitbox_shape.disabled = false
 
 
+func wait_for_standing_light_punch_active_frame(attack_generation: int) -> void:
+	while (
+		attack_generation == action_generation
+		and fighter.animated_sprite.animation == &"light_punch_single"
+		and fighter.animated_sprite.frame < STANDING_LIGHT_PUNCH_ACTIVE_FRAME
+	):
+		await get_tree().process_frame
+
+
 func disable_hitbox() -> void:
 	if hitbox_shape:
 		hitbox_shape.disabled = true
@@ -587,6 +603,9 @@ func configure_hitbox(attack: AttackData) -> void:
 		if is_crouched_light_punch:
 			attack_shape.size = CROUCHED_LIGHT_HITBOX_SIZE
 			hitbox_shape.position = CROUCHED_LIGHT_HITBOX_POSITION
+		elif attack.attack_id == &"light_punch":
+			attack_shape.size = STANDING_LIGHT_PUNCH_HITBOX_SIZE
+			hitbox_shape.position = STANDING_LIGHT_PUNCH_HITBOX_POSITION
 		elif is_crouched_medium_punch:
 			attack_shape.size = CROUCHED_MEDIUM_HITBOX_SIZE
 			hitbox_shape.position = CROUCHED_MEDIUM_HITBOX_POSITION
@@ -617,6 +636,10 @@ func configure_hitbox(attack: AttackData) -> void:
 
 
 func get_attack_phase_durations(attack: AttackData) -> Vector3:
+	if attack.attack_id == &"light_punch" and not is_crouched_light_punch:
+		# Frame globale 18 (indice 17): ottavo frame del foglio light-punch-hit,
+		# dopo i primi 10 fotogrammi del foglio di preparazione.
+		return Vector3(float(STANDING_LIGHT_PUNCH_ACTIVE_FRAME), 6.0, 19.0) / 48.0
 	if attack.attack_id == &"medium_punch" and is_crouched_medium_punch:
 		var startup_frames := 4.0 if crouched_medium_punch_started_crouched else 8.0
 		return Vector3(startup_frames, 3.0, 5.0) / ATTACK_ANIMATION_FPS
@@ -669,6 +692,15 @@ func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 	if attack.attack_id == &"medium_kick" and is_airborne_medium_kick:
 		return AttackData.HitHeight.HIGH
 	return attack.hit_height
+
+
+func _target_will_block(target: Mangler) -> bool:
+	return (
+		(target.combat.is_blocking or target.current_state == Mangler.State.BLOCKING)
+		and target.is_holding_back()
+		and target.is_attack_in_front(fighter)
+		and target.is_on_floor()
+	)
 
 
 func perform_light_punch_followup() -> void:
@@ -735,6 +767,12 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	):
 		light_punch_connected_targets.append(target)
 	var effective_hit_height := get_effective_hit_height(current_attack)
+	if (
+		current_attack.attack_id == &"light_punch"
+		and is_crouched_light_punch
+		and _target_will_block(target)
+	):
+		effective_hit_height = AttackData.HitHeight.LOW
 	var effective_reaction_frame := get_hit_reaction_start_frame(current_attack)
 	var effective_damage := current_attack.damage
 	var effective_knockdown := current_attack.causes_knockdown

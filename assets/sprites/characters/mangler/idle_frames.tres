@@ -26,6 +26,201 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/heavy-kick.png" id="25_heavy_kick"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/heavy-kick-ok.png" id="26_heavy_kick_ok"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/test-spazzata.png" id="27_crouched_heavy_kick"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/basic-moves/light-punch/light-punch-preparation.png" id="28_light_punch_preparation"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/basic-moves/light-punch/light-punch-hit.png" id="29_light_punch_hit"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/basic-moves/light-punch/light-punch-to-idle.png" id="30_light_punch_to_idle"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_00"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_01"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_02"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_03"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_04"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_05"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_06"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_07"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_08"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_09"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_10"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_11"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_12"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_13"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_14"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_preparation_15"]
+atlas = ExtResource("28_light_punch_preparation")
+region = Rect2(1536, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_00"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_01"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_02"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_03"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_04"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_05"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_06"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_07"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_08"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_09"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_10"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_11"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_12"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_13"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_14"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_hit_15"]
+atlas = ExtResource("29_light_punch_hit")
+region = Rect2(1536, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_00"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_01"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_02"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_03"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(1536, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_04"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(0, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_05"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(512, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_06"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(1024, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_07"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(1536, 512, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_08"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(0, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_09"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(512, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_10"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(1024, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_11"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(1536, 1024, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_12"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(0, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_13"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(512, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_14"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(1024, 1536, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_light_punch_to_idle_15"]
+atlas = ExtResource("30_light_punch_to_idle")
+region = Rect2(1536, 1536, 512, 512)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouched_heavy_kick_00"]
 atlas = ExtResource("27_crouched_heavy_kick")
@@ -2189,44 +2384,134 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_00")
+"texture": SubResource("AtlasTexture_light_punch_preparation_00")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_01")
+"texture": SubResource("AtlasTexture_light_punch_preparation_01")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_02")
+"texture": SubResource("AtlasTexture_light_punch_preparation_02")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_03")
+"texture": SubResource("AtlasTexture_light_punch_preparation_03")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_04")
+"texture": SubResource("AtlasTexture_light_punch_preparation_04")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_05")
+"texture": SubResource("AtlasTexture_light_punch_preparation_05")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_05")
+"texture": SubResource("AtlasTexture_light_punch_preparation_06")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_04")
+"texture": SubResource("AtlasTexture_light_punch_preparation_07")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_03")
+"texture": SubResource("AtlasTexture_light_punch_preparation_08")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_02")
+"texture": SubResource("AtlasTexture_light_punch_preparation_09")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_01")
+"texture": SubResource("AtlasTexture_light_punch_hit_00")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_light_punch_okay_00")
+"texture": SubResource("AtlasTexture_light_punch_hit_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_hit_15")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_00")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_01")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_03")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_04")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_06")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_09")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_light_punch_to_idle_15")
 }],
 "loop": 0,
 "name": &"light_punch_single",
-"speed": 24.0
+"speed": 48.0
 }, {
 "frames": [{
 "duration": 1.0,

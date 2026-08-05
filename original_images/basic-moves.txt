@@ -7,8 +7,8 @@ strafe-back <--ok
 jump <--ok
 
 block_high <--ok
-block_mid
-block_low
+block_mid <--ok
+block_low <--ok
 
 hurted_high
 hurted_mid

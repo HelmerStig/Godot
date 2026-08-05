@@ -177,21 +177,34 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_single")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_single") == 12,
-		"il pugno light singolo usa 1-6 e torna indietro da 6 a 1"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_single") == 42,
+		"il pugno light usa 10 frame di preparazione e due fogli completi da 16"
 	)
-	var light_single_impact := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 5)
+	var light_single_preparation_last := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 9)
+		as AtlasTexture
+	)
+	var light_single_hit_first := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 10)
+		as AtlasTexture
+	)
+	var light_single_recovery_first := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 26)
 		as AtlasTexture
 	)
 	var light_single_last := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 11)
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 41)
 		as AtlasTexture
 	)
 	_expect(
-		light_single_impact.region.position == Vector2(512.0, 512.0)
-		and light_single_last.region.position == Vector2.ZERO,
-		"il light singolo raggiunge il frame 6 e termina tornando al frame 1"
+		light_single_preparation_last.atlas.resource_path.ends_with("light-punch-preparation.png")
+		and light_single_preparation_last.region.position == Vector2(512.0, 1024.0)
+		and light_single_hit_first.atlas.resource_path.ends_with("light-punch-hit.png")
+		and light_single_hit_first.region.position == Vector2.ZERO
+		and light_single_recovery_first.atlas.resource_path.ends_with("light-punch-to-idle.png")
+		and light_single_recovery_first.region.position == Vector2.ZERO
+		and light_single_last.region.position == Vector2(1536.0, 1536.0),
+		"il light singolo rispetta preparation, hit e ritorno a idle"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_double")
@@ -209,7 +222,7 @@ func _test_combat_flow() -> void:
 	_expect(
 		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"light_punch_single"),
-			24.0
+			48.0
 		)
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"light_punch_double"),
@@ -217,7 +230,7 @@ func _test_combat_flow() -> void:
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_punch_single")
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_punch_double"),
-		"entrambe le animazioni light sono non cicliche a 24 FPS"
+		"il nuovo light singolo usa 48 FPS e la combo precedente resta a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"medium_open_hand_slap")
@@ -735,12 +748,12 @@ func _test_combat_flow() -> void:
 		"SpriteFrames contiene block_mid"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.get_frame_count(&"block_mid") == 4,
-		"block_mid usa soltanto i fotogrammi 4-7"
+		player1.animated_sprite.sprite_frames.get_frame_count(&"block_mid") == 8,
+		"block_mid usa tutti gli 8 fotogrammi del foglio aggiornato"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"block_mid"), 16.0),
-		"block_mid è configurato a 16 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"block_mid"), 24.0),
+		"block_mid è configurato a 24 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"block_mid"),
@@ -748,16 +761,36 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"block_mid_recovery")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_mid_recovery") == 9,
-		"block_mid_recovery usa i fotogrammi 8-16"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_mid_recovery") == 7,
+		"block_mid_recovery torna indietro dai fotogrammi 7-1"
 	)
 	_expect(
 		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"block_mid_recovery"),
-			16.0
+			24.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"block_mid_recovery"),
-		"block_mid_recovery è non ciclica a 16 FPS"
+		"block_mid_recovery è non ciclica a 24 FPS"
+	)
+	var block_mid_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_mid", 0
+	) as AtlasTexture
+	var block_mid_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_mid", 7
+	) as AtlasTexture
+	var block_mid_recovery_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_mid_recovery", 0
+	) as AtlasTexture
+	var block_mid_recovery_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_mid_recovery", 6
+	) as AtlasTexture
+	_expect(
+		block_mid_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and block_mid_last.region == Rect2(1024.0, 512.0, 512.0, 512.0)
+		and block_mid_recovery_first.region == Rect2(512.0, 512.0, 512.0, 512.0)
+		and block_mid_recovery_last.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and block_mid_first.atlas.resource_path.ends_with("07-block-middle.png"),
+		"block_mid usa 07-block-middle in avanti e poi al contrario"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"block_high")
@@ -804,30 +837,50 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"block_low")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_low") == 16,
-		"block_low da posizione alta parte dal fotogramma 1"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_low") == 11,
+		"block_low usa gli 11 fotogrammi della nuova sequenza crouched"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"block_low_crouched")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_low_crouched") == 8,
-		"block_low da posizione bassa parte dal fotogramma 9"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_low_crouched") == 11,
+		"block_low da crouch usa la nuova sequenza completa"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"block_low_recovery")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_low_recovery") == 15,
-		"block_low_recovery torna indietro dai fotogrammi 15-1"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_low_recovery") == 10,
+		"block_low_recovery torna indietro dai fotogrammi 10-1"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"block_low"), 16.0)
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"block_low"), 24.0)
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"block_low_crouched"),
-			16.0
+			24.0
 		)
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"block_low_recovery"),
-			16.0
+			24.0
 		),
-		"le varianti block_low sono configurate a 16 FPS"
+		"le varianti block_low sono configurate a 24 FPS"
+	)
+	var block_low_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_low_crouched", 0
+	) as AtlasTexture
+	var block_low_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_low_crouched", 10
+	) as AtlasTexture
+	var block_low_recovery_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_low_recovery", 0
+	) as AtlasTexture
+	var block_low_recovery_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_low_recovery", 9
+	) as AtlasTexture
+	_expect(
+		block_low_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and block_low_last.region == Rect2(0.0, 1024.0, 512.0, 512.0)
+		and block_low_recovery_first.region == Rect2(2048.0, 512.0, 512.0, 512.0)
+		and block_low_recovery_last.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and block_low_first.atlas.resource_path.ends_with("08-block-low.png"),
+		"block_low usa 08-block-low in avanti e poi al contrario"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"ko"),
@@ -1305,23 +1358,46 @@ func _test_combat_flow() -> void:
 	player1.combat.try_attack(&"light_punch")
 	_expect(player1.current_state == Mangler.State.ATTACKING, "AttackData avvia lo stato ATTACKING")
 	_expect(
+		player1.animated_sprite.animation == &"light_punch_single"
+		and player1.animated_sprite.scale == Mangler.REWORK_SPRITE_SCALE
+		and player1.animated_sprite.position == Mangler.REWORK_SPRITE_POSITION,
+		"il nuovo light punch usa dimensioni e linea dei piedi del Mangler rework"
+	)
+	_expect(
 		player1.z_index > player2.z_index,
 		"Player 1 passa in primo piano durante qualsiasi attacco"
 	)
 	_expect(player1.combat.current_attack == light_punch, "FighterCombat usa la risorsa selezionata")
 	var attack_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
-		attack_shape.size == light_punch.hitbox_size
-		and player1.combat.hitbox_shape.position == light_punch.hitbox_position,
+		attack_shape.size == FighterCombat.STANDING_LIGHT_PUNCH_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position
+		== FighterCombat.STANDING_LIGHT_PUNCH_HITBOX_POSITION,
 		"AttackData configura geometria e posizione della hitbox"
+	)
+	_expect(
+		FighterCombat.STANDING_LIGHT_PUNCH_HITBOX_SIZE == Vector2(185.0, 35.0)
+		and FighterCombat.STANDING_LIGHT_PUNCH_HITBOX_POSITION == Vector2(92.5, -210.0),
+		"il light punch aggiunge 85 px in avanti e sposta la hitbox 100 px in alto"
 	)
 	_expect(
 		light_punch.hitbox_size == Vector2(100.0, 35.0)
 		and light_punch.hitbox_position == Vector2(50.0, -110.0),
 		"il light punch è accorciato di 50 px soltanto verso l'avversario"
 	)
+	var light_punch_phases := player1.combat.get_attack_phase_durations(light_punch)
+	_expect(
+		is_equal_approx(
+			light_punch_phases.x,
+			float(FighterCombat.STANDING_LIGHT_PUNCH_ACTIVE_FRAME) / 48.0
+		),
+		"la hitbox diventa attiva al frame 8 del foglio light-punch-hit"
+	)
 	await create_timer(player1.get_animation_duration(&"light_punch_single") + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "il jab singolo completa 1-6 e il ritorno 6-1")
+	_expect(
+		player1.current_state == Mangler.State.IDLE,
+		"il jab singolo completa preparation, hit e ritorno a idle"
+	)
 	_expect(
 		player1.z_index == player1_default_z,
 		"Player 1 ripristina l'ordine grafico normale al termine dell'attacco"
@@ -1663,6 +1739,21 @@ func _test_combat_flow() -> void:
 		and player1.animated_sprite.animation == &"crouched_punch_crouched",
 		"DOWN+light dal frame 7 di crouch passa al fotogramma 9 di crouched_punch"
 	)
+	var health_before_crouched_light_guard := player2.combat.current_health
+	Input.action_press(&"p2_move_right")
+	await physics_frame
+	await physics_frame
+	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	Input.action_release(&"p2_move_right")
+	_expect(
+		player2.combat.current_health == health_before_crouched_light_guard
+		and player2.current_state == Mangler.State.BLOCKING
+		and player2.animated_sprite.animation == &"block_low",
+		"il light punch basso parato attiva block_low senza infliggere danno"
+	)
+	player1.combat.is_attacking = false
+	player2.combat.reset()
+	player2.change_state(Mangler.State.IDLE)
 	await create_timer(player1.get_animation_duration(&"crouched_punch_crouched") + 0.05).timeout
 
 	var position_before_hit := player2.position.x
@@ -1753,6 +1844,7 @@ func _test_combat_flow() -> void:
 	Input.action_press(&"p2_move_right")
 	await physics_frame
 	await physics_frame
+	player1.combat.is_attacking = true
 	player2.combat.take_damage(20, player1)
 	Input.action_release(&"p2_move_right")
 	_expect(
@@ -1762,15 +1854,23 @@ func _test_combat_flow() -> void:
 	_expect(player2.current_state == Mangler.State.BLOCKING, "guardia attiva BLOCKING")
 	_expect(player2.animated_sprite.animation == &"block_mid", "la guardia centrale riproduce block_mid")
 	_expect(player2_bar.value == 80.0, "la barra non cala durante la guardia")
-	await create_timer(0.2).timeout
-	_expect(player2.current_state == Mangler.State.BLOCKING, "BLOCKING mantiene i fotogrammi 4-7")
-	await create_timer(0.1).timeout
+	await create_timer(player2.get_animation_duration(&"block_mid") + 0.05).timeout
+	player2.update_animation()
+	_expect(
+		player2.current_state == Mangler.State.BLOCKING
+		and player2.animated_sprite.animation == &"block_mid"
+		and player2.animated_sprite.frame == 7
+		and not player2.animated_sprite.is_playing(),
+		"block_mid si ferma sul fotogramma 8 senza ripetere l'animazione"
+	)
+	player1.combat.is_attacking = false
+	await create_timer(0.05).timeout
 	_expect(
 		player2.current_state == Mangler.State.BLOCK_RECOVERY
 		and player2.animated_sprite.animation == &"block_mid_recovery",
-		"a fine blocco prosegue dai fotogrammi 8-16"
+		"a fine blocco medio riproduce i fotogrammi inversi fino al primo"
 	)
-	await create_timer(0.6).timeout
+	await create_timer(player2.get_animation_duration(&"block_mid_recovery") + 0.05).timeout
 	_expect(player2.current_state == Mangler.State.IDLE, "block_mid_recovery termina in IDLE")
 
 	Input.action_press(&"p2_move_right")
@@ -1818,7 +1918,7 @@ func _test_combat_flow() -> void:
 	_expect(
 		player2.current_state == Mangler.State.BLOCKING
 		and player2.animated_sprite.animation == &"block_low_crouched",
-		"da posizione già bassa la parata parte dal fotogramma 9"
+		"da posizione già bassa la parata usa 08-block-low dal primo fotogramma"
 	)
 	player2.change_state(Mangler.State.IDLE)
 

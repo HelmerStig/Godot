@@ -1,0 +1,37 @@
+Create a non-looping 2D fighting-game light punch animation for the supplied character (Mangler), side-view, facing RIGHT.
+
+Use this exact starting pose as frame 1 (keyframe1):
+original_images/mangler/light-punch/mangler-light-punch-preparation.png
+
+Use this exact final pose as last frame (impact keyframe):
+original_images/mangler/light-punch/mangler-light-open-hand-impact.png
+
+Animation goals:
+- Action: quick light punch from guard/preparation to open-hand impact.
+- Timing feel: snappy, fast startup, brief impact, short recovery.
+- Frame 1 must match the preparation keyframe silhouette and alignment.
+- Last frame must match the open-hand impact keyframe silhouette and alignment.
+- Keep motion clean and readable between those two poses.
+
+Technical constraints:
+- Fixed side camera.
+- Keep character centered and in-place (no horizontal drift).
+- Keep feet planted relative to the same ground line (no foot sliding).
+- Preserve character identity, body proportions, clothing, facial traits, colors, and shading style.
+- Transparent background (alpha), no background elements.
+- Keep consistent external padding; do not crop limbs.
+- 512x512 cell target, with generous safe margins.
+- No perspective change, no scale change, no body deformation.
+
+Pose and mechanics constraints:
+- Lead arm transitions from raised guard to forward open-hand strike.
+- Rear hand stays near torso in guard posture.
+- Hips/torso rotate slightly into the strike, then settle.
+- Head and gaze stay forward/right.
+- Lower body remains stable and grounded.
+
+Negative prompt:
+horizontal movement, vertical bouncing, camera motion, perspective shift, zoom,
+foot sliding, limb stretching, extra fingers, extra limbs, body deformation,
+off-model face, color shift, blurry details, cropped hands, cropped feet,
+background, floor shadows, VFX trails, duplicated character, mirrored direction

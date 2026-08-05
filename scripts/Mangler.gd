@@ -82,6 +82,14 @@ const BLOCK_HIGH_SHEET := preload("res://assets/sprites/characters/mangler/06-bl
 const BLOCK_HIGH_FRAME_COUNT := 22
 const BLOCK_HIGH_COLUMNS := 5
 const BLOCK_HIGH_CELL_SIZE := Vector2(512.0, 512.0)
+const BLOCK_MID_SHEET := preload("res://assets/sprites/characters/mangler/07-block-middle.png")
+const BLOCK_MID_FRAME_COUNT := 8
+const BLOCK_MID_COLUMNS := 5
+const BLOCK_MID_CELL_SIZE := Vector2(512.0, 512.0)
+const BLOCK_LOW_SHEET := preload("res://assets/sprites/characters/mangler/08-block-low.png")
+const BLOCK_LOW_FRAME_COUNT := 11
+const BLOCK_LOW_COLUMNS := 5
+const BLOCK_LOW_CELL_SIZE := Vector2(512.0, 512.0)
 const CROUCHED_HEAVY_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/test-spazzata.png"
 )
@@ -230,6 +238,8 @@ func _ready() -> void:
 	configure_heavy_punch_high_frames()
 	configure_crouch_frames()
 	configure_block_high_frames()
+	configure_block_mid_frames()
+	configure_block_low_frames()
 	configure_crouched_heavy_kick_frames()
 	configure_crouched_medium_kick_frames()
 	configure_crouched_light_kick_frames()
@@ -419,6 +429,75 @@ func configure_block_high_frames() -> void:
 			BLOCK_HIGH_CELL_SIZE
 		)
 		frames.add_frame(&"block_high_recovery", atlas_frame)
+
+
+func configure_block_mid_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"block_mid", &"block_mid_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 24.0)
+		frames.set_animation_loop(animation_name, false)
+
+	for source_index in range(BLOCK_MID_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = BLOCK_MID_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % BLOCK_MID_COLUMNS) * BLOCK_MID_CELL_SIZE.x,
+				(source_index / BLOCK_MID_COLUMNS) * BLOCK_MID_CELL_SIZE.y
+			),
+			BLOCK_MID_CELL_SIZE
+		)
+		frames.add_frame(&"block_mid", atlas_frame)
+
+	for source_index in range(BLOCK_MID_FRAME_COUNT - 2, -1, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = BLOCK_MID_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % BLOCK_MID_COLUMNS) * BLOCK_MID_CELL_SIZE.x,
+				(source_index / BLOCK_MID_COLUMNS) * BLOCK_MID_CELL_SIZE.y
+			),
+			BLOCK_MID_CELL_SIZE
+		)
+		frames.add_frame(&"block_mid_recovery", atlas_frame)
+
+
+func configure_block_low_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"block_low", &"block_low_crouched", &"block_low_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 24.0)
+		frames.set_animation_loop(animation_name, false)
+
+	for source_index in range(BLOCK_LOW_FRAME_COUNT):
+		for animation_name in [&"block_low", &"block_low_crouched"]:
+			var atlas_frame := AtlasTexture.new()
+			atlas_frame.atlas = BLOCK_LOW_SHEET
+			atlas_frame.region = Rect2(
+				Vector2(
+					(source_index % BLOCK_LOW_COLUMNS) * BLOCK_LOW_CELL_SIZE.x,
+					(source_index / BLOCK_LOW_COLUMNS) * BLOCK_LOW_CELL_SIZE.y
+				),
+				BLOCK_LOW_CELL_SIZE
+			)
+			frames.add_frame(animation_name, atlas_frame)
+
+	for source_index in range(BLOCK_LOW_FRAME_COUNT - 2, -1, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = BLOCK_LOW_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % BLOCK_LOW_COLUMNS) * BLOCK_LOW_CELL_SIZE.x,
+				(source_index / BLOCK_LOW_COLUMNS) * BLOCK_LOW_CELL_SIZE.y
+			),
+			BLOCK_LOW_CELL_SIZE
+		)
+		frames.add_frame(&"block_low_recovery", atlas_frame)
 
 
 func configure_crouched_heavy_kick_frames() -> void:
@@ -808,7 +887,8 @@ func update_animation() -> void:
 	if current_state == State.BLOCKING:
 		var block_animation := get_block_animation(received_block_height, block_started_crouched)
 		if animated_sprite.sprite_frames.has_animation(block_animation):
-			if animated_sprite.animation != block_animation or not animated_sprite.is_playing():
+			# Una parata conclusa deve mantenere la posa finale, non ricominciare da capo.
+			if animated_sprite.animation != block_animation:
 				animated_sprite.play(block_animation)
 			return
 
@@ -858,8 +938,9 @@ func update_animation() -> void:
 func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
-		&"idle", &"heavy_punch", &"crouch", &"jump", &"block_high",
-		&"block_high_recovery"
+		&"idle", &"light_punch_single", &"heavy_punch", &"crouch", &"jump", &"block_high",
+		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
+		&"block_low_crouched", &"block_low_recovery"
 	]
 	animated_sprite.scale = REWORK_SPRITE_SCALE if uses_reworked_art else LEGACY_SPRITE_SCALE
 	animated_sprite.position = (
@@ -938,7 +1019,7 @@ func is_holding_low_guard() -> bool:
 
 
 func return_to_crouch_after_low_block() -> void:
-	"""Passa dal frame finale della parata al settimo frame fermo di crouch."""
+	"""Passa dal frame finale della parata alla posa finale del crouch."""
 	change_state(State.CROUCHING)
 	if animated_sprite.sprite_frames.has_animation(&"crouch"):
 		animated_sprite.play(&"crouch")
@@ -948,7 +1029,7 @@ func return_to_crouch_after_low_block() -> void:
 
 
 func return_to_crouch_pose() -> void:
-	"""Ripristina e mantiene il settimo frame di crouch dopo un attacco basso."""
+	"""Ripristina e mantiene la posa finale del crouch dopo un attacco basso."""
 	change_state(State.CROUCHING)
 	if animated_sprite.sprite_frames.has_animation(&"crouch"):
 		animated_sprite.play(&"crouch")
