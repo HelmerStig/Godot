@@ -735,9 +735,9 @@ func _test_combat_flow() -> void:
 	_expect(
 		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"knockdown_recovery"),
-			16.0
+			24.0
 		),
-		"knockdown_recovery è configurato a 16 FPS"
+		"knockdown_recovery è configurato a 24 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"knockdown_recovery"),
@@ -891,8 +891,8 @@ func _test_combat_flow() -> void:
 		"ko contiene le 25 celle da 512"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"ko"), 16.0),
-		"ko è configurato a 16 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"ko"), 24.0),
+		"ko è configurato a 24 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"ko"),
