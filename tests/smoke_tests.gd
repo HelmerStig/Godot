@@ -244,22 +244,26 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"heavy_punch")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_punch") == 78
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_punch") == 70
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"heavy_punch"),
 			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"heavy_punch"),
-		"il pugno pesante alto usa 1-49 e torna indietro fino al frame 21 a 48 FPS"
+		"il pugno pesante alto usa 1-49, poi 41-21, a 48 FPS"
 	)
 	var heavy_first := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"heavy_punch", 0
 	) as AtlasTexture
 	var heavy_last := player1.animated_sprite.sprite_frames.get_frame_texture(
-		&"heavy_punch", 77
+		&"heavy_punch", 69
+	) as AtlasTexture
+	var heavy_recovery_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"heavy_punch", 49
 	) as AtlasTexture
 	_expect(
 		heavy_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and heavy_recovery_first.region == Rect2(2560.0, 2560.0, 512.0, 512.0)
 		and heavy_last.region == Rect2(3072.0, 1024.0, 512.0, 512.0)
 		and heavy_first.atlas.resource_path.ends_with("moves/00-heavy_punch_high.png"),
 		"il pugno pesante alto termina sul fotogramma sorgente 21 prima dell'idle"
@@ -561,28 +565,38 @@ func _test_combat_flow() -> void:
 		"SpriteFrames contiene l'animazione run"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.get_frame_count(&"run") == 22,
-		"run contiene 22 frame"
+		player1.animated_sprite.sprite_frames.get_frame_count(&"run") == 46,
+		"run contiene i 46 frame non vuoti del nuovo foglio 7x7"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"run"), 12.0),
-		"run è configurato a 12 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"run"), 24.0),
+		"run è configurato a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.get_animation_loop(&"run"),
 		"run è configurato in loop"
+	)
+	var run_first := player1.animated_sprite.sprite_frames.get_frame_texture(&"run", 0) as AtlasTexture
+	var run_last := player1.animated_sprite.sprite_frames.get_frame_texture(&"run", 45) as AtlasTexture
+	_expect(
+		run_first != null
+		and run_last != null
+		and run_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and run_last.region == Rect2(1536.0, 3072.0, 512.0, 512.0)
+		and run_first.atlas.resource_path.ends_with("05-run.png"),
+		"run usa 05-run dal primo al quarantaseiesimo fotogramma"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouch"),
 		"SpriteFrames contiene l'animazione crouch"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.get_frame_count(&"crouch") == 7,
-		"crouch contiene i primi 7 frame dello spritesheet"
+		player1.animated_sprite.sprite_frames.get_frame_count(&"crouch") == 25,
+		"crouch contiene tutti i 25 frame del nuovo foglio"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"crouch"), 24.0),
-		"crouch è configurato a 24 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"crouch"), 48.0),
+		"crouch è configurato a 48 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouch"),
@@ -610,7 +624,17 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.get_frame_count(&"jump") == 25,
-		"jump contiene i 25 frame di front-flip-custom"
+		"jump contiene tutti i 25 frame del nuovo foglio 04-jump"
+	)
+	var jump_first := player1.animated_sprite.sprite_frames.get_frame_texture(&"jump", 0) as AtlasTexture
+	var jump_last := player1.animated_sprite.sprite_frames.get_frame_texture(&"jump", 24) as AtlasTexture
+	_expect(
+		jump_first != null
+		and jump_last != null
+		and jump_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and jump_last.region == Rect2(2048.0, 2048.0, 512.0, 512.0)
+		and jump_first.atlas.resource_path.ends_with("04-jump.png"),
+		"jump usa il nuovo atlante 04-jump dal primo all'ultimo fotogramma"
 	)
 	_expect(
 		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"jump"), 24.0),
@@ -737,26 +761,46 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"block_high")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_high") == 5,
-		"block_high usa i fotogrammi 5-9"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_high") == 14,
+		"block_high usa i fotogrammi 9-22 del nuovo foglio"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"block_high"), 16.0)
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"block_high"), 48.0)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"block_high"),
-		"block_high è non ciclica a 16 FPS"
+		"block_high è non ciclica a 48 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"block_high_recovery")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_high_recovery") == 8,
-		"block_high_recovery torna indietro dai fotogrammi 8-1"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"block_high_recovery") == 21,
+		"block_high_recovery torna indietro dai fotogrammi 21-1"
 	)
 	_expect(
 		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"block_high_recovery"),
-			16.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"block_high_recovery"),
-		"block_high_recovery è non ciclica a 16 FPS"
+		"block_high_recovery è non ciclica a 48 FPS"
+	)
+	var block_high_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_high", 0
+	) as AtlasTexture
+	var block_high_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_high", 13
+	) as AtlasTexture
+	var block_high_recovery_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_high_recovery", 0
+	) as AtlasTexture
+	var block_high_recovery_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"block_high_recovery", 20
+	) as AtlasTexture
+	_expect(
+		block_high_first.region == Rect2(1536.0, 512.0, 512.0, 512.0)
+		and block_high_last.region == Rect2(512.0, 2048.0, 512.0, 512.0)
+		and block_high_recovery_first.region == Rect2(0.0, 2048.0, 512.0, 512.0)
+		and block_high_recovery_last.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and block_high_first.atlas.resource_path.ends_with("06-block-high.png"),
+		"block_high usa 06-block-high dal frame 9 e poi torna al primo"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"block_low")
@@ -895,7 +939,7 @@ func _test_combat_flow() -> void:
 	await create_timer(0.75).timeout
 	_expect(
 		player1.current_state == Mangler.State.CROUCHING
-		and player1.animated_sprite.frame == 6
+		and player1.animated_sprite.frame == 24
 		and not player1.animated_sprite.is_playing(),
 		"crouch mantiene l'ultimo frame mentre giù resta premuto"
 	)
@@ -950,8 +994,10 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.animation == &"jump"
-		and player1.animated_sprite.is_playing(),
-		"JUMP_STARTUP riproduce jump con celle da 512"
+		and player1.animated_sprite.is_playing()
+		and player1.animated_sprite.scale == Mangler.REWORK_SPRITE_SCALE
+		and player1.animated_sprite.position == Mangler.REWORK_SPRITE_POSITION,
+		"JUMP_STARTUP riproduce il nuovo jump con scala e allineamento rework"
 	)
 	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME - 1
 	player1._on_animation_frame_changed()
@@ -1304,7 +1350,7 @@ func _test_combat_flow() -> void:
 		and player1.combat.get_effective_hit_height(heavy_punch) == AttackData.HitHeight.MID
 		and player1.combat.get_hit_reaction_start_frame(heavy_punch) == 4
 		and player1.combat.get_attack_phase_durations(heavy_punch)
-		== Vector3(38.0, 4.0, 36.0) / 48.0,
+		== Vector3(38.0, 4.0, 28.0) / 48.0,
 		"il nuovo pugno potente provoca hurt-medium e sincronizza il contatto finale"
 	)
 	var heavy_punch_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
@@ -1730,6 +1776,7 @@ func _test_combat_flow() -> void:
 	Input.action_press(&"p2_move_right")
 	await physics_frame
 	await physics_frame
+	player1.combat.is_attacking = true
 	player2.combat.take_damage(
 		20,
 		player1,
@@ -1741,15 +1788,23 @@ func _test_combat_flow() -> void:
 	_expect(
 		player2.current_state == Mangler.State.BLOCKING
 		and player2.animated_sprite.animation == &"block_high",
-		"un colpo alto bloccato riproduce i fotogrammi 5-9 di block_high"
+		"un colpo alto bloccato riproduce il nuovo block_high"
 	)
-	await create_timer(0.35).timeout
+	await create_timer(player2.get_animation_duration(&"block_high") + 0.05).timeout
+	_expect(
+		player2.current_state == Mangler.State.BLOCKING
+		and player2.animated_sprite.animation == &"block_high"
+		and player2.animated_sprite.frame == 13,
+		"la parata alta mantiene l'ultimo frame finché l'attacco avversario è attivo"
+	)
+	player1.combat.is_attacking = false
+	await create_timer(0.05).timeout
 	_expect(
 		player2.current_state == Mangler.State.BLOCK_RECOVERY
 		and player2.animated_sprite.animation == &"block_high_recovery",
-		"a fine parata alta riproduce i fotogrammi inversi fino al primo"
+		"quando l'attacco termina la parata alta riparte al contrario"
 	)
-	await create_timer(0.55).timeout
+	await create_timer(player2.get_animation_duration(&"block_high_recovery") + 0.05).timeout
 	_expect(player2.current_state == Mangler.State.IDLE, "block_high_recovery termina in IDLE")
 
 	player2.start_block_reaction(AttackData.HitHeight.LOW, false)
@@ -1776,9 +1831,9 @@ func _test_combat_flow() -> void:
 	_expect(
 		player2.current_state == Mangler.State.CROUCHING
 		and player2.animated_sprite.animation == &"crouch"
-		and player2.animated_sprite.frame == 6
+		and player2.animated_sprite.frame == 24
 		and not player2.animated_sprite.is_playing(),
-		"mantenere basso e indietro passa dal frame 16 al frame 7 di crouch"
+		"mantenere basso e indietro torna al frame finale del nuovo crouch"
 	)
 	Input.action_release(&"p2_move_right")
 	Input.action_release(&"p2_crouch")

@@ -383,7 +383,7 @@ func take_damage(
 	if current_health <= 0:
 		die(ko_start_frame)
 	elif attack_was_blocked:
-		block_reaction(blockstun, hit_height)
+		block_reaction(blockstun, hit_height, attacker)
 	elif causes_knockdown:
 		sweep_knockdown_reaction(attacker)
 	else:
@@ -392,7 +392,11 @@ func take_damage(
 		hit_reaction(hitstun, hit_height, attacker, hit_reaction_start_frame, apply_pushback)
 
 
-func block_reaction(duration: float, hit_height: AttackData.HitHeight) -> void:
+func block_reaction(
+	duration: float,
+	hit_height: AttackData.HitHeight,
+	attacker: Mangler = null
+) -> void:
 	var started_crouched := fighter.current_state == Mangler.State.CROUCHING
 	cancel_current_action()
 	var block_generation := action_generation
@@ -402,6 +406,21 @@ func block_reaction(duration: float, hit_height: AttackData.HitHeight) -> void:
 	await get_tree().create_timer(reaction_duration).timeout
 	if block_generation != action_generation or current_health <= 0:
 		return
+	while (
+		attacker != null
+		and is_instance_valid(attacker)
+		and attacker.combat != null
+		and attacker.combat.is_attacking
+	):
+		var frame_count := fighter.animated_sprite.sprite_frames.get_frame_count(
+			fighter.animated_sprite.animation
+		)
+		if frame_count > 0:
+			fighter.animated_sprite.frame = frame_count - 1
+			fighter.animated_sprite.pause()
+		await get_tree().process_frame
+		if block_generation != action_generation or current_health <= 0:
+			return
 	if hit_height == AttackData.HitHeight.LOW and fighter.is_holding_low_guard():
 		fighter.return_to_crouch_after_low_block()
 		return
@@ -618,7 +637,7 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 	if attack.attack_id == &"heavy_punch" and is_airborne_heavy_punch:
 		return Vector3(8.0, 4.0, 4.0) / ATTACK_ANIMATION_FPS
 	if attack.attack_id == &"heavy_punch":
-		return Vector3(38.0, 4.0, 36.0) / 48.0
+		return Vector3(38.0, 4.0, 28.0) / 48.0
 	return Vector3(attack.startup, attack.active, attack.recovery)
 
 

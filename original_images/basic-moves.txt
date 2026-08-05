@@ -1,11 +1,14 @@
 idle <--ok
-crouch
+crouch <--ok
 walk <--ok
 walk-back <--ok
-run
-strafe-back
-jump
-block
+run <--ok
+strafe-back <--ok
+jump <--ok
+
+block_high <--ok
+block_mid
+block_low
 
 hurted_high
 hurted_mid
@@ -15,7 +18,7 @@ knockdown
 
 hurted_air <--
 
-moves
+
 light-punch
 medium-punch
 strong-punch <--ok
@@ -36,4 +39,11 @@ jump-strong-punch
 jump-light-kick
 jump-medium-kick
 jump-strong-kick
+
+running-light-punch
+running-medium-punch
+running-strong-punch
+running-light-kick
+running-medium-kick
+running-strong-kick
 

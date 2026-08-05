@@ -64,12 +64,24 @@ const BACKWALK_SHEET := preload("res://assets/sprites/characters/mangler/03-back
 const BACKWALK_FRAME_COUNT := 26
 const BACKWALK_COLUMNS := 7
 const BACKWALK_CELL_SIZE := Vector2(512.0, 512.0)
+const RUN_SHEET := preload("res://assets/sprites/characters/mangler/05-run.png")
+const RUN_FRAME_COUNT := 46
+const RUN_COLUMNS := 7
+const RUN_CELL_SIZE := Vector2(512.0, 512.0)
 const HEAVY_PUNCH_HIGH_SHEET := preload(
 	"res://assets/sprites/characters/mangler/moves/00-heavy_punch_high.png"
 )
 const HEAVY_PUNCH_HIGH_FRAME_COUNT := 49
 const HEAVY_PUNCH_HIGH_COLUMNS := 7
 const HEAVY_PUNCH_HIGH_CELL_SIZE := Vector2(512.0, 512.0)
+const CROUCH_SHEET := preload("res://assets/sprites/characters/mangler/04-crouching.png")
+const CROUCH_FRAME_COUNT := 25
+const CROUCH_COLUMNS := 5
+const CROUCH_CELL_SIZE := Vector2(512.0, 512.0)
+const BLOCK_HIGH_SHEET := preload("res://assets/sprites/characters/mangler/06-block-high.png")
+const BLOCK_HIGH_FRAME_COUNT := 22
+const BLOCK_HIGH_COLUMNS := 5
+const BLOCK_HIGH_CELL_SIZE := Vector2(512.0, 512.0)
 const CROUCHED_HEAVY_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/test-spazzata.png"
 )
@@ -214,7 +226,10 @@ func _ready() -> void:
 	configure_idle_frames()
 	configure_walk_frames()
 	configure_backwalk_frames()
+	configure_run_frames()
 	configure_heavy_punch_high_frames()
+	configure_crouch_frames()
+	configure_block_high_frames()
 	configure_crouched_heavy_kick_frames()
 	configure_crouched_medium_kick_frames()
 	configure_crouched_light_kick_frames()
@@ -301,6 +316,26 @@ func configure_backwalk_frames() -> void:
 		frames.add_frame(&"backwalk", atlas_frame)
 
 
+func configure_run_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"run"):
+		frames.remove_animation(&"run")
+	frames.add_animation(&"run")
+	frames.set_animation_speed(&"run", 24.0)
+	frames.set_animation_loop(&"run", true)
+	for source_index in range(RUN_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = RUN_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % RUN_COLUMNS) * RUN_CELL_SIZE.x,
+				(source_index / RUN_COLUMNS) * RUN_CELL_SIZE.y
+			),
+			RUN_CELL_SIZE
+		)
+		frames.add_frame(&"run", atlas_frame)
+
+
 func configure_heavy_punch_high_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"heavy_punch"):
@@ -319,7 +354,7 @@ func configure_heavy_punch_high_frames() -> void:
 			HEAVY_PUNCH_HIGH_CELL_SIZE
 		)
 		frames.add_frame(&"heavy_punch", atlas_frame)
-	for source_index in range(HEAVY_PUNCH_HIGH_FRAME_COUNT - 1, 19, -1):
+	for source_index in range(40, 19, -1):
 		var atlas_frame := AtlasTexture.new()
 		atlas_frame.atlas = HEAVY_PUNCH_HIGH_SHEET
 		atlas_frame.region = Rect2(
@@ -330,6 +365,60 @@ func configure_heavy_punch_high_frames() -> void:
 			HEAVY_PUNCH_HIGH_CELL_SIZE
 		)
 		frames.add_frame(&"heavy_punch", atlas_frame)
+
+
+func configure_crouch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"crouch"):
+		frames.remove_animation(&"crouch")
+	frames.add_animation(&"crouch")
+	frames.set_animation_speed(&"crouch", 48.0)
+	frames.set_animation_loop(&"crouch", false)
+	for source_index in range(CROUCH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % CROUCH_COLUMNS) * CROUCH_CELL_SIZE.x,
+				(source_index / CROUCH_COLUMNS) * CROUCH_CELL_SIZE.y
+			),
+			CROUCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouch", atlas_frame)
+
+
+func configure_block_high_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"block_high", &"block_high_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+
+	for source_index in range(8, BLOCK_HIGH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = BLOCK_HIGH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % BLOCK_HIGH_COLUMNS) * BLOCK_HIGH_CELL_SIZE.x,
+				(source_index / BLOCK_HIGH_COLUMNS) * BLOCK_HIGH_CELL_SIZE.y
+			),
+			BLOCK_HIGH_CELL_SIZE
+		)
+		frames.add_frame(&"block_high", atlas_frame)
+
+	for source_index in range(BLOCK_HIGH_FRAME_COUNT - 2, -1, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = BLOCK_HIGH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				(source_index % BLOCK_HIGH_COLUMNS) * BLOCK_HIGH_CELL_SIZE.x,
+				(source_index / BLOCK_HIGH_COLUMNS) * BLOCK_HIGH_CELL_SIZE.y
+			),
+			BLOCK_HIGH_CELL_SIZE
+		)
+		frames.add_frame(&"block_high_recovery", atlas_frame)
 
 
 func configure_crouched_heavy_kick_frames() -> void:
@@ -768,7 +857,10 @@ func update_animation() -> void:
 
 func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
-	var uses_reworked_art := animated_sprite.animation in [&"idle", &"heavy_punch"]
+	var uses_reworked_art := animated_sprite.animation in [
+		&"idle", &"heavy_punch", &"crouch", &"jump", &"block_high",
+		&"block_high_recovery"
+	]
 	animated_sprite.scale = REWORK_SPRITE_SCALE if uses_reworked_art else LEGACY_SPRITE_SCALE
 	animated_sprite.position = (
 		REWORK_SPRITE_POSITION if uses_reworked_art else LEGACY_SPRITE_POSITION
