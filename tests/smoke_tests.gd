@@ -716,9 +716,9 @@ func _test_combat_flow() -> void:
 	_expect(
 		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"sweep_knockdown"),
-			16.0
+			24.0
 		),
-		"sweep_knockdown è configurato a 16 FPS"
+		"sweep_knockdown è configurato a 24 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"sweep_knockdown"),

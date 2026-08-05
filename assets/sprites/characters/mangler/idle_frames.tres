@@ -10,7 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://7iv4xqo8tqli" path="res://assets/sprites/characters/mangler/hurt-medium.png" id="8_hurt_mid"]
 [ext_resource type="Texture2D" uid="uid://do83oo5pvogwe" path="res://assets/sprites/characters/mangler/hurt-high.png" id="9_hurt_high"]
 [ext_resource type="Texture2D" uid="uid://dwluwd0be38h2" path="res://assets/sprites/characters/mangler/hurt_low.png" id="10_hurt_low"]
-[ext_resource type="Texture2D" uid="uid://cej7q8ibl0b51" path="res://assets/sprites/characters/mangler/sweep_knockdown.png" id="11_sweep_knockdown"]
+[ext_resource type="Texture2D" uid="uid://cej7q8ibl0b51" path="res://assets/sprites/characters/mangler/09-sweep-knockdown.png" id="11_sweep_knockdown"]
 [ext_resource type="Texture2D" uid="uid://df3ejwktlkl7y" path="res://assets/sprites/characters/mangler/knockdown_recovery.png" id="12_knockdown_recovery"]
 [ext_resource type="Texture2D" uid="uid://c0nu4bpi6jgfg" path="res://assets/sprites/characters/mangler/block_mid.png" id="13_block_mid"]
 [ext_resource type="Texture2D" uid="uid://cfwqlf3me77cs" path="res://assets/sprites/characters/mangler/ko.png" id="14_ko"]
@@ -3780,7 +3780,7 @@ animations = [{
 }],
 "loop": 0,
 "name": &"sweep_knockdown",
-"speed": 16.0
+"speed": 24.0
 }, {
 "frames": [{
 "duration": 1.0,
