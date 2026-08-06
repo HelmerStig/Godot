@@ -51,8 +51,6 @@ var current_attack: AttackData
 var current_attack_direction := FighterInputBuffer.Direction.NEUTRAL
 var action_generation := 0
 var hit_targets: Array[Mangler] = []
-var light_punch_connected_targets: Array[Mangler] = []
-var light_punch_followup_done := false
 var medium_kick_followup_done := false
 var is_crouched_light_punch := false
 var crouched_punch_started_crouched := false
@@ -234,8 +232,6 @@ func try_attack(
 	if wants_airborne_attack:
 		fighter.aerial_attack_used = true
 	hit_targets.clear()
-	light_punch_connected_targets.clear()
-	light_punch_followup_done = false
 	medium_kick_followup_done = false
 	configure_hitbox(attack)
 	var preserved_air_velocity := fighter.velocity
@@ -251,11 +247,8 @@ func try_attack(
 	attack_started.emit(attack_name)
 	var phase_durations := get_attack_phase_durations(attack)
 
-	# Startup. Il nuovo light singolo si sincronizza direttamente al fotogramma
-	# d'impatto; se viene convertito nella combo, conserva il flusso precedente.
-	if attack.attack_id == &"light_punch" and not is_crouched_light_punch:
-		await wait_for_standing_light_punch_active_frame(attack_generation)
-	elif attack.attack_id == &"medium_punch" and not is_crouched_medium_punch and not is_airborne_medium_punch:
+	# Startup.
+	if attack.attack_id == &"medium_punch" and not is_crouched_medium_punch and not is_airborne_medium_punch:
 		await wait_for_standing_medium_punch_active_frame(attack_generation)
 	else:
 		await get_tree().create_timer(phase_durations.x).timeout
@@ -286,8 +279,6 @@ func try_attack(
 		while (
 			attack_generation == action_generation
 			and fighter.animated_sprite.animation in [
-				&"light_punch_single",
-				&"light_punch_double",
 				&"crouched_punch",
 				&"crouched_punch_crouched",
 				&"medium_open_hand_slap",
@@ -315,7 +306,6 @@ func try_attack(
 	is_attacking = false
 	current_attack = null
 	hit_targets.clear()
-	light_punch_connected_targets.clear()
 	var should_return_to_crouch := (
 		(
 			is_crouched_light_punch
@@ -522,8 +512,6 @@ func cancel_current_action() -> void:
 	is_airborne_medium_punch = false
 	is_airborne_heavy_punch = false
 	hit_targets.clear()
-	light_punch_connected_targets.clear()
-	light_punch_followup_done = false
 	disable_hitbox()
 
 
@@ -535,15 +523,6 @@ func get_health_percentage() -> float:
 
 func enable_hitbox() -> void:
 	hitbox_shape.disabled = false
-
-
-func wait_for_standing_light_punch_active_frame(attack_generation: int) -> void:
-	while (
-		attack_generation == action_generation
-		and fighter.animated_sprite.animation == &"light_punch_single"
-		and fighter.animated_sprite.frame < STANDING_LIGHT_PUNCH_ACTIVE_FRAME
-	):
-		await get_tree().process_frame
 
 
 func wait_for_standing_medium_punch_active_frame(attack_generation: int) -> void:
@@ -654,8 +633,6 @@ func configure_hitbox(attack: AttackData) -> void:
 
 func get_attack_phase_durations(attack: AttackData) -> Vector3:
 	if attack.attack_id == &"light_punch" and not is_crouched_light_punch:
-		# Frame globale 18 (indice 17): ottavo frame del foglio light-punch-hit,
-		# dopo i primi 10 fotogrammi del foglio di preparazione.
 		return Vector3(float(STANDING_LIGHT_PUNCH_ACTIVE_FRAME), 6.0, 19.0) / 48.0
 	if attack.attack_id == &"medium_punch" and not is_crouched_medium_punch and not is_airborne_medium_punch:
 		# Usa lo stesso timing del light punch per l'animazione identica
@@ -725,30 +702,6 @@ func _target_will_block(target: Mangler) -> bool:
 	)
 
 
-func perform_light_punch_followup() -> void:
-	"""Al frame 8 riavvia la reazione dei bersagli colpiti dal primo pugno."""
-	if light_punch_followup_done or not is_attacking or current_attack == null:
-		return
-	if current_attack.attack_id != &"light_punch":
-		return
-
-	light_punch_followup_done = true
-	for target in light_punch_connected_targets.duplicate():
-		if target == null or not is_instance_valid(target):
-			continue
-		target.combat.take_damage(
-			current_attack.damage,
-			fighter,
-			current_attack.hitstun,
-			current_attack.blockstun,
-			current_attack.hit_height,
-			current_attack.causes_knockdown,
-			4,
-			10,
-			false
-		)
-
-
 func perform_medium_kick_followup() -> void:
 	if medium_kick_followup_done or not is_attacking or current_attack == null:
 		return
@@ -782,12 +735,6 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	if target == null or target == fighter or hit_targets.has(target) or current_attack == null:
 		return
 	hit_targets.append(target)
-	if (
-		current_attack.attack_id == &"light_punch"
-		and not is_crouched_light_punch
-		and not light_punch_connected_targets.has(target)
-	):
-		light_punch_connected_targets.append(target)
 	var effective_hit_height := get_effective_hit_height(current_attack)
 	if (
 		current_attack.attack_id == &"light_punch"
@@ -822,5 +769,5 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		effective_knockdown,
 		effective_reaction_frame,
 		0,
-		not (current_attack.attack_id == &"light_punch" and not is_crouched_light_punch)
+		true
 	)

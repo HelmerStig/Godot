@@ -103,8 +103,6 @@ const SWEEP_AFTERIMAGE_LIFETIME := 0.14
 const SWEEP_AFTERIMAGE_ALPHA := 0.28
 const SWEEP_AFTERIMAGE_OFFSET := 8.0
 const ATTACK_EFFECT_ANIMATIONS := [
-	&"light_punch_single",
-	&"light_punch_double",
 	&"crouched_punch",
 	&"crouched_punch_crouched",
 	&"medium_open_hand_slap",
@@ -227,7 +225,6 @@ var pending_jump_horizontal_multiplier := 1.0
 var received_hit_height := AttackData.HitHeight.MID
 var received_block_height := AttackData.HitHeight.MID
 var block_started_crouched := false
-var light_punch_combo_queued := false
 var default_z_index := 0
 var sweep_afterimage_spawn_count := 0
 var attack_afterimage_spawn_count := 0
@@ -737,9 +734,6 @@ func _physics_process(delta: float) -> void:
 	# Il buffer continua a registrare durante startup, recovery e hit-stun.
 	if is_player_controlled:
 		input_buffer.update(is_facing_right)
-	if is_player_controlled and controls_enabled and current_state == State.ATTACKING:
-		try_queue_light_punch_combo()
-
 	if is_player_controlled and controls_enabled and can_move:
 		handle_input()
 
@@ -911,6 +905,9 @@ func update_animation() -> void:
 		if animated_sprite.animation != &"idle" or not animated_sprite.is_playing():
 			animated_sprite.play(&"idle")
 		return
+	# L'animazione di attacco è gestita da _on_combat_attack_started; non interrompere.
+	if current_state == State.ATTACKING:
+		return
 	if current_state == State.CROUCHING:
 		if (
 			animated_sprite.sprite_frames.has_animation(&"crouch")
@@ -1001,7 +998,7 @@ func update_animation() -> void:
 func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
-		&"idle", &"light_punch_single", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
+		&"idle", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery"
 	]
@@ -1164,23 +1161,6 @@ func get_animation_duration(animation_name: StringName, start_frame: int = 0) ->
 	for frame_index in range(first_frame, frames.get_frame_count(animation_name)):
 		duration += frames.get_frame_duration(animation_name, frame_index) / speed
 	return duration
-
-
-func try_queue_light_punch_combo() -> void:
-	"""Converte il jab singolo nella combo se il secondo input arriva entro il settimo frame."""
-	if light_punch_combo_queued or not combat.is_attacking or combat.current_attack == null:
-		return
-	if combat.current_attack.attack_id != &"light_punch":
-		return
-	if animated_sprite.animation != &"light_punch_single" or animated_sprite.frame > 6:
-		return
-	if input_buffer.consume_attack(&"light_punch", 1) == FighterInputBuffer.NO_DIRECTION:
-		return
-
-	light_punch_combo_queued = true
-	var continuation_frame := animated_sprite.frame
-	animated_sprite.play(&"light_punch_double")
-	animated_sprite.frame = continuation_frame
 
 
 func is_moving_backward() -> bool:
@@ -1379,7 +1359,6 @@ func _on_combat_knocked_out() -> void:
 
 func _on_combat_attack_started(attack_name: StringName) -> void:
 	bring_player_one_to_foreground()
-	light_punch_combo_queued = false
 	if attack_name == &"light_punch" and combat.is_crouched_light_punch:
 		var crouched_animation := (
 			&"crouched_punch_crouched"
@@ -1388,8 +1367,6 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 		)
 		if animated_sprite.sprite_frames.has_animation(crouched_animation):
 			animated_sprite.play(crouched_animation)
-	elif attack_name == &"light_punch" and animated_sprite.sprite_frames.has_animation(&"light_punch_single"):
-		animated_sprite.play(&"light_punch_single")
 	elif attack_name == &"medium_punch" and combat.is_airborne_medium_punch:
 		animated_sprite.play(&"jump_medium_punch")
 	elif attack_name == &"heavy_punch" and combat.is_airborne_heavy_punch:
@@ -1437,7 +1414,6 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 
 func _on_combat_attack_finished() -> void:
 	restore_default_render_order()
-	light_punch_combo_queued = false
 	attack_finished.emit()
 
 
@@ -1606,12 +1582,6 @@ func _on_animation_finished() -> void:
 func _on_animation_frame_changed() -> void:
 	emit_attack_motion_effect()
 	if (
-		animated_sprite.animation == &"light_punch_double"
-		and animated_sprite.frame >= 7
-		and current_state == State.ATTACKING
-	):
-		combat.perform_light_punch_followup()
-	elif (
 		animated_sprite.animation == &"medium_kick"
 		and animated_sprite.frame >= 7
 		and current_state == State.ATTACKING

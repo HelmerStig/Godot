@@ -176,61 +176,8 @@ func _test_combat_flow() -> void:
 		"idle parte automaticamente"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_single")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_single") == 42,
-		"il pugno light usa 10 frame di preparazione e due fogli completi da 16"
-	)
-	var light_single_preparation_last := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 9)
-		as AtlasTexture
-	)
-	var light_single_hit_first := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 10)
-		as AtlasTexture
-	)
-	var light_single_recovery_first := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 26)
-		as AtlasTexture
-	)
-	var light_single_last := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 41)
-		as AtlasTexture
-	)
-	_expect(
-		light_single_preparation_last.atlas.resource_path.ends_with("light-punch-preparation.png")
-		and light_single_preparation_last.region.position == Vector2(512.0, 1024.0)
-		and light_single_hit_first.atlas.resource_path.ends_with("light-punch-hit.png")
-		and light_single_hit_first.region.position == Vector2.ZERO
-		and light_single_recovery_first.atlas.resource_path.ends_with("light-punch-to-idle.png")
-		and light_single_recovery_first.region.position == Vector2.ZERO
-		and light_single_last.region.position == Vector2(1536.0, 1536.0),
-		"il light singolo rispetta preparation, hit e ritorno a idle"
-	)
-	_expect(
-		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_double")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_double") == 16,
-		"la combo light usa 1-6 e prosegue dal frame 7 fino al frame 16"
-	)
-	var light_combo_last := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_double", 15)
-		as AtlasTexture
-	)
-	_expect(
-		light_combo_last.region.position == Vector2(1536.0, 1536.0),
-		"la combo light termina sul frame 16 del nuovo foglio"
-	)
-	_expect(
-		is_equal_approx(
-			player1.animated_sprite.sprite_frames.get_animation_speed(&"light_punch_single"),
-			48.0
-		)
-		and is_equal_approx(
-			player1.animated_sprite.sprite_frames.get_animation_speed(&"light_punch_double"),
-			24.0
-		)
-		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_punch_single")
-		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_punch_double"),
-		"il nuovo light singolo usa 48 FPS e la combo precedente resta a 24 FPS"
+		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_single"),
+		"SpriteFrames contiene l'animazione light_punch_single"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"medium_open_hand_slap")
@@ -1358,12 +1305,6 @@ func _test_combat_flow() -> void:
 	player1.combat.try_attack(&"light_punch")
 	_expect(player1.current_state == Mangler.State.ATTACKING, "AttackData avvia lo stato ATTACKING")
 	_expect(
-		player1.animated_sprite.animation == &"light_punch_single"
-		and player1.animated_sprite.scale == Mangler.REWORK_SPRITE_SCALE
-		and player1.animated_sprite.position == Mangler.REWORK_SPRITE_POSITION,
-		"il nuovo light punch usa dimensioni e linea dei piedi del Mangler rework"
-	)
-	_expect(
 		player1.z_index > player2.z_index,
 		"Player 1 passa in primo piano durante qualsiasi attacco"
 	)
@@ -1391,9 +1332,9 @@ func _test_combat_flow() -> void:
 			light_punch_phases.x,
 			float(FighterCombat.STANDING_LIGHT_PUNCH_ACTIVE_FRAME) / 48.0
 		),
-		"la hitbox diventa attiva al frame 8 del foglio light-punch-hit"
+		"la hitbox del light punch diventa attiva dopo i frame di startup"
 	)
-	await create_timer(player1.get_animation_duration(&"light_punch_single") + 0.05).timeout
+	await create_timer(light_punch.get_total_duration() + 0.7).timeout
 	_expect(
 		player1.current_state == Mangler.State.IDLE,
 		"il jab singolo completa preparation, hit e ritorno a idle"
@@ -1678,42 +1619,6 @@ func _test_combat_flow() -> void:
 		"DOWN+medio dal crouch avvia il gancio ai reni dal frame 5"
 	)
 	await create_timer(medium_punch.get_total_duration() + 0.05).timeout
-
-	player1.combat.try_attack(&"light_punch")
-	await create_timer(0.05).timeout
-	player1.input_buffer.record_input_snapshot(0, 0, [&"light_punch"], true)
-	player1.try_queue_light_punch_combo()
-	_expect(
-		player1.light_punch_combo_queued
-		and player1.animated_sprite.animation == &"light_punch_double",
-		"un secondo light ravvicinato continua dal jab nella combo da 16 frame"
-	)
-	player2.combat.take_damage(
-		light_punch.damage,
-		player1,
-		light_punch.hitstun,
-		light_punch.blockstun,
-		light_punch.hit_height,
-		false,
-		light_punch.hit_reaction_start_frame,
-		0,
-		false
-	)
-	_expect(is_zero_approx(player2.velocity.x), "il light punch non spinge indietro l'avversario")
-	player1.combat.light_punch_connected_targets.append(player2)
-	player1.animated_sprite.frame = 7
-	player1._on_animation_frame_changed()
-	_expect(
-		player1.combat.light_punch_followup_done
-		and player2.combat.current_health == 90
-		and player2.animated_sprite.animation == &"hurt_high"
-		and player2.animated_sprite.frame == 4,
-		"la combo infligge due danni light e al frame 8 riavvia hurt_high dal frame 5"
-	)
-	player2.combat.reset()
-	player2.change_state(Mangler.State.IDLE)
-	await create_timer(player1.get_animation_duration(&"light_punch_double") + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "la combo light completa torna in IDLE")
 
 	player1.combat.try_attack(&"light_punch", FighterInputBuffer.Direction.DOWN)
 	_expect(
