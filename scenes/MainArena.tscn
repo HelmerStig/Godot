@@ -12,7 +12,7 @@ size = Vector2(2304, 50)
 script = ExtResource("2_arena")
 
 [node name="DefaultStage" parent="." unique_id=566572223 instance=ExtResource("3_stage")]
-position = Vector2(-129, -31)
+position = Vector2(-129, 3)
 
 [node name="Ground" type="StaticBody2D" parent="." unique_id=1204746480]
 position = Vector2(0, 600)
