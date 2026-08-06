@@ -103,6 +103,7 @@ const SWEEP_AFTERIMAGE_LIFETIME := 0.14
 const SWEEP_AFTERIMAGE_ALPHA := 0.28
 const SWEEP_AFTERIMAGE_OFFSET := 8.0
 const ATTACK_EFFECT_ANIMATIONS := [
+	&"light_punch_single",
 	&"crouched_punch",
 	&"crouched_punch_crouched",
 	&"medium_open_hand_slap",
@@ -178,6 +179,12 @@ const MEDIUM_PUNCH_TO_IDLE_SHEET := preload(
 const MEDIUM_PUNCH_TO_IDLE_FRAME_COUNT := 16
 const MEDIUM_PUNCH_COLUMNS := 4
 const MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const LIGHT_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/light-punch/light-punch.png"
+)
+const LIGHT_PUNCH_FRAME_COUNT := 18
+const LIGHT_PUNCH_COLUMNS := 5
+const LIGHT_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -247,6 +254,7 @@ func _ready() -> void:
 	configure_backwalk_frames()
 	configure_run_frames()
 	configure_heavy_punch_high_frames()
+	configure_light_punch_frames()
 	configure_crouch_frames()
 	configure_block_high_frames()
 	configure_block_mid_frames()
@@ -635,6 +643,26 @@ func configure_jump_medium_kick_frames() -> void:
 		frames.add_frame(&"jump_medium_kick", atlas_frame)
 
 
+func configure_light_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"light_punch_single"):
+		frames.remove_animation(&"light_punch_single")
+	frames.add_animation(&"light_punch_single")
+	frames.set_animation_speed(&"light_punch_single", 48.0)
+	frames.set_animation_loop(&"light_punch_single", false)
+	for source_index in range(LIGHT_PUNCH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = LIGHT_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % LIGHT_PUNCH_COLUMNS),
+				float(floori(float(source_index) / LIGHT_PUNCH_COLUMNS))
+			) * LIGHT_PUNCH_CELL_SIZE,
+			LIGHT_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"light_punch_single", atlas_frame)
+
+
 func configure_medium_punch_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"medium_open_hand_slap"):
@@ -998,7 +1026,7 @@ func update_animation() -> void:
 func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
-		&"idle", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
+		&"idle", &"light_punch_single", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery"
 	]
@@ -1367,6 +1395,8 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 		)
 		if animated_sprite.sprite_frames.has_animation(crouched_animation):
 			animated_sprite.play(crouched_animation)
+	elif attack_name == &"light_punch" and animated_sprite.sprite_frames.has_animation(&"light_punch_single"):
+		animated_sprite.play(&"light_punch_single")
 	elif attack_name == &"medium_punch" and combat.is_airborne_medium_punch:
 		animated_sprite.play(&"jump_medium_punch")
 	elif attack_name == &"heavy_punch" and combat.is_airborne_heavy_punch:

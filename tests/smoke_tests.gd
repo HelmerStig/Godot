@@ -176,8 +176,36 @@ func _test_combat_flow() -> void:
 		"idle parte automaticamente"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_single"),
-		"SpriteFrames contiene l'animazione light_punch_single"
+		player1.animated_sprite.sprite_frames.has_animation(&"light_punch_single")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_punch_single") == 18,
+		"il pugno light usa 18 frame sul foglio unificato a 48 FPS"
+	)
+	var light_first := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 0)
+		as AtlasTexture
+	)
+	var light_impact := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 16)
+		as AtlasTexture
+	)
+	var light_last := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 17)
+		as AtlasTexture
+	)
+	_expect(
+		light_first.atlas.resource_path.ends_with("light-punch.png")
+		and light_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and light_impact.region == Rect2(512.0, 1024.0, 512.0, 512.0)
+		and light_last.region == Rect2(1024.0, 1536.0, 512.0, 512.0),
+		"il light punch usa il foglio unificato: impatto al frame 12 (indice 11)"
+	)
+	_expect(
+		is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"light_punch_single"),
+			48.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_punch_single"),
+		"il light singolo usa 48 FPS non ciclici"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"medium_open_hand_slap")
@@ -1317,9 +1345,9 @@ func _test_combat_flow() -> void:
 		"AttackData configura geometria e posizione della hitbox"
 	)
 	_expect(
-		FighterCombat.STANDING_LIGHT_PUNCH_HITBOX_SIZE == Vector2(185.0, 35.0)
-		and FighterCombat.STANDING_LIGHT_PUNCH_HITBOX_POSITION == Vector2(92.5, -210.0),
-		"il light punch aggiunge 85 px in avanti e sposta la hitbox 100 px in alto"
+		FighterCombat.STANDING_LIGHT_PUNCH_HITBOX_SIZE == Vector2(205.0, 35.0)
+		and FighterCombat.STANDING_LIGHT_PUNCH_HITBOX_POSITION == Vector2(52.5, -210.0),
+		"il light punch usa hitbox 205 px con origine invariata"
 	)
 	_expect(
 		light_punch.hitbox_size == Vector2(100.0, 35.0)
@@ -1332,7 +1360,7 @@ func _test_combat_flow() -> void:
 			light_punch_phases.x,
 			float(FighterCombat.STANDING_LIGHT_PUNCH_ACTIVE_FRAME) / 48.0
 		),
-		"la hitbox del light punch diventa attiva dopo i frame di startup"
+		"la hitbox del light punch diventa attiva al frame 17 (48 FPS)"
 	)
 	await create_timer(light_punch.get_total_duration() + 0.7).timeout
 	_expect(

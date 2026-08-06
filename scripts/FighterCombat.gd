@@ -16,9 +16,9 @@ const JUMP_KICK_ANIMATION_FPS := 30.0
 const AIRBORNE_ATTACK_GROUND_CANCEL_HEIGHT := 40.0
 const CROUCHED_LIGHT_HITBOX_SIZE := Vector2(150.0, 35.0)
 const CROUCHED_LIGHT_HITBOX_POSITION := Vector2(75.0, -110.0)
-const STANDING_LIGHT_PUNCH_HITBOX_SIZE := Vector2(185.0, 35.0)
-const STANDING_LIGHT_PUNCH_HITBOX_POSITION := Vector2(92.5, -210.0)
-const STANDING_LIGHT_PUNCH_ACTIVE_FRAME := 17
+const STANDING_LIGHT_PUNCH_HITBOX_SIZE := Vector2(205.0, 35.0)
+const STANDING_LIGHT_PUNCH_HITBOX_POSITION := Vector2(52.5, -210.0)
+const STANDING_LIGHT_PUNCH_ACTIVE_FRAME := 11
 const STANDING_MEDIUM_PUNCH_HITBOX_SIZE := Vector2(185.0, 35.0)
 const STANDING_MEDIUM_PUNCH_HITBOX_POSITION := Vector2(92.5, -210.0)
 const STANDING_MEDIUM_PUNCH_ACTIVE_FRAME := 17
@@ -279,6 +279,7 @@ func try_attack(
 		while (
 			attack_generation == action_generation
 			and fighter.animated_sprite.animation in [
+				&"light_punch_single",
 				&"crouched_punch",
 				&"crouched_punch_crouched",
 				&"medium_open_hand_slap",
@@ -633,7 +634,7 @@ func configure_hitbox(attack: AttackData) -> void:
 
 func get_attack_phase_durations(attack: AttackData) -> Vector3:
 	if attack.attack_id == &"light_punch" and not is_crouched_light_punch:
-		return Vector3(float(STANDING_LIGHT_PUNCH_ACTIVE_FRAME), 6.0, 19.0) / 48.0
+		return Vector3(float(STANDING_LIGHT_PUNCH_ACTIVE_FRAME), 3.0, 3.0) / 48.0
 	if attack.attack_id == &"medium_punch" and not is_crouched_medium_punch and not is_airborne_medium_punch:
 		# Usa lo stesso timing del light punch per l'animazione identica
 		return Vector3(float(STANDING_MEDIUM_PUNCH_ACTIVE_FRAME), 6.0, 19.0) / 48.0
