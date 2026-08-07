@@ -670,7 +670,7 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 	if attack.attack_id == &"medium_kick" and is_crouched_medium_kick:
 		return Vector3(5.0, 3.0, 8.0) / ATTACK_ANIMATION_FPS
 	if attack.attack_id == &"light_kick" and is_crouched_light_kick:
-		return Vector3(5.0, 3.0, 8.0) / ATTACK_ANIMATION_FPS
+		return Vector3(13.0, 3.0, 15.0) / 48.0
 	if attack.attack_id == &"light_kick" and is_airborne_light_kick:
 		return Vector3(4.0, 2.0, 3.0) / ATTACK_ANIMATION_FPS
 	if attack.attack_id == &"heavy_kick" and is_airborne_heavy_kick:
@@ -710,7 +710,7 @@ func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 	if attack.attack_id == &"light_kick" and not is_crouched_light_kick and not is_airborne_light_kick:
 		return AttackData.HitHeight.LOW
 	if attack.attack_id == &"light_kick" and is_crouched_light_kick:
-		return AttackData.HitHeight.MID
+		return AttackData.HitHeight.LOW
 	if attack.attack_id == &"light_kick" and is_airborne_light_kick:
 		return AttackData.HitHeight.HIGH
 	if attack.attack_id == &"heavy_kick" and is_airborne_heavy_kick:

@@ -132,10 +132,10 @@ const CROUCHED_MEDIUM_KICK_FRAME_COUNT := 16
 const CROUCHED_MEDIUM_KICK_COLUMNS := 4
 const CROUCHED_MEDIUM_KICK_CELL_SIZE := Vector2(512.0, 512.0)
 const CROUCHED_LIGHT_KICK_SHEET := preload(
-	"res://assets/sprites/characters/mangler/light_kick_low.png"
+	"res://assets/sprites/characters/mangler/basic-moves/light-kick/crouched_light_kick.png"
 )
-const CROUCHED_LIGHT_KICK_FRAME_COUNT := 16
-const CROUCHED_LIGHT_KICK_COLUMNS := 4
+const CROUCHED_LIGHT_KICK_FRAME_COUNT := 25
+const CROUCHED_LIGHT_KICK_COLUMNS := 5
 const CROUCHED_LIGHT_KICK_CELL_SIZE := Vector2(512.0, 512.0)
 const JUMP_LIGHT_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/jump-kick-light.png"
@@ -743,9 +743,21 @@ func configure_crouched_light_kick_frames() -> void:
 	if frames.has_animation(&"crouched_light_kick"):
 		frames.remove_animation(&"crouched_light_kick")
 	frames.add_animation(&"crouched_light_kick")
-	frames.set_animation_speed(&"crouched_light_kick", 24.0)
+	frames.set_animation_speed(&"crouched_light_kick", 48.0)
 	frames.set_animation_loop(&"crouched_light_kick", false)
-	for source_index in range(CROUCHED_LIGHT_KICK_FRAME_COUNT):
+	# Avanzata: fotogrammi 6-21; hitbox attivo a 19-21; recovery: 20-6.
+	for source_index in range(6, 22):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_LIGHT_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_LIGHT_KICK_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_LIGHT_KICK_COLUMNS))
+			) * CROUCHED_LIGHT_KICK_CELL_SIZE,
+			CROUCHED_LIGHT_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_light_kick", atlas_frame)
+	for source_index in range(20, 5, -1):
 		var atlas_frame := AtlasTexture.new()
 		atlas_frame.atlas = CROUCHED_LIGHT_KICK_SHEET
 		atlas_frame.region = Rect2(
@@ -1365,7 +1377,7 @@ func update_sprite_scale() -> void:
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
-		&"block_low_crouched", &"block_low_recovery"
+		&"block_low_crouched", &"block_low_recovery", &"crouched_light_kick"
 	]
 	animated_sprite.scale = REWORK_SPRITE_SCALE if uses_reworked_art else LEGACY_SPRITE_SCALE
 	animated_sprite.position = (
