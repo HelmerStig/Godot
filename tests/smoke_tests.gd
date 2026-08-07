@@ -386,13 +386,13 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"jump_heavy_punch")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_heavy_punch") == 16
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_heavy_punch") == 31
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"jump_heavy_punch"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump_heavy_punch"),
-		"il pugno potente aereo usa tutti i 16 frame a 24 FPS"
+		"il pugno potente aereo usa 16 frame avanti e 15 indietro a 48 FPS"
 	)
 	var jump_heavy_punch_first := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"jump_heavy_punch", 0

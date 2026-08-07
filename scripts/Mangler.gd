@@ -29,7 +29,7 @@ enum State {
 }
 
 const BASE_GRAVITY := 1400.0
-const JUMP_SPEED_MULTIPLIER := 1.2
+const JUMP_SPEED_MULTIPLIER := 1.5
 const LEGACY_SPRITE_SCALE := Vector2(0.7, 0.7)
 const LEGACY_SPRITE_POSITION := Vector2(0.0, -120.0)
 const REWORK_SPRITE_SCALE := Vector2(0.85, 0.85)
@@ -945,9 +945,20 @@ func configure_jump_heavy_punch_frames() -> void:
 	if frames.has_animation(&"jump_heavy_punch"):
 		frames.remove_animation(&"jump_heavy_punch")
 	frames.add_animation(&"jump_heavy_punch")
-	frames.set_animation_speed(&"jump_heavy_punch", 24.0)
+	frames.set_animation_speed(&"jump_heavy_punch", 48.0)
 	frames.set_animation_loop(&"jump_heavy_punch", false)
 	for source_index in range(JUMP_HEAVY_PUNCH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = JUMP_HEAVY_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % JUMP_HEAVY_PUNCH_COLUMNS),
+				float(floori(float(source_index) / JUMP_HEAVY_PUNCH_COLUMNS))
+			) * JUMP_HEAVY_PUNCH_CELL_SIZE,
+			JUMP_HEAVY_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"jump_heavy_punch", atlas_frame)
+	for source_index in range(JUMP_HEAVY_PUNCH_FRAME_COUNT - 2, -1, -1):
 		var atlas_frame := AtlasTexture.new()
 		atlas_frame.atlas = JUMP_HEAVY_PUNCH_SHEET
 		atlas_frame.region = Rect2(
@@ -1418,6 +1429,11 @@ func update_state() -> void:
 		return
 	if current_state == State.JUMP_STARTUP:
 		return
+	# Atterraggio durante il pugno potente aereo: interrompe l'attacco.
+	if current_state == State.ATTACKING and combat.is_airborne_heavy_punch and is_on_floor():
+		combat.cancel_current_action()
+		change_state(State.IDLE)
+		return
 	if current_state in [
 		State.STANDING_UP,
 		State.ATTACKING,
@@ -1679,6 +1695,16 @@ func get_attack_motion_profile(animation_name: StringName) -> Dictionary:
 			"lifetime": SWEEP_AFTERIMAGE_LIFETIME,
 			"offset": SWEEP_AFTERIMAGE_OFFSET,
 			"stretch": 1.04,
+		}
+	if animation_name == &"jump_heavy_punch":
+		return {
+			"start_ratio": 0.10,
+			"end_ratio": 0.90,
+			"tint": Color(1.0, 0.72, 0.35),
+			"alpha": 0.40,
+			"lifetime": 0.22,
+			"offset": 14.0,
+			"stretch": 1.12,
 		}
 	if animation_name in [
 		&"jump_light_kick", &"jump_medium_kick", &"jump_heavy_kick", &"jump_medium_punch",

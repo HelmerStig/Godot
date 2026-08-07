@@ -10,8 +10,8 @@
 [ext_resource type="Texture2D" uid="uid://7iv4xqo8tqli" path="res://assets/sprites/characters/mangler/hurt-medium.png" id="8_hurt_mid"]
 [ext_resource type="Texture2D" uid="uid://do83oo5pvogwe" path="res://assets/sprites/characters/mangler/hurt-high.png" id="9_hurt_high"]
 [ext_resource type="Texture2D" uid="uid://dwluwd0be38h2" path="res://assets/sprites/characters/mangler/hurt_low.png" id="10_hurt_low"]
-[ext_resource type="Texture2D" uid="uid://cej7q8ibl0b51" path="res://assets/sprites/characters/mangler/09-sweep-knockdown.png" id="11_sweep_knockdown"]
-[ext_resource type="Texture2D" uid="uid://df3ejwktlkl7y" path="res://assets/sprites/characters/mangler/10-knockdown-recovery.png" id="12_knockdown_recovery"]
+[ext_resource type="Texture2D" uid="uid://cej7q8ibl0b51" path="res://assets/sprites/characters/mangler/sweep_knockdown.png" id="11_sweep_knockdown"]
+[ext_resource type="Texture2D" uid="uid://df3ejwktlkl7y" path="res://assets/sprites/characters/mangler/knockdown_recovery.png" id="12_knockdown_recovery"]
 [ext_resource type="Texture2D" uid="uid://c0nu4bpi6jgfg" path="res://assets/sprites/characters/mangler/block_mid.png" id="13_block_mid"]
 [ext_resource type="Texture2D" uid="uid://cfwqlf3me77cs" path="res://assets/sprites/characters/mangler/ko.png" id="14_ko"]
 [ext_resource type="Texture2D" uid="uid://dixih8el7fy33" path="res://assets/sprites/characters/mangler/block_high.png" id="15_block_high"]
@@ -25,6 +25,7 @@
 [ext_resource type="Texture2D" uid="uid://bvcex3w1niif0" path="res://assets/sprites/characters/mangler/heavy-kick.png" id="25_heavy_kick"]
 [ext_resource type="Texture2D" uid="uid://bpmtio2r5n7nv" path="res://assets/sprites/characters/mangler/heavy-kick-ok.png" id="26_heavy_kick_ok"]
 [ext_resource type="Texture2D" uid="uid://c3hnqdjvgyjo3" path="res://assets/sprites/characters/mangler/test-spazzata.png" id="27_crouched_heavy_kick"]
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_backwalk_00"]
 atlas = ExtResource("3_backwalk")
 region = Rect2(0, 0, 512, 512)

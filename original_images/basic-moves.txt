@@ -24,10 +24,10 @@ light-punch <--ok
 medium-punch <--ok
 strong-punch <--ok
 light-kick <--ok
-medium-kick
+medium-kick <--ok
 strong-kick <--ok
 
-crouched-light-punch
+crouched-light-punch <--ok
 crouched-medium-punch
 crouched-strong-punch
 crouched-light-kick
@@ -36,7 +36,7 @@ crouched-strong-kick
 
 jump-light-punch
 jump-medium-punch
-jump-strong-punch
+jump-strong-punch <--ok
 jump-light-kick
 jump-medium-kick
 jump-strong-kick
