@@ -30,6 +30,8 @@ enum State {
 
 const BASE_GRAVITY := 1400.0
 const JUMP_SPEED_MULTIPLIER := 1.5
+const CROUCHED_PUNCH_JUMP_VERTICAL := 1120.0
+const CROUCHED_PUNCH_JUMP_FORWARD := 100.0
 const LEGACY_SPRITE_SCALE := Vector2(0.7, 0.7)
 const LEGACY_SPRITE_POSITION := Vector2(0.0, -120.0)
 const REWORK_SPRITE_SCALE := Vector2(0.85, 0.85)
@@ -185,6 +187,12 @@ const CROUCHED_MEDIUM_PUNCH_SHEET := preload(
 const CROUCHED_MEDIUM_PUNCH_FRAME_COUNT := 25
 const CROUCHED_MEDIUM_PUNCH_COLUMNS := 5
 const CROUCHED_MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const CROUCHED_HEAVY_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/strong-punch/crouched_jumping_power_punch.png"
+)
+const CROUCHED_HEAVY_PUNCH_FRAME_COUNT := 25
+const CROUCHED_HEAVY_PUNCH_COLUMNS := 5
+const CROUCHED_HEAVY_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
 const LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/light-punch/light-punch.png"
 )
@@ -267,6 +275,7 @@ var sweep_afterimage_spawn_count := 0
 var attack_afterimage_spawn_count := 0
 var aerial_attack_used := false
 var force_idle_until_landing := false
+var crouched_heavy_punch_has_jumped := false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -284,6 +293,7 @@ func _ready() -> void:
 	configure_backwalk_frames()
 	configure_run_frames()
 	configure_heavy_punch_high_frames()
+	configure_crouched_heavy_punch_frames()
 	configure_light_punch_frames()
 	configure_crouched_light_punch_frames()
 	configure_crouched_light_punch_crouched_frames()
@@ -401,6 +411,38 @@ func configure_run_frames() -> void:
 			RUN_CELL_SIZE
 		)
 		frames.add_frame(&"run", atlas_frame)
+
+
+func configure_crouched_heavy_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"crouched_power_punch"):
+		frames.remove_animation(&"crouched_power_punch")
+	frames.add_animation(&"crouched_power_punch")
+	frames.set_animation_speed(&"crouched_power_punch", 48.0)
+	frames.set_animation_loop(&"crouched_power_punch", false)
+	# Avanzata 0-24 (hitbox al 19); rovesciata 23-0 (recovery).
+	for source_index in range(CROUCHED_HEAVY_PUNCH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_HEAVY_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_HEAVY_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_HEAVY_PUNCH_COLUMNS))
+			) * CROUCHED_HEAVY_PUNCH_CELL_SIZE,
+			CROUCHED_HEAVY_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_power_punch", atlas_frame)
+	for source_index in range(CROUCHED_HEAVY_PUNCH_FRAME_COUNT - 2, -1, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_HEAVY_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_HEAVY_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_HEAVY_PUNCH_COLUMNS))
+			) * CROUCHED_HEAVY_PUNCH_CELL_SIZE,
+			CROUCHED_HEAVY_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_power_punch", atlas_frame, 48.0 / 60.0)
 
 
 func configure_heavy_punch_high_frames() -> void:
@@ -1320,6 +1362,7 @@ func update_sprite_scale() -> void:
 	var uses_reworked_art := animated_sprite.animation in [
 		&"idle", &"light_punch_single", &"crouched_punch", &"crouched_punch_crouched",
 		&"crouched_medium_punch", &"crouched_medium_punch_crouched",
+		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery"
@@ -1743,6 +1786,7 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 
 func _on_combat_attack_finished() -> void:
 	restore_default_render_order()
+	crouched_heavy_punch_has_jumped = false
 	attack_finished.emit()
 
 
@@ -1921,6 +1965,16 @@ func _on_animation_finished() -> void:
 func _on_animation_frame_changed() -> void:
 	emit_attack_motion_effect()
 	if (
+		animated_sprite.animation == &"crouched_power_punch"
+		and animated_sprite.frame == 6
+		and current_state == State.ATTACKING
+		and combat.is_crouched_heavy_punch
+		and not crouched_heavy_punch_has_jumped
+	):
+		crouched_heavy_punch_has_jumped = true
+		velocity.y = -CROUCHED_PUNCH_JUMP_VERTICAL
+		velocity.x = CROUCHED_PUNCH_JUMP_FORWARD if is_facing_right else -CROUCHED_PUNCH_JUMP_FORWARD
+	elif (
 		animated_sprite.animation == &"medium_kick"
 		and animated_sprite.frame >= 28
 		and current_state == State.ATTACKING

@@ -21,6 +21,7 @@ const STANDING_LIGHT_PUNCH_HITBOX_POSITION := Vector2(52.5, -210.0)
 const STANDING_LIGHT_PUNCH_ACTIVE_FRAME := 11
 const CROUCHED_LIGHT_PUNCH_ACTIVE_FRAME := 10
 const CROUCHED_MEDIUM_PUNCH_ACTIVE_FRAME := 11
+const CROUCHED_HEAVY_PUNCH_ACTIVE_FRAME := 19
 const STANDING_LIGHT_KICK_ACTIVE_FRAME := 14
 const STANDING_HEAVY_KICK_ACTIVE_FRAME := 24
 const STANDING_HEAVY_KICK_HITBOX_SIZE := Vector2(165.0, 45.0)
@@ -657,7 +658,7 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 		var startup_frames := 7.0 if crouched_medium_punch_started_crouched else float(CROUCHED_MEDIUM_PUNCH_ACTIVE_FRAME)
 		return Vector3(startup_frames, 4.0, 5.0) / 48.0
 	if attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
-		return Vector3(9.0, 2.0, 5.0) / ATTACK_ANIMATION_FPS
+		return Vector3(float(CROUCHED_HEAVY_PUNCH_ACTIVE_FRAME), 6.0, 5.0) / 48.0
 	if attack.attack_id == &"heavy_kick" and not is_crouched_heavy_kick and not is_airborne_heavy_kick:
 		return Vector3(float(STANDING_HEAVY_KICK_ACTIVE_FRAME), 4.0, 5.0) / 48.0
 	if attack.attack_id == &"heavy_kick" and is_crouched_heavy_kick:

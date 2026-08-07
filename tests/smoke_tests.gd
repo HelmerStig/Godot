@@ -487,16 +487,16 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_power_punch")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_power_punch") == 16,
-		"il pugno potente abbassato usa l'intera animazione 1-16"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_power_punch") == 49,
+		"il pugno potente abbassato usa 25 frame avanti e 24 indietro"
 	)
 	_expect(
 		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_power_punch"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_power_punch"),
-		"il pugno potente abbassato è non ciclico a 24 FPS"
+		"il pugno potente abbassato è non ciclico a 48 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_punch")
@@ -1642,9 +1642,9 @@ func _test_combat_flow() -> void:
 	)
 	var crouched_heavy_phases := player1.combat.get_attack_phase_durations(heavy_punch)
 	_expect(
-		is_equal_approx(crouched_heavy_phases.x, 9.0 / 24.0)
-		and is_equal_approx(crouched_heavy_phases.y, 2.0 / 24.0),
-		"il pugno potente abbassato diventa attivo al frame 10"
+		is_equal_approx(crouched_heavy_phases.x, float(FighterCombat.CROUCHED_HEAVY_PUNCH_ACTIVE_FRAME) / 48.0)
+		and is_equal_approx(crouched_heavy_phases.y, 6.0 / 48.0),
+		"il pugno potente abbassato diventa attivo al frame 20 e salta al frame 10"
 	)
 	await create_timer(player1.get_animation_duration(&"crouched_power_punch") + 0.05).timeout
 	player1.change_state(Mangler.State.CROUCHING)

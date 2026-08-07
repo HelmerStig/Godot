@@ -28,7 +28,7 @@ medium-kick <--ok
 strong-kick <--ok
 
 crouched-light-punch <--ok
-crouched-medium-punch
+crouched-medium-punch <--ok
 crouched-strong-punch
 crouched-light-kick
 crouched-medium-kick
