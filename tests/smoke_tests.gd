@@ -520,8 +520,8 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_punch")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_punch") == 23,
-		"il pugno basso da posizione alta usa i fotogrammi 1-12 e torna fino al primo"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_punch") == 21,
+		"il pugno basso usa step=2 fino al frame 20, poi torna al frame 1"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_punch_crouched")
@@ -529,25 +529,26 @@ func _test_combat_flow() -> void:
 		"il pugno basso da crouch usa 9-12 e torna fino al primo"
 	)
 	var crouched_sheet_frames := player1.animated_sprite.sprite_frames
-	var crouched_peak := crouched_sheet_frames.get_frame_texture(&"crouched_punch", 11) as AtlasTexture
-	var crouched_reverse := crouched_sheet_frames.get_frame_texture(&"crouched_punch", 12) as AtlasTexture
-	var crouched_last := crouched_sheet_frames.get_frame_texture(&"crouched_punch", 22) as AtlasTexture
+	var crouched_peak := crouched_sheet_frames.get_frame_texture(&"crouched_punch", 10) as AtlasTexture
+	var crouched_reverse := crouched_sheet_frames.get_frame_texture(&"crouched_punch", 11) as AtlasTexture
+	var crouched_last := crouched_sheet_frames.get_frame_texture(&"crouched_punch", 20) as AtlasTexture
 	_expect(
-		crouched_peak.region.position == Vector2(1536.0, 1024.0)
-		and crouched_reverse.region.position == Vector2(1024.0, 1024.0)
-		and crouched_last.region.position == Vector2.ZERO,
-		"crouched_punch raggiunge il frame 12, inverte e termina sul frame 1"
+		crouched_peak.region == Rect2(2048.0, 1536.0, 512.0, 512.0)
+		and crouched_reverse.region == Rect2(1536.0, 1536.0, 512.0, 512.0)
+		and crouched_last.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and crouched_peak.atlas.resource_path.ends_with("crouched-light-punch.png"),
+		"crouched_punch raggiunge il frame 20 (sorgente 19), inverte e termina sul frame 1"
 	)
 	_expect(
 		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_punch"),
-			24.0
+			48.0
 		)
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_punch_crouched"),
-			24.0
+			48.0
 		),
-		"le due varianti del pugno basso sono configurate a 24 FPS"
+		"entrambe le varianti del pugno basso usano 48 FPS"
 	)
 
 	_expect(

@@ -185,6 +185,12 @@ const LIGHT_PUNCH_SHEET := preload(
 const LIGHT_PUNCH_FRAME_COUNT := 18
 const LIGHT_PUNCH_COLUMNS := 5
 const LIGHT_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const CROUCHED_LIGHT_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/light-punch/crouched-light-punch.png"
+)
+const CROUCHED_LIGHT_PUNCH_FRAME_COUNT := 25
+const CROUCHED_LIGHT_PUNCH_COLUMNS := 5
+const CROUCHED_LIGHT_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
 const LIGHT_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/light-kick/light_kick.png"
 )
@@ -273,6 +279,8 @@ func _ready() -> void:
 	configure_run_frames()
 	configure_heavy_punch_high_frames()
 	configure_light_punch_frames()
+	configure_crouched_light_punch_frames()
+	configure_crouched_light_punch_crouched_frames()
 	configure_crouch_frames()
 	configure_block_high_frames()
 	configure_block_mid_frames()
@@ -760,6 +768,90 @@ func configure_jump_medium_kick_frames() -> void:
 		frames.add_frame(&"jump_medium_kick", atlas_frame)
 
 
+func configure_crouched_light_punch_crouched_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"crouched_punch_crouched"):
+		frames.remove_animation(&"crouched_punch_crouched")
+	frames.add_animation(&"crouched_punch_crouched")
+	frames.set_animation_speed(&"crouched_punch_crouched", 48.0)
+	frames.set_animation_loop(&"crouched_punch_crouched", false)
+	# Parte dal frame 12 (metà sequenza, già in carica); stesso schema step=2 e impatto.
+	for source_index in range(12, 19, 2):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_LIGHT_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_LIGHT_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_LIGHT_PUNCH_COLUMNS))
+			) * CROUCHED_LIGHT_PUNCH_CELL_SIZE,
+			CROUCHED_LIGHT_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_punch_crouched", atlas_frame)
+	var impact_frame := AtlasTexture.new()
+	impact_frame.atlas = CROUCHED_LIGHT_PUNCH_SHEET
+	impact_frame.region = Rect2(
+		Vector2(
+			float(19 % CROUCHED_LIGHT_PUNCH_COLUMNS),
+			float(floori(19.0 / CROUCHED_LIGHT_PUNCH_COLUMNS))
+		) * CROUCHED_LIGHT_PUNCH_CELL_SIZE,
+		CROUCHED_LIGHT_PUNCH_CELL_SIZE
+	)
+	frames.add_frame(&"crouched_punch_crouched", impact_frame)
+	for source_index in range(18, -1, -2):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_LIGHT_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_LIGHT_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_LIGHT_PUNCH_COLUMNS))
+			) * CROUCHED_LIGHT_PUNCH_CELL_SIZE,
+			CROUCHED_LIGHT_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_punch_crouched", atlas_frame)
+
+
+func configure_crouched_light_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"crouched_punch"):
+		frames.remove_animation(&"crouched_punch")
+	frames.add_animation(&"crouched_punch")
+	frames.set_animation_speed(&"crouched_punch", 48.0)
+	frames.set_animation_loop(&"crouched_punch", false)
+	# Un fotogramma sì e uno no: step=2; poi frame 19 (impatto); rovesciata 18→0.
+	for source_index in range(0, 19, 2):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_LIGHT_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_LIGHT_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_LIGHT_PUNCH_COLUMNS))
+			) * CROUCHED_LIGHT_PUNCH_CELL_SIZE,
+			CROUCHED_LIGHT_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_punch", atlas_frame)
+	var impact_frame := AtlasTexture.new()
+	impact_frame.atlas = CROUCHED_LIGHT_PUNCH_SHEET
+	impact_frame.region = Rect2(
+		Vector2(
+			float(19 % CROUCHED_LIGHT_PUNCH_COLUMNS),
+			float(floori(19.0 / CROUCHED_LIGHT_PUNCH_COLUMNS))
+		) * CROUCHED_LIGHT_PUNCH_CELL_SIZE,
+		CROUCHED_LIGHT_PUNCH_CELL_SIZE
+	)
+	frames.add_frame(&"crouched_punch", impact_frame)
+	for source_index in range(18, -1, -2):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_LIGHT_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_LIGHT_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_LIGHT_PUNCH_COLUMNS))
+			) * CROUCHED_LIGHT_PUNCH_CELL_SIZE,
+			CROUCHED_LIGHT_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_punch", atlas_frame)
+
+
 func configure_light_punch_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"light_punch_single"):
@@ -1143,7 +1235,8 @@ func update_animation() -> void:
 func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
-		&"idle", &"light_punch_single", &"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
+		&"idle", &"light_punch_single", &"crouched_punch", &"crouched_punch_crouched",
+		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery"
 	]

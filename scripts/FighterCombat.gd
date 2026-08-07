@@ -19,6 +19,7 @@ const CROUCHED_LIGHT_HITBOX_POSITION := Vector2(75.0, -110.0)
 const STANDING_LIGHT_PUNCH_HITBOX_SIZE := Vector2(205.0, 35.0)
 const STANDING_LIGHT_PUNCH_HITBOX_POSITION := Vector2(52.5, -210.0)
 const STANDING_LIGHT_PUNCH_ACTIVE_FRAME := 11
+const CROUCHED_LIGHT_PUNCH_ACTIVE_FRAME := 10
 const STANDING_LIGHT_KICK_ACTIVE_FRAME := 14
 const STANDING_HEAVY_KICK_ACTIVE_FRAME := 24
 const STANDING_HEAVY_KICK_HITBOX_SIZE := Vector2(165.0, 45.0)
@@ -644,6 +645,8 @@ func configure_hitbox(attack: AttackData) -> void:
 
 
 func get_attack_phase_durations(attack: AttackData) -> Vector3:
+	if attack.attack_id == &"light_punch" and is_crouched_light_punch:
+		return Vector3(float(CROUCHED_LIGHT_PUNCH_ACTIVE_FRAME), 3.0, 5.0) / 48.0
 	if attack.attack_id == &"light_punch" and not is_crouched_light_punch:
 		return Vector3(float(STANDING_LIGHT_PUNCH_ACTIVE_FRAME), 3.0, 3.0) / 48.0
 	if attack.attack_id == &"medium_punch" and not is_crouched_medium_punch and not is_airborne_medium_punch:
