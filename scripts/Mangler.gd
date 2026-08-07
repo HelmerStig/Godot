@@ -179,6 +179,12 @@ const MEDIUM_PUNCH_TO_IDLE_SHEET := preload(
 const MEDIUM_PUNCH_TO_IDLE_FRAME_COUNT := 16
 const MEDIUM_PUNCH_COLUMNS := 4
 const MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const CROUCHED_MEDIUM_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/medium-kick/crouched_medium_punch.png"
+)
+const CROUCHED_MEDIUM_PUNCH_FRAME_COUNT := 25
+const CROUCHED_MEDIUM_PUNCH_COLUMNS := 5
+const CROUCHED_MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
 const LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/light-punch/light-punch.png"
 )
@@ -295,6 +301,8 @@ func _ready() -> void:
 	configure_jump_medium_kick_frames()
 	configure_jump_heavy_kick_frames()
 	configure_medium_punch_frames()
+	configure_crouched_medium_punch_frames()
+	configure_crouched_medium_punch_crouched_frames()
 	configure_jump_medium_punch_frames()
 	configure_jump_heavy_punch_frames()
 	input_buffer = FighterInputBuffer.new(player_number)
@@ -872,6 +880,70 @@ func configure_light_punch_frames() -> void:
 		frames.add_frame(&"light_punch_single", atlas_frame)
 
 
+func configure_crouched_medium_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"crouched_medium_punch"):
+		frames.remove_animation(&"crouched_medium_punch")
+	frames.add_animation(&"crouched_medium_punch")
+	frames.set_animation_speed(&"crouched_medium_punch", 48.0)
+	frames.set_animation_loop(&"crouched_medium_punch", false)
+	# Avanzata: sorgente 8-22 (hitbox al 19-22); rovesciata: 21-14.
+	for source_index in range(8, 23):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_MEDIUM_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_MEDIUM_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_MEDIUM_PUNCH_COLUMNS))
+			) * CROUCHED_MEDIUM_PUNCH_CELL_SIZE,
+			CROUCHED_MEDIUM_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_medium_punch", atlas_frame)
+	for source_index in range(21, 13, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_MEDIUM_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_MEDIUM_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_MEDIUM_PUNCH_COLUMNS))
+			) * CROUCHED_MEDIUM_PUNCH_CELL_SIZE,
+			CROUCHED_MEDIUM_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_medium_punch", atlas_frame)
+
+
+func configure_crouched_medium_punch_crouched_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"crouched_medium_punch_crouched"):
+		frames.remove_animation(&"crouched_medium_punch_crouched")
+	frames.add_animation(&"crouched_medium_punch_crouched")
+	frames.set_animation_speed(&"crouched_medium_punch_crouched", 48.0)
+	frames.set_animation_loop(&"crouched_medium_punch_crouched", false)
+	# Parte da sorgente 12 (già in carica); stessa rovesciata fino a 8.
+	for source_index in range(12, 23):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_MEDIUM_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_MEDIUM_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_MEDIUM_PUNCH_COLUMNS))
+			) * CROUCHED_MEDIUM_PUNCH_CELL_SIZE,
+			CROUCHED_MEDIUM_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_medium_punch_crouched", atlas_frame)
+	for source_index in range(21, 13, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_MEDIUM_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_MEDIUM_PUNCH_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_MEDIUM_PUNCH_COLUMNS))
+			) * CROUCHED_MEDIUM_PUNCH_CELL_SIZE,
+			CROUCHED_MEDIUM_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_medium_punch_crouched", atlas_frame)
+
+
 func configure_medium_punch_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"medium_open_hand_slap"):
@@ -1247,6 +1319,7 @@ func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
 		&"idle", &"light_punch_single", &"crouched_punch", &"crouched_punch_crouched",
+		&"crouched_medium_punch", &"crouched_medium_punch_crouched",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery"

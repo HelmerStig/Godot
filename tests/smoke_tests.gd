@@ -500,23 +500,23 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_punch")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_punch") == 16
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_punch") == 23
 		and player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_punch_crouched")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_punch_crouched") == 12,
-		"il medio basso usa 1-16 da posizione alta e 5-16 dal crouch"
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_punch_crouched") == 19,
+		"il medio basso usa frame 9-23 avanti, ritorno fino al 15 (23 frame)"
 	)
 	var crouched_medium_first := (
 		player1.animated_sprite.sprite_frames.get_frame_texture(&"crouched_medium_punch_crouched", 0)
 		as AtlasTexture
 	)
 	_expect(
-		crouched_medium_first.region.position == Vector2(0.0, 512.0)
+		crouched_medium_first.region.position == Vector2(1024.0, 1024.0)
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_medium_punch"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_medium_punch"),
-		"dal crouch il medio basso parte dal frame 5 ed entrambe le varianti sono non cicliche a 24 FPS"
+		"dal crouch il medio basso parte dal frame 13 del foglio, 48 FPS non ciclici"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_punch")
@@ -1674,10 +1674,10 @@ func _test_combat_flow() -> void:
 	)
 	var crouched_medium_phases := player1.combat.get_attack_phase_durations(medium_punch)
 	_expect(
-		is_equal_approx(crouched_medium_phases.x, 8.0 / 24.0)
-		and is_equal_approx(crouched_medium_phases.y, 3.0 / 24.0)
+		is_equal_approx(crouched_medium_phases.x, float(FighterCombat.CROUCHED_MEDIUM_PUNCH_ACTIVE_FRAME) / 48.0)
+		and is_equal_approx(crouched_medium_phases.y, 3.0 / 48.0)
 		and player1.combat.get_hit_reaction_start_frame(medium_punch) == 4,
-		"al frame 9 il medio basso diventa attivo e hurt-medium parte dal frame 5"
+		"la hitbox del medio basso diventa attiva al frame 23 (pos. anim. 14) e hurt-medium parte dal frame 5"
 	)
 	await create_timer(player1.get_animation_duration(&"crouched_medium_punch") + 0.05).timeout
 	player1.change_state(Mangler.State.CROUCHING)
