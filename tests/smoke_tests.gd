@@ -1632,19 +1632,19 @@ func _test_combat_flow() -> void:
 	)
 	var crouched_heavy_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
-		crouched_heavy_shape.size == Vector2(180.0, 170.0)
-		and player1.combat.hitbox_shape.position == Vector2(90.0, -155.0),
+		crouched_heavy_shape.size == Vector2(80.0, 435.0)
+		and player1.combat.hitbox_shape.position == Vector2(90.0, -255.0),
 		"il pugno potente abbassato ha una hitbox ridotta di 30 px"
 	)
 	_expect(
 		player1.combat.get_effective_hit_height(heavy_punch) == AttackData.HitHeight.LOW,
-		"il pugno potente abbassato provoca la reazione hurt_low"
+		"il pugno potente abbassato provoca la reazione hurt_high e lancia l'avversario"
 	)
 	var crouched_heavy_phases := player1.combat.get_attack_phase_durations(heavy_punch)
 	_expect(
 		is_equal_approx(crouched_heavy_phases.x, float(FighterCombat.CROUCHED_HEAVY_PUNCH_ACTIVE_FRAME) / 48.0)
 		and is_equal_approx(crouched_heavy_phases.y, 6.0 / 48.0),
-		"il pugno potente abbassato diventa attivo al frame 20 e salta al frame 10"
+		"il pugno potente abbassato diventa attivo al frame 9 (salto) e lancia l'avversario"
 	)
 	await create_timer(player1.get_animation_duration(&"crouched_power_punch") + 0.05).timeout
 	player1.change_state(Mangler.State.CROUCHING)

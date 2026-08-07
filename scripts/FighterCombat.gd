@@ -21,7 +21,7 @@ const STANDING_LIGHT_PUNCH_HITBOX_POSITION := Vector2(52.5, -210.0)
 const STANDING_LIGHT_PUNCH_ACTIVE_FRAME := 11
 const CROUCHED_LIGHT_PUNCH_ACTIVE_FRAME := 10
 const CROUCHED_MEDIUM_PUNCH_ACTIVE_FRAME := 11
-const CROUCHED_HEAVY_PUNCH_ACTIVE_FRAME := 19
+const CROUCHED_HEAVY_PUNCH_ACTIVE_FRAME := 8
 const STANDING_LIGHT_KICK_ACTIVE_FRAME := 14
 const STANDING_HEAVY_KICK_ACTIVE_FRAME := 24
 const STANDING_HEAVY_KICK_HITBOX_SIZE := Vector2(165.0, 45.0)
@@ -33,8 +33,10 @@ const STANDING_MEDIUM_PUNCH_HITBOX_POSITION := Vector2(92.5, -210.0)
 const STANDING_MEDIUM_PUNCH_ACTIVE_FRAME := 17
 const CROUCHED_MEDIUM_HITBOX_SIZE := Vector2(195.0, 40.0)
 const CROUCHED_MEDIUM_HITBOX_POSITION := Vector2(100.0, -108.0)
-const CROUCHED_HEAVY_HITBOX_SIZE := Vector2(180.0, 170.0)
-const CROUCHED_HEAVY_HITBOX_POSITION := Vector2(90.0, -155.0)
+const CROUCHED_HEAVY_HITBOX_SIZE := Vector2(80.0, 435.0)
+const CROUCHED_HEAVY_HITBOX_POSITION := Vector2(90.0, -255.0)
+const CROUCHED_HEAVY_LAUNCH_VERTICAL := 800.0
+const CROUCHED_HEAVY_LAUNCH_HORIZONTAL := 200.0
 const CROUCHED_HEAVY_KICK_HITBOX_SIZE := Vector2(190.0, 45.0)
 const CROUCHED_HEAVY_KICK_HITBOX_POSITION := Vector2(95.0, -42.0)
 const CROUCHED_MEDIUM_KICK_HITBOX_SIZE := Vector2(165.0, 40.0)
@@ -696,7 +698,7 @@ func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 	if attack.attack_id == &"medium_punch" and is_crouched_medium_punch:
 		return AttackData.HitHeight.MID
 	if attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
-		return AttackData.HitHeight.LOW
+		return AttackData.HitHeight.HIGH
 	if attack.attack_id == &"heavy_punch" and not is_airborne_heavy_punch:
 		return AttackData.HitHeight.MID
 	if attack.attack_id == &"heavy_kick" and not is_crouched_heavy_kick and not is_airborne_heavy_kick:
@@ -796,3 +798,8 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		0,
 		true
 	)
+	if current_attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
+		# Launch: l'avversario vola in alto 100px e indietro 50px.
+		var launch_dir := 1.0 if fighter.is_facing_right else -1.0
+		target.velocity.y = -CROUCHED_HEAVY_LAUNCH_VERTICAL
+		target.velocity.x = launch_dir * CROUCHED_HEAVY_LAUNCH_HORIZONTAL
