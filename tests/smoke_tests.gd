@@ -258,13 +258,30 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"light_kick")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_kick") == 16
-		and is_equal_approx(
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"light_kick") == 29,
+		"il light kick usa 15 frame in avanti (11-25) e 14 di ritorno, 48 FPS"
+	)
+	var light_kick_first := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_kick", 0)
+		as AtlasTexture
+	)
+	var light_kick_peak := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_kick", 14)
+		as AtlasTexture
+	)
+	_expect(
+		light_kick_first.atlas.resource_path.ends_with("light_kick.png")
+		and light_kick_first.region == Rect2(0.0, 1024.0, 512.0, 512.0)
+		and light_kick_peak.region == Rect2(2048.0, 2048.0, 512.0, 512.0),
+		"il light kick parte dal fotogramma 11 e raggiunge il picco al 25 (indice sorgente 24)"
+	)
+	_expect(
+		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"light_kick"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"light_kick"),
-		"il light kick in piedi usa tutti i 16 frame, non ciclici, a 24 FPS"
+		"il light kick in piedi usa 48 FPS non ciclici"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_light_kick")
@@ -1421,12 +1438,13 @@ func _test_combat_flow() -> void:
 	player1.combat.try_attack(&"light_kick")
 	_expect(
 		player1.animated_sprite.animation == &"light_kick"
-		and standing_light_kick.hit_height == AttackData.HitHeight.MID
-		and player1.combat.get_hit_reaction_start_frame(standing_light_kick) == 4
-		and is_equal_approx(standing_light_kick.startup, 6.0 / 24.0)
-		and is_equal_approx(standing_light_kick.active, 4.0 / 24.0)
-		and is_equal_approx(standing_light_kick.recovery, 6.0 / 24.0),
-		"il light kick in piedi sincronizza startup, hurt-medium e recupero sui 16 frame"
+		and player1.combat.get_effective_hit_height(standing_light_kick) == AttackData.HitHeight.LOW,
+		"il light kick in piedi avvia light_kick e provoca hurt_low"
+	)
+	var standing_lk_phases := player1.combat.get_attack_phase_durations(standing_light_kick)
+	_expect(
+		is_equal_approx(standing_lk_phases.x, float(FighterCombat.STANDING_LIGHT_KICK_ACTIVE_FRAME) / 48.0),
+		"la hitbox del light kick diventa attiva al picco (pos. animazione 14, sorgente 25)"
 	)
 	var standing_light_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(

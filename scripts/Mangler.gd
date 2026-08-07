@@ -185,6 +185,12 @@ const LIGHT_PUNCH_SHEET := preload(
 const LIGHT_PUNCH_FRAME_COUNT := 18
 const LIGHT_PUNCH_COLUMNS := 5
 const LIGHT_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const LIGHT_KICK_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/light-kick/light_kick.png"
+)
+const LIGHT_KICK_FRAME_COUNT := 25
+const LIGHT_KICK_COLUMNS := 5
+const LIGHT_KICK_CELL_SIZE := Vector2(512.0, 512.0)
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -262,6 +268,7 @@ func _ready() -> void:
 	configure_crouched_heavy_kick_frames()
 	configure_crouched_medium_kick_frames()
 	configure_crouched_light_kick_frames()
+	configure_standing_light_kick_frames()
 	configure_jump_light_kick_frames()
 	configure_jump_medium_kick_frames()
 	configure_jump_heavy_kick_frames()
@@ -561,6 +568,38 @@ func configure_crouched_medium_kick_frames() -> void:
 			CROUCHED_MEDIUM_KICK_CELL_SIZE
 		)
 		frames.add_frame(&"crouched_medium_kick", atlas_frame)
+
+
+func configure_standing_light_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"light_kick"):
+		frames.remove_animation(&"light_kick")
+	frames.add_animation(&"light_kick")
+	frames.set_animation_speed(&"light_kick", 48.0)
+	frames.set_animation_loop(&"light_kick", false)
+	# Avanzata: fotogrammi 10-24 (startup + impatto al 24); rovesciata: 23-10 (recovery).
+	for source_index in range(10, LIGHT_KICK_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = LIGHT_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % LIGHT_KICK_COLUMNS),
+				float(floori(float(source_index) / LIGHT_KICK_COLUMNS))
+			) * LIGHT_KICK_CELL_SIZE,
+			LIGHT_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"light_kick", atlas_frame)
+	for source_index in range(LIGHT_KICK_FRAME_COUNT - 2, 9, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = LIGHT_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % LIGHT_KICK_COLUMNS),
+				float(floori(float(source_index) / LIGHT_KICK_COLUMNS))
+			) * LIGHT_KICK_CELL_SIZE,
+			LIGHT_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"light_kick", atlas_frame)
 
 
 func configure_crouched_light_kick_frames() -> void:
@@ -1026,7 +1065,7 @@ func update_animation() -> void:
 func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
-		&"idle", &"light_punch_single", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
+		&"idle", &"light_punch_single", &"light_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery"
 	]

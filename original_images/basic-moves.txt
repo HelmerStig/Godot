@@ -20,7 +20,7 @@ knockdown <--ok
 hurted_air <--
 
 
-light-punch
+light-punch <--ok
 medium-punch <--ok
 strong-punch <--ok
 light-kick
