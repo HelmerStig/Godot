@@ -1538,6 +1538,7 @@ func get_attack_motion_profile(animation_name: StringName) -> Dictionary:
 		&"medium_open_hand_slap",
 		&"crouched_medium_punch",
 		&"crouched_medium_punch_crouched",
+		&"light_kick",
 		&"medium_kick",
 		&"crouched_medium_kick",
 	]:
@@ -1555,7 +1556,6 @@ func get_attack_motion_profile(animation_name: StringName) -> Dictionary:
 		&"light_punch_double",
 		&"crouched_punch",
 		&"crouched_punch_crouched",
-		&"light_kick",
 		&"crouched_light_kick",
 	]:
 		return {
