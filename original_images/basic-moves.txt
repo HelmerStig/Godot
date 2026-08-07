@@ -23,9 +23,9 @@ hurted_air <--
 light-punch <--ok
 medium-punch <--ok
 strong-punch <--ok
-light-kick
+light-kick <--ok
 medium-kick
-strong-kick
+strong-kick <--ok
 
 crouched-light-punch
 crouched-medium-punch

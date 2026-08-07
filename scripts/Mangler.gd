@@ -191,6 +191,18 @@ const LIGHT_KICK_SHEET := preload(
 const LIGHT_KICK_FRAME_COUNT := 25
 const LIGHT_KICK_COLUMNS := 5
 const LIGHT_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const STRONG_KICK_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/strong-kick/strong-kick.png"
+)
+const STRONG_KICK_FRAME_COUNT := 49
+const STRONG_KICK_COLUMNS := 7
+const STRONG_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const MEDIUM_KICK_STANDING_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/medium-kick/medium_kick.png"
+)
+const MEDIUM_KICK_STANDING_FRAME_COUNT := 42
+const MEDIUM_KICK_STANDING_COLUMNS := 6
+const MEDIUM_KICK_STANDING_CELL_SIZE := Vector2(512.0, 512.0)
 const SWEEP_PUSHBACK_SPEED := 240.0
 const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
 const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
@@ -266,7 +278,9 @@ func _ready() -> void:
 	configure_block_mid_frames()
 	configure_block_low_frames()
 	configure_crouched_heavy_kick_frames()
+	configure_standing_heavy_kick_frames()
 	configure_crouched_medium_kick_frames()
+	configure_standing_medium_kick_frames()
 	configure_crouched_light_kick_frames()
 	configure_standing_light_kick_frames()
 	configure_jump_light_kick_frames()
@@ -527,6 +541,38 @@ func configure_block_low_frames() -> void:
 		frames.add_frame(&"block_low_recovery", atlas_frame)
 
 
+func configure_standing_heavy_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"heavy_kick"):
+		frames.remove_animation(&"heavy_kick")
+	frames.add_animation(&"heavy_kick")
+	frames.set_animation_speed(&"heavy_kick", 48.0)
+	frames.set_animation_loop(&"heavy_kick", false)
+	# Avanzata: fotogrammi 21-48 (hitbox al 24); rovesciata: 47-21 (recovery).
+	for source_index in range(21, STRONG_KICK_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = STRONG_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % STRONG_KICK_COLUMNS),
+				float(floori(float(source_index) / STRONG_KICK_COLUMNS))
+			) * STRONG_KICK_CELL_SIZE,
+			STRONG_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"heavy_kick", atlas_frame)
+	for source_index in range(STRONG_KICK_FRAME_COUNT - 2, 20, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = STRONG_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % STRONG_KICK_COLUMNS),
+				float(floori(float(source_index) / STRONG_KICK_COLUMNS))
+			) * STRONG_KICK_CELL_SIZE,
+			STRONG_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"heavy_kick", atlas_frame)
+
+
 func configure_crouched_heavy_kick_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"crouched_heavy_kick"):
@@ -548,6 +594,38 @@ func configure_crouched_heavy_kick_frames() -> void:
 			CROUCHED_HEAVY_KICK_CELL_SIZE
 		)
 		frames.add_frame(&"crouched_heavy_kick", atlas_frame)
+
+
+func configure_standing_medium_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"medium_kick"):
+		frames.remove_animation(&"medium_kick")
+	frames.add_animation(&"medium_kick")
+	frames.set_animation_speed(&"medium_kick", 48.0)
+	frames.set_animation_loop(&"medium_kick", false)
+	# Avanzata: fotogrammi 14-41 (hitbox ai pos. 26-27); rovesciata: 40-14 (recovery).
+	for source_index in range(14, MEDIUM_KICK_STANDING_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = MEDIUM_KICK_STANDING_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % MEDIUM_KICK_STANDING_COLUMNS),
+				float(floori(float(source_index) / MEDIUM_KICK_STANDING_COLUMNS))
+			) * MEDIUM_KICK_STANDING_CELL_SIZE,
+			MEDIUM_KICK_STANDING_CELL_SIZE
+		)
+		frames.add_frame(&"medium_kick", atlas_frame)
+	for source_index in range(MEDIUM_KICK_STANDING_FRAME_COUNT - 2, 13, -1):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = MEDIUM_KICK_STANDING_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % MEDIUM_KICK_STANDING_COLUMNS),
+				float(floori(float(source_index) / MEDIUM_KICK_STANDING_COLUMNS))
+			) * MEDIUM_KICK_STANDING_CELL_SIZE,
+			MEDIUM_KICK_STANDING_CELL_SIZE
+		)
+		frames.add_frame(&"medium_kick", atlas_frame)
 
 
 func configure_crouched_medium_kick_frames() -> void:
@@ -1065,7 +1143,7 @@ func update_animation() -> void:
 func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
-		&"idle", &"light_punch_single", &"light_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
+		&"idle", &"light_punch_single", &"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery"
 	]
@@ -1652,7 +1730,7 @@ func _on_animation_frame_changed() -> void:
 	emit_attack_motion_effect()
 	if (
 		animated_sprite.animation == &"medium_kick"
-		and animated_sprite.frame >= 7
+		and animated_sprite.frame >= 28
 		and current_state == State.ATTACKING
 	):
 		combat.perform_medium_kick_followup()

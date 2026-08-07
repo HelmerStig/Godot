@@ -417,23 +417,40 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"medium_kick")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_kick") == 12
-		and is_equal_approx(
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_kick") == 55,
+		"il medium kick usa 28 frame avanti (15-42) e 27 di ritorno, 24 FPS"
+	)
+	var mk_first := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"medium_kick", 0)
+		as AtlasTexture
+	)
+	var mk_peak := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"medium_kick", 26)
+		as AtlasTexture
+	)
+	_expect(
+		mk_first.atlas.resource_path.ends_with("medium_kick.png")
+		and mk_first.region == Rect2(1024.0, 1024.0, 512.0, 512.0)
+		and mk_peak.region == Rect2(2048.0, 3072.0, 512.0, 512.0),
+		"il medium kick parte dal fotogramma 15 e raggiunge il picco al 41 (indice sorgente 40)"
+	)
+	_expect(
+		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"medium_kick"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"medium_kick"),
-		"il medium kick usa soltanto i primi 12 frame, non ciclici, a 24 FPS"
+		"il medium kick usa 48 FPS non ciclici"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"heavy_kick")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_kick") == 16
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"heavy_kick") == 55
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"heavy_kick"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"heavy_kick"),
-		"il nuovo heavy kick usa tutti i 16 frame, non ciclici, a 24 FPS"
+		"lo strong kick usa 28 frame avanti (22-49) e 27 di ritorno, 48 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_heavy_kick")
@@ -1481,16 +1498,18 @@ func _test_combat_flow() -> void:
 	var standing_medium_kick := player1.character_data.get_attack(&"medium_kick")
 	player1.combat.try_attack(&"medium_kick")
 	_expect(
-		player1.animated_sprite.animation == &"medium_kick"
-		and is_zero_approx(standing_medium_kick.startup)
-		and is_equal_approx(standing_medium_kick.active, 8.0 / 24.0)
-		and is_equal_approx(standing_medium_kick.recovery, 4.0 / 24.0),
-		"il medium kick sincronizza i due impatti sui fotogrammi 1 e 8"
+		player1.animated_sprite.animation == &"medium_kick",
+		"il medium kick avvia l'animazione standing"
+	)
+	var standing_mk_phases := player1.combat.get_attack_phase_durations(standing_medium_kick)
+	_expect(
+		is_equal_approx(standing_mk_phases.x, float(FighterCombat.STANDING_MEDIUM_KICK_ACTIVE_FRAME) / 24.0),
+		"la hitbox del medium kick diventa attiva al frame 41 (pos. anim. 26)"
 	)
 	var standing_medium_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
 		standing_medium_kick_shape.size == Vector2(165.0, 45.0)
-		and player1.combat.hitbox_shape.position == Vector2(97.5, -65.0),
+		and player1.combat.hitbox_shape.position == Vector2(97.5, -165.0),
 		"il medium kick usa la hitbox estesa verso l'avversario"
 	)
 	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
@@ -1498,17 +1517,18 @@ func _test_combat_flow() -> void:
 		player2.combat.current_health == 94
 		and player2.animated_sprite.animation == &"hurt_high"
 		and player2.animated_sprite.frame == 0,
-		"il primo impatto del medium kick infligge 6 danni e avvia hurt-high dal frame 1"
+		"il primo impatto del medium kick infligge 6 danni e avvia hurt-high"
 	)
-	player1.animated_sprite.frame = 7
+	player1.animated_sprite.frame = 28
+	player1._on_animation_frame_changed()
 	_expect(
 		player2.combat.current_health == 88
 		and player2.animated_sprite.animation == &"hurt_mid"
 		and player2.animated_sprite.frame == 4,
-		"al fotogramma 8 il secondo impatto infligge 6 danni e avvia hurt-medium"
+		"alla posizione inversa il secondo impatto infligge 6 danni e avvia hurt-medium"
 	)
 	await create_timer(player1.get_animation_duration(&"medium_kick") + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "il medium kick torna in idle dopo il fotogramma 12")
+	_expect(player1.current_state == Mangler.State.IDLE, "il medium kick completa l'intera animazione")
 	player2.combat.reset()
 
 	player1.combat.try_attack(&"medium_kick", FighterInputBuffer.Direction.DOWN)
@@ -1538,24 +1558,29 @@ func _test_combat_flow() -> void:
 	player1.combat.try_attack(&"heavy_kick")
 	_expect(
 		player1.animated_sprite.animation == &"heavy_kick"
-		and not standing_heavy_kick.causes_knockdown
-		and standing_heavy_kick.hit_height == AttackData.HitHeight.MID
-		and player1.combat.get_hit_reaction_start_frame(standing_heavy_kick) == 4
-		and is_equal_approx(standing_heavy_kick.startup, 8.0 / 24.0)
-		and is_equal_approx(standing_heavy_kick.active, 2.0 / 24.0)
-		and is_equal_approx(standing_heavy_kick.recovery, 6.0 / 24.0),
-		"il nuovo heavy kick colpisce sui fotogrammi 9-10 con hurt-medium"
+		and player1.combat.get_effective_hit_height(standing_heavy_kick) == AttackData.HitHeight.HIGH,
+		"lo strong kick in piedi avvia heavy_kick e provoca hurt_high"
+	)
+	var standing_hk_phases := player1.combat.get_attack_phase_durations(standing_heavy_kick)
+	_expect(
+		is_equal_approx(standing_hk_phases.x, float(FighterCombat.STANDING_HEAVY_KICK_ACTIVE_FRAME) / 48.0),
+		"la hitbox dello strong kick diventa attiva al frame 46 (pos. anim. 24, parte dal frame 22)"
+	)
+	var standing_hk_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		standing_hk_shape.size == FighterCombat.STANDING_HEAVY_KICK_HITBOX_SIZE
+		and player1.combat.hitbox_shape.position == FighterCombat.STANDING_HEAVY_KICK_HITBOX_POSITION,
+		"lo strong kick usa hitbox 165 px"
 	)
 	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
 	_expect(
 		player2.combat.current_health == 80
 		and player2.current_state == Mangler.State.HIT
-		and player2.animated_sprite.animation == &"hurt_mid"
-		and player2.animated_sprite.frame == 4,
-		"l'heavy kick infligge 20 danni e avvia hurt-medium dal fotogramma 5"
+		and player2.animated_sprite.animation == &"hurt_high",
+		"lo strong kick infligge 20 danni e avvia hurt_high"
 	)
 	await create_timer(player1.get_animation_duration(&"heavy_kick") + 0.05).timeout
-	_expect(player1.current_state == Mangler.State.IDLE, "il nuovo heavy kick completa tutti i 16 frame")
+	_expect(player1.current_state == Mangler.State.IDLE, "lo strong kick completa l'animazione")
 	player2.combat.reset()
 
 	player1.combat.try_attack(&"heavy_kick", FighterInputBuffer.Direction.DOWN)

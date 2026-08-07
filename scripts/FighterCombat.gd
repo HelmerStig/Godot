@@ -20,6 +20,11 @@ const STANDING_LIGHT_PUNCH_HITBOX_SIZE := Vector2(205.0, 35.0)
 const STANDING_LIGHT_PUNCH_HITBOX_POSITION := Vector2(52.5, -210.0)
 const STANDING_LIGHT_PUNCH_ACTIVE_FRAME := 11
 const STANDING_LIGHT_KICK_ACTIVE_FRAME := 14
+const STANDING_HEAVY_KICK_ACTIVE_FRAME := 24
+const STANDING_HEAVY_KICK_HITBOX_SIZE := Vector2(165.0, 45.0)
+const STANDING_HEAVY_KICK_HITBOX_POSITION := Vector2(97.5, -65.0)
+const STANDING_MEDIUM_KICK_ACTIVE_FRAME := 26
+const STANDING_MEDIUM_KICK_HITBOX_POSITION := Vector2(97.5, -165.0)
 const STANDING_MEDIUM_PUNCH_HITBOX_SIZE := Vector2(185.0, 35.0)
 const STANDING_MEDIUM_PUNCH_HITBOX_POSITION := Vector2(92.5, -210.0)
 const STANDING_MEDIUM_PUNCH_ACTIVE_FRAME := 17
@@ -625,9 +630,14 @@ func configure_hitbox(attack: AttackData) -> void:
 		elif is_airborne_heavy_kick:
 			attack_shape.size = JUMP_HEAVY_KICK_HITBOX_SIZE
 			hitbox_shape.position = JUMP_HEAVY_KICK_HITBOX_POSITION
+		elif attack.attack_id == &"heavy_kick":
+			attack_shape.size = STANDING_HEAVY_KICK_HITBOX_SIZE
+			hitbox_shape.position = STANDING_HEAVY_KICK_HITBOX_POSITION
 		elif is_airborne_medium_kick:
 			attack_shape.size = JUMP_MEDIUM_KICK_HITBOX_SIZE
 			hitbox_shape.position = JUMP_MEDIUM_KICK_HITBOX_POSITION
+		elif attack.attack_id == &"medium_kick":
+			hitbox_shape.position = STANDING_MEDIUM_KICK_HITBOX_POSITION
 		elif attack.attack_id == &"heavy_punch" and not is_airborne_heavy_punch:
 			attack_shape.size = STANDING_HEAVY_PUNCH_HITBOX_SIZE
 			hitbox_shape.position = STANDING_HEAVY_PUNCH_HITBOX_POSITION
@@ -644,8 +654,12 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 		return Vector3(startup_frames, 3.0, 5.0) / ATTACK_ANIMATION_FPS
 	if attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
 		return Vector3(9.0, 2.0, 5.0) / ATTACK_ANIMATION_FPS
+	if attack.attack_id == &"heavy_kick" and not is_crouched_heavy_kick and not is_airborne_heavy_kick:
+		return Vector3(float(STANDING_HEAVY_KICK_ACTIVE_FRAME), 4.0, 5.0) / 48.0
 	if attack.attack_id == &"heavy_kick" and is_crouched_heavy_kick:
 		return Vector3(3.0, 2.0, 12.0) / ATTACK_ANIMATION_FPS
+	if attack.attack_id == &"medium_kick" and not is_crouched_medium_kick and not is_airborne_medium_kick:
+		return Vector3(float(STANDING_MEDIUM_KICK_ACTIVE_FRAME), 2.0, 5.0) / 48.0
 	if attack.attack_id == &"medium_kick" and is_crouched_medium_kick:
 		return Vector3(5.0, 3.0, 8.0) / ATTACK_ANIMATION_FPS
 	if attack.attack_id == &"light_kick" and is_crouched_light_kick:
@@ -680,10 +694,14 @@ func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 		return AttackData.HitHeight.LOW
 	if attack.attack_id == &"heavy_punch" and not is_airborne_heavy_punch:
 		return AttackData.HitHeight.MID
+	if attack.attack_id == &"heavy_kick" and not is_crouched_heavy_kick and not is_airborne_heavy_kick:
+		return AttackData.HitHeight.HIGH
 	if attack.attack_id == &"heavy_kick" and is_crouched_heavy_kick:
 		return AttackData.HitHeight.LOW
 	if attack.attack_id == &"medium_kick" and is_crouched_medium_kick:
 		return AttackData.HitHeight.MID
+	if attack.attack_id == &"light_kick" and not is_crouched_light_kick and not is_airborne_light_kick:
+		return AttackData.HitHeight.LOW
 	if attack.attack_id == &"light_kick" and is_crouched_light_kick:
 		return AttackData.HitHeight.MID
 	if attack.attack_id == &"light_kick" and is_airborne_light_kick:
