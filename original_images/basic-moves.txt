@@ -30,7 +30,7 @@ strong-kick <--ok
 crouched-light-punch <--ok
 crouched-medium-punch <--ok
 crouched-strong-punch <--ok
-crouched-light-kick
+crouched-light-kick <--ok
 crouched-medium-kick
 crouched-strong-kick
 

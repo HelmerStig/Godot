@@ -39,8 +39,8 @@ const CROUCHED_HEAVY_LAUNCH_VERTICAL := 800.0
 const CROUCHED_HEAVY_LAUNCH_HORIZONTAL := 200.0
 const CROUCHED_HEAVY_KICK_HITBOX_SIZE := Vector2(190.0, 45.0)
 const CROUCHED_HEAVY_KICK_HITBOX_POSITION := Vector2(95.0, -42.0)
-const CROUCHED_MEDIUM_KICK_HITBOX_SIZE := Vector2(165.0, 40.0)
-const CROUCHED_MEDIUM_KICK_HITBOX_POSITION := Vector2(85.0, -48.0)
+const CROUCHED_MEDIUM_KICK_HITBOX_SIZE := Vector2(195.0, 40.0)
+const CROUCHED_MEDIUM_KICK_HITBOX_POSITION := Vector2(100.0, -48.0)
 const CROUCHED_LIGHT_KICK_HITBOX_SIZE := Vector2(150.0, 35.0)
 const CROUCHED_LIGHT_KICK_HITBOX_POSITION := Vector2(75.0, -45.0)
 const JUMP_LIGHT_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
@@ -668,7 +668,7 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 	if attack.attack_id == &"medium_kick" and not is_crouched_medium_kick and not is_airborne_medium_kick:
 		return Vector3(float(STANDING_MEDIUM_KICK_ACTIVE_FRAME), 2.0, 5.0) / 48.0
 	if attack.attack_id == &"medium_kick" and is_crouched_medium_kick:
-		return Vector3(5.0, 3.0, 8.0) / ATTACK_ANIMATION_FPS
+		return Vector3(22.0, 3.0, 24.0) / 48.0
 	if attack.attack_id == &"light_kick" and is_crouched_light_kick:
 		return Vector3(13.0, 3.0, 15.0) / 48.0
 	if attack.attack_id == &"light_kick" and is_airborne_light_kick:
@@ -762,6 +762,8 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	if target == null or target == fighter or hit_targets.has(target) or current_attack == null:
 		return
 	hit_targets.append(target)
+	if current_attack.attack_id == &"light_punch" and not is_crouched_light_punch:
+		fighter.spawn_hit_effect(target.global_position + Vector2(0.0, -220.0), fighter.is_facing_right)
 	var effective_hit_height := get_effective_hit_height(current_attack)
 	if (
 		current_attack.attack_id == &"light_punch"

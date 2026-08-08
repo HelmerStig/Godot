@@ -126,10 +126,10 @@ const ATTACK_EFFECT_ANIMATIONS := [
 	&"jump_heavy_kick",
 ]
 const CROUCHED_MEDIUM_KICK_SHEET := preload(
-	"res://assets/sprites/characters/mangler/medium-kick-low.png"
+	"res://assets/sprites/characters/mangler/basic-moves/medium-kick/crouched_medium_kick.png"
 )
-const CROUCHED_MEDIUM_KICK_FRAME_COUNT := 16
-const CROUCHED_MEDIUM_KICK_COLUMNS := 4
+const CROUCHED_MEDIUM_KICK_FRAME_COUNT := 25
+const CROUCHED_MEDIUM_KICK_COLUMNS := 5
 const CROUCHED_MEDIUM_KICK_CELL_SIZE := Vector2(512.0, 512.0)
 const CROUCHED_LIGHT_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/light-kick/crouched_light_kick.png"
@@ -691,9 +691,21 @@ func configure_crouched_medium_kick_frames() -> void:
 	if frames.has_animation(&"crouched_medium_kick"):
 		frames.remove_animation(&"crouched_medium_kick")
 	frames.add_animation(&"crouched_medium_kick")
-	frames.set_animation_speed(&"crouched_medium_kick", 24.0)
+	frames.set_animation_speed(&"crouched_medium_kick", 48.0)
 	frames.set_animation_loop(&"crouched_medium_kick", false)
-	for source_index in range(CROUCHED_MEDIUM_KICK_FRAME_COUNT):
+	# Avanzata: fotogrammi 0-24; hitbox attivo a 22-24; recovery: 23-0.
+	for source_index in range(0, 25):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = CROUCHED_MEDIUM_KICK_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % CROUCHED_MEDIUM_KICK_COLUMNS),
+				float(floori(float(source_index) / CROUCHED_MEDIUM_KICK_COLUMNS))
+			) * CROUCHED_MEDIUM_KICK_CELL_SIZE,
+			CROUCHED_MEDIUM_KICK_CELL_SIZE
+		)
+		frames.add_frame(&"crouched_medium_kick", atlas_frame)
+	for source_index in range(23, -1, -1):
 		var atlas_frame := AtlasTexture.new()
 		atlas_frame.atlas = CROUCHED_MEDIUM_KICK_SHEET
 		atlas_frame.region = Rect2(
@@ -1377,7 +1389,7 @@ func update_sprite_scale() -> void:
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
-		&"block_low_crouched", &"block_low_recovery", &"crouched_light_kick"
+		&"block_low_crouched", &"block_low_recovery", &"crouched_light_kick", &"crouched_medium_kick"
 	]
 	animated_sprite.scale = REWORK_SPRITE_SCALE if uses_reworked_art else LEGACY_SPRITE_SCALE
 	animated_sprite.position = (
@@ -1631,6 +1643,8 @@ func update_collision_profile() -> void:
 
 
 func get_crouch_progress() -> float:
+	if animated_sprite.animation.begins_with("crouched_"):
+		return 1.0
 	if current_state not in [State.CROUCHING, State.STANDING_UP]:
 		return 0.0
 	if animated_sprite.animation != &"crouch":
@@ -1794,6 +1808,7 @@ func _on_combat_attack_started(attack_name: StringName) -> void:
 	elif attack_name == &"heavy_kick" and animated_sprite.sprite_frames.has_animation(&"heavy_kick"):
 		animated_sprite.play(&"heavy_kick")
 	attack_started.emit(attack_name)
+	update_collision_profile()
 
 
 func _on_combat_attack_finished() -> void:
@@ -1959,6 +1974,28 @@ func spawn_attack_motion_afterimage(profile: Dictionary) -> void:
 
 func spawn_sweep_motion_afterimage() -> void:
 	spawn_attack_motion_afterimage(get_attack_motion_profile(&"crouched_heavy_kick"))
+
+
+func spawn_hit_effect(world_position: Vector2, facing_right: bool = true) -> void:
+	var particles := CPUParticles2D.new()
+	particles.z_index = z_index + 2
+	particles.one_shot = true
+	particles.explosiveness = 1.0
+	particles.amount = 28
+	particles.lifetime = 0.45
+	particles.spread = 75.0
+	# vola nel verso opposto al pugno, verso il basso
+	particles.direction = Vector2(-1.0 if facing_right else 1.0, 0.6).normalized()
+	particles.initial_velocity_min = 120.0
+	particles.initial_velocity_max = 420.0
+	particles.gravity = Vector2(0.0, 650.0)
+	particles.scale_amount_min = 1.0
+	particles.scale_amount_max = 2.5
+	particles.color = Color(0.75, 0.0, 0.04)
+	get_tree().root.add_child(particles)
+	particles.global_position = world_position
+	particles.emitting = true
+	get_tree().create_timer(particles.lifetime + 0.1).timeout.connect(particles.queue_free)
 
 
 func clear_attack_afterimages() -> void:
