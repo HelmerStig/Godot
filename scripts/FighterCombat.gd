@@ -41,8 +41,8 @@ const CROUCHED_HEAVY_KICK_HITBOX_SIZE := Vector2(190.0, 45.0)
 const CROUCHED_HEAVY_KICK_HITBOX_POSITION := Vector2(95.0, -42.0)
 const CROUCHED_MEDIUM_KICK_HITBOX_SIZE := Vector2(195.0, 40.0)
 const CROUCHED_MEDIUM_KICK_HITBOX_POSITION := Vector2(100.0, -48.0)
-const CROUCHED_LIGHT_KICK_HITBOX_SIZE := Vector2(150.0, 35.0)
-const CROUCHED_LIGHT_KICK_HITBOX_POSITION := Vector2(75.0, -45.0)
+const CROUCHED_LIGHT_KICK_HITBOX_SIZE := Vector2(190.0, 35.0)
+const CROUCHED_LIGHT_KICK_HITBOX_POSITION := Vector2(95.0, -45.0)
 const JUMP_LIGHT_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
 const JUMP_LIGHT_KICK_HITBOX_POSITION := Vector2(85.0, -105.0)
 const JUMP_HEAVY_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
@@ -664,7 +664,7 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 	if attack.attack_id == &"heavy_kick" and not is_crouched_heavy_kick and not is_airborne_heavy_kick:
 		return Vector3(float(STANDING_HEAVY_KICK_ACTIVE_FRAME), 4.0, 5.0) / 48.0
 	if attack.attack_id == &"heavy_kick" and is_crouched_heavy_kick:
-		return Vector3(3.0, 2.0, 12.0) / ATTACK_ANIMATION_FPS
+		return Vector3(22.0, 7.0, 20.0) / 48.0
 	if attack.attack_id == &"medium_kick" and not is_crouched_medium_kick and not is_airborne_medium_kick:
 		return Vector3(float(STANDING_MEDIUM_KICK_ACTIVE_FRAME), 2.0, 5.0) / 48.0
 	if attack.attack_id == &"medium_kick" and is_crouched_medium_kick:

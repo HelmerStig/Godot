@@ -93,12 +93,17 @@ const BLOCK_LOW_FRAME_COUNT := 11
 const BLOCK_LOW_COLUMNS := 5
 const BLOCK_LOW_CELL_SIZE := Vector2(512.0, 512.0)
 const CROUCHED_HEAVY_KICK_SHEET := preload(
-	"res://assets/sprites/characters/mangler/test-spazzata.png"
+	"res://assets/sprites/characters/mangler/basic-moves/strong-kick/strong_crouched_kick_hit.png"
 )
-const CROUCHED_HEAVY_KICK_SOURCE_START := 31 # Indice zero-based: fotogramma 32.
-const CROUCHED_HEAVY_KICK_SOURCE_END := 47 # Indice zero-based: fotogramma 48.
-const CROUCHED_HEAVY_KICK_COLUMNS := 8
+const CROUCHED_HEAVY_KICK_FRAME_COUNT := 49
+const CROUCHED_HEAVY_KICK_COLUMNS := 7
 const CROUCHED_HEAVY_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const SWEEP_KNOCKDOWN_SHEET := preload(
+	"res://assets/sprites/characters/mangler/09-sweep-knockdown.png"
+)
+const SWEEP_KNOCKDOWN_FRAME_COUNT := 49
+const SWEEP_KNOCKDOWN_COLUMNS := 7
+const SWEEP_KNOCKDOWN_CELL_SIZE := Vector2(512.0, 512.0)
 const SWEEP_AFTERIMAGE_START_FRAME := 2
 const SWEEP_AFTERIMAGE_END_FRAME := 10
 const SWEEP_AFTERIMAGE_LIFETIME := 0.14
@@ -302,6 +307,7 @@ func _ready() -> void:
 	configure_block_mid_frames()
 	configure_block_low_frames()
 	configure_crouched_heavy_kick_frames()
+	configure_sweep_knockdown_frames()
 	configure_standing_heavy_kick_frames()
 	configure_crouched_medium_kick_frames()
 	configure_standing_medium_kick_frames()
@@ -636,12 +642,10 @@ func configure_crouched_heavy_kick_frames() -> void:
 	if frames.has_animation(&"crouched_heavy_kick"):
 		frames.remove_animation(&"crouched_heavy_kick")
 	frames.add_animation(&"crouched_heavy_kick")
-	frames.set_animation_speed(&"crouched_heavy_kick", 24.0)
+	frames.set_animation_speed(&"crouched_heavy_kick", 48.0)
 	frames.set_animation_loop(&"crouched_heavy_kick", false)
-	for source_index in range(
-		CROUCHED_HEAVY_KICK_SOURCE_START,
-		CROUCHED_HEAVY_KICK_SOURCE_END + 1
-	):
+	# Tutti i fotogrammi 0-48; hitbox attivo circa a frame 30.
+	for source_index in range(0, CROUCHED_HEAVY_KICK_FRAME_COUNT):
 		var atlas_frame := AtlasTexture.new()
 		atlas_frame.atlas = CROUCHED_HEAVY_KICK_SHEET
 		atlas_frame.region = Rect2(
@@ -652,6 +656,26 @@ func configure_crouched_heavy_kick_frames() -> void:
 			CROUCHED_HEAVY_KICK_CELL_SIZE
 		)
 		frames.add_frame(&"crouched_heavy_kick", atlas_frame)
+
+
+func configure_sweep_knockdown_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"sweep_knockdown"):
+		frames.remove_animation(&"sweep_knockdown")
+	frames.add_animation(&"sweep_knockdown")
+	frames.set_animation_speed(&"sweep_knockdown", 48.0)
+	frames.set_animation_loop(&"sweep_knockdown", false)
+	for source_index in range(0, SWEEP_KNOCKDOWN_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = SWEEP_KNOCKDOWN_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % SWEEP_KNOCKDOWN_COLUMNS),
+				float(floori(float(source_index) / SWEEP_KNOCKDOWN_COLUMNS))
+			) * SWEEP_KNOCKDOWN_CELL_SIZE,
+			SWEEP_KNOCKDOWN_CELL_SIZE
+		)
+		frames.add_frame(&"sweep_knockdown", atlas_frame)
 
 
 func configure_standing_medium_kick_frames() -> void:
@@ -1389,7 +1413,8 @@ func update_sprite_scale() -> void:
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
-		&"block_low_crouched", &"block_low_recovery", &"crouched_light_kick", &"crouched_medium_kick"
+		&"block_low_crouched", &"block_low_recovery", &"crouched_light_kick", &"crouched_medium_kick",
+		&"crouched_heavy_kick"
 	]
 	animated_sprite.scale = REWORK_SPRITE_SCALE if uses_reworked_art else LEGACY_SPRITE_SCALE
 	animated_sprite.position = (
