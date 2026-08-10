@@ -1634,6 +1634,7 @@ func _test_combat_flow() -> void:
 	player1.input_buffer.record_input_snapshot(
 		1, 0, [&"light_punch"], player1.is_facing_right
 	)
+	var sonic_motion_effect_count := player1.attack_afterimage_spawn_count
 	player1.handle_input()
 	_expect(
 		player1.combat.is_special_sonic_boom
@@ -1654,6 +1655,10 @@ func _test_combat_flow() -> void:
 		and sonic_effect.get_child(0).get_node_or_null("GatheringParticles") != null,
 		"dal fotogramma 14 il Sonic Boom crea aloni e particelle sulle due braccia"
 	)
+	_expect(
+		player1.attack_afterimage_spawn_count > sonic_motion_effect_count,
+		"il lancio Sonic Boom usa una scia di movimento giallo-dorata accentuata"
+	)
 	var sonic_first_arm_position := (sonic_effect.get_child(0) as Node2D).position
 	await create_timer(0.18).timeout
 	_expect(
@@ -1672,9 +1677,22 @@ func _test_combat_flow() -> void:
 		sonic_projectile != null
 		and projectile_sprite != null
 		and projectile_sprite.sprite_frames.get_frame_count(&"fly") == 25
-		and is_equal_approx(projectile_sprite.sprite_frames.get_animation_speed(&"fly"), 24.0)
+		and is_equal_approx(projectile_sprite.sprite_frames.get_animation_speed(&"fly"), 48.0)
+		and is_equal_approx(float(sonic_projectile.get("movement_speed")), 520.0)
 		and (sonic_projectile.get_node("Trail") as CPUParticles2D).emitting,
-		"dal frame 23 partono i piatti a 24 FPS con scia gialla e scintille"
+		"il pugno leggero lancia i piatti a 520 px/s, 48 FPS e con una scia gialla accentuata"
+	)
+	var sonic_impact := (
+		sonic_projectile.call(
+			"spawn_impact_explosion", player2.global_position + Vector2(0.0, -150.0)
+		) as Node2D
+		if sonic_projectile != null else null
+	)
+	_expect(
+		sonic_impact != null
+		and sonic_impact.is_in_group("sonic_projectile_impact")
+		and sonic_impact.get_node_or_null("ImpactSparks") != null,
+		"il contatto del proiettile genera un'esplosione gialla sull'avversario"
 	)
 	var projectile_start_x := sonic_projectile.global_position.x if sonic_projectile != null else 0.0
 	await create_timer(0.12).timeout
@@ -1684,6 +1702,16 @@ func _test_combat_flow() -> void:
 		or absf(sonic_projectile.global_position.x - projectile_start_x) > 40.0,
 		"il proiettile Sonic Boom viaggia in avanti"
 	)
+	if sonic_projectile != null and is_instance_valid(sonic_projectile):
+		sonic_projectile.call(
+			"_on_area_entered", player2.get_node("Hurtbox") as Area2D
+		)
+		await process_frame
+		_expect(
+			player2.combat.current_health == 88
+			and player2.animated_sprite.animation == &"hurt_mid",
+			"il proiettile Sonic Boom provoca hurt_middle sull'avversario"
+		)
 	await create_timer(0.48).timeout
 	_expect(
 		player1.current_state == Mangler.State.IDLE
@@ -1691,6 +1719,28 @@ func _test_combat_flow() -> void:
 		and player1.get_node_or_null("SonicChargeEffect") == null,
 		"il lancio Sonic Boom completa i 49 frame e torna in IDLE"
 	)
+	for sonic_variant: Dictionary in [
+		{&"punch": &"medium_punch", &"multiplier": 1.3, &"label": "MEDIUM PUNCH"},
+		{&"punch": &"heavy_punch", &"multiplier": 1.6, &"label": "HEAVY PUNCH"},
+	]:
+		player1.combat.cancel_current_action()
+		player1.change_state(Mangler.State.IDLE)
+		player1.input_buffer.clear()
+		player1.input_buffer.record_input_snapshot(0, 1, [], player1.is_facing_right)
+		player1.input_buffer.record_input_snapshot(1, 1, [], player1.is_facing_right)
+		player1.input_buffer.record_input_snapshot(
+			1, 0, [sonic_variant[&"punch"]], player1.is_facing_right
+		)
+		player1.handle_input()
+		_expect(
+			player1.combat.is_special_sonic_boom
+			and is_equal_approx(
+				player1.pending_sonic_projectile_speed_multiplier,
+				float(sonic_variant[&"multiplier"])
+			),
+			"DOWN, DOWN-FORWARD, FORWARD + %s avvia il Sonic Boom con velocità dedicata"
+			% sonic_variant[&"label"]
+		)
 
 	player1.combat.cancel_current_action()
 	player1.change_state(Mangler.State.IDLE)

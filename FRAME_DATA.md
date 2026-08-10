@@ -29,6 +29,8 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | 720 Punch | standing | `special_720_punch` | 48 | 9 | 34 | 6 | 49 | 6×3 | high | no |
 | Sonic Boom (lancio) | standing | `special_sonic_boom` | 48 | 24 | 1 | 24 | 49 | 0 | high | no |
 
+Il proiettile Sonic Boom viaggia a 520 px/s con pugno leggero, 676 px/s con pugno medio e 832 px/s con pugno pesante.
+
 \* Il calcio medio in piedi produce due impatti da 6 danni.
 
 ## Modello dati

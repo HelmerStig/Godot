@@ -177,7 +177,7 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momen
 - Il pugno leggero aereo usa i fotogrammi sorgente 6–20, mantiene il 20 e la hitbox mentre il tasto resta premuto, quindi recupera con 24–6 al rilascio.
 - `CharacterData` usa ancora un profilo personaggio creato in memoria, anche se gli attacchi sono risorse `.tres` dedicate.
 - La speciale `720 Punch` di Mangler si esegue premendo pugno leggero e pugno medio insieme; durante la rotazione permette un lento movimento avanti/indietro.
-- Il `Sonic Boom` si esegue con `↓ ↘ → + pugno leggero`: al frame 23 genera i piatti animati a 24 FPS con scia gialla e scintille.
+- Il `Sonic Boom` si esegue con `↓ ↘ → + pugno leggero, medio o pesante`: al frame 23 genera i piatti animati a 48 FPS con scia gialla e scintille. Il proiettile diventa progressivamente più veloce passando dal pugno leggero al medio e al pesante.
 - Non sono ancora presenti IA, audio, menu, selezione personaggio o multiplayer online.
 - `original_images/` conserva materiale sorgente e non fa parte del flusso runtime.
 

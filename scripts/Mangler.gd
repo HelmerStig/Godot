@@ -136,6 +136,7 @@ const ATTACK_EFFECT_ANIMATIONS := [
 	&"crouched_heavy_kick",
 	&"jump_heavy_kick",
 	&"special_720_punch",
+	&"special_sonic_boom",
 ]
 const CROUCHED_MEDIUM_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/medium-kick/crouched_medium_kick.png"
@@ -212,6 +213,11 @@ const SPECIAL_SONIC_BOOM_SHEET := preload(
 const SPECIAL_SONIC_BOOM_FRAME_COUNT := 49
 const SPECIAL_SONIC_BOOM_COLUMNS := 7
 const SPECIAL_SONIC_BOOM_CELL_SIZE := Vector2(512.0, 512.0)
+const SONIC_PROJECTILE_SPEED_MULTIPLIERS := {
+	&"light_punch": 1.0,
+	&"medium_punch": 1.3,
+	&"heavy_punch": 1.6,
+}
 const MEDIUM_PUNCH_PREPARATION_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/medium-punch/medium-punch-preparation.png"
 )
@@ -312,6 +318,7 @@ var last_forward_tap_frame := -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
 var last_back_tap_frame := -BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES - 1
 var pending_jump_direction := 0.0
 var pending_jump_horizontal_multiplier := 1.0
+var pending_sonic_projectile_speed_multiplier := 1.0
 var received_hit_height := AttackData.HitHeight.MID
 var received_block_height := AttackData.HitHeight.MID
 var block_started_crouched := false
@@ -1278,10 +1285,14 @@ func handle_input() -> void:
 			FighterInputBuffer.Direction.DOWN_FORWARD,
 			FighterInputBuffer.Direction.FORWARD,
 		]):
-			var sonic_light_direction := input_buffer.consume_attack(&"light_punch")
-			if sonic_light_direction != FighterInputBuffer.NO_DIRECTION:
-				combat.try_attack(&"special_sonic_boom", sonic_light_direction)
-				return
+			for sonic_punch: StringName in [&"heavy_punch", &"medium_punch", &"light_punch"]:
+				var sonic_direction := input_buffer.consume_attack(sonic_punch)
+				if sonic_direction != FighterInputBuffer.NO_DIRECTION:
+					pending_sonic_projectile_speed_multiplier = get_sonic_projectile_speed_multiplier(
+						sonic_punch
+					)
+					combat.try_attack(&"special_sonic_boom", sonic_direction)
+					return
 		for attack_name in ATTACK_PRIORITY:
 			var attack_direction := input_buffer.consume_attack(attack_name)
 			if attack_direction != FighterInputBuffer.NO_DIRECTION:
@@ -2197,8 +2208,18 @@ func spawn_sonic_projectile(world_position: Vector2) -> Area2D:
 		projectile_parent = get_tree().root
 	projectile_parent.add_child(projectile)
 	projectile.global_position = world_position
-	projectile.call("configure", self, 1.0 if is_facing_right else -1.0)
+	projectile.call(
+		"configure",
+		self,
+		1.0 if is_facing_right else -1.0,
+		pending_sonic_projectile_speed_multiplier
+	)
+	pending_sonic_projectile_speed_multiplier = 1.0
 	return projectile
+
+
+func get_sonic_projectile_speed_multiplier(punch_name: StringName) -> float:
+	return float(SONIC_PROJECTILE_SPEED_MULTIPLIERS.get(punch_name, 1.0))
 
 
 func create_sonic_glow_texture() -> GradientTexture2D:
