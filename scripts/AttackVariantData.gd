@@ -16,6 +16,7 @@ class_name AttackVariantData
 @export_group("Hit")
 @export var hitbox_size := Vector2(70.0, 35.0)
 @export var hitbox_position := Vector2(35.0, -110.0)
+@export_range(-180.0, 180.0, 0.5) var hitbox_rotation_degrees := 0.0
 @export_enum("High", "Mid", "Low") var hit_height := 1
 @export var causes_knockdown := false
 @export_range(0, 99, 1, "or_greater") var hit_reaction_start_frame := 0

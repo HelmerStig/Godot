@@ -173,11 +173,14 @@ const JUMP_MEDIUM_KICK_FRAME_COUNT := 16
 const JUMP_MEDIUM_KICK_COLUMNS := 4
 const JUMP_MEDIUM_KICK_CELL_SIZE := Vector2(512.0, 512.0)
 const JUMP_MEDIUM_PUNCH_SHEET := preload(
-	"res://assets/sprites/characters/mangler/medium-punch-jump.png"
+	"res://assets/sprites/characters/mangler/basic-moves/medium-punch/jumping-medium-punch.png"
 )
-const JUMP_MEDIUM_PUNCH_FRAME_COUNT := 16
-const JUMP_MEDIUM_PUNCH_COLUMNS := 4
+const JUMP_MEDIUM_PUNCH_COLUMNS := 5
 const JUMP_MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const JUMP_MEDIUM_PUNCH_SOURCE_SEQUENCE := [
+	5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+	23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5,
+]
 const JUMP_HEAVY_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/mangler/heavy_punch_jump.png"
 )
@@ -1092,9 +1095,9 @@ func configure_jump_medium_punch_frames() -> void:
 	if frames.has_animation(&"jump_medium_punch"):
 		frames.remove_animation(&"jump_medium_punch")
 	frames.add_animation(&"jump_medium_punch")
-	frames.set_animation_speed(&"jump_medium_punch", 24.0)
+	frames.set_animation_speed(&"jump_medium_punch", 48.0)
 	frames.set_animation_loop(&"jump_medium_punch", false)
-	for source_index in range(JUMP_MEDIUM_PUNCH_FRAME_COUNT):
+	for source_index in JUMP_MEDIUM_PUNCH_SOURCE_SEQUENCE:
 		var atlas_frame := AtlasTexture.new()
 		atlas_frame.atlas = JUMP_MEDIUM_PUNCH_SHEET
 		atlas_frame.region = Rect2(
@@ -1415,7 +1418,7 @@ func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
 		&"idle", &"light_punch_single", &"crouched_punch", &"crouched_punch_crouched",
-		&"jump_light_punch",
+		&"jump_light_punch", &"jump_medium_punch",
 		&"crouched_medium_punch", &"crouched_medium_punch_crouched",
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
@@ -1601,8 +1604,12 @@ func update_state() -> void:
 		return
 	if current_state == State.JUMP_STARTUP:
 		return
-	# Atterraggio durante il pugno potente aereo: interrompe l'attacco.
-	if current_state == State.ATTACKING and combat.is_airborne_heavy_punch and is_on_floor():
+	# Atterraggio durante un pugno aereo: interrompe subito attacco e recovery.
+	if (
+		current_state == State.ATTACKING
+		and (combat.is_airborne_heavy_punch or combat.is_airborne_medium_punch)
+		and is_on_floor()
+	):
 		combat.cancel_current_action()
 		change_state(State.IDLE)
 		return

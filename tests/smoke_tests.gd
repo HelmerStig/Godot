@@ -413,25 +413,37 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"jump_medium_punch")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_medium_punch") == 16
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_medium_punch") == 34
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"jump_medium_punch"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump_medium_punch"),
-		"il pugno medio aereo usa tutti i 16 frame di medium-punch-jump a 24 FPS"
+		"il pugno medio aereo usa 6-20 e la recovery 24-6 a 48 FPS"
 	)
 	var jump_medium_punch_first := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"jump_medium_punch", 0
 	) as AtlasTexture
-	var jump_medium_punch_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+	var jump_medium_punch_active := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_medium_punch", 12
+	) as AtlasTexture
+	var jump_medium_punch_hold := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_medium_punch", 14
+	) as AtlasTexture
+	var jump_medium_punch_release := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"jump_medium_punch", 15
 	) as AtlasTexture
+	var jump_medium_punch_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_medium_punch", 33
+	) as AtlasTexture
 	_expect(
-		jump_medium_punch_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
-		and jump_medium_punch_last.region == Rect2(1536.0, 1536.0, 512.0, 512.0)
-		and jump_medium_punch_first.atlas.resource_path.ends_with("medium-punch-jump.png"),
-		"il pugno medio aereo riproduce lo spritesheet dal primo all'ultimo frame"
+		jump_medium_punch_first.region == Rect2(0.0, 512.0, 512.0, 512.0)
+		and jump_medium_punch_active.region == Rect2(1024.0, 1536.0, 512.0, 512.0)
+		and jump_medium_punch_hold.region == Rect2(2048.0, 1536.0, 512.0, 512.0)
+		and jump_medium_punch_release.region == Rect2(1536.0, 2048.0, 512.0, 512.0)
+		and jump_medium_punch_last.region == jump_medium_punch_first.region
+		and jump_medium_punch_first.atlas.resource_path.ends_with("jumping-medium-punch.png"),
+		"il pugno medio aereo mappa i fotogrammi 6, 18, 20, 24 e 6"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"jump_heavy_punch")
@@ -1309,7 +1321,11 @@ func _test_combat_flow() -> void:
 	player1.change_state(Mangler.State.JUMPING)
 	var aerial_medium_punch_velocity_before_attack := player1.velocity
 	var aerial_medium_punch := player1.character_data.get_attack(&"medium_punch")
-	player1.combat.try_attack(&"medium_punch")
+	Input.action_press(player1.get_input_action("medium_punch"))
+	player1.input_buffer.record_input_snapshot(
+		0, 0, [&"medium_punch"], player1.is_facing_right
+	)
+	player1.handle_input()
 	_expect(
 		player1.combat.is_airborne_medium_punch
 		and player1.current_state == Mangler.State.ATTACKING
@@ -1321,10 +1337,22 @@ func _test_combat_flow() -> void:
 		"il pugno medio aereo conserva la traiettoria del salto"
 	)
 	var jump_medium_punch_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	await create_timer(0.65).timeout
 	_expect(
-		jump_medium_punch_shape.size == aerial_medium_punch.hitbox_size
-		and player1.combat.hitbox_shape.position == aerial_medium_punch.hitbox_position,
-		"il pugno medio aereo usa la hitbox del danno medium"
+		player1.animated_sprite.frame == 14
+		and not player1.animated_sprite.is_playing()
+		and not player1.combat.hitbox_shape.disabled,
+		"il pugno medio aereo attiva dal frame 18 e mantiene la posa 20"
+	)
+	_expect(
+		jump_medium_punch_shape.size == Vector2(200.0, 48.0)
+		and player1.combat.hitbox_shape.position == Vector2(102.0, -142.0)
+		and is_equal_approx(player1.combat.hitbox_shape.rotation_degrees, 24.0),
+		"la hitbox del pugno medio aereo segue il braccio che colpisce"
+	)
+	_expect(
+		player1.animated_sprite.scale == Mangler.REWORK_SPRITE_SCALE,
+		"il pugno medio aereo usa la scala dei nuovi sprite"
 	)
 	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
 	_expect(
@@ -1332,10 +1360,23 @@ func _test_combat_flow() -> void:
 		and player2.animated_sprite.animation == &"hurt_high",
 		"il pugno medio aereo infligge danno medium e provoca hurt_high"
 	)
-	await create_timer(player1.get_animation_duration(&"jump_medium_punch") + 0.05).timeout
+	Input.action_release(player1.get_input_action("medium_punch"))
+	await process_frame
+	await process_frame
 	_expect(
-		player1.current_state == Mangler.State.JUMPING,
-		"al termine del pugno medio aereo Mangler torna allo stato di salto"
+		player1.animated_sprite.frame >= 15
+		and player1.combat.hitbox_shape.disabled,
+		"rilasciando il pugno medio aereo avvia la recovery dal frame 24"
+	)
+	player1.global_position.y = player1.shadow_ground_y
+	player1.velocity.y = 1.0
+	player1.move_and_slide()
+	player1.update_state()
+	_expect(
+		player1.current_state == Mangler.State.IDLE
+		and player1.animated_sprite.animation == &"idle"
+		and not player1.combat.is_attacking,
+		"atterrando durante il pugno medio aereo Mangler torna subito in IDLE"
 	)
 	player1.position = aerial_test_position
 	player1.velocity = Vector2(0.0, 1.0)
@@ -2074,4 +2115,5 @@ func _release_test_actions() -> void:
 	Input.action_release(&"p1_move_right")
 	Input.action_release(&"p1_crouch")
 	Input.action_release(&"p1_light_punch")
+	Input.action_release(&"p1_medium_punch")
 	Input.action_release(&"p2_move_right")

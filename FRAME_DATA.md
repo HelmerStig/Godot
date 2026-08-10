@@ -13,7 +13,7 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Pugno medio | standing | `medium_open_hand_slap` | 48 | 17 | 6 | 19 | 42 | 10 | high | no |
 | Pugno medio | crouched | `crouched_medium_punch` | 48 | 11 | 4 | 5 | 20 | 10 | mid | no |
 | Pugno medio | crouched held | `crouched_medium_punch_crouched` | 48 | 7 | 4 | 5 | 16 | 10 | mid | no |
-| Pugno medio | airborne | `jump_medium_punch` | 24 | 7 | 3 | 6 | 16 | 10 | high | no |
+| Pugno medio | airborne | `jump_medium_punch` | 48 | 12 | hold | 19 | variabile | 10 | high | no |
 | Pugno pesante | standing | `heavy_punch` | 48 | 38 | 4 | 28 | 70 | 15 | mid | no |
 | Pugno pesante | crouched | `crouched_power_punch` | 48 | 8 | 6 | 5 | 19 | 15 | high | no |
 | Pugno pesante | airborne | `jump_heavy_punch` | 48 | 8 | 4 | 4 | 16 | 15 | high | no |

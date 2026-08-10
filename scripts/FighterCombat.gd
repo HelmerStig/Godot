@@ -278,8 +278,10 @@ func try_attack(
 	print("Eseguendo attacco: %s (danno: %d)" % [attack_name, attack.damage])
 
 	var canceled_near_ground := false
-	if is_airborne_light_punch:
-		canceled_near_ground = await hold_jump_light_punch_until_release(attack_generation)
+	if is_airborne_light_punch or is_airborne_medium_punch:
+		canceled_near_ground = await hold_jump_punch_until_release(
+			attack_name, attack_generation
+		)
 		if attack_generation != action_generation:
 			return
 	else:
@@ -287,7 +289,12 @@ func try_attack(
 		await get_tree().create_timer(phase_durations.y).timeout
 		if attack_generation != action_generation:
 			return
-	if not is_airborne_light_punch and wants_airborne_attack and is_attack_button_held(attack_name):
+	if (
+		not is_airborne_light_punch
+		and not is_airborne_medium_punch
+		and wants_airborne_attack
+		and is_attack_button_held(attack_name)
+	):
 		canceled_near_ground = await hold_airborne_attack_until_release(
 			attack_name, attack_generation
 		)
@@ -617,18 +624,31 @@ func hold_airborne_attack_until_release(
 	return should_cancel_airborne_attack_for_landing()
 
 
-func hold_jump_light_punch_until_release(attack_generation: int) -> bool:
-	## Il frame 14 dell'animazione corrisponde al fotogramma sorgente 20.
+func hold_jump_punch_until_release(
+	attack_name: StringName,
+	attack_generation: int
+) -> bool:
+	## Il frame 14 delle sequenze corrisponde al fotogramma sorgente 20.
 	const IMPACT_ANIMATION_FRAME := 14
 	const RELEASE_ANIMATION_FRAME := 15 # Fotogramma sorgente 24, poi 23...6.
 	var sprite := fighter.animated_sprite
+	while (
+		attack_generation == action_generation
+		and sprite.frame < IMPACT_ANIMATION_FRAME
+		and not fighter.is_on_floor()
+	):
+		await get_tree().process_frame
+	if attack_generation != action_generation:
+		return false
+	if fighter.is_on_floor():
+		return true
 	sprite.frame = IMPACT_ANIMATION_FRAME
 	sprite.pause()
 	# Il colpo resta attivo almeno per un frame anche se il tasto era già stato rilasciato.
 	await get_tree().process_frame
 	while (
 		attack_generation == action_generation
-		and is_attack_button_held(&"light_punch")
+		and is_attack_button_held(attack_name)
 		and not fighter.is_on_floor()
 	):
 		await get_tree().process_frame
@@ -638,7 +658,7 @@ func hold_jump_light_punch_until_release(attack_generation: int) -> bool:
 		return true
 	disable_hitbox()
 	sprite.frame = RELEASE_ANIMATION_FRAME
-	sprite.play(&"jump_light_punch")
+	sprite.play(current_variant.animation_name)
 	return false
 
 
@@ -658,9 +678,11 @@ func configure_hitbox(attack: AttackData) -> void:
 		if current_variant != null:
 			attack_shape.size = current_variant.hitbox_size
 			hitbox_shape.position = current_variant.hitbox_position
+			hitbox_shape.rotation_degrees = current_variant.hitbox_rotation_degrees
 			return
 		attack_shape.size = attack.hitbox_size
 		hitbox_shape.position = attack.hitbox_position
+		hitbox_shape.rotation = 0.0
 
 
 func get_attack_phase_durations(attack: AttackData) -> Vector3:
