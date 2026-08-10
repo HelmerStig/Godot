@@ -75,6 +75,7 @@ var is_airborne_heavy_kick := false
 var is_airborne_medium_kick := false
 var is_airborne_medium_punch := false
 var is_airborne_heavy_punch := false
+var is_airborne_light_punch := false
 
 @onready var hitbox: Area2D = get_parent().get_node("Hitbox")
 @onready var hitbox_shape: CollisionShape2D = get_parent().get_node("Hitbox/HitboxShape")
@@ -153,6 +154,12 @@ func try_attack(
 		]
 	)
 	var starts_crouched := fighter.current_state == Mangler.State.CROUCHING
+	var wants_airborne_light_punch := (
+		attack_name == &"light_punch"
+		and fighter.current_state == Mangler.State.JUMPING
+		and not fighter.is_on_floor()
+		and not fighter.aerial_attack_used
+	)
 	var wants_airborne_medium_punch := (
 		attack_name == &"medium_punch"
 		and fighter.current_state == Mangler.State.JUMPING
@@ -190,6 +197,7 @@ func try_attack(
 	)
 	var wants_airborne_attack := (
 		wants_airborne_kick
+		or wants_airborne_light_punch
 		or wants_airborne_medium_punch
 		or wants_airborne_heavy_punch
 	)
@@ -224,7 +232,7 @@ func try_attack(
 	is_blocking = false
 	current_attack = attack
 	current_attack_direction = input_direction
-	is_crouched_light_punch = wants_crouched_punch
+	is_crouched_light_punch = wants_crouched_punch and not wants_airborne_light_punch
 	crouched_punch_started_crouched = wants_crouched_punch and starts_crouched
 	is_crouched_medium_punch = wants_crouched_medium_punch and not wants_airborne_medium_punch
 	crouched_medium_punch_started_crouched = wants_crouched_medium_punch and starts_crouched
@@ -238,6 +246,7 @@ func try_attack(
 	is_airborne_medium_kick = wants_airborne_medium_kick
 	is_airborne_medium_punch = wants_airborne_medium_punch
 	is_airborne_heavy_punch = wants_airborne_heavy_punch
+	is_airborne_light_punch = wants_airborne_light_punch
 	current_variant = attack.get_variant(get_current_variant_id())
 	if wants_airborne_attack:
 		fighter.aerial_attack_used = true
@@ -252,6 +261,7 @@ func try_attack(
 		or is_airborne_heavy_kick
 		or is_airborne_medium_punch
 		or is_airborne_heavy_punch
+		or is_airborne_light_punch
 	):
 		fighter.velocity = preserved_air_velocity
 	attack_started.emit(attack_name)
@@ -267,12 +277,17 @@ func try_attack(
 	enable_hitbox()
 	print("Eseguendo attacco: %s (danno: %d)" % [attack_name, attack.damage])
 
-	# Frame attivi.
-	await get_tree().create_timer(phase_durations.y).timeout
-	if attack_generation != action_generation:
-		return
 	var canceled_near_ground := false
-	if wants_airborne_attack and is_attack_button_held(attack_name):
+	if is_airborne_light_punch:
+		canceled_near_ground = await hold_jump_light_punch_until_release(attack_generation)
+		if attack_generation != action_generation:
+			return
+	else:
+		# Frame attivi.
+		await get_tree().create_timer(phase_durations.y).timeout
+		if attack_generation != action_generation:
+			return
+	if not is_airborne_light_punch and wants_airborne_attack and is_attack_button_held(attack_name):
 		canceled_near_ground = await hold_airborne_attack_until_release(
 			attack_name, attack_generation
 		)
@@ -304,6 +319,7 @@ func try_attack(
 				&"crouched_medium_kick",
 				&"crouched_light_kick",
 				&"jump_light_kick",
+				&"jump_light_punch",
 				&"jump_heavy_kick",
 				&"jump_medium_kick",
 				&"jump_medium_punch",
@@ -337,6 +353,7 @@ func try_attack(
 			or is_airborne_heavy_kick
 			or is_airborne_medium_punch
 			or is_airborne_heavy_punch
+			or is_airborne_light_punch
 		)
 		and not fighter.is_on_floor()
 	)
@@ -354,7 +371,10 @@ func try_attack(
 	is_airborne_medium_kick = false
 	is_airborne_medium_punch = false
 	is_airborne_heavy_punch = false
-	if canceled_near_ground:
+	is_airborne_light_punch = false
+	if canceled_near_ground and fighter.is_on_floor():
+		fighter.change_state(Mangler.State.IDLE)
+	elif canceled_near_ground:
 		fighter.force_idle_until_landing = true
 		fighter.change_state(Mangler.State.JUMPING)
 	elif should_return_to_jump:
@@ -524,6 +544,7 @@ func cancel_current_action() -> void:
 	is_airborne_medium_kick = false
 	is_airborne_medium_punch = false
 	is_airborne_heavy_punch = false
+	is_airborne_light_punch = false
 	hit_targets.clear()
 	disable_hitbox()
 
@@ -596,6 +617,31 @@ func hold_airborne_attack_until_release(
 	return should_cancel_airborne_attack_for_landing()
 
 
+func hold_jump_light_punch_until_release(attack_generation: int) -> bool:
+	## Il frame 14 dell'animazione corrisponde al fotogramma sorgente 20.
+	const IMPACT_ANIMATION_FRAME := 14
+	const RELEASE_ANIMATION_FRAME := 15 # Fotogramma sorgente 24, poi 23...6.
+	var sprite := fighter.animated_sprite
+	sprite.frame = IMPACT_ANIMATION_FRAME
+	sprite.pause()
+	# Il colpo resta attivo almeno per un frame anche se il tasto era già stato rilasciato.
+	await get_tree().process_frame
+	while (
+		attack_generation == action_generation
+		and is_attack_button_held(&"light_punch")
+		and not fighter.is_on_floor()
+	):
+		await get_tree().process_frame
+	if attack_generation != action_generation:
+		return false
+	if fighter.is_on_floor():
+		return true
+	disable_hitbox()
+	sprite.frame = RELEASE_ANIMATION_FRAME
+	sprite.play(&"jump_light_punch")
+	return false
+
+
 func should_cancel_airborne_attack_for_landing() -> bool:
 	if fighter.is_on_floor():
 		return true
@@ -637,7 +683,8 @@ func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 
 func get_current_variant_id() -> StringName:
 	if (
-		is_airborne_light_kick or is_airborne_medium_kick or is_airborne_heavy_kick
+		is_airborne_light_punch or is_airborne_light_kick
+		or is_airborne_medium_kick or is_airborne_heavy_kick
 		or is_airborne_medium_punch or is_airborne_heavy_punch
 	):
 		return &"airborne"

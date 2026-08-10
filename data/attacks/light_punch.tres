@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="AttackData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/AttackData.gd" id="1_attack"]
 [ext_resource type="Script" path="res://scripts/AttackVariantData.gd" id="2_variant"]
@@ -41,6 +41,19 @@ hitbox_position = Vector2(75, -110)
 hit_height = 1
 hit_reaction_start_frame = 4
 
+[sub_resource type="Resource" id="Variant_airborne"]
+script = ExtResource("2_variant")
+variant_id = &"airborne"
+animation_name = &"jump_light_punch"
+animation_fps = 48.0
+startup_frames = 14
+active_frames = 1
+recovery_frames = 19
+active_animation_frame = 14
+hitbox_size = Vector2(135, 180)
+hitbox_position = Vector2(55, -170)
+hit_height = 0
+
 [resource]
 script = ExtResource("1_attack")
 attack_id = &"light_punch"
@@ -54,4 +67,4 @@ hit_height = 0
 hit_reaction_start_frame = 3
 hitbox_size = Vector2(100, 35)
 hitbox_position = Vector2(50, -110)
-variants = Array[Resource]([SubResource("Variant_standing"), SubResource("Variant_crouched"), SubResource("Variant_crouched_held")])
+variants = Array[Resource]([SubResource("Variant_standing"), SubResource("Variant_crouched"), SubResource("Variant_crouched_held"), SubResource("Variant_airborne")])

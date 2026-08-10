@@ -34,7 +34,7 @@ crouched-light-kick <--ok
 crouched-medium-kick <--ok
 crouched-strong-kick <--ok
 
-jump-light-punch
+jump-light-punch <--ok
 jump-medium-punch
 jump-strong-punch <--ok
 jump-light-kick

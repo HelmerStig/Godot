@@ -174,6 +174,7 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momen
 
 - Il progetto offre training locale, non ancora round completi o best-of-three.
 - Mangler dispone di animazioni per locomozione, guardia, reazioni, KO e attacchi; alcune aspettative della suite devono ancora essere riallineate agli atlas correnti.
+- Il pugno leggero aereo usa i fotogrammi sorgente 6–20, mantiene il 20 e la hitbox mentre il tasto resta premuto, quindi recupera con 24–6 al rilascio.
 - `CharacterData` usa ancora un profilo personaggio creato in memoria, anche se gli attacchi sono risorse `.tres` dedicate.
 - Combo e mosse speciali non sono ancora collegate al gameplay, anche se l'input buffer riconosce sequenze.
 - Non sono ancora presenti IA, audio, menu, selezione personaggio o multiplayer online.

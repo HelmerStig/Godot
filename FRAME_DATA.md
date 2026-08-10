@@ -9,6 +9,7 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Pugno leggero | standing | `light_punch_single` | 48 | 11 | 3 | 3 | 17 | 5 | high | no |
 | Pugno leggero | crouched | `crouched_punch` | 48 | 10 | 3 | 5 | 18 | 5 | mid | no |
 | Pugno leggero | crouched held | `crouched_punch_crouched` | 48 | 4 | 3 | 5 | 12 | 5 | mid | no |
+| Pugno leggero | airborne | `jump_light_punch` | 48 | 14 | hold | 19 | variabile | 5 | high | no |
 | Pugno medio | standing | `medium_open_hand_slap` | 48 | 17 | 6 | 19 | 42 | 10 | high | no |
 | Pugno medio | crouched | `crouched_medium_punch` | 48 | 11 | 4 | 5 | 20 | 10 | mid | no |
 | Pugno medio | crouched held | `crouched_medium_punch_crouched` | 48 | 7 | 4 | 5 | 16 | 10 | mid | no |

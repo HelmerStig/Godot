@@ -151,6 +151,15 @@ const JUMP_LIGHT_KICK_SHEET := preload(
 const JUMP_LIGHT_KICK_COLUMNS := 4
 const JUMP_LIGHT_KICK_CELL_SIZE := Vector2(512.0, 512.0)
 const JUMP_LIGHT_KICK_SOURCE_SEQUENCE := [11, 12, 13, 14, 15, 14, 13, 12, 11]
+const JUMP_LIGHT_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/mangler/basic-moves/light-punch/jumping_light_punch.png"
+)
+const JUMP_LIGHT_PUNCH_COLUMNS := 5
+const JUMP_LIGHT_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const JUMP_LIGHT_PUNCH_SOURCE_SEQUENCE := [
+	5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+	23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5,
+]
 const JUMP_HEAVY_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/medium_jump_kick.png"
 )
@@ -802,6 +811,26 @@ func configure_jump_light_kick_frames() -> void:
 		frames.add_frame(&"jump_light_kick", atlas_frame)
 
 
+func configure_jump_light_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"jump_light_punch"):
+		frames.remove_animation(&"jump_light_punch")
+	frames.add_animation(&"jump_light_punch")
+	frames.set_animation_speed(&"jump_light_punch", 48.0)
+	frames.set_animation_loop(&"jump_light_punch", false)
+	for source_index in JUMP_LIGHT_PUNCH_SOURCE_SEQUENCE:
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = JUMP_LIGHT_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % JUMP_LIGHT_PUNCH_COLUMNS),
+				float(floori(float(source_index) / JUMP_LIGHT_PUNCH_COLUMNS))
+			) * JUMP_LIGHT_PUNCH_CELL_SIZE,
+			JUMP_LIGHT_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"jump_light_punch", atlas_frame)
+
+
 func configure_jump_heavy_kick_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"jump_heavy_kick"):
@@ -1151,7 +1180,8 @@ func handle_input() -> void:
 	# nessun cambio di direzione è consentito durante il volo.
 	if current_state == State.JUMPING:
 		for aerial_attack_name in [
-			&"heavy_punch", &"medium_punch", &"heavy_kick", &"medium_kick", &"light_kick"
+			&"heavy_punch", &"medium_punch", &"light_punch",
+			&"heavy_kick", &"medium_kick", &"light_kick"
 		]:
 			var aerial_attack_direction := input_buffer.consume_attack(aerial_attack_name)
 			if aerial_attack_direction != FighterInputBuffer.NO_DIRECTION:
@@ -1385,6 +1415,7 @@ func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
 		&"idle", &"light_punch_single", &"crouched_punch", &"crouched_punch_crouched",
+		&"jump_light_punch",
 		&"crouched_medium_punch", &"crouched_medium_punch_crouched",
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",

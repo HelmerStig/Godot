@@ -28,6 +28,7 @@ static func configure_all(fighter: Mangler) -> void:
 	fighter.configure_crouched_light_kick_frames()
 	fighter.configure_standing_light_kick_frames()
 	fighter.configure_jump_light_kick_frames()
+	fighter.configure_jump_light_punch_frames()
 	fighter.configure_jump_medium_kick_frames()
 	fighter.configure_jump_heavy_kick_frames()
 	fighter.configure_medium_punch_frames()

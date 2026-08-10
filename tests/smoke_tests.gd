@@ -340,6 +340,34 @@ func _test_combat_flow() -> void:
 		"il light kick aereo raggiunge il frame 16 e torna al frame 12"
 	)
 	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"jump_light_punch")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_light_punch") == 34
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"jump_light_punch"), 48.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump_light_punch"),
+		"il light punch aereo usa 6-20 e la recovery 24-6 a 48 FPS"
+	)
+	var jump_light_punch_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_light_punch", 0
+	) as AtlasTexture
+	var jump_light_punch_impact := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_light_punch", 14
+	) as AtlasTexture
+	var jump_light_punch_release := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_light_punch", 15
+	) as AtlasTexture
+	var jump_light_punch_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_light_punch", 33
+	) as AtlasTexture
+	_expect(
+		jump_light_punch_first.region == Rect2(0.0, 512.0, 512.0, 512.0)
+		and jump_light_punch_impact.region == Rect2(2048.0, 1536.0, 512.0, 512.0)
+		and jump_light_punch_release.region == Rect2(1536.0, 2048.0, 512.0, 512.0)
+		and jump_light_punch_last.region == jump_light_punch_first.region,
+		"il light punch aereo mappa i fotogrammi sorgente 6, 20, 24 e 6"
+	)
+	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"jump_heavy_kick")
 		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_heavy_kick") == 16
 		and is_equal_approx(
@@ -1163,6 +1191,54 @@ func _test_combat_flow() -> void:
 	player1.move_and_slide()
 	player1.change_state(Mangler.State.JUMPING)
 	var aerial_velocity_before_attack := player1.velocity
+	Input.action_press(player1.get_input_action("light_punch"))
+	player1.input_buffer.record_input_snapshot(
+		0, 0, [&"light_punch"], player1.is_facing_right
+	)
+	player1.handle_input()
+	_expect(
+		player1.combat.is_airborne_light_punch
+		and player1.current_state == Mangler.State.ATTACKING
+		and player1.animated_sprite.animation == &"jump_light_punch",
+		"l'input LIGHT PUNCH durante JUMPING avvia il pugno leggero aereo"
+	)
+	var jump_light_punch_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		player1.animated_sprite.scale == Mangler.REWORK_SPRITE_SCALE
+		and player1.animated_sprite.position == Mangler.REWORK_SPRITE_POSITION,
+		"il light punch aereo usa scala e offset dei nuovi sprite"
+	)
+	_expect(
+		jump_light_punch_shape.size == Vector2(135.0, 180.0)
+		and player1.combat.hitbox_shape.position == Vector2(55.0, -170.0),
+		"la hitbox del light punch aereo copre braccia e busto verso il basso"
+	)
+	await create_timer(0.65).timeout
+	_expect(
+		player1.animated_sprite.frame == 14
+		and not player1.animated_sprite.is_playing()
+		and not player1.combat.hitbox_shape.disabled,
+		"tenendo il light punch aereo mantiene il fotogramma 20 e la hitbox"
+	)
+	Input.action_release(player1.get_input_action("light_punch"))
+	await process_frame
+	await process_frame
+	_expect(
+		player1.animated_sprite.frame >= 15
+		and player1.combat.hitbox_shape.disabled,
+		"rilasciando il light punch aereo avvia la recovery dal fotogramma 24"
+	)
+	player1.combat.cancel_current_action()
+	player1.position = aerial_test_position
+	player1.velocity = Vector2.ZERO
+	player1.change_state(Mangler.State.IDLE)
+	player1.aerial_attack_used = false
+	player1.start_jump(1.0)
+	player1.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	player1._on_animation_frame_changed()
+	player1.move_and_slide()
+	player1.change_state(Mangler.State.JUMPING)
+	aerial_velocity_before_attack = player1.velocity
 	Input.action_press(player1.get_input_action("light_kick"))
 	player1.combat.try_attack(&"light_kick")
 	_expect(
@@ -1997,4 +2073,5 @@ func _expect(condition: bool, description: String) -> void:
 func _release_test_actions() -> void:
 	Input.action_release(&"p1_move_right")
 	Input.action_release(&"p1_crouch")
+	Input.action_release(&"p1_light_punch")
 	Input.action_release(&"p2_move_right")

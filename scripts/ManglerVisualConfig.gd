@@ -15,7 +15,8 @@ const PROFILES := {
 }
 
 const AIRBORNE := [
-	&"jump_light_kick", &"jump_medium_kick", &"jump_heavy_kick", &"jump_medium_punch",
+	&"jump_light_punch", &"jump_light_kick", &"jump_medium_kick", &"jump_heavy_kick",
+	&"jump_medium_punch",
 ]
 const HEAVY := [&"heavy_punch", &"crouched_power_punch", &"heavy_kick"]
 const MEDIUM := [
