@@ -58,6 +58,7 @@ const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
 const HIT_PUSHBACK_SPEED := 180.0
 const HIT_PUSHBACK_DECELERATION := 720.0
 const ATTACK_FOREGROUND_Z_OFFSET := 1
+const SPECIAL_720_MOVE_SPEED := 75.0
 const IDLE_SHEET := preload("res://assets/sprites/characters/mangler/01-mangler-idle.png")
 const IDLE_FRAME_COUNT := 49
 const IDLE_COLUMNS := 7
@@ -133,6 +134,7 @@ const ATTACK_EFFECT_ANIMATIONS := [
 	&"heavy_kick",
 	&"crouched_heavy_kick",
 	&"jump_heavy_kick",
+	&"special_720_punch",
 ]
 const CROUCHED_MEDIUM_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/medium-kick/crouched_medium_kick.png"
@@ -197,6 +199,12 @@ const JUMP_HEAVY_PUNCH_SHEET := preload(
 const JUMP_HEAVY_PUNCH_FRAME_COUNT := 16
 const JUMP_HEAVY_PUNCH_COLUMNS := 4
 const JUMP_HEAVY_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const SPECIAL_720_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/mangler/specials/720_punch.png"
+)
+const SPECIAL_720_PUNCH_FRAME_COUNT := 49
+const SPECIAL_720_PUNCH_COLUMNS := 7
+const SPECIAL_720_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
 const MEDIUM_PUNCH_PREPARATION_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/medium-punch/medium-punch-preparation.png"
 )
@@ -1151,6 +1159,26 @@ func configure_jump_heavy_punch_frames() -> void:
 		frames.add_frame(&"jump_heavy_punch", atlas_frame)
 
 
+func configure_special_720_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"special_720_punch"):
+		frames.remove_animation(&"special_720_punch")
+	frames.add_animation(&"special_720_punch")
+	frames.set_animation_speed(&"special_720_punch", 48.0)
+	frames.set_animation_loop(&"special_720_punch", false)
+	for source_index in range(SPECIAL_720_PUNCH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = SPECIAL_720_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % SPECIAL_720_PUNCH_COLUMNS),
+				float(floori(float(source_index) / SPECIAL_720_PUNCH_COLUMNS))
+			) * SPECIAL_720_PUNCH_CELL_SIZE,
+			SPECIAL_720_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"special_720_punch", atlas_frame)
+
+
 func _physics_process(delta: float) -> void:
 	if force_idle_until_landing and is_on_floor():
 		force_idle_until_landing = false
@@ -1164,6 +1192,8 @@ func _physics_process(delta: float) -> void:
 		input_buffer.update(is_facing_right)
 	if is_player_controlled and controls_enabled and can_move:
 		handle_input()
+	if combat.is_special_720_punch:
+		velocity.x = get_special_720_movement_velocity()
 
 	update_state()
 	update_physical_collision()
@@ -1206,6 +1236,10 @@ func handle_input() -> void:
 	combat.set_guarding(is_holding_back() and is_on_floor())
 
 	if is_on_floor():
+		if is_special_720_punch_chord_pressed():
+			input_buffer.clear()
+			combat.try_attack(&"special_720_punch")
+			return
 		for attack_name in ATTACK_PRIORITY:
 			var attack_direction := input_buffer.consume_attack(attack_name)
 			if attack_direction != FighterInputBuffer.NO_DIRECTION:
@@ -1248,6 +1282,23 @@ func handle_input() -> void:
 	velocity.x = direction * movement_speed
 	if is_on_floor() and current_state != State.RUNNING:
 		change_state(State.WALKING if direction != 0 else State.IDLE)
+
+
+func is_special_720_punch_chord_pressed() -> bool:
+	var light_action := get_input_action("light_punch")
+	var medium_action := get_input_action("medium_punch")
+	return (
+		Input.is_action_pressed(light_action)
+		and Input.is_action_pressed(medium_action)
+		and (
+			Input.is_action_just_pressed(light_action)
+			or Input.is_action_just_pressed(medium_action)
+		)
+	)
+
+
+func get_special_720_movement_velocity() -> float:
+	return input_buffer.get_horizontal_axis() * SPECIAL_720_MOVE_SPEED
 
 
 func start_back_hop(horizontal_direction: float) -> void:
@@ -1429,6 +1480,7 @@ func update_sprite_scale() -> void:
 	var uses_reworked_art := animated_sprite.animation in [
 		&"idle", &"light_punch_single", &"crouched_punch", &"crouched_punch_crouched",
 		&"jump_light_punch", &"jump_medium_punch", &"jump_light_kick",
+		&"special_720_punch",
 		&"crouched_medium_punch", &"crouched_medium_punch_crouched",
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",

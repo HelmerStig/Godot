@@ -36,8 +36,9 @@ func _test_attack_data() -> void:
 		&"light_kick",
 		&"medium_kick",
 		&"heavy_kick",
+		&"special_720_punch",
 	]
-	_expect(character_data.attacks.size() == 6, "il profilo predefinito contiene sei AttackData")
+	_expect(character_data.attacks.size() == 7, "il profilo predefinito contiene sette AttackData")
 	for attack_id in attack_ids:
 		var attack := character_data.get_attack(attack_id)
 		_expect(attack != null, "risorsa caricata: " + str(attack_id))
@@ -384,6 +385,27 @@ func _test_combat_flow() -> void:
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump_heavy_kick"),
 		"il calcio potente aereo usa la sequenza 6-25-6 a 48 FPS"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"special_720_punch")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"special_720_punch") == 49
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"special_720_punch"), 48.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"special_720_punch"),
+		"720 Punch usa tutti i 49 fotogrammi a 48 FPS senza loop"
+	)
+	var special_720_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"special_720_punch", 0
+	) as AtlasTexture
+	var special_720_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"special_720_punch", 48
+	) as AtlasTexture
+	_expect(
+		special_720_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and special_720_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0)
+		and special_720_first.atlas.resource_path.ends_with("specials/720_punch.png"),
+		"720 Punch mappa integralmente l'atlante 7x7"
 	)
 	var jump_heavy_first := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"jump_heavy_kick", 0
@@ -1582,6 +1604,70 @@ func _test_combat_flow() -> void:
 	)
 	player2.combat.reset()
 
+	player1.combat.cancel_current_action()
+	player1.change_state(Mangler.State.IDLE)
+	player2.combat.reset()
+	Input.action_release(player1.get_input_action("light_punch"))
+	Input.action_release(player1.get_input_action("medium_punch"))
+	await process_frame
+	Input.action_press(player1.get_input_action("light_punch"))
+	Input.action_press(player1.get_input_action("medium_punch"))
+	player1.input_buffer.record_input_snapshot(
+		0, 0, [&"light_punch", &"medium_punch"], player1.is_facing_right
+	)
+	_expect(
+		player1.is_special_720_punch_chord_pressed(),
+		"LIGHT PUNCH + MEDIUM PUNCH insieme riconoscono il comando 720 Punch"
+	)
+	player1.handle_input()
+	_expect(
+		player1.combat.is_special_720_punch
+		and player1.current_state == Mangler.State.ATTACKING
+		and player1.animated_sprite.animation == &"special_720_punch",
+		"il comando combinato avvia la speciale 720 Punch"
+	)
+	var special_effect_count := player1.attack_afterimage_spawn_count
+	Input.action_release(player1.get_input_action("move_left"))
+	Input.action_press(player1.get_input_action("move_right"))
+	await process_frame
+	await process_frame
+	_expect(
+		is_equal_approx(
+			absf(player1.get_special_720_movement_velocity()), Mangler.SPECIAL_720_MOVE_SPEED
+		)
+		and Mangler.SPECIAL_720_MOVE_SPEED < player1.character_data.walk_speed,
+		"durante 720 Punch Mangler può avanzare lentamente"
+	)
+	await create_timer(0.25).timeout
+	var special_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		special_shape.size == Vector2(340.0, 60.0)
+		and player1.combat.hitbox_shape.position == Vector2(0.0, -165.0)
+		and not player1.combat.hitbox_shape.disabled,
+		"la hitbox di 720 Punch copre l'intera apertura delle braccia"
+	)
+	_expect(
+		player1.attack_afterimage_spawn_count > special_effect_count,
+		"720 Punch genera una scia di movimento accentuata"
+	)
+	for hit_index in range(3):
+		player1.combat.hit_targets.clear()
+		player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
+	_expect(
+		player2.combat.current_health == 82
+		and player2.animated_sprite.animation == &"hurt_high",
+		"l'avversario dentro la hitbox riceve tre colpi e tre reazioni hurt_high"
+	)
+	Input.action_release(player1.get_input_action("move_right"))
+	Input.action_release(player1.get_input_action("light_punch"))
+	Input.action_release(player1.get_input_action("medium_punch"))
+	await create_timer(0.85).timeout
+	_expect(
+		player1.current_state == Mangler.State.IDLE and not player1.combat.is_attacking,
+		"720 Punch completa i 49 fotogrammi e torna in IDLE"
+	)
+	player2.combat.reset()
+
 	var light_punch := player1.character_data.get_attack(&"light_punch")
 	var player1_default_z := player1.z_index
 	player1.combat.try_attack(&"light_punch")
@@ -2197,6 +2283,8 @@ func _release_test_actions() -> void:
 	Input.action_release(&"p1_crouch")
 	Input.action_release(&"p1_light_punch")
 	Input.action_release(&"p1_medium_punch")
+	Input.action_release(&"p1_move_left")
+	Input.action_release(&"p1_move_right")
 	Input.action_release(&"p1_medium_kick")
 	Input.action_release(&"p1_heavy_kick")
 	Input.action_release(&"p2_move_right")

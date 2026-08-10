@@ -4,6 +4,10 @@ class_name ManglerVisualConfig
 ## Unica fonte dei profili degli effetti visivi delle animazioni di Mangler.
 
 const PROFILES := {
+	&"special_720_punch": {
+		"start_ratio": 0.24, "end_ratio": 0.80, "tint": Color(1.0, 0.58, 0.26),
+		"alpha": 0.33, "lifetime": 0.18, "offset": 11.0, "stretch": 1.065,
+	},
 	&"crouched_heavy_kick": {
 		"start_ratio": 0.12, "end_ratio": 0.63, "tint": Color(0.82, 0.9, 1.0),
 		"alpha": 0.28, "lifetime": 0.14, "offset": 8.0, "stretch": 1.04,

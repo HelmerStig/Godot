@@ -76,6 +76,7 @@ var is_airborne_medium_kick := false
 var is_airborne_medium_punch := false
 var is_airborne_heavy_punch := false
 var is_airborne_light_punch := false
+var is_special_720_punch := false
 
 @onready var hitbox: Area2D = get_parent().get_node("Hitbox")
 @onready var hitbox_shape: CollisionShape2D = get_parent().get_node("Hitbox/HitboxShape")
@@ -154,6 +155,7 @@ func try_attack(
 		]
 	)
 	var starts_crouched := fighter.current_state == Mangler.State.CROUCHING
+	var wants_special_720_punch := attack_name == &"special_720_punch"
 	var wants_airborne_light_punch := (
 		attack_name == &"light_punch"
 		and fighter.current_state == Mangler.State.JUMPING
@@ -247,6 +249,7 @@ func try_attack(
 	is_airborne_medium_punch = wants_airborne_medium_punch
 	is_airborne_heavy_punch = wants_airborne_heavy_punch
 	is_airborne_light_punch = wants_airborne_light_punch
+	is_special_720_punch = wants_special_720_punch
 	current_variant = attack.get_variant(get_current_variant_id())
 	if wants_airborne_attack:
 		fighter.aerial_attack_used = true
@@ -290,6 +293,10 @@ func try_attack(
 		)
 		if attack_generation != action_generation:
 			return
+	elif is_special_720_punch:
+		await perform_special_720_multi_hit(phase_durations.y, attack_generation)
+		if attack_generation != action_generation:
+			return
 	else:
 		# Frame attivi.
 		await get_tree().create_timer(phase_durations.y).timeout
@@ -316,7 +323,7 @@ func try_attack(
 		await get_tree().create_timer(phase_durations.z).timeout
 		if attack_generation != action_generation:
 			return
-	if attack.attack_id in [&"light_punch", &"medium_punch", &"heavy_punch", &"light_kick", &"medium_kick", &"heavy_kick"]:
+	if attack.attack_id in [&"light_punch", &"medium_punch", &"heavy_punch", &"light_kick", &"medium_kick", &"heavy_kick", &"special_720_punch"]:
 		while (
 			attack_generation == action_generation
 			and fighter.animated_sprite.animation in [
@@ -340,6 +347,7 @@ func try_attack(
 				&"jump_medium_kick",
 				&"jump_medium_punch",
 				&"jump_heavy_punch",
+				&"special_720_punch",
 			]
 			and fighter.animated_sprite.is_playing()
 		):
@@ -388,6 +396,7 @@ func try_attack(
 	is_airborne_medium_punch = false
 	is_airborne_heavy_punch = false
 	is_airborne_light_punch = false
+	is_special_720_punch = false
 	if canceled_near_ground and fighter.is_on_floor():
 		fighter.change_state(Mangler.State.IDLE)
 	elif canceled_near_ground:
@@ -561,6 +570,7 @@ func cancel_current_action() -> void:
 	is_airborne_medium_punch = false
 	is_airborne_heavy_punch = false
 	is_airborne_light_punch = false
+	is_special_720_punch = false
 	hit_targets.clear()
 	disable_hitbox()
 
@@ -573,6 +583,19 @@ func get_health_percentage() -> float:
 
 func enable_hitbox() -> void:
 	hitbox_shape.disabled = false
+
+
+func perform_special_720_multi_hit(active_duration: float, attack_generation: int) -> void:
+	"""Genera tre impatti separati se l'avversario resta nella zona delle braccia."""
+	var pulse_interval := active_duration / 3.0
+	for pulse_index in range(3):
+		if attack_generation != action_generation:
+			return
+		hit_targets.clear()
+		await get_tree().physics_frame
+		for area in hitbox.get_overlapping_areas():
+			_apply_hit_to_area(area)
+		await get_tree().create_timer(pulse_interval).timeout
 
 
 func wait_for_standing_medium_punch_active_frame(attack_generation: int) -> void:
@@ -760,6 +783,9 @@ func perform_medium_kick_followup() -> void:
 
 
 func _on_hitbox_area_entered(area: Area2D) -> void:
+	# La speciale usa tre impulsi temporizzati, evitando un quarto colpo dal segnale enter.
+	if is_special_720_punch:
+		return
 	_apply_hit_to_area(area)
 
 
@@ -809,7 +835,7 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		effective_knockdown,
 		effective_reaction_frame,
 		0,
-		true
+		not is_special_720_punch
 	)
 	if current_attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
 		# Launch: l'avversario vola in alto 100px e indietro 50px.
