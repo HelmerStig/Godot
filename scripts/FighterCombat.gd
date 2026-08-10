@@ -279,8 +279,14 @@ func try_attack(
 
 	var canceled_near_ground := false
 	if is_airborne_light_punch or is_airborne_medium_punch:
-		canceled_near_ground = await hold_jump_punch_until_release(
-			attack_name, attack_generation
+		canceled_near_ground = await hold_jump_attack_until_release(
+			attack_name, attack_generation, 14, 15
+		)
+		if attack_generation != action_generation:
+			return
+	elif is_airborne_light_kick or is_airborne_medium_kick:
+		canceled_near_ground = await hold_jump_attack_until_release(
+			attack_name, attack_generation, 19, 20
 		)
 		if attack_generation != action_generation:
 			return
@@ -292,6 +298,8 @@ func try_attack(
 	if (
 		not is_airborne_light_punch
 		and not is_airborne_medium_punch
+		and not is_airborne_light_kick
+		and not is_airborne_medium_kick
 		and wants_airborne_attack
 		and is_attack_button_held(attack_name)
 	):
@@ -624,17 +632,17 @@ func hold_airborne_attack_until_release(
 	return should_cancel_airborne_attack_for_landing()
 
 
-func hold_jump_punch_until_release(
+func hold_jump_attack_until_release(
 	attack_name: StringName,
-	attack_generation: int
+	attack_generation: int,
+	hold_animation_frame: int,
+	release_animation_frame: int
 ) -> bool:
-	## Il frame 14 delle sequenze corrisponde al fotogramma sorgente 20.
-	const IMPACT_ANIMATION_FRAME := 14
-	const RELEASE_ANIMATION_FRAME := 15 # Fotogramma sorgente 24, poi 23...6.
+	## Mantiene la posa d'impatto e riparte dal primo frame della recovery inversa.
 	var sprite := fighter.animated_sprite
 	while (
 		attack_generation == action_generation
-		and sprite.frame < IMPACT_ANIMATION_FRAME
+		and sprite.frame < hold_animation_frame
 		and not fighter.is_on_floor()
 	):
 		await get_tree().process_frame
@@ -642,7 +650,7 @@ func hold_jump_punch_until_release(
 		return false
 	if fighter.is_on_floor():
 		return true
-	sprite.frame = IMPACT_ANIMATION_FRAME
+	sprite.frame = hold_animation_frame
 	sprite.pause()
 	# Il colpo resta attivo almeno per un frame anche se il tasto era già stato rilasciato.
 	await get_tree().process_frame
@@ -657,7 +665,7 @@ func hold_jump_punch_until_release(
 	if fighter.is_on_floor():
 		return true
 	disable_hitbox()
-	sprite.frame = RELEASE_ANIMATION_FRAME
+	sprite.frame = release_animation_frame
 	sprite.play(current_variant.animation_name)
 	return false
 

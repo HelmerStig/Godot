@@ -32,13 +32,14 @@ hit_reaction_start_frame = 4
 script = ExtResource("2_variant")
 variant_id = &"airborne"
 animation_name = &"jump_medium_kick"
-animation_fps = 30.0
-startup_frames = 6
-active_frames = 3
-recovery_frames = 7
-active_animation_frame = 6
-hitbox_size = Vector2(150, 45)
-hitbox_position = Vector2(85, -105)
+animation_fps = 48.0
+startup_frames = 15
+active_frames = 5
+recovery_frames = 19
+active_animation_frame = 15
+hitbox_size = Vector2(170, 55)
+hitbox_position = Vector2(95, -55)
+hitbox_rotation_degrees = 12.0
 hit_height = 0
 
 [resource]

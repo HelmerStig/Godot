@@ -19,10 +19,10 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Pugno pesante | airborne | `jump_heavy_punch` | 48 | 8 | 4 | 4 | 16 | 15 | high | no |
 | Calcio leggero | standing | `light_kick` | 48 | 14 | 3 | 14 | 31 | 8 | low | no |
 | Calcio leggero | crouched | `crouched_light_kick` | 48 | 13 | 3 | 15 | 31 | 8 | low | no |
-| Calcio leggero | airborne | `jump_light_kick` | 24 | 4 | 2 | 3 | 9 | 8 | high | no |
+| Calcio leggero | airborne | `jump_light_kick` | 48 | 15 | hold | 19 | variabile | 8 | high | no |
 | Calcio medio | standing | `medium_kick` | 48 | 26 | 2 | 5 | 33 | 12* | low/high | no |
 | Calcio medio | crouched | `crouched_medium_kick` | 48 | 22 | 3 | 24 | 49 | 12 | mid | no |
-| Calcio medio | airborne | `jump_medium_kick` | 30 | 6 | 3 | 7 | 16 | 12 | high | no |
+| Calcio medio | airborne | `jump_medium_kick` | 48 | 15 | hold | 19 | variabile | 12 | high | no |
 | Calcio pesante | standing | `heavy_kick` | 48 | 24 | 4 | 5 | 33 | 20 | high | no |
 | Calcio pesante | crouched | `crouched_heavy_kick` | 48 | 22 | 7 | 20 | 49 | 20 | low | sì |
 | Calcio pesante | airborne | `jump_heavy_kick` | 30 | 7 | 3 | 6 | 16 | 20 | high | no |

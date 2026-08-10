@@ -39,6 +39,7 @@ const LEGACY_SPRITE_SCALE := Vector2(0.7, 0.7)
 const LEGACY_SPRITE_POSITION := Vector2(0.0, -120.0)
 const REWORK_SPRITE_SCALE := Vector2(0.85, 0.85)
 const REWORK_SPRITE_POSITION := Vector2(0.0, -115.0)
+const JUMP_LIGHT_KICK_SPRITE_SCALE := Vector2(0.8, 0.8)
 const GRAVITY := BASE_GRAVITY * JUMP_SPEED_MULTIPLIER * JUMP_SPEED_MULTIPLIER
 const GROUND_COLLISION_LAYER := 1
 const FIGHTER_COLLISION_LAYER := 8
@@ -146,11 +147,14 @@ const CROUCHED_LIGHT_KICK_FRAME_COUNT := 25
 const CROUCHED_LIGHT_KICK_COLUMNS := 5
 const CROUCHED_LIGHT_KICK_CELL_SIZE := Vector2(512.0, 512.0)
 const JUMP_LIGHT_KICK_SHEET := preload(
-	"res://assets/sprites/characters/mangler/jump-kick-light.png"
+	"res://assets/sprites/characters/mangler/basic-moves/light-kick/jumping_light_kick.png"
 )
-const JUMP_LIGHT_KICK_COLUMNS := 4
+const JUMP_LIGHT_KICK_COLUMNS := 5
 const JUMP_LIGHT_KICK_CELL_SIZE := Vector2(512.0, 512.0)
-const JUMP_LIGHT_KICK_SOURCE_SEQUENCE := [11, 12, 13, 14, 15, 14, 13, 12, 11]
+const JUMP_LIGHT_KICK_SOURCE_SEQUENCE := [
+	5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+	23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5,
+]
 const JUMP_LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/light-punch/jumping_light_punch.png"
 )
@@ -167,11 +171,14 @@ const JUMP_HEAVY_KICK_FRAME_COUNT := 16
 const JUMP_HEAVY_KICK_COLUMNS := 4
 const JUMP_HEAVY_KICK_CELL_SIZE := Vector2(512.0, 512.0)
 const JUMP_MEDIUM_KICK_SHEET := preload(
-	"res://assets/sprites/characters/mangler/custom_jump_kick_2.png"
+	"res://assets/sprites/characters/mangler/basic-moves/medium-kick/jump_mnedium_kick.png"
 )
-const JUMP_MEDIUM_KICK_FRAME_COUNT := 16
-const JUMP_MEDIUM_KICK_COLUMNS := 4
+const JUMP_MEDIUM_KICK_COLUMNS := 5
 const JUMP_MEDIUM_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const JUMP_MEDIUM_KICK_SOURCE_SEQUENCE := [
+	5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+	23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5,
+]
 const JUMP_MEDIUM_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/medium-punch/jumping-medium-punch.png"
 )
@@ -799,7 +806,7 @@ func configure_jump_light_kick_frames() -> void:
 	if frames.has_animation(&"jump_light_kick"):
 		frames.remove_animation(&"jump_light_kick")
 	frames.add_animation(&"jump_light_kick")
-	frames.set_animation_speed(&"jump_light_kick", 24.0)
+	frames.set_animation_speed(&"jump_light_kick", 48.0)
 	frames.set_animation_loop(&"jump_light_kick", false)
 	for source_index in JUMP_LIGHT_KICK_SOURCE_SEQUENCE:
 		var atlas_frame := AtlasTexture.new()
@@ -859,9 +866,9 @@ func configure_jump_medium_kick_frames() -> void:
 	if frames.has_animation(&"jump_medium_kick"):
 		frames.remove_animation(&"jump_medium_kick")
 	frames.add_animation(&"jump_medium_kick")
-	frames.set_animation_speed(&"jump_medium_kick", 30.0)
+	frames.set_animation_speed(&"jump_medium_kick", 48.0)
 	frames.set_animation_loop(&"jump_medium_kick", false)
-	for source_index in range(JUMP_MEDIUM_KICK_FRAME_COUNT):
+	for source_index in JUMP_MEDIUM_KICK_SOURCE_SEQUENCE:
 		var atlas_frame := AtlasTexture.new()
 		atlas_frame.atlas = JUMP_MEDIUM_KICK_SHEET
 		atlas_frame.region = Rect2(
@@ -1418,7 +1425,7 @@ func update_sprite_scale() -> void:
 	"""Ingrandisce soltanto le animazioni già convertite al nuovo formato grafico."""
 	var uses_reworked_art := animated_sprite.animation in [
 		&"idle", &"light_punch_single", &"crouched_punch", &"crouched_punch_crouched",
-		&"jump_light_punch", &"jump_medium_punch",
+		&"jump_light_punch", &"jump_medium_punch", &"jump_light_kick",
 		&"crouched_medium_punch", &"crouched_medium_punch_crouched",
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
@@ -1426,7 +1433,10 @@ func update_sprite_scale() -> void:
 		&"block_low_crouched", &"block_low_recovery", &"crouched_light_kick", &"crouched_medium_kick",
 		&"crouched_heavy_kick"
 	]
-	animated_sprite.scale = REWORK_SPRITE_SCALE if uses_reworked_art else LEGACY_SPRITE_SCALE
+	if animated_sprite.animation in [&"jump_light_kick", &"jump_medium_kick"]:
+		animated_sprite.scale = JUMP_LIGHT_KICK_SPRITE_SCALE
+	else:
+		animated_sprite.scale = REWORK_SPRITE_SCALE if uses_reworked_art else LEGACY_SPRITE_SCALE
 	animated_sprite.position = (
 		REWORK_SPRITE_POSITION if uses_reworked_art else LEGACY_SPRITE_POSITION
 	)
@@ -1607,7 +1617,12 @@ func update_state() -> void:
 	# Atterraggio durante un pugno aereo: interrompe subito attacco e recovery.
 	if (
 		current_state == State.ATTACKING
-		and (combat.is_airborne_heavy_punch or combat.is_airborne_medium_punch)
+		and (
+			combat.is_airborne_heavy_punch
+			or combat.is_airborne_medium_punch
+			or combat.is_airborne_light_kick
+			or combat.is_airborne_medium_kick
+		)
 		and is_on_floor()
 	):
 		combat.cancel_current_action()
