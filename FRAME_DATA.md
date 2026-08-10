@@ -27,6 +27,7 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Calcio pesante | crouched | `crouched_heavy_kick` | 48 | 22 | 7 | 20 | 49 | 20 | low | sì |
 | Calcio pesante | airborne | `jump_heavy_kick` | 48 | 15 | hold | 19 | variabile | 20 | high | no |
 | 720 Punch | standing | `special_720_punch` | 48 | 9 | 34 | 6 | 49 | 6×3 | high | no |
+| Sonic Boom (lancio) | standing | `special_sonic_boom` | 48 | 24 | 1 | 24 | 49 | 0 | high | no |
 
 \* Il calcio medio in piedi produce due impatti da 6 danni.
 

@@ -37,8 +37,9 @@ func _test_attack_data() -> void:
 		&"medium_kick",
 		&"heavy_kick",
 		&"special_720_punch",
+		&"special_sonic_boom",
 	]
-	_expect(character_data.attacks.size() == 7, "il profilo predefinito contiene sette AttackData")
+	_expect(character_data.attacks.size() == 8, "il profilo predefinito contiene otto AttackData")
 	for attack_id in attack_ids:
 		var attack := character_data.get_attack(attack_id)
 		_expect(attack != null, "risorsa caricata: " + str(attack_id))
@@ -406,6 +407,27 @@ func _test_combat_flow() -> void:
 		and special_720_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0)
 		and special_720_first.atlas.resource_path.ends_with("specials/720_punch.png"),
 		"720 Punch mappa integralmente l'atlante 7x7"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"special_sonic_boom")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"special_sonic_boom") == 49
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"special_sonic_boom"), 48.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"special_sonic_boom"),
+		"il lancio Sonic Boom usa 49 fotogrammi a 48 FPS senza loop"
+	)
+	var sonic_boom_first := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"special_sonic_boom", 0
+	) as AtlasTexture
+	var sonic_boom_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"special_sonic_boom", 48
+	) as AtlasTexture
+	_expect(
+		sonic_boom_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and sonic_boom_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0)
+		and sonic_boom_first.atlas.resource_path.ends_with("specials/sonic-boom.png"),
+		"il lancio Sonic Boom mappa integralmente l'atlante 7x7"
 	)
 	var jump_heavy_first := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"jump_heavy_kick", 0
@@ -1603,6 +1625,72 @@ func _test_combat_flow() -> void:
 		"atterrando durante il calcio potente aereo Mangler torna subito in IDLE"
 	)
 	player2.combat.reset()
+
+	player1.combat.cancel_current_action()
+	player1.change_state(Mangler.State.IDLE)
+	player1.input_buffer.clear()
+	player1.input_buffer.record_input_snapshot(0, 1, [], player1.is_facing_right)
+	player1.input_buffer.record_input_snapshot(1, 1, [], player1.is_facing_right)
+	player1.input_buffer.record_input_snapshot(
+		1, 0, [&"light_punch"], player1.is_facing_right
+	)
+	player1.handle_input()
+	_expect(
+		player1.combat.is_special_sonic_boom
+		and player1.current_state == Mangler.State.ATTACKING
+		and player1.animated_sprite.animation == &"special_sonic_boom",
+		"DOWN, DOWN-FORWARD, FORWARD + LIGHT PUNCH avvia il lancio Sonic Boom"
+	)
+	_expect(
+		player1.combat.hitbox_shape.disabled,
+		"la sola animazione di lancio Sonic Boom non attiva ancora una hitbox"
+	)
+	await create_timer(0.32).timeout
+	var sonic_effect := player1.get_node_or_null("SonicChargeEffect") as Node2D
+	_expect(
+		sonic_effect != null
+		and sonic_effect.get_child_count() == 2
+		and sonic_effect.get_child(0).get_node_or_null("ArmGlow") != null
+		and sonic_effect.get_child(0).get_node_or_null("GatheringParticles") != null,
+		"dal fotogramma 14 il Sonic Boom crea aloni e particelle sulle due braccia"
+	)
+	var sonic_first_arm_position := (sonic_effect.get_child(0) as Node2D).position
+	await create_timer(0.18).timeout
+	_expect(
+		player1.get_node_or_null("SonicChargeEffect") == null
+		and player1.get_node_or_null("SonicChargeExplosion") != null
+		and sonic_first_arm_position != player1.get_sonic_arm_positions(22)[0],
+		"la scia segue le braccia dal frame 14 e culmina nell'esplosione al frame 23"
+	)
+	var sonic_projectiles := get_nodes_in_group("sonic_projectile")
+	var sonic_projectile := sonic_projectiles.back() as Area2D if not sonic_projectiles.is_empty() else null
+	var projectile_sprite := (
+		sonic_projectile.get_node("AnimatedSprite2D") as AnimatedSprite2D
+		if sonic_projectile != null else null
+	)
+	_expect(
+		sonic_projectile != null
+		and projectile_sprite != null
+		and projectile_sprite.sprite_frames.get_frame_count(&"fly") == 25
+		and is_equal_approx(projectile_sprite.sprite_frames.get_animation_speed(&"fly"), 24.0)
+		and (sonic_projectile.get_node("Trail") as CPUParticles2D).emitting,
+		"dal frame 23 partono i piatti a 24 FPS con scia gialla e scintille"
+	)
+	var projectile_start_x := sonic_projectile.global_position.x if sonic_projectile != null else 0.0
+	await create_timer(0.12).timeout
+	_expect(
+		sonic_projectile == null
+		or not is_instance_valid(sonic_projectile)
+		or absf(sonic_projectile.global_position.x - projectile_start_x) > 40.0,
+		"il proiettile Sonic Boom viaggia in avanti"
+	)
+	await create_timer(0.48).timeout
+	_expect(
+		player1.current_state == Mangler.State.IDLE
+		and not player1.combat.is_attacking
+		and player1.get_node_or_null("SonicChargeEffect") == null,
+		"il lancio Sonic Boom completa i 49 frame e torna in IDLE"
+	)
 
 	player1.combat.cancel_current_action()
 	player1.change_state(Mangler.State.IDLE)

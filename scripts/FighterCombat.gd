@@ -77,6 +77,7 @@ var is_airborne_medium_punch := false
 var is_airborne_heavy_punch := false
 var is_airborne_light_punch := false
 var is_special_720_punch := false
+var is_special_sonic_boom := false
 
 @onready var hitbox: Area2D = get_parent().get_node("Hitbox")
 @onready var hitbox_shape: CollisionShape2D = get_parent().get_node("Hitbox/HitboxShape")
@@ -156,6 +157,7 @@ func try_attack(
 	)
 	var starts_crouched := fighter.current_state == Mangler.State.CROUCHING
 	var wants_special_720_punch := attack_name == &"special_720_punch"
+	var wants_special_sonic_boom := attack_name == &"special_sonic_boom"
 	var wants_airborne_light_punch := (
 		attack_name == &"light_punch"
 		and fighter.current_state == Mangler.State.JUMPING
@@ -250,6 +252,7 @@ func try_attack(
 	is_airborne_heavy_punch = wants_airborne_heavy_punch
 	is_airborne_light_punch = wants_airborne_light_punch
 	is_special_720_punch = wants_special_720_punch
+	is_special_sonic_boom = wants_special_sonic_boom
 	current_variant = attack.get_variant(get_current_variant_id())
 	if wants_airborne_attack:
 		fighter.aerial_attack_used = true
@@ -277,7 +280,8 @@ func try_attack(
 		await get_tree().create_timer(phase_durations.x).timeout
 	if attack_generation != action_generation:
 		return
-	enable_hitbox()
+	if not is_special_sonic_boom:
+		enable_hitbox()
 	print("Eseguendo attacco: %s (danno: %d)" % [attack_name, attack.damage])
 
 	var canceled_near_ground := false
@@ -323,7 +327,7 @@ func try_attack(
 		await get_tree().create_timer(phase_durations.z).timeout
 		if attack_generation != action_generation:
 			return
-	if attack.attack_id in [&"light_punch", &"medium_punch", &"heavy_punch", &"light_kick", &"medium_kick", &"heavy_kick", &"special_720_punch"]:
+	if attack.attack_id in [&"light_punch", &"medium_punch", &"heavy_punch", &"light_kick", &"medium_kick", &"heavy_kick", &"special_720_punch", &"special_sonic_boom"]:
 		while (
 			attack_generation == action_generation
 			and fighter.animated_sprite.animation in [
@@ -348,6 +352,7 @@ func try_attack(
 				&"jump_medium_punch",
 				&"jump_heavy_punch",
 				&"special_720_punch",
+				&"special_sonic_boom",
 			]
 			and fighter.animated_sprite.is_playing()
 		):
@@ -397,6 +402,7 @@ func try_attack(
 	is_airborne_heavy_punch = false
 	is_airborne_light_punch = false
 	is_special_720_punch = false
+	is_special_sonic_boom = false
 	if canceled_near_ground and fighter.is_on_floor():
 		fighter.change_state(Mangler.State.IDLE)
 	elif canceled_near_ground:
@@ -571,6 +577,7 @@ func cancel_current_action() -> void:
 	is_airborne_heavy_punch = false
 	is_airborne_light_punch = false
 	is_special_720_punch = false
+	is_special_sonic_boom = false
 	hit_targets.clear()
 	disable_hitbox()
 

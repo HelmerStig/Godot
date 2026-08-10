@@ -12,6 +12,7 @@ const DEFAULT_ATTACKS := [
 	preload("res://data/attacks/medium_kick.tres"),
 	preload("res://data/attacks/heavy_kick.tres"),
 	preload("res://data/attacks/special_720_punch.tres"),
+	preload("res://data/attacks/special_sonic_boom.tres"),
 ]
 
 # === INFORMAZIONI GENERALI ===
