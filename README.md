@@ -18,7 +18,7 @@ Il prototipo comprende:
 - barre della vita, timer e messaggi aggiornati tramite segnali;
 - debug di hitbox e hurtbox e modalità slow motion;
 - stage con sfondo ed effetti ambientali;
-- smoke test headless per input buffer e flusso di combattimento.
+- smoke test headless per risorse, varianti, animazioni, input buffer e combattimento.
 
 Il timer è visualizzato e scende da 99, ma il timeout e il sistema best-of-three sono intenzionalmente disabilitati in modalità training.
 
@@ -84,7 +84,9 @@ Esecuzione diretta, valida anche su altri sistemi:
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
-La suite verifica 53 condizioni relative ad animazione idle, `AttackData`, input buffer, ciclo degli attacchi, danno, hit-stun, guardia, segnali UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK` e codice di uscita `0`.
+La suite verifica oltre 200 condizioni relative ad animazioni, `AttackData`, `AttackVariantData`, input buffer, combattimento, UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK`.
+
+> Baseline del 10 agosto 2026: il progetto viene caricato senza errori di parsing, ma restano 25 asserzioni non allineate alle animazioni correnti. Non considerare verde il runner finché il log contiene `SMOKE_TESTS_FAILED`.
 
 ## Architettura
 
@@ -103,8 +105,11 @@ ArenaUI
 - `scenes/stages/DefaultStage.tscn`: sfondo ed effetti ambientali.
 - `scripts/Mangler.gd`: input, movimento, orientamento e transizioni di stato.
 - `scripts/AttackData.gd`: schema di danno, timing, stun e hitbox di un attacco.
+- `scripts/AttackVariantData.gd`: frame data, animazione e hitbox delle varianti contestuali.
 - `data/attacks/*.tres`: sei risorse di attacco modificabili dall'Inspector.
 - `scripts/FighterCombat.gd`: esecuzione degli attacchi, danno, guardia, reazioni e KO.
+- `scripts/ManglerAnimationSetup.gd`: punto unico di registrazione delle animazioni runtime.
+- `scripts/ManglerVisualConfig.gd`: profili degli effetti di movimento e afterimage.
 - `scripts/FighterInputBuffer.gd`: cronologia input, direzioni relative e riconoscimento sequenze.
 - `scripts/CharacterData.gd`: statistiche e configurazione del personaggio.
 - `scripts/MainArena.gd`: ciclo del training, camera, countdown, KO e reset.
@@ -141,12 +146,12 @@ In aria il corpo del fighter attraversa l'altro fighter, continuando però a col
 
 | Attacco | Danno | Startup | Active | Recovery | Totale |
 |---|---:|---:|---:|---:|---:|
-| Pugno leggero | 5 | 5f | 8f | 5f | 18f / 0,30 s |
-| Pugno medio | 10 | 7f | 10f | 10f | 27f / 0,45 s |
-| Pugno pesante | 15 | 10f | 15f | 11f | 36f / 0,60 s |
-| Calcio leggero | 8 | 6f | 10f | 8f | 24f / 0,40 s |
-| Calcio medio | 12 | 8f | 12f | 10f | 30f / 0,50 s |
-| Calcio pesante | 20 | 15f | 18f | 9f | 42f / 0,70 s |
+| Pugno leggero | 5 | 11f | 3f | 3f | 17f / 48 FPS |
+| Pugno medio | 10 | 17f | 6f | 19f | 42f / 48 FPS |
+| Pugno pesante | 15 | 38f | 4f | 28f | 70f / 48 FPS |
+| Calcio leggero | 8 | 14f | 3f | 14f | 31f / 48 FPS |
+| Calcio medio | 12 | 26f | 2f | 5f | 33f / 48 FPS |
+| Calcio pesante | 20 | 24f | 4f | 5f | 33f / 48 FPS |
 
 - Vita massima: 100 HP.
 - Velocità a terra: 200 px/s.
@@ -157,7 +162,7 @@ In aria il corpo del fighter attraversa l'altro fighter, continuando però a col
 - Hit-stun: 0,30 s.
 - Reazione di blocco: 0,15 s.
 
-Ogni riga è una risorsa `AttackData` distinta che contiene anche hit-stun, block-stun, dimensione e posizione della hitbox. `FRAME_DATA.md` documenta gli stessi valori in forma tabellare.
+La tabella descrive le varianti in piedi. Ogni `AttackData` contiene risorse `AttackVariantData`; `FRAME_DATA.md` documenta tutte le varianti.
 
 ## Asset dei personaggi
 
@@ -168,7 +173,7 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momen
 ## Limiti noti e prossime priorità
 
 - Il progetto offre training locale, non ancora round completi o best-of-three.
-- L'animazione idle di Mangler è collegata; gli altri stati attendono i rispettivi spritesheet.
+- Mangler dispone di animazioni per locomozione, guardia, reazioni, KO e attacchi; alcune aspettative della suite devono ancora essere riallineate agli atlas correnti.
 - `CharacterData` usa ancora un profilo personaggio creato in memoria, anche se gli attacchi sono risorse `.tres` dedicate.
 - Combo e mosse speciali non sono ancora collegate al gameplay, anche se l'input buffer riconosce sequenze.
 - Non sono ancora presenti IA, audio, menu, selezione personaggio o multiplayer online.

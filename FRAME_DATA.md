@@ -1,202 +1,52 @@
-# Specifiche Tecniche - Sistema di Combattimento
+# Sanmo — frame data corrente
 
-## Frame Data
+Ultimo aggiornamento: 10 agosto 2026.
 
-In un picchiaduro, ogni azione è misurata in "frame". A 60 FPS, 1 frame = 1/60 di secondo (circa 0.0167s).
+I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agli FPS della variante, non a 60 Hz.
 
-### Attacchi Base - Frame Timing
+| Attacco | Variante | Animazione | FPS | Startup | Active | Recovery | Totale | Danno | Altezza | KD |
+|---|---|---|---:|---:|---:|---:|---:|---:|---|---|
+| Pugno leggero | standing | `light_punch_single` | 48 | 11 | 3 | 3 | 17 | 5 | high | no |
+| Pugno leggero | crouched | `crouched_punch` | 48 | 10 | 3 | 5 | 18 | 5 | mid | no |
+| Pugno leggero | crouched held | `crouched_punch_crouched` | 48 | 4 | 3 | 5 | 12 | 5 | mid | no |
+| Pugno medio | standing | `medium_open_hand_slap` | 48 | 17 | 6 | 19 | 42 | 10 | high | no |
+| Pugno medio | crouched | `crouched_medium_punch` | 48 | 11 | 4 | 5 | 20 | 10 | mid | no |
+| Pugno medio | crouched held | `crouched_medium_punch_crouched` | 48 | 7 | 4 | 5 | 16 | 10 | mid | no |
+| Pugno medio | airborne | `jump_medium_punch` | 24 | 7 | 3 | 6 | 16 | 10 | high | no |
+| Pugno pesante | standing | `heavy_punch` | 48 | 38 | 4 | 28 | 70 | 15 | mid | no |
+| Pugno pesante | crouched | `crouched_power_punch` | 48 | 8 | 6 | 5 | 19 | 15 | high | no |
+| Pugno pesante | airborne | `jump_heavy_punch` | 48 | 8 | 4 | 4 | 16 | 15 | high | no |
+| Calcio leggero | standing | `light_kick` | 48 | 14 | 3 | 14 | 31 | 8 | low | no |
+| Calcio leggero | crouched | `crouched_light_kick` | 48 | 13 | 3 | 15 | 31 | 8 | low | no |
+| Calcio leggero | airborne | `jump_light_kick` | 24 | 4 | 2 | 3 | 9 | 8 | high | no |
+| Calcio medio | standing | `medium_kick` | 48 | 26 | 2 | 5 | 33 | 12* | low/high | no |
+| Calcio medio | crouched | `crouched_medium_kick` | 48 | 22 | 3 | 24 | 49 | 12 | mid | no |
+| Calcio medio | airborne | `jump_medium_kick` | 30 | 6 | 3 | 7 | 16 | 12 | high | no |
+| Calcio pesante | standing | `heavy_kick` | 48 | 24 | 4 | 5 | 33 | 20 | high | no |
+| Calcio pesante | crouched | `crouched_heavy_kick` | 48 | 22 | 7 | 20 | 49 | 20 | low | sì |
+| Calcio pesante | airborne | `jump_heavy_kick` | 30 | 7 | 3 | 6 | 16 | 20 | high | no |
 
-| Attacco        | Startup | Active | Recovery | Totale | Danno | Velocità |
-|----------------|---------|--------|----------|--------|-------|----------|
-| Pugno Leggero  | 5f      | 8f     | 5f       | 18f    | 5     | 0.30s    |
-| Pugno Medio    | 7f      | 10f    | 10f      | 27f    | 10    | 0.45s    |
-| Pugno Pesante  | 10f     | 15f    | 11f      | 36f    | 15    | 0.60s    |
-| Calcio Leggero | 6f      | 10f    | 8f       | 24f    | 8     | 0.40s    |
-| Calcio Medio   | 8f      | 12f    | 10f      | 30f    | 12    | 0.50s    |
-| Calcio Pesante | 15f     | 18f    | 9f       | 42f    | 20    | 0.70s    |
+\* Il calcio medio in piedi produce due impatti da 6 danni.
 
-**Legenda:**
-- **Startup**: Frame prima che l'hitbox diventi attiva
-- **Active**: Frame in cui l'hitbox può colpire
-- **Recovery**: Frame dopo l'attacco prima di poter agire di nuovo
-- **Totale**: Durata totale dell'animazione
+## Modello dati
 
-Questi valori sono implementati nelle risorse `data/attacks/*.tres`. Ogni `AttackData` contiene inoltre hit-stun, block-stun, dimensione e posizione della hitbox.
+- `AttackData`: identità, danno, hit-stun, block-stun e fallback compatibile.
+- `AttackVariantData`: animazione, FPS, startup/active/recovery, frame attivo, hitbox, altezza, reazione e knockdown.
+- Varianti riconosciute: `standing`, `crouched`, `crouched_held`, `airborne`.
 
-### Movimento
+I valori delle varianti non devono essere duplicati come costanti in `FighterCombat.gd`.
 
-| Azione         | Valore         | Note                              |
-|----------------|----------------|-----------------------------------|
-| Velocità Base  | 200 px/s       | Movimento orizzontale             |
-| Velocità Aerea | 280 px/s       | Controllo orizzontale durante il salto |
-| Velocità Salto | -850 px/s      | Velocità iniziale verticale       |
-| Gravità        | 1400 px/s²     | Accelerazione verso il basso      |
-| Altezza Salto  | ~258 px        | Calcolata: v²/(2g)                |
-| Durata Salto   | ~1.21s         | Tempo totale in aria              |
+## Movimento
 
-### Sistema di Danno
+| Proprietà | Valore |
+|---|---:|
+| Vita | 100 HP |
+| Camminata | 200 px/s |
+| Corsa | 320 px/s |
+| Controllo aereo | 280 px/s |
+| Impulso salto | -850 px/s |
+| Guardia corretta | 0 danni |
 
-#### Vita Base
-- **Vita massima**: 100 HP
-- **Vita iniziale**: 100 HP
+## Stato della baseline
 
-#### Modificatori Danno
-
-| Condizione           | Modificatore | Note                                    |
-|----------------------|--------------|----------------------------------------|
-| Danno normale        | 100%         | Attacco va a segno                     |
-| Con blocco           | 0%           | Nessuna perdita di vita                 |
-| Counter Hit (futuro) | 125%         | Colpire durante startup avversario     |
-| Combo scaling (fut.) | 90%-50%      | Danno ridotto nei combo                |
-
-#### Calcolo Danno con Blocco
-```
-danno_finale = 0
-```
-Esempio: Pugno Pesante (15 danno) → 0 danni se bloccato
-
-### Stati del Personaggio
-
-| Stato        | Può muoversi | Può attaccare | Può bloccare | Note                    |
-|--------------|--------------|---------------|--------------|-------------------------|
-| IDLE         | ✓            | ✓             | ✓            | Stato neutrale          |
-| WALKING      | ✓            | ✓             | ✓            | In movimento            |
-| JUMPING      | ✓ (limitato) | ✓             | ✗            | In aria                 |
-| CROUCHING    | ✗            | ✓ (futuro)    | ✓            | Accovacciato            |
-| ATTACKING    | ✗            | ✗             | ✗            | Durante attacco         |
-| BLOCKING     | ✗            | ✗             | ✓            | In difesa               |
-| HIT          | ✗            | ✗             | ✗            | Stun dopo colpo (0.3s)  |
-| KNOCKED_DOWN | ✗            | ✗             | ✗            | KO                      |
-
-### Sistema di Collisioni
-
-#### Collision Layers
-```
-Layer 1: Terreno
-Layer 2: Hitbox (attacchi)
-Layer 4: Hurtbox (zone vulnerabili)
-Layer 8: CharacterBody2D (corpo fisico del personaggio)
-```
-
-#### Collision Masks
-- **CharacterBody2D**: Mask = Layer 1 (collide con altri personaggi e terreno)
-- **Hitbox**: Mask = Layer 4 (collide con hurtbox avversari)
-- **Hurtbox**: Mask = Layer 2 (collide con hitbox avversari)
-
-### Hitbox/Hurtbox
-
-```
-Personaggio A attacca → Attiva Hitbox (Layer 2)
-                        ↓
-                   Collide con
-                        ↓
-Personaggio B Hurtbox (Layer 4) → take_damage()
-```
-
-### Sistema di Round
-
-#### Regole
-- **Durata round**: 99 secondi
-- **Vittoria**: Best of 3 rounds
-- **Condizioni vittoria**:
-  - KO: Vita avversario = 0
-  - Timeout: Chi ha più vita vince
-  - Draw: Stessa vita allo scadere (nessun vincitore)
-
-#### Sequenza Round
-1. **Countdown**: "ROUND X" (1s) → "FIGHT!" (1s)
-2. **Combattimento**: 99 secondi di gioco
-3. **Vittoria**: "PLAYER X WINS!" (2-3s)
-4. **Prossimo Round** o **Fine Match**
-
-### Meccaniche da Implementare (Futuro)
-
-#### Sistema Combo
-- **Input Buffer**: 0.1s per collegare attacchi
-- **Combo Counter**: Conteggio colpi consecutivi
-- **Combo Scaling**: Riduzione danno progressiva
-  - 2° colpo: 90% danno
-  - 3° colpo: 80% danno
-  - 4°+ colpi: 70% danno
-
-#### Special Moves
-- **Barra Super**: 0-100 punti
-  - Guadagno: +5 per attacco inflitto, +3 per attacco subito
-  - Costo mosse speciali: 25-50 punti
-- **Input Motion**: 
-  - Hadouken: ↓↘→ + Pugno
-  - Shoryuken: →↓↘ + Pugno
-  - Tatsumaki: ↓↙← + Calcio
-
-#### Advanced Mechanics
-- **Canceling**: Annullare recovery con special move
-- **Juggle System**: Colpire avversario in aria
-- **Throw System**: Presa non bloccabile
-- **Parry**: Timing perfetto per contrattaccare
-- **EX Moves**: Versione potenziata con costo super
-
-## Riferimenti Frame Data Classici
-
-### Street Fighter Frame Data Tipici
-
-**Jab (Light Punch)**
-- Startup: 3-4f
-- Active: 2-3f
-- Recovery: 5-7f
-- Frame Advantage on block: +2 to -2
-
-**Medium Punch**
-- Startup: 5-7f
-- Active: 3-4f
-- Recovery: 8-12f
-
-**Heavy Punch**
-- Startup: 8-12f
-- Active: 4-6f
-- Recovery: 15-20f
-
-### Note di Bilanciamento
-
-1. **Triangolo Attacchi**:
-   - Leggeri: Veloci, poco danno, sicuri
-   - Medi: Bilanciati
-   - Pesanti: Lenti, molto danno, rischiosi
-
-2. **Risk vs Reward**:
-   - Attacchi più forti = più rischio se mancano
-   - Bloccare attacco pesante = opportunità di contrattacco
-
-3. **Spacing**:
-   - Range attacchi diverso per gameplay tattico
-   - Pugno: Range corto
-   - Calcio: Range medio-lungo
-
-## Formule Utili
-
-### Calcolo Frame da Secondi
-```
-frame = secondi * 60
-secondi = frame / 60
-```
-
-### Calcolo Altezza Salto
-```
-altezza_max = velocità_iniziale² / (2 * gravità)
-altezza_max = 850² / (2 * 1400) = 258.0 px
-```
-
-### Calcolo Tempo in Aria
-```
-tempo_totale = 2 * velocità_iniziale / gravità
-tempo_totale = 2 * 850 / 1400 = 1.214 s
-```
-
-### Scaling Combo
-```
-danno_combo = danno_base * (0.9 ^ (n-1))
-dove n = numero colpo nel combo
-```
-
----
-
-**Note**: Questi valori sono un punto di partenza. Playtest e iterazione sono essenziali per trovare il bilanciamento perfetto!
+Al 10 agosto 2026 il caricamento headless non presenta errori di parsing. La suite registra 25 asserzioni fallite, concentrate su slicing/FPS degli atlas e sincronizzazione di alcuni frame attivi. Prima del refactoring erano 26. Questa pagina descrive i dati runtime correnti.

@@ -1,6 +1,45 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/AttackData.gd" id="1_attack"]
+[ext_resource type="Script" path="res://scripts/AttackVariantData.gd" id="2_variant"]
+
+[sub_resource type="Resource" id="Variant_standing"]
+script = ExtResource("2_variant")
+variant_id = &"standing"
+animation_name = &"light_kick"
+startup_frames = 14
+active_frames = 3
+recovery_frames = 14
+active_animation_frame = 14
+hitbox_size = Vector2(185, 35)
+hitbox_position = Vector2(97.5, -55)
+hit_height = 2
+
+[sub_resource type="Resource" id="Variant_crouched"]
+script = ExtResource("2_variant")
+variant_id = &"crouched"
+animation_name = &"crouched_light_kick"
+startup_frames = 13
+active_frames = 3
+recovery_frames = 15
+active_animation_frame = 13
+hitbox_size = Vector2(190, 35)
+hitbox_position = Vector2(95, -45)
+hit_height = 2
+hit_reaction_start_frame = 4
+
+[sub_resource type="Resource" id="Variant_airborne"]
+script = ExtResource("2_variant")
+variant_id = &"airborne"
+animation_name = &"jump_light_kick"
+animation_fps = 24.0
+startup_frames = 4
+active_frames = 2
+recovery_frames = 3
+active_animation_frame = 4
+hitbox_size = Vector2(150, 45)
+hitbox_position = Vector2(85, -105)
+hit_height = 0
 
 [resource]
 script = ExtResource("1_attack")
@@ -14,3 +53,4 @@ blockstun = 0.15
 hit_height = 1
 hitbox_size = Vector2(185, 35)
 hitbox_position = Vector2(97.5, -55)
+variants = Array[Resource]([SubResource("Variant_standing"), SubResource("Variant_crouched"), SubResource("Variant_airborne")])

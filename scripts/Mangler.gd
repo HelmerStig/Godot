@@ -1,6 +1,9 @@
 extends CharacterBody2D
 class_name Mangler
 
+const AnimationSetup := preload("res://scripts/ManglerAnimationSetup.gd")
+const VisualConfig := preload("res://scripts/ManglerVisualConfig.gd")
+
 ## Corpo e coordinatore del fighter: input, movimento, stato e orientamento.
 
 signal health_changed(current_health: int, max_health: int)
@@ -293,34 +296,7 @@ var crouched_heavy_punch_has_jumped := false
 
 func _ready() -> void:
 	default_z_index = z_index
-	configure_idle_frames()
-	configure_walk_frames()
-	configure_backwalk_frames()
-	configure_run_frames()
-	configure_heavy_punch_high_frames()
-	configure_crouched_heavy_punch_frames()
-	configure_light_punch_frames()
-	configure_crouched_light_punch_frames()
-	configure_crouched_light_punch_crouched_frames()
-	configure_crouch_frames()
-	configure_block_high_frames()
-	configure_block_mid_frames()
-	configure_block_low_frames()
-	configure_crouched_heavy_kick_frames()
-	configure_sweep_knockdown_frames()
-	configure_standing_heavy_kick_frames()
-	configure_crouched_medium_kick_frames()
-	configure_standing_medium_kick_frames()
-	configure_crouched_light_kick_frames()
-	configure_standing_light_kick_frames()
-	configure_jump_light_kick_frames()
-	configure_jump_medium_kick_frames()
-	configure_jump_heavy_kick_frames()
-	configure_medium_punch_frames()
-	configure_crouched_medium_punch_frames()
-	configure_crouched_medium_punch_crouched_frames()
-	configure_jump_medium_punch_frames()
-	configure_jump_heavy_punch_frames()
+	AnimationSetup.configure_all(self)
 	input_buffer = FighterInputBuffer.new(player_number)
 	shadow_ground_y = global_position.y
 	duplicate_collision_shapes()
@@ -1780,7 +1756,12 @@ func _on_combat_knocked_out() -> void:
 
 func _on_combat_attack_started(attack_name: StringName) -> void:
 	bring_player_one_to_foreground()
-	if attack_name == &"light_punch" and combat.is_crouched_light_punch:
+	if (
+		combat.current_variant != null
+		and animated_sprite.sprite_frames.has_animation(combat.current_variant.animation_name)
+	):
+		animated_sprite.play(combat.current_variant.animation_name)
+	elif attack_name == &"light_punch" and combat.is_crouched_light_punch:
 		var crouched_animation := (
 			&"crouched_punch_crouched"
 			if combat.crouched_punch_started_crouched
@@ -1855,85 +1836,7 @@ func restore_default_render_order() -> void:
 
 
 func get_attack_motion_profile(animation_name: StringName) -> Dictionary:
-	if animation_name == &"crouched_heavy_kick":
-		return {
-			"start_ratio": 0.12,
-			"end_ratio": 0.63,
-			"tint": Color(0.82, 0.9, 1.0),
-			"alpha": SWEEP_AFTERIMAGE_ALPHA,
-			"lifetime": SWEEP_AFTERIMAGE_LIFETIME,
-			"offset": SWEEP_AFTERIMAGE_OFFSET,
-			"stretch": 1.04,
-		}
-	if animation_name == &"jump_heavy_punch":
-		return {
-			"start_ratio": 0.10,
-			"end_ratio": 0.90,
-			"tint": Color(1.0, 0.72, 0.35),
-			"alpha": 0.40,
-			"lifetime": 0.22,
-			"offset": 14.0,
-			"stretch": 1.12,
-		}
-	if animation_name in [
-		&"jump_light_kick", &"jump_medium_kick", &"jump_heavy_kick", &"jump_medium_punch",
-		&"jump_heavy_punch"
-	]:
-		return {
-			"start_ratio": 0.18,
-			"end_ratio": 0.78,
-			"tint": Color(0.72, 0.88, 1.0),
-			"alpha": 0.24,
-			"lifetime": 0.13,
-			"offset": 7.0,
-			"stretch": 1.03,
-		}
-	if animation_name in [
-		&"heavy_punch", &"crouched_power_punch", &"heavy_kick"
-	]:
-		return {
-			"start_ratio": 0.28,
-			"end_ratio": 0.78,
-			"tint": Color(1.0, 0.78, 0.55),
-			"alpha": 0.3,
-			"lifetime": 0.16,
-			"offset": 10.0,
-			"stretch": 1.06,
-		}
-	if animation_name in [
-		&"medium_open_hand_slap",
-		&"crouched_medium_punch",
-		&"crouched_medium_punch_crouched",
-		&"light_kick",
-		&"medium_kick",
-		&"crouched_medium_kick",
-	]:
-		return {
-			"start_ratio": 0.24,
-			"end_ratio": 0.72,
-			"tint": Color(0.86, 0.92, 1.0),
-			"alpha": 0.22,
-			"lifetime": 0.12,
-			"offset": 6.0,
-			"stretch": 1.025,
-		}
-	if animation_name in [
-		&"light_punch_single",
-		&"light_punch_double",
-		&"crouched_punch",
-		&"crouched_punch_crouched",
-		&"crouched_light_kick",
-	]:
-		return {
-			"start_ratio": 0.2,
-			"end_ratio": 0.62,
-			"tint": Color.WHITE,
-			"alpha": 0.16,
-			"lifetime": 0.09,
-			"offset": 4.0,
-			"stretch": 1.01,
-		}
-	return {}
+	return VisualConfig.get_motion_profile(animation_name)
 
 
 func has_attack_motion_effect(animation_name: StringName) -> bool:

@@ -1,6 +1,6 @@
 # Memoria del progetto
 
-Ultimo aggiornamento: 15 luglio 2026
+Ultimo aggiornamento: 10 agosto 2026
 
 ## Obiettivo attuale
 
@@ -21,8 +21,8 @@ Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La p
 - Overlay collisioni con `F3` e slow motion con `F4`.
 - Stage con sfondo ed effetti ambientali.
 - Sprite personaggi ridotti a PNG RGBA 512×512; scala della scena condivisa impostata a `0.7`.
-- Idle di Mangler configurato come `AnimatedSprite2D`: 25 frame, 10 FPS, loop.
-- Rimossi lo scaffolding vuoto `node_2d.tscn` e lo script parallasse non collegabile `ParallaxStage.gd`.
+- Mangler dispone di animazioni per locomozione, attacchi, guardia, reazioni e KO.
+- Le varianti delle mosse sono risorse `AttackVariantData` embedded nei sei attacchi `.tres`.
 
 ## Architettura corrente
 
@@ -31,6 +31,7 @@ Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La p
 - `scenes/stages/DefaultStage.tscn`: stage predefinito.
 - `scripts/Mangler.gd`: coordinatore del fighter; gestisce input, movimento, orientamento e stato.
 - `scripts/AttackData.gd`: schema dati di un attacco.
+- `scripts/AttackVariantData.gd`: frame data e geometria delle varianti contestuali.
 - `data/attacks/*.tres`: risorse dei sei attacchi base.
 - `scripts/FighterCombat.gd`: ciclo degli attacchi, vita, danno, guardia, reazioni e KO.
 - `scripts/FighterInputBuffer.gd`: snapshot input, direzioni relative, consumo attacchi e sequenze recenti.
@@ -39,6 +40,8 @@ Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La p
 - `scripts/ArenaUI.gd`: unico componente che modifica barre vita, timer e messaggi.
 - `scripts/FighterDebugOverlay.gd`: disegno diagnostico delle collisioni.
 - `scripts/StageAmbientEffects.gd`: movimento degli effetti ambientali.
+- `scripts/ManglerAnimationSetup.gd`: registro centrale delle animazioni runtime.
+- `scripts/ManglerVisualConfig.gd`: profili degli effetti di movimento.
 - `tests/smoke_tests.gd`: suite headless permanente.
 
 Il flusso degli eventi è:
@@ -56,7 +59,7 @@ FighterCombat → Mangler → MainArena → ArenaUI
 - Conservare `Mangler` come autorità sulle transizioni tramite `change_state()`.
 - Isolare il combattimento in `FighterCombat`, evitando per ora una classe separata per ogni stato.
 - Usare `CharacterData` come fonte di movimento, vita e lista degli attacchi disponibili.
-- Usare `AttackData` come unica fonte di danno, startup, active, recovery, hit-stun, block-stun e hitbox.
+- Usare `AttackData` per identità/danno/stun e `AttackVariantData` per animazione, frame attivi, timing, hitbox, altezza e knockdown.
 - Proteggere coroutine di attacco, hit-stun e block-stun con un contatore di generazione.
 - Usare segnali tra combattimento, fighter, arena e UI.
 - Mantenere input separati per i due giocatori.
@@ -77,7 +80,7 @@ Esecuzione diretta:
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
-La suite corrente esegue 53 verifiche e copre:
+La suite corrente esegue oltre 200 verifiche e copre:
 
 - configurazione, autoplay e orientamento dell'animazione idle;
 - caricamento, lookup e validazione delle sei risorse `AttackData`;
@@ -91,7 +94,7 @@ La suite corrente esegue 53 verifiche e copre:
 - KO, blocco dei controlli e messaggio del vincitore;
 - reset di vita, stato, UI e training.
 
-Ultimo risultato noto: `SMOKE_TESTS_OK`, codice di uscita `0`.
+Ultimo risultato noto (10 agosto 2026): caricamento senza errori di parsing e `SMOKE_TESTS_FAILED` con 25 asserzioni, contro le 26 della baseline precedente al refactoring.
 
 ## Controlli attuali
 
@@ -123,7 +126,8 @@ Ultimo risultato noto: `SMOKE_TESTS_OK`, codice di uscita `0`.
 ## Debito tecnico noto
 
 - `CharacterData` viene creato in memoria e non esistono profili `.tres` per i personaggi.
-- Solo l'idle di Mangler è collegato; mancano ancora walk, jump, crouch, guard, hit, KO e attacchi.
+- Le funzioni di slicing degli atlas sono ancora fisicamente in `Mangler.gd`, anche se registrazione e profili effetti sono stati estratti.
+- Venticinque aspettative della suite non sono allineate agli atlas e timing correnti.
 - Gli asset di Arianna, Bue, Mileto, Peirolo e Torpe non sono ancora collegati a fighter giocabili.
 - `end_round_timeout()`, `next_round()` ed `end_match()` sono segnaposto.
 - Il timer continua a essere visualizzato in training, ma non termina il round.
@@ -133,12 +137,12 @@ Ultimo risultato noto: `SMOKE_TESTS_OK`, codice di uscita `0`.
 
 ## Priorità successive
 
-1. Collegare stati e attacchi ad animazioni e feedback visivi.
-2. Creare risorse `CharacterData` dedicate ai personaggi.
-3. Aggiungere un secondo tipo di fighter o una IA basilare.
+1. Riallineare atlas, frame attivi e smoke test fino a `SMOKE_TESTS_OK`.
+2. Migrare per gruppi le funzioni di slicing da `Mangler.gd` al componente animazioni.
+3. Creare risorse `CharacterData` dedicate ai personaggi.
 4. Implementare round, timeout, punteggio e best-of-three.
 5. Collegare combo e mosse speciali all'input buffer.
 
 ## Nota per la prossima sessione
 
-Prima di nuove modifiche eseguire `tests/run_smoke_tests.cmd`. Il prossimo intervento tecnico consigliato è collegare stati e attacchi alle animazioni.
+Prima di nuove modifiche eseguire `tests/run_smoke_tests.cmd`. Il prossimo intervento è risolvere le 25 discrepanze della baseline e proseguire l'estrazione dello slicing da `Mangler.gd`.

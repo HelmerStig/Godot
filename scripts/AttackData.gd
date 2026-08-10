@@ -26,9 +26,19 @@ enum HitHeight {
 @export var hitbox_size := Vector2(70.0, 35.0)
 @export var hitbox_position := Vector2(35.0, -110.0)
 
+@export_group("Variants")
+@export var variants: Array[Resource] = []
+
 
 func get_total_duration() -> float:
 	return startup + active + recovery
+
+
+func get_variant(variant_id: StringName) -> Resource:
+	for variant in variants:
+		if variant != null and variant.variant_id == variant_id:
+			return variant
+	return null
 
 
 func is_valid() -> bool:
@@ -42,4 +52,14 @@ func is_valid() -> bool:
 		and blockstun >= 0.0
 		and hitbox_size.x > 0.0
 		and hitbox_size.y > 0.0
+		and _variants_are_valid()
 	)
+
+
+func _variants_are_valid() -> bool:
+	var seen_ids: Dictionary = {}
+	for variant in variants:
+		if variant == null or not variant.is_valid() or seen_ids.has(variant.variant_id):
+			return false
+		seen_ids[variant.variant_id] = true
+	return true

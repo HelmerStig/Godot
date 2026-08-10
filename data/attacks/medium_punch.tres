@@ -1,6 +1,58 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/AttackData.gd" id="1_attack"]
+[ext_resource type="Script" path="res://scripts/AttackVariantData.gd" id="2_variant"]
+
+[sub_resource type="Resource" id="Variant_standing"]
+script = ExtResource("2_variant")
+variant_id = &"standing"
+animation_name = &"medium_open_hand_slap"
+startup_frames = 17
+active_frames = 6
+recovery_frames = 19
+active_animation_frame = 17
+hitbox_size = Vector2(185, 35)
+hitbox_position = Vector2(92.5, -210)
+hit_height = 0
+
+[sub_resource type="Resource" id="Variant_crouched"]
+script = ExtResource("2_variant")
+variant_id = &"crouched"
+animation_name = &"crouched_medium_punch"
+startup_frames = 11
+active_frames = 4
+recovery_frames = 5
+active_animation_frame = 11
+hitbox_size = Vector2(195, 40)
+hitbox_position = Vector2(100, -108)
+hit_height = 1
+hit_reaction_start_frame = 4
+
+[sub_resource type="Resource" id="Variant_crouched_held"]
+script = ExtResource("2_variant")
+variant_id = &"crouched_held"
+animation_name = &"crouched_medium_punch_crouched"
+startup_frames = 7
+active_frames = 4
+recovery_frames = 5
+active_animation_frame = 7
+hitbox_size = Vector2(195, 40)
+hitbox_position = Vector2(100, -108)
+hit_height = 1
+hit_reaction_start_frame = 4
+
+[sub_resource type="Resource" id="Variant_airborne"]
+script = ExtResource("2_variant")
+variant_id = &"airborne"
+animation_name = &"jump_medium_punch"
+animation_fps = 24.0
+startup_frames = 7
+active_frames = 3
+recovery_frames = 6
+active_animation_frame = 7
+hitbox_size = Vector2(100, 35)
+hitbox_position = Vector2(50, -110)
+hit_height = 0
 
 [resource]
 script = ExtResource("1_attack")
@@ -15,3 +67,4 @@ hit_height = 0
 hit_reaction_start_frame = 3
 hitbox_size = Vector2(100, 35)
 hitbox_position = Vector2(50, -110)
+variants = Array[Resource]([SubResource("Variant_standing"), SubResource("Variant_crouched"), SubResource("Variant_crouched_held"), SubResource("Variant_airborne")])

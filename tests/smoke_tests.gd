@@ -45,6 +45,27 @@ func _test_attack_data() -> void:
 			_expect(attack.is_valid(), "risorsa valida: " + str(attack_id))
 
 	var light_punch := character_data.get_attack(&"light_punch")
+	var standing_light: Resource
+	var crouched_light: Resource
+	if light_punch != null:
+		for variant in light_punch.variants:
+			if variant.variant_id == &"standing":
+				standing_light = variant
+			elif variant.variant_id == &"crouched":
+				crouched_light = variant
+	_expect(
+		standing_light != null
+		and standing_light.animation_name == &"light_punch_single"
+		and standing_light.startup_frames == 11
+		and standing_light.active_frames == 3,
+		"il frame data del light punch in piedi proviene da AttackVariantData"
+	)
+	_expect(
+		crouched_light != null
+		and crouched_light.hitbox_size == Vector2(150.0, 35.0)
+		and crouched_light.hit_height == AttackData.HitHeight.MID,
+		"la variante accovacciata contiene hitbox e altezza del colpo"
+	)
 	_expect(
 		light_punch != null and is_equal_approx(light_punch.get_total_duration(), 0.3),
 		"startup, active e recovery determinano la durata totale"
