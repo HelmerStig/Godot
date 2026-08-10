@@ -25,7 +25,7 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Calcio medio | airborne | `jump_medium_kick` | 48 | 15 | hold | 19 | variabile | 12 | high | no |
 | Calcio pesante | standing | `heavy_kick` | 48 | 24 | 4 | 5 | 33 | 20 | high | no |
 | Calcio pesante | crouched | `crouched_heavy_kick` | 48 | 22 | 7 | 20 | 49 | 20 | low | sì |
-| Calcio pesante | airborne | `jump_heavy_kick` | 30 | 7 | 3 | 6 | 16 | 20 | high | no |
+| Calcio pesante | airborne | `jump_heavy_kick` | 48 | 15 | hold | 19 | variabile | 20 | high | no |
 
 \* Il calcio medio in piedi produce due impatti da 6 danni.
 

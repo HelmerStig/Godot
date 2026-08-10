@@ -377,25 +377,37 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"jump_heavy_kick")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_heavy_kick") == 16
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"jump_heavy_kick") == 39
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"jump_heavy_kick"),
-			30.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"jump_heavy_kick"),
-		"il calcio potente aereo usa tutti i 16 frame di medium_jump_kick a 30 FPS"
+		"il calcio potente aereo usa la sequenza 6-25-6 a 48 FPS"
 	)
 	var jump_heavy_first := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"jump_heavy_kick", 0
 	) as AtlasTexture
-	var jump_heavy_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+	var jump_heavy_active := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"jump_heavy_kick", 15
 	) as AtlasTexture
+	var jump_heavy_hold := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_heavy_kick", 19
+	) as AtlasTexture
+	var jump_heavy_release := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_heavy_kick", 20
+	) as AtlasTexture
+	var jump_heavy_last := player1.animated_sprite.sprite_frames.get_frame_texture(
+		&"jump_heavy_kick", 38
+	) as AtlasTexture
 	_expect(
-		jump_heavy_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
-		and jump_heavy_last.region == Rect2(1536.0, 1536.0, 512.0, 512.0)
-		and jump_heavy_first.atlas.resource_path.ends_with("medium_jump_kick.png"),
-		"il calcio potente aereo riproduce il foglio dal primo all'ultimo frame"
+		jump_heavy_first.region == Rect2(0.0, 512.0, 512.0, 512.0)
+		and jump_heavy_active.region == Rect2(0.0, 2048.0, 512.0, 512.0)
+		and jump_heavy_hold.region == Rect2(2048.0, 2048.0, 512.0, 512.0)
+		and jump_heavy_release.region == Rect2(1536.0, 2048.0, 512.0, 512.0)
+		and jump_heavy_last.region == jump_heavy_first.region
+		and jump_heavy_first.atlas.resource_path.ends_with("strong_jump-kick.png"),
+		"il calcio potente aereo mappa i fotogrammi sorgente 6, 21, 25, 24 e 6"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"jump_medium_kick")
@@ -1511,7 +1523,11 @@ func _test_combat_flow() -> void:
 	player1.move_and_slide()
 	player1.change_state(Mangler.State.JUMPING)
 	var aerial_heavy_velocity_before_attack := player1.velocity
-	player1.combat.try_attack(&"heavy_kick")
+	Input.action_press(player1.get_input_action("heavy_kick"))
+	player1.input_buffer.record_input_snapshot(
+		0, 0, [&"heavy_kick"], player1.is_facing_right
+	)
+	player1.handle_input()
 	_expect(
 		player1.combat.is_airborne_heavy_kick
 		and player1.current_state == Mangler.State.ATTACKING
@@ -1522,11 +1538,23 @@ func _test_combat_flow() -> void:
 		is_equal_approx(player1.velocity.x, aerial_heavy_velocity_before_attack.x),
 		"il calcio potente aereo conserva la traiettoria del salto"
 	)
+	await create_timer(0.45).timeout
 	var jump_heavy_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
 		jump_heavy_kick_shape.size == FighterCombat.JUMP_HEAVY_KICK_HITBOX_SIZE
-		and player1.combat.hitbox_shape.position == FighterCombat.JUMP_HEAVY_KICK_HITBOX_POSITION,
-		"il calcio potente aereo usa la propria hitbox"
+		and player1.combat.hitbox_shape.position == FighterCombat.JUMP_HEAVY_KICK_HITBOX_POSITION
+		and is_equal_approx(player1.combat.hitbox_shape.rotation_degrees, 10.0),
+		"il calcio potente aereo usa una hitbox inclinata lungo la gamba"
+	)
+	_expect(
+		player1.animated_sprite.frame == 19
+		and not player1.animated_sprite.is_playing()
+		and not player1.combat.hitbox_shape.disabled,
+		"tenendo HEAVY KICK il calcio aereo resta sul fotogramma 25 con hitbox attiva"
+	)
+	_expect(
+		player1.animated_sprite.scale == Mangler.JUMP_LIGHT_KICK_SPRITE_SCALE,
+		"il calcio potente aereo mantiene la scala dei nuovi sprite di salto"
 	)
 	player1.combat._apply_hit_to_area(player2.get_node("Hurtbox") as Area2D)
 	_expect(
@@ -1534,16 +1562,24 @@ func _test_combat_flow() -> void:
 		and player2.animated_sprite.animation == &"hurt_high",
 		"il calcio potente aereo infligge danno heavy e provoca hurt_high"
 	)
-	await create_timer(player1.get_animation_duration(&"jump_heavy_kick") + 0.05).timeout
+	Input.action_release(player1.get_input_action("heavy_kick"))
+	await process_frame
+	await process_frame
 	_expect(
-		player1.current_state == Mangler.State.JUMPING,
-		"al termine del calcio potente aereo Mangler torna allo stato di salto"
+		player1.animated_sprite.frame >= 20
+		and player1.combat.hitbox_shape.disabled,
+		"rilasciando HEAVY KICK il calcio potente torna indietro e disattiva la hitbox"
 	)
-	player1.position = aerial_test_position
+	player1.global_position.y = player1.shadow_ground_y
 	player1.velocity = Vector2(0.0, 1.0)
 	player1.move_and_slide()
-	player1.velocity = Vector2.ZERO
-	player1.change_state(Mangler.State.IDLE)
+	player1.update_state()
+	_expect(
+		player1.current_state == Mangler.State.IDLE
+		and player1.animated_sprite.animation == &"idle"
+		and not player1.combat.is_attacking,
+		"atterrando durante il calcio potente aereo Mangler torna subito in IDLE"
+	)
 	player2.combat.reset()
 
 	var light_punch := player1.character_data.get_attack(&"light_punch")
@@ -2162,4 +2198,5 @@ func _release_test_actions() -> void:
 	Input.action_release(&"p1_light_punch")
 	Input.action_release(&"p1_medium_punch")
 	Input.action_release(&"p1_medium_kick")
+	Input.action_release(&"p1_heavy_kick")
 	Input.action_release(&"p2_move_right")

@@ -40,8 +40,8 @@ const CROUCHED_LIGHT_KICK_HITBOX_SIZE := Vector2(190.0, 35.0)
 const CROUCHED_LIGHT_KICK_HITBOX_POSITION := Vector2(95.0, -45.0)
 const JUMP_LIGHT_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
 const JUMP_LIGHT_KICK_HITBOX_POSITION := Vector2(85.0, -105.0)
-const JUMP_HEAVY_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
-const JUMP_HEAVY_KICK_HITBOX_POSITION := Vector2(85.0, -105.0)
+const JUMP_HEAVY_KICK_HITBOX_SIZE := Vector2(220.0, 65.0)
+const JUMP_HEAVY_KICK_HITBOX_POSITION := Vector2(125.0, -60.0)
 const JUMP_MEDIUM_KICK_HITBOX_SIZE := Vector2(150.0, 45.0)
 const JUMP_MEDIUM_KICK_HITBOX_POSITION := Vector2(85.0, -105.0)
 const STANDING_HEAVY_PUNCH_HITBOX_SIZE := Vector2(225.0, 45.0)
@@ -284,7 +284,7 @@ func try_attack(
 		)
 		if attack_generation != action_generation:
 			return
-	elif is_airborne_light_kick or is_airborne_medium_kick:
+	elif is_airborne_light_kick or is_airborne_medium_kick or is_airborne_heavy_kick:
 		canceled_near_ground = await hold_jump_attack_until_release(
 			attack_name, attack_generation, 19, 20
 		)
@@ -300,6 +300,7 @@ func try_attack(
 		and not is_airborne_medium_punch
 		and not is_airborne_light_kick
 		and not is_airborne_medium_kick
+		and not is_airborne_heavy_kick
 		and wants_airborne_attack
 		and is_attack_button_held(attack_name)
 	):
