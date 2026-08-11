@@ -213,6 +213,15 @@ const SPECIAL_SONIC_BOOM_SHEET := preload(
 const SPECIAL_SONIC_BOOM_FRAME_COUNT := 49
 const SPECIAL_SONIC_BOOM_COLUMNS := 7
 const SPECIAL_SONIC_BOOM_CELL_SIZE := Vector2(512.0, 512.0)
+const GRAB_TENTATIVE_REAR_SHEET := preload(
+	"res://assets/sprites/characters/mangler/prese/grab_tentative_rear.png"
+)
+const GRAB_TENTATIVE_FRONT_SHEET := preload(
+	"res://assets/sprites/characters/mangler/prese/grab_tentative_front.png"
+)
+const GRAB_TENTATIVE_FRAME_COUNT := 25
+const GRAB_TENTATIVE_COLUMNS := 5
+const GRAB_TENTATIVE_CELL_SIZE := Vector2(512.0, 512.0)
 const SONIC_PROJECTILE_SPEED_MULTIPLIERS := {
 	&"light_punch": 1.0,
 	&"medium_punch": 1.3,
@@ -329,14 +338,20 @@ var aerial_attack_used := false
 var force_idle_until_landing := false
 var crouched_heavy_punch_has_jumped := false
 var sonic_charge_effect: Node2D
+var grab_succeeded := false
+var grabbed_target: Mangler
+var grabbed_by: Mangler
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var grab_front_sprite: AnimatedSprite2D = $GrabFrontSprite
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var head_hurtbox: CollisionShape2D = $Hurtbox/HeadHurtbox
 @onready var torso_hurtbox: CollisionShape2D = $Hurtbox/TorsoHurtbox
 @onready var legs_hurtbox: CollisionShape2D = $Hurtbox/LegsHurtbox
 @onready var combat: FighterCombat = $Combat
 @onready var ground_shadow: Polygon2D = $GroundShadow
+@onready var grab_box: Area2D = $GrabBox
+@onready var grab_box_shape: CollisionShape2D = $GrabBox/GrabBoxShape
 
 
 func _ready() -> void:
@@ -1214,7 +1229,54 @@ func configure_special_sonic_boom_frames() -> void:
 		frames.add_frame(&"special_sonic_boom", atlas_frame)
 
 
+func configure_grab_tentative_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name: StringName in [&"grab_tentative", &"grab_tentative_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(GRAB_TENTATIVE_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = GRAB_TENTATIVE_REAR_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % GRAB_TENTATIVE_COLUMNS),
+				float(floori(float(source_index) / GRAB_TENTATIVE_COLUMNS))
+			) * GRAB_TENTATIVE_CELL_SIZE,
+			GRAB_TENTATIVE_CELL_SIZE
+		)
+		frames.add_frame(&"grab_tentative", atlas_frame)
+	for source_index in range(GRAB_TENTATIVE_FRAME_COUNT - 2, -1, -1):
+		frames.add_frame(
+			&"grab_tentative_recovery",
+			frames.get_frame_texture(&"grab_tentative", source_index)
+		)
+	var front_frames := SpriteFrames.new()
+	front_frames.add_animation(&"grab_tentative_front")
+	front_frames.set_animation_speed(&"grab_tentative_front", 48.0)
+	front_frames.set_animation_loop(&"grab_tentative_front", false)
+	for source_index in range(GRAB_TENTATIVE_FRAME_COUNT):
+		var front_atlas_frame := AtlasTexture.new()
+		front_atlas_frame.atlas = GRAB_TENTATIVE_FRONT_SHEET
+		front_atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % GRAB_TENTATIVE_COLUMNS),
+				float(floori(float(source_index) / GRAB_TENTATIVE_COLUMNS))
+			) * GRAB_TENTATIVE_CELL_SIZE,
+			GRAB_TENTATIVE_CELL_SIZE
+		)
+		front_frames.add_frame(&"grab_tentative_front", front_atlas_frame)
+	grab_front_sprite.sprite_frames = front_frames
+	grab_front_sprite.animation = &"grab_tentative_front"
+
+
 func _physics_process(delta: float) -> void:
+	if is_instance_valid(grabbed_by):
+		velocity = Vector2.ZERO
+		update_ground_shadow()
+		return
 	if (
 		is_instance_valid(sonic_charge_effect)
 		and (current_state != State.ATTACKING or animated_sprite.animation != &"special_sonic_boom")
@@ -1276,6 +1338,10 @@ func handle_input() -> void:
 	combat.set_guarding(is_holding_back() and is_on_floor())
 
 	if is_on_floor():
+		if is_grab_chord_pressed():
+			input_buffer.clear()
+			start_grab_tentative()
+			return
 		if is_special_720_punch_chord_pressed():
 			input_buffer.clear()
 			combat.try_attack(&"special_720_punch")
@@ -1348,6 +1414,73 @@ func is_special_720_punch_chord_pressed() -> bool:
 			or Input.is_action_just_pressed(medium_action)
 		)
 	)
+
+
+func is_grab_chord_pressed() -> bool:
+	var light_punch_action := get_input_action("light_punch")
+	var light_kick_action := get_input_action("light_kick")
+	return (
+		Input.is_action_pressed(light_punch_action)
+		and Input.is_action_pressed(light_kick_action)
+		and (
+			Input.is_action_just_pressed(light_punch_action)
+			or Input.is_action_just_pressed(light_kick_action)
+		)
+	)
+
+
+func start_grab_tentative() -> void:
+	grab_succeeded = false
+	grabbed_target = null
+	velocity = Vector2.ZERO
+	combat.set_guarding(false)
+	change_state(State.ATTACKING)
+	grab_box_shape.set_deferred("disabled", false)
+	grab_front_sprite.visible = true
+	grab_front_sprite.frame = 0
+	animated_sprite.play(&"grab_tentative")
+
+
+func try_complete_grab() -> void:
+	if grab_succeeded:
+		return
+	for area in grab_box.get_overlapping_areas():
+		if not area.is_in_group("hurtbox"):
+			continue
+		var target := area.get_parent() as Mangler
+		if target == null or target == self or is_instance_valid(target.grabbed_by):
+			continue
+		grab_succeeded = true
+		grabbed_target = target
+		z_index = target.z_index - 1
+		target.become_grabbed(self)
+		grab_box_shape.set_deferred("disabled", true)
+		animated_sprite.pause()
+		return
+	grab_box_shape.set_deferred("disabled", true)
+	animated_sprite.play(&"grab_tentative_recovery")
+
+
+func become_grabbed(attacker: Mangler) -> void:
+	combat.cancel_current_action()
+	grabbed_by = attacker
+	controls_enabled = false
+	can_move = false
+	velocity = Vector2.ZERO
+	animated_sprite.pause()
+
+
+func release_grab() -> void:
+	if is_instance_valid(grabbed_target):
+		grabbed_target.grabbed_by = null
+		grabbed_target.controls_enabled = true
+		grabbed_target.change_state(State.IDLE)
+	grabbed_target = null
+	grab_succeeded = false
+	grabbed_by = null
+	grab_box_shape.set_deferred("disabled", true)
+	grab_front_sprite.visible = false
+	z_index = default_z_index
 
 
 func get_special_720_movement_velocity() -> float:
@@ -1535,6 +1668,7 @@ func update_sprite_scale() -> void:
 		&"jump_light_punch", &"jump_medium_punch", &"jump_light_kick",
 		&"special_720_punch",
 		&"special_sonic_boom",
+		&"grab_tentative", &"grab_tentative_recovery",
 		&"crouched_medium_punch", &"crouched_medium_punch_crouched",
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
@@ -1549,6 +1683,8 @@ func update_sprite_scale() -> void:
 	animated_sprite.position = (
 		REWORK_SPRITE_POSITION if uses_reworked_art else LEGACY_SPRITE_POSITION
 	)
+	grab_front_sprite.scale = animated_sprite.scale
+	grab_front_sprite.position = animated_sprite.position
 
 
 func get_hit_animation(hit_height: AttackData.HitHeight) -> StringName:
@@ -1858,7 +1994,9 @@ func update_facing_direction() -> void:
 func flip_character() -> void:
 	is_facing_right = not is_facing_right
 	animated_sprite.flip_h = not is_facing_right
+	grab_front_sprite.flip_h = not is_facing_right
 	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	grab_box.scale.x = 1.0 if is_facing_right else -1.0
 	update_animation()
 
 
@@ -1882,6 +2020,7 @@ func is_attack_in_front(attacker: Mangler) -> bool:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	release_grab()
 	clear_attack_afterimages()
 	aerial_attack_used = false
 	force_idle_until_landing = false
@@ -2253,14 +2392,22 @@ func clear_attack_afterimages() -> void:
 
 
 func _on_animation_finished() -> void:
-	if current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
+	if animated_sprite.animation == &"grab_tentative":
+		try_complete_grab()
+	elif animated_sprite.animation == &"grab_tentative_recovery":
+		grab_front_sprite.visible = false
+		change_state(State.IDLE)
+	elif current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
 		change_state(State.IDLE)
 	elif current_state == State.BACK_HOP and animated_sprite.animation == &"dodge" and is_on_floor():
 		change_state(State.IDLE)
 
 
 func _on_animation_frame_changed() -> void:
+	sync_grab_front_frame()
 	emit_attack_motion_effect()
+	if animated_sprite.animation == &"grab_tentative" and animated_sprite.frame == 24:
+		try_complete_grab()
 	if (
 		animated_sprite.animation == &"special_sonic_boom"
 		and animated_sprite.frame >= 13
@@ -2303,3 +2450,12 @@ func _on_animation_frame_changed() -> void:
 		and animated_sprite.frame >= JUMP_TAKEOFF_FRAME
 	):
 		begin_jump_ascent()
+
+
+func sync_grab_front_frame() -> void:
+	if not grab_front_sprite.visible:
+		return
+	if animated_sprite.animation == &"grab_tentative":
+		grab_front_sprite.frame = animated_sprite.frame
+	elif animated_sprite.animation == &"grab_tentative_recovery":
+		grab_front_sprite.frame = GRAB_TENTATIVE_FRAME_COUNT - 2 - animated_sprite.frame

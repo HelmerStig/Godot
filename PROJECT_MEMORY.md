@@ -119,6 +119,8 @@ Ultimo risultato noto (10 agosto 2026): caricamento senza errori di parsing e `S
 ### Comuni
 
 - Guardia: tenere la direzione opposta all'avversario.
+- Presa di Mangler: pugno leggero + calcio leggero a terra; il tentativo usa 25 frame a 48 FPS, mantiene il frame finale se riesce e riproduce 24–1 se manca.
+- Rendering presa: lo sprite principale usa il livello `rear`; `GrabFrontSprite` replica lo stesso frame con il livello `front` sopra la vittima.
 - Reset training: `R`.
 - Overlay collisioni: `F3`.
 - Slow motion: `F4`.

@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://cemh2xowvxf8g"]
+[gd_scene load_steps=10 format=3 uid="uid://cemh2xowvxf8g"]
 
 [ext_resource type="Script" path="res://scripts/Mangler.gd" id="1_mangler"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/characters/mangler/idle_frames.tres" id="2_frames"]
@@ -10,6 +10,9 @@ size = Vector2(120, 240)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
 size = Vector2(70, 35)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_grab_box"]
+size = Vector2(115, 155)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox_head"]
 size = Vector2(55, 55)
@@ -39,6 +42,13 @@ sprite_frames = ExtResource("2_frames")
 animation = &"idle"
 autoplay = "idle"
 
+[node name="GrabFrontSprite" type="AnimatedSprite2D" parent="."]
+z_index = 50
+z_as_relative = false
+position = Vector2(0, -115)
+scale = Vector2(0.85, 0.85)
+visible = false
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -120)
 shape = SubResource("RectangleShape2D_1")
@@ -50,6 +60,15 @@ collision_mask = 4
 [node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
 position = Vector2(35, -110)
 shape = SubResource("RectangleShape2D_hitbox")
+disabled = true
+
+[node name="GrabBox" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 4
+
+[node name="GrabBoxShape" type="CollisionShape2D" parent="GrabBox"]
+position = Vector2(92, -145)
+shape = SubResource("RectangleShape2D_grab_box")
 disabled = true
 
 [node name="Hurtbox" type="Area2D" parent="." groups=["hurtbox"]]

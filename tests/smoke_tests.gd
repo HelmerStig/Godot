@@ -149,6 +149,14 @@ func _test_input_buffer() -> void:
 	_expect(
 		buffer.matches_recent_sequence([
 			FighterInputBuffer.Direction.DOWN,
+			FighterInputBuffer.Direction.DOWN_FORWARD,
+			FighterInputBuffer.Direction.FORWARD,
+		]),
+		"un quarto di luna analogico rapido ricostruisce la diagonale tra DOWN e FORWARD"
+	)
+	_expect(
+		buffer.matches_recent_sequence([
+			FighterInputBuffer.Direction.DOWN,
 			FighterInputBuffer.Direction.FORWARD,
 		]),
 		"riconoscimento di una sequenza direzionale recente"
@@ -416,6 +424,31 @@ func _test_combat_flow() -> void:
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"special_sonic_boom"),
 		"il lancio Sonic Boom usa 49 fotogrammi a 48 FPS senza loop"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"grab_tentative")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"grab_tentative") == 25
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"grab_tentative"), 48.0
+		)
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"grab_tentative_recovery") == 24,
+		"il tentativo di presa usa 25 frame a 48 FPS e recupera dai frame 24-1"
+	)
+	var grab_rear_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"grab_tentative", 24)
+		as AtlasTexture
+	)
+	var grab_front_frame := (
+		player1.grab_front_sprite.sprite_frames.get_frame_texture(&"grab_tentative_front", 24)
+		as AtlasTexture
+	)
+	_expect(
+		grab_rear_frame != null
+		and grab_rear_frame.atlas == Mangler.GRAB_TENTATIVE_REAR_SHEET
+		and grab_front_frame != null
+		and grab_front_frame.atlas == Mangler.GRAB_TENTATIVE_FRONT_SHEET
+		and player1.grab_front_sprite.sprite_frames.get_frame_count(&"grab_tentative_front") == 25,
+		"la presa separa e sincronizza i 25 frame rear e front"
 	)
 	var sonic_boom_first := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"special_sonic_boom", 0
@@ -1625,6 +1658,36 @@ func _test_combat_flow() -> void:
 		"atterrando durante il calcio potente aereo Mangler torna subito in IDLE"
 	)
 	player2.combat.reset()
+
+	player1.combat.cancel_current_action()
+	player1.change_state(Mangler.State.IDLE)
+	var grab_target_original_position := player2.global_position
+	player2.global_position = player1.global_position + Vector2(420.0, 0.0)
+	player1.start_grab_tentative()
+	await create_timer(1.08).timeout
+	_expect(
+		player1.current_state == Mangler.State.IDLE
+		and player1.animated_sprite.animation == &"idle"
+		and not player1.grab_succeeded
+		and not player1.grab_front_sprite.visible,
+		"se il tentativo di presa manca, riproduce 24-1 e torna in IDLE"
+	)
+	player2.global_position = player1.global_position + Vector2(120.0, 0.0)
+	player1.start_grab_tentative()
+	await create_timer(0.56).timeout
+	_expect(
+		player1.grab_succeeded
+		and player1.animated_sprite.animation == &"grab_tentative"
+		and player1.animated_sprite.frame == 24
+		and not player1.animated_sprite.is_playing()
+		and player1.grab_front_sprite.visible
+		and player1.grab_front_sprite.frame == 24
+		and player2.grabbed_by == player1
+		and not player2.controls_enabled,
+		"se la presa riesce, mantiene l'ultimo frame e immobilizza l'avversario"
+	)
+	player1.release_grab()
+	player2.global_position = grab_target_original_position
 
 	player1.combat.cancel_current_action()
 	player1.change_state(Mangler.State.IDLE)
