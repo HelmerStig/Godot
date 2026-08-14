@@ -119,8 +119,11 @@ Ultimo risultato noto (10 agosto 2026): caricamento senza errori di parsing e `S
 ### Comuni
 
 - Guardia: tenere la direzione opposta all'avversario.
-- Presa di Mangler: pugno leggero + calcio leggero a terra; il tentativo usa 25 frame a 48 FPS, mantiene il frame finale se riesce e riproduce 24–1 se manca.
+- Presa di Mangler: pugno leggero + calcio leggero a terra; il tentativo usa 25 frame a 60 FPS, avvia la testata se riesce e riproduce 24–1 a 60 FPS se manca.
 - Rendering presa: lo sprite principale usa il livello `rear`; `GrabFrontSprite` replica lo stesso frame con il livello `front` sopra la vittima.
+- Follow-up presa: `testata-rear.png` e `testata-front.png`, 25 frame sincronizzati a 25 FPS, impatto high non parabile al frame 17 per 15 danni; la vittima resta immobilizzata fino alla fine.
+- Effetto testata: scia dorata rear/front attiva circa dai frame 11–19, con intensità da mossa potente.
+- Reazione vittima presa: `grabbed.png`, sequenza sorgente 10–25–10 a 24 FPS; un impatto interrompe la sequenza e avvia `hurt_high`.
 - Reset training: `R`.
 - Overlay collisioni: `F3`.
 - Slow motion: `F4`.

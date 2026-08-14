@@ -137,6 +137,7 @@ const ATTACK_EFFECT_ANIMATIONS := [
 	&"jump_heavy_kick",
 	&"special_720_punch",
 	&"special_sonic_boom",
+	&"grab_headbutt",
 ]
 const CROUCHED_MEDIUM_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/medium-kick/crouched_medium_kick.png"
@@ -222,6 +223,24 @@ const GRAB_TENTATIVE_FRONT_SHEET := preload(
 const GRAB_TENTATIVE_FRAME_COUNT := 25
 const GRAB_TENTATIVE_COLUMNS := 5
 const GRAB_TENTATIVE_CELL_SIZE := Vector2(512.0, 512.0)
+const GRAB_HEADBUTT_REAR_SHEET := preload(
+	"res://assets/sprites/characters/mangler/prese/testata-rear.png"
+)
+const GRAB_HEADBUTT_FRONT_SHEET := preload(
+	"res://assets/sprites/characters/mangler/prese/testata-front.png"
+)
+const GRAB_HEADBUTT_FRAME_COUNT := 25
+const GRAB_HEADBUTT_COLUMNS := 5
+const GRAB_HEADBUTT_CELL_SIZE := Vector2(512.0, 512.0)
+const GRAB_HEADBUTT_ACTIVE_FRAME := 16
+const GRAB_HEADBUTT_DAMAGE := 15
+const GRABBED_SHEET := preload(
+	"res://assets/sprites/characters/mangler/prese/grabbed.png"
+)
+const GRABBED_FRAME_COUNT := 25
+const GRABBED_START_FRAME := 9
+const GRABBED_COLUMNS := 5
+const GRABBED_CELL_SIZE := Vector2(512.0, 512.0)
 const SONIC_PROJECTILE_SPEED_MULTIPLIERS := {
 	&"light_punch": 1.0,
 	&"medium_punch": 1.3,
@@ -341,6 +360,7 @@ var sonic_charge_effect: Node2D
 var grab_succeeded := false
 var grabbed_target: Mangler
 var grabbed_by: Mangler
+var grab_headbutt_hit_landed := false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var grab_front_sprite: AnimatedSprite2D = $GrabFrontSprite
@@ -352,6 +372,10 @@ var grabbed_by: Mangler
 @onready var ground_shadow: Polygon2D = $GroundShadow
 @onready var grab_box: Area2D = $GrabBox
 @onready var grab_box_shape: CollisionShape2D = $GrabBox/GrabBoxShape
+@onready var grab_headbutt_hitbox: Area2D = $GrabHeadbuttHitbox
+@onready var grab_headbutt_hitbox_shape: CollisionShape2D = (
+	$GrabHeadbuttHitbox/GrabHeadbuttHitboxShape
+)
 
 
 func _ready() -> void:
@@ -1235,7 +1259,7 @@ func configure_grab_tentative_frames() -> void:
 		if frames.has_animation(animation_name):
 			frames.remove_animation(animation_name)
 		frames.add_animation(animation_name)
-		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_speed(animation_name, 60.0)
 		frames.set_animation_loop(animation_name, false)
 	for source_index in range(GRAB_TENTATIVE_FRAME_COUNT):
 		var atlas_frame := AtlasTexture.new()
@@ -1255,7 +1279,7 @@ func configure_grab_tentative_frames() -> void:
 		)
 	var front_frames := SpriteFrames.new()
 	front_frames.add_animation(&"grab_tentative_front")
-	front_frames.set_animation_speed(&"grab_tentative_front", 48.0)
+	front_frames.set_animation_speed(&"grab_tentative_front", 60.0)
 	front_frames.set_animation_loop(&"grab_tentative_front", false)
 	for source_index in range(GRAB_TENTATIVE_FRAME_COUNT):
 		var front_atlas_frame := AtlasTexture.new()
@@ -1270,6 +1294,68 @@ func configure_grab_tentative_frames() -> void:
 		front_frames.add_frame(&"grab_tentative_front", front_atlas_frame)
 	grab_front_sprite.sprite_frames = front_frames
 	grab_front_sprite.animation = &"grab_tentative_front"
+
+
+func configure_grab_headbutt_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"grab_headbutt"):
+		frames.remove_animation(&"grab_headbutt")
+	frames.add_animation(&"grab_headbutt")
+	frames.set_animation_speed(&"grab_headbutt", 25.0)
+	frames.set_animation_loop(&"grab_headbutt", false)
+	for source_index in range(GRAB_HEADBUTT_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = GRAB_HEADBUTT_REAR_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % GRAB_HEADBUTT_COLUMNS),
+				float(floori(float(source_index) / GRAB_HEADBUTT_COLUMNS))
+			) * GRAB_HEADBUTT_CELL_SIZE,
+			GRAB_HEADBUTT_CELL_SIZE
+		)
+		frames.add_frame(&"grab_headbutt", atlas_frame)
+	var front_frames := grab_front_sprite.sprite_frames
+	if front_frames.has_animation(&"grab_headbutt_front"):
+		front_frames.remove_animation(&"grab_headbutt_front")
+	front_frames.add_animation(&"grab_headbutt_front")
+	front_frames.set_animation_speed(&"grab_headbutt_front", 25.0)
+	front_frames.set_animation_loop(&"grab_headbutt_front", false)
+	for source_index in range(GRAB_HEADBUTT_FRAME_COUNT):
+		var front_atlas_frame := AtlasTexture.new()
+		front_atlas_frame.atlas = GRAB_HEADBUTT_FRONT_SHEET
+		front_atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % GRAB_HEADBUTT_COLUMNS),
+				float(floori(float(source_index) / GRAB_HEADBUTT_COLUMNS))
+			) * GRAB_HEADBUTT_CELL_SIZE,
+			GRAB_HEADBUTT_CELL_SIZE
+		)
+		front_frames.add_frame(&"grab_headbutt_front", front_atlas_frame)
+
+
+func configure_grabbed_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"grabbed"):
+		frames.remove_animation(&"grabbed")
+	frames.add_animation(&"grabbed")
+	frames.set_animation_speed(&"grabbed", 24.0)
+	frames.set_animation_loop(&"grabbed", false)
+	for source_index in range(GRABBED_START_FRAME, GRABBED_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = GRABBED_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % GRABBED_COLUMNS),
+				float(floori(float(source_index) / GRABBED_COLUMNS))
+			) * GRABBED_CELL_SIZE,
+			GRABBED_CELL_SIZE
+		)
+		frames.add_frame(&"grabbed", atlas_frame)
+	for source_index in range(GRABBED_FRAME_COUNT - 1, GRABBED_START_FRAME - 1, -1):
+		frames.add_frame(
+			&"grabbed",
+			frames.get_frame_texture(&"grabbed", source_index - GRABBED_START_FRAME)
+		)
 
 
 func _physics_process(delta: float) -> void:
@@ -1436,6 +1522,7 @@ func start_grab_tentative() -> void:
 	combat.set_guarding(false)
 	change_state(State.ATTACKING)
 	grab_box_shape.set_deferred("disabled", false)
+	grab_front_sprite.animation = &"grab_tentative_front"
 	grab_front_sprite.visible = true
 	grab_front_sprite.frame = 0
 	animated_sprite.play(&"grab_tentative")
@@ -1455,7 +1542,7 @@ func try_complete_grab() -> void:
 		z_index = target.z_index - 1
 		target.become_grabbed(self)
 		grab_box_shape.set_deferred("disabled", true)
-		animated_sprite.pause()
+		start_grab_headbutt()
 		return
 	grab_box_shape.set_deferred("disabled", true)
 	animated_sprite.play(&"grab_tentative_recovery")
@@ -1467,11 +1554,42 @@ func become_grabbed(attacker: Mangler) -> void:
 	controls_enabled = false
 	can_move = false
 	velocity = Vector2.ZERO
-	animated_sprite.pause()
+	animated_sprite.play(&"grabbed")
+
+
+func start_grab_headbutt() -> void:
+	grab_headbutt_hit_landed = false
+	grab_front_sprite.animation = &"grab_headbutt_front"
+	grab_front_sprite.frame = 0
+	grab_front_sprite.visible = true
+	grab_headbutt_hitbox_shape.set_deferred("disabled", true)
+	animated_sprite.play(&"grab_headbutt")
+
+
+func perform_grab_headbutt_hit() -> void:
+	if grab_headbutt_hit_landed or not is_instance_valid(grabbed_target):
+		return
+	grab_headbutt_hit_landed = true
+	grab_headbutt_hitbox_shape.set_deferred("disabled", false)
+	grabbed_target.combat.set_guarding(false)
+	grabbed_target.combat.take_damage(
+		GRAB_HEADBUTT_DAMAGE,
+		self,
+		0.35,
+		0.0,
+		AttackData.HitHeight.HIGH,
+		false,
+		0,
+		0,
+		false
+	)
+	if is_instance_valid(grabbed_target) and grabbed_target.combat.current_health > 0:
+		grabbed_target.start_hit_reaction(AttackData.HitHeight.HIGH, self, 0, false)
 
 
 func release_grab() -> void:
 	if is_instance_valid(grabbed_target):
+		grabbed_target.combat.cancel_current_action()
 		grabbed_target.grabbed_by = null
 		grabbed_target.controls_enabled = true
 		grabbed_target.change_state(State.IDLE)
@@ -1479,6 +1597,7 @@ func release_grab() -> void:
 	grab_succeeded = false
 	grabbed_by = null
 	grab_box_shape.set_deferred("disabled", true)
+	grab_headbutt_hitbox_shape.set_deferred("disabled", true)
 	grab_front_sprite.visible = false
 	z_index = default_z_index
 
@@ -1669,6 +1788,8 @@ func update_sprite_scale() -> void:
 		&"special_720_punch",
 		&"special_sonic_boom",
 		&"grab_tentative", &"grab_tentative_recovery",
+		&"grab_headbutt",
+		&"grabbed",
 		&"crouched_medium_punch", &"crouched_medium_punch_crouched",
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
@@ -1997,6 +2118,7 @@ func flip_character() -> void:
 	grab_front_sprite.flip_h = not is_facing_right
 	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
 	grab_box.scale.x = 1.0 if is_facing_right else -1.0
+	grab_headbutt_hitbox.scale.x = 1.0 if is_facing_right else -1.0
 	update_animation()
 
 
@@ -2187,12 +2309,52 @@ func spawn_attack_motion_afterimage(profile: Dictionary) -> void:
 	var tint: Color = profile["tint"]
 	ghost.modulate = Color(tint.r, tint.g, tint.b, float(profile["alpha"]))
 	add_child(ghost)
+	if animated_sprite.animation == &"grab_headbutt" and grab_front_sprite.visible:
+		spawn_grab_headbutt_front_afterimage(profile)
 	attack_afterimage_spawn_count += 1
 	if animated_sprite.animation == &"crouched_heavy_kick":
 		sweep_afterimage_spawn_count += 1
 	var trail_direction := 1.0 if is_facing_right else -1.0
 	var tween := ghost.create_tween()
 	var lifetime := float(profile["lifetime"])
+	tween.tween_property(ghost, "modulate:a", 0.0, lifetime)
+	tween.parallel().tween_property(
+		ghost,
+		"position:x",
+		ghost.position.x - trail_direction * float(profile["offset"]),
+		lifetime
+	)
+	tween.tween_callback(ghost.queue_free)
+
+
+func spawn_grab_headbutt_front_afterimage(profile: Dictionary) -> void:
+	var frame_texture := grab_front_sprite.sprite_frames.get_frame_texture(
+		&"grab_headbutt_front", grab_front_sprite.frame
+	)
+	if frame_texture == null:
+		return
+	var ghost := Sprite2D.new()
+	ghost.name = "GrabHeadbuttFrontAfterimage"
+	ghost.add_to_group("attack_afterimage")
+	ghost.add_to_group("grab_headbutt_front_afterimage")
+	ghost.texture = frame_texture
+	ghost.centered = grab_front_sprite.centered
+	ghost.offset = grab_front_sprite.offset
+	ghost.position = grab_front_sprite.position
+	ghost.rotation = grab_front_sprite.rotation
+	ghost.scale = grab_front_sprite.scale
+	ghost.scale.x *= float(profile["stretch"])
+	ghost.flip_h = grab_front_sprite.flip_h
+	ghost.flip_v = grab_front_sprite.flip_v
+	ghost.texture_filter = grab_front_sprite.texture_filter
+	ghost.z_as_relative = false
+	ghost.z_index = grab_front_sprite.z_index - 1
+	var tint: Color = profile["tint"]
+	ghost.modulate = Color(tint.r, tint.g, tint.b, float(profile["alpha"]))
+	add_child(ghost)
+	var trail_direction := 1.0 if is_facing_right else -1.0
+	var lifetime := float(profile["lifetime"])
+	var tween := ghost.create_tween()
 	tween.tween_property(ghost, "modulate:a", 0.0, lifetime)
 	tween.parallel().tween_property(
 		ghost,
@@ -2392,7 +2554,12 @@ func clear_attack_afterimages() -> void:
 
 
 func _on_animation_finished() -> void:
-	if animated_sprite.animation == &"grab_tentative":
+	if animated_sprite.animation == &"grabbed" and is_instance_valid(grabbed_by):
+		animated_sprite.pause()
+	elif animated_sprite.animation == &"grab_headbutt":
+		release_grab()
+		change_state(State.IDLE)
+	elif animated_sprite.animation == &"grab_tentative":
 		try_complete_grab()
 	elif animated_sprite.animation == &"grab_tentative_recovery":
 		grab_front_sprite.visible = false
@@ -2408,6 +2575,11 @@ func _on_animation_frame_changed() -> void:
 	emit_attack_motion_effect()
 	if animated_sprite.animation == &"grab_tentative" and animated_sprite.frame == 24:
 		try_complete_grab()
+	if animated_sprite.animation == &"grab_headbutt":
+		if animated_sprite.frame == GRAB_HEADBUTT_ACTIVE_FRAME:
+			perform_grab_headbutt_hit()
+		elif animated_sprite.frame == GRAB_HEADBUTT_ACTIVE_FRAME + 1:
+			grab_headbutt_hitbox_shape.set_deferred("disabled", true)
 	if (
 		animated_sprite.animation == &"special_sonic_boom"
 		and animated_sprite.frame >= 13
@@ -2459,3 +2631,5 @@ func sync_grab_front_frame() -> void:
 		grab_front_sprite.frame = animated_sprite.frame
 	elif animated_sprite.animation == &"grab_tentative_recovery":
 		grab_front_sprite.frame = GRAB_TENTATIVE_FRAME_COUNT - 2 - animated_sprite.frame
+	elif animated_sprite.animation == &"grab_headbutt":
+		grab_front_sprite.frame = animated_sprite.frame

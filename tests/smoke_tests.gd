@@ -429,10 +429,16 @@ func _test_combat_flow() -> void:
 		player1.animated_sprite.sprite_frames.has_animation(&"grab_tentative")
 		and player1.animated_sprite.sprite_frames.get_frame_count(&"grab_tentative") == 25
 		and is_equal_approx(
-			player1.animated_sprite.sprite_frames.get_animation_speed(&"grab_tentative"), 48.0
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"grab_tentative"), 60.0
+		)
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"grab_tentative_recovery"), 60.0
+		)
+		and is_equal_approx(
+			player1.grab_front_sprite.sprite_frames.get_animation_speed(&"grab_tentative_front"), 60.0
 		)
 		and player1.animated_sprite.sprite_frames.get_frame_count(&"grab_tentative_recovery") == 24,
-		"il tentativo di presa usa 25 frame a 48 FPS e recupera dai frame 24-1"
+		"il tentativo di presa usa 25 frame a 60 FPS e recupera dai frame 24-1"
 	)
 	var grab_rear_frame := (
 		player1.animated_sprite.sprite_frames.get_frame_texture(&"grab_tentative", 24)
@@ -449,6 +455,53 @@ func _test_combat_flow() -> void:
 		and grab_front_frame.atlas == Mangler.GRAB_TENTATIVE_FRONT_SHEET
 		and player1.grab_front_sprite.sprite_frames.get_frame_count(&"grab_tentative_front") == 25,
 		"la presa separa e sincronizza i 25 frame rear e front"
+	)
+	var headbutt_rear_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"grab_headbutt", 16)
+		as AtlasTexture
+	)
+	var headbutt_front_frame := (
+		player1.grab_front_sprite.sprite_frames.get_frame_texture(&"grab_headbutt_front", 16)
+		as AtlasTexture
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"grab_headbutt")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"grab_headbutt") == 25
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"grab_headbutt"), 25.0
+		)
+		and headbutt_rear_frame != null
+		and headbutt_rear_frame.atlas == Mangler.GRAB_HEADBUTT_REAR_SHEET
+		and headbutt_front_frame != null
+		and headbutt_front_frame.atlas == Mangler.GRAB_HEADBUTT_FRONT_SHEET
+		and player1.grab_front_sprite.sprite_frames.get_frame_count(&"grab_headbutt_front") == 25
+		and (player1.grab_headbutt_hitbox_shape.shape as RectangleShape2D).size == Vector2(95.0, 70.0)
+		and player1.grab_headbutt_hitbox_shape.position == Vector2(76.0, -230.0),
+		"la testata usa 25 frame a 25 FPS e una hitbox corta davanti al volto"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"grabbed")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"grabbed") == 32
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"grabbed"), 24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"grabbed"),
+		"la vittima usa grabbed 10-25 e 25-10 a 24 FPS"
+	)
+	var grabbed_first_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"grabbed", 0) as AtlasTexture
+	)
+	var grabbed_last_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"grabbed", 31) as AtlasTexture
+	)
+	var grabbed_turnaround_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"grabbed", 16) as AtlasTexture
+	)
+	_expect(
+		grabbed_first_frame.region == Rect2(2048.0, 512.0, 512.0, 512.0)
+		and grabbed_turnaround_frame.region == Rect2(2048.0, 2048.0, 512.0, 512.0)
+		and grabbed_last_frame.region == Rect2(2048.0, 512.0, 512.0, 512.0),
+		"grabbed mappa esattamente 10-25-10 duplicando la posa di inversione"
 	)
 	var sonic_boom_first := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"special_sonic_boom", 0
@@ -1673,21 +1726,46 @@ func _test_combat_flow() -> void:
 		"se il tentativo di presa manca, riproduce 24-1 e torna in IDLE"
 	)
 	player2.global_position = player1.global_position + Vector2(120.0, 0.0)
+	var health_before_grab_headbutt := player2.combat.current_health
+	var headbutt_afterimages_before := player1.attack_afterimage_spawn_count
 	player1.start_grab_tentative()
 	await create_timer(0.56).timeout
 	_expect(
 		player1.grab_succeeded
-		and player1.animated_sprite.animation == &"grab_tentative"
-		and player1.animated_sprite.frame == 24
-		and not player1.animated_sprite.is_playing()
+		and player1.animated_sprite.animation == &"grab_headbutt"
+		and player1.animated_sprite.is_playing()
 		and player1.grab_front_sprite.visible
-		and player1.grab_front_sprite.frame == 24
+		and player1.grab_front_sprite.animation == &"grab_headbutt_front"
+		and player1.grab_front_sprite.frame == player1.animated_sprite.frame
 		and player2.grabbed_by == player1
-		and not player2.controls_enabled,
-		"se la presa riesce, mantiene l'ultimo frame e immobilizza l'avversario"
+		and not player2.controls_enabled
+		and player2.animated_sprite.animation == &"grabbed"
+		and player2.animated_sprite.is_playing(),
+		"se la presa riesce, avvia subito la testata e mantiene l'avversario immobilizzato"
 	)
-	player1.release_grab()
+	await create_timer(0.70).timeout
+	_expect(
+		player1.grab_headbutt_hit_landed
+		and player2.combat.current_health == health_before_grab_headbutt - Mangler.GRAB_HEADBUTT_DAMAGE
+		and player2.grabbed_by == player1
+		and not player2.controls_enabled
+		and player2.animated_sprite.animation == &"hurt_high",
+		"la testata colpisce al frame 17 senza permettere risposta o parata"
+	)
+	_expect(
+		player1.attack_afterimage_spawn_count > headbutt_afterimages_before
+		and player1.get_tree().get_node_count_in_group("grab_headbutt_front_afterimage") > 0,
+		"durante l'affondo la testata genera scie sincronizzate rear e front"
+	)
+	await create_timer(0.38).timeout
+	_expect(
+		player1.current_state == Mangler.State.IDLE
+		and player2.grabbed_by == null
+		and player2.controls_enabled,
+		"al termine della testata entrambi i personaggi vengono liberati"
+	)
 	player2.global_position = grab_target_original_position
+	player2.combat.reset()
 
 	player1.combat.cancel_current_action()
 	player1.change_state(Mangler.State.IDLE)

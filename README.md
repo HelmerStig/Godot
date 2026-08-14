@@ -178,8 +178,11 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momen
 - `CharacterData` usa ancora un profilo personaggio creato in memoria, anche se gli attacchi sono risorse `.tres` dedicate.
 - La speciale `720 Punch` di Mangler si esegue premendo pugno leggero e pugno medio insieme; durante la rotazione permette un lento movimento avanti/indietro.
 - Il `Sonic Boom` si esegue con `↓ ↘ → + pugno leggero, medio o pesante`: al frame 23 genera i piatti animati a 48 FPS con scia gialla e scintille. Il proiettile diventa progressivamente più veloce passando dal pugno leggero al medio e al pesante.
-- Il tentativo di presa si esegue a terra con `pugno leggero + calcio leggero`: se raggiunge l'avversario mantiene l'ultimo frame e immobilizza entrambi; se manca, torna dai frame 24–1 e poi in `IDLE`.
+- Il tentativo di presa si esegue a terra con `pugno leggero + calcio leggero` e gira a 60 FPS: se raggiunge l'avversario avvia immediatamente una testata garantita e non parabile; se manca, torna dai frame 24–1 e poi in `IDLE`.
 - La presa usa due livelli sincronizzati: `grab_tentative_rear.png` dietro alla vittima e `grab_tentative_front.png` davanti, entrambi composti da 25 celle 512×512.
+- Anche la testata usa livelli sincronizzati: `testata-rear.png` dietro alla vittima e `testata-front.png` davanti.
+- Durante l'affondo della testata, i livelli `rear` e `front` generano una breve scia dorata sincronizzata.
+- La vittima riproduce `grabbed.png` a 24 FPS nella sequenza sorgente 10→25→10; quando riceve la testata passa immediatamente a `hurt_high`.
 - Non sono ancora presenti IA, audio, menu, selezione personaggio o multiplayer online.
 - `original_images/` conserva materiale sorgente e non fa parte del flusso runtime.
 

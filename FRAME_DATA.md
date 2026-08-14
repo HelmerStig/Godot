@@ -28,7 +28,9 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Calcio pesante | airborne | `jump_heavy_kick` | 48 | 15 | hold | 19 | variabile | 20 | high | no |
 | 720 Punch | standing | `special_720_punch` | 48 | 9 | 34 | 6 | 49 | 6×3 | high | no |
 | Sonic Boom (lancio) | standing | `special_sonic_boom` | 48 | 24 | 1 | 24 | 49 | 0 | high | no |
-| Tentativo di presa | standing | `grab_tentative` | 48 | 24 | 1 | 24 | 49 | 0 | grab | no |
+| Tentativo di presa | standing | `grab_tentative` | 60 | 24 | 1 | 24 | 49 | 0 | grab | no |
+| Testata da presa | grab follow-up | `grab_headbutt` | 25 | 16 | 1 | 8 | 25 | 15 | high/unblockable | no |
+| Vittima afferrata | reaction | `grabbed` | 24 | — | — | — | 32 (sorgente 10–25–10) | 0 | reaction | no |
 
 Il proiettile Sonic Boom viaggia a 520 px/s con pugno leggero, 676 px/s con pugno medio e 832 px/s con pugno pesante.
 
