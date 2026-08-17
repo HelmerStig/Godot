@@ -17,8 +17,9 @@ enum Direction {
 }
 
 const NO_DIRECTION := -1
-const HISTORY_LIMIT := 30
-const DEFAULT_ATTACK_BUFFER_FRAMES := 6
+const HISTORY_LIMIT := 60
+const DEFAULT_ATTACK_BUFFER_FRAMES := 10
+const DEFAULT_MOTION_WINDOW_FRAMES := 36
 const ATTACK_ACTIONS := [
 	&"light_punch",
 	&"medium_punch",
@@ -91,10 +92,21 @@ func record_input_snapshot(
 	})
 	# Uno stick analogico può attraversare la diagonale fra due frame fisici.
 	# Conserviamo quel passaggio implicito per non perdere i quarti di luna rapidi.
-	if previous_direction == Direction.DOWN and _current_direction == Direction.FORWARD:
+	var inferred_directions: Array[int] = []
+	if previous_direction == Direction.BACK and _current_direction == Direction.DOWN:
+		inferred_directions = [Direction.DOWN_BACK]
+	elif previous_direction == Direction.BACK and _current_direction == Direction.DOWN_FORWARD:
+		inferred_directions = [Direction.DOWN_BACK, Direction.DOWN]
+	elif previous_direction == Direction.DOWN_BACK and _current_direction == Direction.DOWN_FORWARD:
+		inferred_directions = [Direction.DOWN]
+	elif previous_direction == Direction.DOWN_BACK and _current_direction == Direction.FORWARD:
+		inferred_directions = [Direction.DOWN, Direction.DOWN_FORWARD]
+	elif previous_direction == Direction.DOWN and _current_direction == Direction.FORWARD:
+		inferred_directions = [Direction.DOWN_FORWARD]
+	for inferred_direction in inferred_directions:
 		_history.insert(1, {
 			"frame": Engine.get_physics_frames(),
-			"direction": Direction.DOWN_FORWARD,
+			"direction": inferred_direction,
 			"attacks": [],
 		})
 	if _history.size() > HISTORY_LIMIT:
@@ -165,7 +177,9 @@ func consume_attack(
 	return NO_DIRECTION
 
 
-func matches_recent_sequence(sequence: Array[int], within_frames: int = 20) -> bool:
+func matches_recent_sequence(
+	sequence: Array[int], within_frames: int = DEFAULT_MOTION_WINDOW_FRAMES
+) -> bool:
 	"""Base per future mosse speciali, ad esempio DOWN, DOWN_FORWARD, FORWARD."""
 	if sequence.is_empty():
 		return false

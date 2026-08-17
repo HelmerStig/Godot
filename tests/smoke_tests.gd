@@ -161,6 +161,27 @@ func _test_input_buffer() -> void:
 		]),
 		"riconoscimento di una sequenza direzionale recente"
 	)
+	buffer.clear()
+	buffer.record_input_snapshot(-1, 0, no_attacks, true)
+	buffer.record_input_snapshot(1, 1, no_attacks, true)
+	buffer.record_input_snapshot(1, 0, no_attacks, true)
+	_expect(
+		buffer.matches_recent_sequence([
+			FighterInputBuffer.Direction.BACK,
+			FighterInputBuffer.Direction.DOWN_BACK,
+			FighterInputBuffer.Direction.DOWN,
+			FighterInputBuffer.Direction.DOWN_FORWARD,
+			FighterInputBuffer.Direction.FORWARD,
+		]),
+		"la mezzaluna ricostruisce diagonali e basso saltati dallo stick rapido"
+	)
+	_expect(
+		FighterInputBuffer.HISTORY_LIMIT == 60
+		and FighterInputBuffer.DEFAULT_ATTACK_BUFFER_FRAMES == 10
+		and FighterInputBuffer.DEFAULT_MOTION_WINDOW_FRAMES == 36
+		and Mangler.SUPER_MOTION_WINDOW_FRAMES == 48,
+		"quarti e mezze lune usano finestre temporali più tolleranti"
+	)
 
 func _test_combat_flow() -> void:
 	print("-- Arena, combattimento e UI")
@@ -550,6 +571,29 @@ func _test_combat_flow() -> void:
 		and super_drum_hurt_first_frame.region.position == Vector2(1536.0, 0.0)
 		and super_drum_hurt_last_frame.region.position == Vector2(0.0, 1536.0),
 		"la reazione del rullo usa hurt-high dal fotogramma 4 al 13 in loop"
+	)
+	var super_knockdown_first_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"super_drum_knockdown", 0)
+		as AtlasTexture
+	)
+	var super_knockdown_last_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"super_drum_knockdown", 14)
+		as AtlasTexture
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"super_drum_knockdown") == 15
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"super_drum_knockdown"),
+			24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(
+			&"super_drum_knockdown"
+		)
+		and super_knockdown_first_frame
+		== player1.animated_sprite.sprite_frames.get_frame_texture(&"ko", 10)
+		and super_knockdown_last_frame
+		== player1.animated_sprite.sprite_frames.get_frame_texture(&"ko", 24),
+		"la caduta finale usa i fotogrammi 11-25 di ko.png a 24 FPS"
 	)
 	var headbutt_rear_frame := (
 		player1.animated_sprite.sprite_frames.get_frame_texture(&"grab_headbutt", 16)
@@ -1952,6 +1996,7 @@ func _test_combat_flow() -> void:
 	)
 	player1.global_position.x = player2.global_position.x - Mangler.SUPER_ROTATE_RUN_STOP_DISTANCE
 	player1.animated_sprite.play(&"super_run_only")
+	var health_before_super_drum := player2.combat.current_health
 	await process_frame
 	player1._physics_process(0.0)
 	_expect(
@@ -1959,8 +2004,13 @@ func _test_combat_flow() -> void:
 		and player1.super_drum_roll_completed_loops == 0
 		and player2.current_state == Mangler.State.HIT
 		and player2.animated_sprite.animation == &"super_drum_hurt"
-		and player2.animated_sprite.is_playing(),
-		"al contatto il drum roll avvia hurt-high 4-13 in loop sull'avversario"
+		and player2.animated_sprite.is_playing()
+		and player2.animated_sprite.scale == Mangler.LEGACY_SPRITE_SCALE
+		and player2.combat.current_health
+		== health_before_super_drum - roundi(
+			float(player2.combat.max_health) * Mangler.SUPER_DAMAGE_RATIO
+		),
+		"al contatto il drum roll avvia hurt-high e toglie il 25% della vita massima"
 	)
 	player1.animated_sprite.frame = Mangler.SUPER_DRUM_ROLL_IMPACT_FRAMES[0]
 	player1._on_animation_frame_changed()
@@ -1983,10 +2033,16 @@ func _test_combat_flow() -> void:
 		first_drum_loop_restarted
 		and player1.super_drum_roll_completed_loops == 2
 		and player1.current_state == Mangler.State.IDLE
-		and player2.controls_enabled
-		and player2.current_state == Mangler.State.IDLE
-		and player2.animated_sprite.animation == &"idle",
-		"dopo due loop di drum roll entrambi i personaggi tornano attivi"
+		and not player2.controls_enabled
+		and player2.current_state == Mangler.State.KNOCKED_DOWN
+		and player2.animated_sprite.animation == &"super_drum_knockdown",
+		"dopo due loop l'avversario cade usando i frame 11-25 di ko"
+	)
+	player2._on_animation_finished()
+	_expect(
+		player2.current_state == Mangler.State.KNOCKDOWN_RECOVERY
+		and player2.animated_sprite.animation == &"knockdown_recovery",
+		"terminata la caduta parte knockdown_recovery"
 	)
 	player1.release_super_freeze()
 	player1.global_position = super_test_player1_position
@@ -2008,6 +2064,11 @@ func _test_combat_flow() -> void:
 	player1.release_super_freeze()
 	player1.combat.cancel_current_action()
 	player1.change_state(Mangler.State.IDLE)
+	# Isola il danno percentuale della super dai test di combattimento successivi.
+	player2.combat.reset()
+	player2.controls_enabled = true
+	player2.can_move = true
+	player2.change_state(Mangler.State.IDLE)
 
 	player1.combat.cancel_current_action()
 	player1.change_state(Mangler.State.IDLE)

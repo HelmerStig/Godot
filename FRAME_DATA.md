@@ -32,8 +32,9 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Supermossa (avvio) | standing super | `super_start` | 48 | 19 (aura gialla) | — | hold | 25 | 0 | super | no |
 | Supermossa (corsa rotante) | standing super | `super_rotate_run` | 48 | 20 (movimento + scia) | — | hold | 25 | 0 | super | no |
 | Supermossa (corsa) | standing super | `super_run_only` | 48 | scia continua | — | loop fino al contatto | 24 | 0 | super | sì |
-| Supermossa (rullo) | standing super | `super_drum_roll` | 48 | 5, 11, 17, 23 (esplosioni rosse) | — | 2 esecuzioni, poi idle | 24 | 0 | super | no |
+| Supermossa (rullo) | standing super | `super_drum_roll` | 48 | 5, 11, 17, 23 (esplosioni rosse) | 25% vita massima, una volta al contatto | 2 esecuzioni, poi idle | 24 | 0 | super | no |
 | Reazione al rullo | frozen hit | `super_drum_hurt` | 48 | — | — | loop per tutta la durata del rullo | 4-13 di `hurt-high.png` | 0 | super | sì |
+| Caduta dopo il rullo | knockdown | `super_drum_knockdown` | 24 | — | — | poi `knockdown_recovery` | 11-25 di `ko.png` | 0 | super | no |
 | Testata da presa | grab follow-up | `grab_headbutt` | 25 | 16 | 1 | 8 | 25 | 15 | high/unblockable | no |
 | Vittima afferrata | reaction | `grabbed` | 24 | — | — | — | 32 (sorgente 10–25–10) | 0 | reaction | no |
 | Colpito in salto | airborne reaction | `hurted_in_jump` | 24 | — | — | — | 25 + 1 s hold | 0 | knockdown | sì |

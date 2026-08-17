@@ -43,6 +43,7 @@ static func configure_all(fighter: Mangler) -> void:
 	fighter.configure_super_run_only_frames()
 	fighter.configure_super_drum_roll_frames()
 	fighter.configure_super_drum_hurt_frames()
+	fighter.configure_super_drum_knockdown_frames()
 	fighter.configure_grab_tentative_frames()
 	fighter.configure_grab_headbow_combined_frames()
 	fighter.configure_grab_headbutt_frames()

@@ -266,9 +266,14 @@ const SUPER_DRUM_ROLL_COLUMNS := 5
 const SUPER_DRUM_ROLL_CELL_SIZE := Vector2(512.0, 512.0)
 const SUPER_DRUM_ROLL_TOTAL_LOOPS := 2
 const SUPER_DRUM_ROLL_IMPACT_FRAMES := [4, 10, 16, 22]
+const SUPER_DAMAGE_RATIO := 0.25
+const SUPER_MOTION_WINDOW_FRAMES := 48
 const SUPER_DRUM_HURT_SOURCE_START_FRAME := 3
 const SUPER_DRUM_HURT_SOURCE_END_FRAME := 12
 const SUPER_DRUM_HURT_FRAME_COUNT := 10
+const SUPER_DRUM_KNOCKDOWN_SOURCE_START_FRAME := 10
+const SUPER_DRUM_KNOCKDOWN_SOURCE_END_FRAME := 24
+const SUPER_DRUM_KNOCKDOWN_FRAME_COUNT := 15
 const GRAB_HEADBUTT_REAR_SHEET := preload(
 	"res://assets/sprites/characters/mangler/prese/testata-rear.png"
 )
@@ -1506,6 +1511,23 @@ func configure_super_drum_hurt_frames() -> void:
 		)
 
 
+func configure_super_drum_knockdown_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"super_drum_knockdown"):
+		frames.remove_animation(&"super_drum_knockdown")
+	frames.add_animation(&"super_drum_knockdown")
+	frames.set_animation_speed(&"super_drum_knockdown", 24.0)
+	frames.set_animation_loop(&"super_drum_knockdown", false)
+	for source_index in range(
+		SUPER_DRUM_KNOCKDOWN_SOURCE_START_FRAME,
+		SUPER_DRUM_KNOCKDOWN_SOURCE_END_FRAME + 1
+	):
+		frames.add_frame(
+			&"super_drum_knockdown",
+			frames.get_frame_texture(&"ko", source_index)
+		)
+
+
 func configure_grabbed_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"grabbed"):
@@ -1747,7 +1769,7 @@ func is_super_start_command_pressed() -> bool:
 		FighterInputBuffer.Direction.DOWN,
 		FighterInputBuffer.Direction.DOWN_FORWARD,
 		FighterInputBuffer.Direction.FORWARD,
-	], 30)
+	], SUPER_MOTION_WINDOW_FRAMES)
 
 
 func start_super_start() -> void:
@@ -1771,6 +1793,23 @@ func start_super_drum_roll() -> void:
 	velocity.x = 0.0
 	if is_instance_valid(super_frozen_target):
 		super_frozen_target.start_super_drum_hurt_reaction()
+		var super_damage := maxi(
+			1,
+			roundi(float(super_frozen_target.combat.max_health) * SUPER_DAMAGE_RATIO)
+		)
+		super_frozen_target.combat.take_damage(
+			super_damage,
+			self,
+			2.0,
+			0.0,
+			AttackData.HitHeight.HIGH,
+			false,
+			0,
+			0,
+			false
+		)
+		if super_frozen_target.combat.current_health > 0:
+			super_frozen_target.start_super_drum_hurt_reaction()
 	animated_sprite.play(&"super_drum_roll")
 
 
@@ -1781,6 +1820,31 @@ func start_super_drum_hurt_reaction() -> void:
 	can_move = false
 	velocity = Vector2.ZERO
 	animated_sprite.play(&"super_drum_hurt")
+
+
+func start_super_drum_knockdown() -> void:
+	if combat.current_health <= 0:
+		return
+	combat.cancel_current_action()
+	controls_enabled = false
+	change_state(State.KNOCKED_DOWN)
+	can_move = false
+	velocity = Vector2.ZERO
+	animated_sprite.play(&"super_drum_knockdown")
+
+
+func start_super_drum_recovery() -> void:
+	if combat.current_health <= 0:
+		return
+	change_state(State.KNOCKDOWN_RECOVERY)
+	controls_enabled = false
+	can_move = false
+	await get_tree().create_timer(get_animation_duration(&"knockdown_recovery")).timeout
+	if current_state != State.KNOCKDOWN_RECOVERY or combat.current_health <= 0:
+		return
+	controls_enabled = true
+	can_move = true
+	change_state(State.IDLE)
 
 
 func spawn_super_drum_roll_impact() -> Node2D:
@@ -1819,10 +1883,11 @@ func freeze_for_super_start() -> void:
 func release_super_freeze() -> void:
 	z_index = default_z_index
 	if is_instance_valid(super_frozen_target):
-		super_frozen_target.controls_enabled = true
-		super_frozen_target.can_move = true
-		super_frozen_target.combat.set_guarding(false)
-		super_frozen_target.change_state(State.IDLE)
+		if super_frozen_target.combat.current_health > 0:
+			super_frozen_target.controls_enabled = true
+			super_frozen_target.can_move = true
+			super_frozen_target.combat.set_guarding(false)
+			super_frozen_target.change_state(State.IDLE)
 	super_frozen_target = null
 
 
@@ -2234,7 +2299,6 @@ func update_sprite_scale() -> void:
 		&"super_rotate_run",
 		&"super_run_only",
 		&"super_drum_roll",
-		&"super_drum_hurt",
 		&"grab_headbutt",
 		&"grabbed",
 		&"hurted_in_jump",
@@ -3044,8 +3108,14 @@ func _on_animation_finished() -> void:
 		if super_drum_roll_completed_loops < SUPER_DRUM_ROLL_TOTAL_LOOPS:
 			animated_sprite.play(&"super_drum_roll")
 		else:
-			release_super_freeze()
+			var drum_target := super_frozen_target
+			z_index = default_z_index
+			super_frozen_target = null
 			change_state(State.IDLE)
+			if is_instance_valid(drum_target):
+				drum_target.start_super_drum_knockdown()
+	elif animated_sprite.animation == &"super_drum_knockdown":
+		start_super_drum_recovery()
 	elif animated_sprite.animation == &"grab_headbow_combined" and is_instance_valid(grabbed_target):
 		spawn_grab_headbow_final_explosion()
 		shift_grab_pair_forward()
