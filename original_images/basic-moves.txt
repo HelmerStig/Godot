@@ -17,7 +17,7 @@ hurted_sweep_knockdown <--ok
 knockdown_recovery <--ok
 knockdown <--ok
 
-hurted_air <--
+hurted_air <-- ok
 
 
 light-punch <--ok
@@ -40,6 +40,11 @@ jump-strong-punch <--ok
 jump-light-kick <--ok
 jump-medium-kick <--ok
 jump-strong-kick <--ok
+
+super<--ok
+presa<--ok
+special 1 <--ok
+special 2 <--ok
 
 running-light-punch
 running-medium-punch
