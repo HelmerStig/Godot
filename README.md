@@ -168,7 +168,7 @@ La tabella descrive le varianti in piedi. Ogni `AttackData` contiene risorse `At
 
 Gli sprite in `assets/sprites/characters/` sono PNG RGBA 512×512. La scena condivisa `Mangler.tscn` usa una scala di `0.7`, equivalente alla precedente resa visiva degli asset 1024×1024 scalati a `0.35`.
 
-Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momento soltanto Mangler è collegato alla scena giocabile.
+Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe. Nell'arena Arianna occupa Player 1 con il solo idle, mentre Mangler occupa Player 2 con il moveset completo.
 
 ## Limiti noti e prossime priorità
 
@@ -182,6 +182,7 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe; al momen
 - La presa diretta usa i frame sorgente 1–29 a 48 FPS, è spostata di 80 px in avanti e genera al frame 19 la stessa esplosione rossa del light punch; sprite e ombra della vittima vengono nascosti durante la sequenza. Dopo il frame 29 entrambi i personaggi avanzano di 15 px nella direzione della testata e tornano in `IDLE`.
 - La supermossa si esegue con `← ↙ ↓ ↘ → + calcio leggero + calcio medio`: tutti e quattro gli sprite sono riprodotti a 48 FPS. `super_start.png` genera al frame 19 un'aura esplosiva gialla; `rotate-super_run.png` e `run_only.png` avvicinano rapidamente Mangler all'avversario a 480 px/s lasciando una scia. Al contatto viene sottratto una sola volta il 25% della vita massima, poi `drum_roll_only.png` viene eseguito due volte con esplosioni rosse sul volto; per tutta questa fase il bersaglio ripete a 48 FPS i fotogrammi 4–13 di `hurt-high.png`. Alla fine il bersaglio cade con i frame 11–25 di `ko.png` a 24 FPS, quindi esegue `knockdown_recovery.png` e torna in `IDLE`; un danno letale conserva invece il vero KO. L'attaccante resta davanti all'avversario nello z-order; prima del contatto l'avversario congelato continua a riprodurre `IDLE`, oppure mantiene la parata alta se stava già parando.
 - Quarto e mezzaluna hanno una tolleranza maggiore: rispettivamente 36 e 48 frame, con 10 frame per associare il pulsante finale. I passaggi diagonali saltati da uno stick analogico rapido vengono ricostruiti dal buffer.
+- Arianna dispone di una scena autonoma, `scenes/Arianna.tscn`: `basic-moves/idle.png` usa 24 frame a 24 FPS in loop. `basic-moves/01-walk.png` usa 48 frame a 24 FPS: in ordine normale per avanzare e in ordine inverso per arretrare, sempre mantenendo il busto rivolto verso l'avversario. Entrambe le direzioni muovono fisicamente il personaggio e tornano in idle al rilascio; gli attacchi restano disabilitati finché non vengono integrati.
 - Il follow-up con la vecchia testata separata resta configurato, ma non viene avviato automaticamente durante questa anteprima.
 - Anche la testata usa livelli sincronizzati: `testata-rear.png` dietro alla vittima e `testata-front.png` davanti.
 - Durante l'affondo della testata, i livelli `rear` e `front` generano una breve scia dorata sincronizzata.

@@ -15,6 +15,7 @@ func _run() -> void:
 	print("=== SANMO HEADLESS SMOKE TESTS ===")
 	_test_attack_data()
 	await _test_input_buffer()
+	await _test_arianna_idle()
 	await _test_combat_flow()
 	_release_test_actions()
 
@@ -183,10 +184,146 @@ func _test_input_buffer() -> void:
 		"quarti e mezze lune usano finestre temporali più tolleranti"
 	)
 
+func _test_arianna_idle() -> void:
+	print("-- Arianna idle")
+	var arianna_scene := load("res://scenes/Arianna.tscn") as PackedScene
+	var arianna := arianna_scene.instantiate() as Arianna
+	arianna.set_physics_process(false)
+	root.add_child(arianna)
+	await process_frame
+	var frames := arianna.animated_sprite.sprite_frames
+	var last_frame := frames.get_frame_texture(&"idle", 23) as AtlasTexture
+	_expect(frames.get_frame_count(&"idle") == 24, "Arianna idle usa esattamente 24 frame")
+	_expect(
+		is_equal_approx(frames.get_animation_speed(&"idle"), 24.0),
+		"Arianna idle è configurato a 24 FPS"
+	)
+	_expect(frames.get_animation_loop(&"idle"), "Arianna idle è configurato in loop")
+	_expect(
+		arianna.animated_sprite.is_playing()
+		and arianna.animated_sprite.animation == &"idle",
+		"Arianna avvia automaticamente idle"
+	)
+	_expect(
+		last_frame != null
+		and last_frame.atlas == Arianna.ARIANNA_IDLE_SHEET
+		and last_frame.region == Rect2(1024.0, 1536.0, 512.0, 512.0),
+		"Arianna usa i primi 24 riquadri della griglia 7x4"
+	)
+	_expect(
+		arianna.animated_sprite.scale == Arianna.ARIANNA_SPRITE_SCALE
+		and arianna.animated_sprite.position == Arianna.ARIANNA_SPRITE_POSITION,
+		"Arianna idle mantiene scala e linea dei piedi configurate"
+	)
+	var walk_frames := arianna.animated_sprite.sprite_frames
+	var walk_last_frame := walk_frames.get_frame_texture(&"walk", 47) as AtlasTexture
+	_expect(
+		walk_frames.get_frame_count(&"walk") == 48
+		and is_equal_approx(walk_frames.get_animation_speed(&"walk"), 24.0)
+		and walk_frames.get_animation_loop(&"walk")
+		and walk_last_frame != null
+		and walk_last_frame.atlas == Arianna.ARIANNA_WALK_SHEET
+		and walk_last_frame.region == Rect2(2560.0, 3072.0, 512.0, 512.0),
+		"Arianna walk usa 48 frame a 24 FPS in loop"
+	)
+	var backwalk_first_frame := walk_frames.get_frame_texture(&"backwalk", 0) as AtlasTexture
+	var backwalk_last_frame := walk_frames.get_frame_texture(&"backwalk", 47) as AtlasTexture
+	_expect(
+		walk_frames.get_frame_count(&"backwalk") == 48
+		and is_equal_approx(walk_frames.get_animation_speed(&"backwalk"), 24.0)
+		and walk_frames.get_animation_loop(&"backwalk")
+		and backwalk_first_frame.region == walk_last_frame.region
+		and backwalk_last_frame.region == Rect2(0.0, 0.0, 512.0, 512.0),
+		"Arianna backwalk riusa i 48 frame di 01-walk in ordine inverso"
+	)
+	arianna.is_facing_right = true
+	var forward_right_is_valid := arianna.is_forward_input(1.0)
+	var backward_right_is_rejected := not arianna.is_forward_input(-1.0)
+	arianna.is_facing_right = false
+	_expect(
+		forward_right_is_valid
+		and backward_right_is_rejected
+		and arianna.is_forward_input(-1.0),
+		"Arianna cammina soltanto verso l'avversario in entrambe le direzioni"
+	)
+	arianna.is_facing_right = true
+	arianna.controls_enabled = true
+	arianna.can_move = true
+	arianna.set_physics_process(true)
+	var walk_start_x := arianna.position.x
+	var arianna_forward_action := arianna.get_input_action("move_right")
+	Input.action_press(arianna_forward_action)
+	await physics_frame
+	await physics_frame
+	var walked_forward := (
+		arianna.position.x > walk_start_x
+		and arianna.animated_sprite.animation == &"walk"
+		and arianna.animated_sprite.is_playing()
+	)
+	Input.action_release(arianna_forward_action)
+	await physics_frame
+	_expect(
+		walked_forward and arianna.animated_sprite.animation == &"idle",
+		"tenere avanti muove Arianna con walk e il rilascio ripristina idle"
+	)
+	var backwalk_start_x := arianna.position.x
+	var arianna_back_action := arianna.get_input_action("move_left")
+	Input.action_press(arianna_back_action)
+	await physics_frame
+	await physics_frame
+	var walked_backward := (
+		arianna.position.x < backwalk_start_x
+		and arianna.animated_sprite.animation == &"backwalk"
+		and arianna.animated_sprite.is_playing()
+	)
+	Input.action_release(arianna_back_action)
+	await physics_frame
+	_expect(
+		walked_backward and arianna.animated_sprite.animation == &"idle",
+		"tenere indietro muove Arianna con backwalk e mantiene il facing"
+	)
+	arianna.queue_free()
+	await process_frame
+	var live_arena := (load("res://scenes/MainArena.tscn") as PackedScene).instantiate()
+	root.add_child(live_arena)
+	await process_frame
+	var live_arianna := live_arena.get_node("Player1") as Arianna
+	var live_idle_frame := live_arianna.animated_sprite.sprite_frames.get_frame_texture(
+		&"idle", 0
+	) as AtlasTexture
+	_expect(
+		live_arianna != null
+		and live_idle_frame != null
+		and live_idle_frame.atlas == Arianna.ARIANNA_IDLE_SHEET,
+		"lo stage mostra l'atlante idle di Arianna sul Player 1"
+	)
+	live_arena.queue_free()
+	await process_frame
+
+
 func _test_combat_flow() -> void:
 	print("-- Arena, combattimento e UI")
 	var arena_scene := load("res://scenes/MainArena.tscn") as PackedScene
 	var arena: Node = arena_scene.instantiate()
+	var configured_player1 := arena.get_node("Player1")
+	var configured_player2 := arena.get_node("Player2")
+	_expect(
+		configured_player1 is Arianna
+		and configured_player2 is Mangler
+		and not (configured_player2 is Arianna),
+		"MainArena usa Arianna come Player 1 e Mangler come Player 2"
+	)
+	# La suite storica sottostante collauda il moveset completo di Mangler.
+	# Sostituisce solo nel fixture Player 1, senza modificare la scena di gioco.
+	var player1_index := configured_player1.get_index()
+	var player1_position: Vector2 = configured_player1.position
+	arena.remove_child(configured_player1)
+	configured_player1.free()
+	var mangler_fixture := (load("res://scenes/Mangler.tscn") as PackedScene).instantiate()
+	mangler_fixture.name = "Player1"
+	mangler_fixture.position = player1_position
+	arena.add_child(mangler_fixture)
+	arena.move_child(mangler_fixture, player1_index)
 	root.add_child(arena)
 
 	var player1 := arena.get_node("Player1") as Mangler
