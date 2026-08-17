@@ -28,12 +28,17 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Calcio pesante | airborne | `jump_heavy_kick` | 48 | 15 | hold | 19 | variabile | 20 | high | no |
 | 720 Punch | standing | `special_720_punch` | 48 | 9 | 34 | 6 | 49 | 6×3 | high | no |
 | Sonic Boom (lancio) | standing | `special_sonic_boom` | 48 | 24 | 1 | 24 | 49 | 0 | high | no |
-| Presa diretta combinata | standing grab | `grab_headbow_combined` | 48 | 19 (esplosione) | — | 1 | 49 | 0 | grab | no |
+| Presa diretta combinata | standing grab | `grab_headbow_combined` | 48 | 19 (esplosione rossa light punch) | — | 1 | 29 (sorgente 1–29) | 0 | grab | no |
+| Supermossa (avvio) | standing super | `super_start` | 48 | 19 (aura gialla) | — | hold | 25 | 0 | super | no |
+| Supermossa (corsa rotante) | standing super | `super_rotate_run` | 48 | 20 (movimento + scia) | — | hold | 25 | 0 | super | no |
+| Supermossa (corsa) | standing super | `super_run_only` | 48 | scia continua | — | loop fino al contatto | 24 | 0 | super | sì |
+| Supermossa (rullo) | standing super | `super_drum_roll` | 48 | 5, 11, 17, 23 (esplosioni rosse) | — | 2 esecuzioni, poi idle | 24 | 0 | super | no |
+| Reazione al rullo | frozen hit | `super_drum_hurt` | 48 | — | — | loop per tutta la durata del rullo | 4-13 di `hurt-high.png` | 0 | super | sì |
 | Testata da presa | grab follow-up | `grab_headbutt` | 25 | 16 | 1 | 8 | 25 | 15 | high/unblockable | no |
 | Vittima afferrata | reaction | `grabbed` | 24 | — | — | — | 32 (sorgente 10–25–10) | 0 | reaction | no |
 | Colpito in salto | airborne reaction | `hurted_in_jump` | 24 | — | — | — | 25 + 1 s hold | 0 | knockdown | sì |
 
-> Presa diretta: `grab_tentative` viene saltato. Se la verifica immediata della portata riesce, parte `Mangler2-headbut_mangler_mangler.png` e la vittima viene nascosta; terminata la sequenza, entrambi avanzano di 30 px nella direzione della testata e tornano visibili in `IDLE`.
+> Presa diretta: `grab_tentative` viene saltato. Se la verifica immediata della portata riesce, parte `Mangler2-headbut_mangler_mangler.png` e la vittima viene nascosta; terminata la sequenza, entrambi avanzano di 15 px nella direzione della testata e tornano visibili in `IDLE`.
 
 Il proiettile Sonic Boom viaggia a 520 px/s con pugno leggero, 676 px/s con pugno medio e 832 px/s con pugno pesante.
 

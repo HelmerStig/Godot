@@ -227,13 +227,48 @@ const GRAB_TENTATIVE_CELL_SIZE := Vector2(512.0, 512.0)
 const GRAB_HEADBOW_COMBINED_SHEET := preload(
 	"res://assets/sprites/characters/mangler/prese/Mangler2-headbut_mangler_mangler.png"
 )
-const GRAB_HEADBOW_COMBINED_FRAME_COUNT := 49
+const GRAB_HEADBOW_COMBINED_FRAME_COUNT := 29
 const GRAB_HEADBOW_COMBINED_COLUMNS := 7
 const GRAB_HEADBOW_COMBINED_CELL_SIZE := Vector2(512.0, 512.0)
 const GRAB_HEADBOW_EXPLOSION_FRAME := 18
 const DIRECT_GRAB_MAX_DISTANCE := 210.0
 const DIRECT_GRAB_MAX_VERTICAL_DISTANCE := 120.0
-const GRAB_END_FORWARD_SHIFT := 30.0
+const GRAB_END_FORWARD_SHIFT := 15.0
+const SUPER_START_SHEET := preload(
+	"res://assets/sprites/characters/mangler/super/super_start.png"
+)
+const SUPER_START_FRAME_COUNT := 25
+const SUPER_START_COLUMNS := 5
+const SUPER_START_CELL_SIZE := Vector2(512.0, 512.0)
+const SUPER_START_AURA_FRAME := 18
+const SUPER_ROTATE_RUN_SHEET := preload(
+	"res://assets/sprites/characters/mangler/super/rotate-super_run.png"
+)
+const SUPER_ROTATE_RUN_FRAME_COUNT := 25
+const SUPER_ROTATE_RUN_COLUMNS := 5
+const SUPER_ROTATE_RUN_CELL_SIZE := Vector2(512.0, 512.0)
+const SUPER_ROTATE_RUN_MOVE_FRAME := 19
+const SUPER_ROTATE_RUN_SPEED := 480.0
+# Due collisioni fisiche larghe 120 px si fermano a circa 120 px tra i centri.
+# Il margine evita che il contatto irraggiungibile lasci super_run_only in loop.
+const SUPER_ROTATE_RUN_STOP_DISTANCE := 130.0
+const SUPER_RUN_ONLY_SHEET := preload(
+	"res://assets/sprites/characters/mangler/super/run_only.png"
+)
+const SUPER_RUN_ONLY_FRAME_COUNT := 24
+const SUPER_RUN_ONLY_COLUMNS := 5
+const SUPER_RUN_ONLY_CELL_SIZE := Vector2(512.0, 512.0)
+const SUPER_DRUM_ROLL_SHEET := preload(
+	"res://assets/sprites/characters/mangler/super/drum_roll_only.png"
+)
+const SUPER_DRUM_ROLL_FRAME_COUNT := 24
+const SUPER_DRUM_ROLL_COLUMNS := 5
+const SUPER_DRUM_ROLL_CELL_SIZE := Vector2(512.0, 512.0)
+const SUPER_DRUM_ROLL_TOTAL_LOOPS := 2
+const SUPER_DRUM_ROLL_IMPACT_FRAMES := [4, 10, 16, 22]
+const SUPER_DRUM_HURT_SOURCE_START_FRAME := 3
+const SUPER_DRUM_HURT_SOURCE_END_FRAME := 12
+const SUPER_DRUM_HURT_FRAME_COUNT := 10
 const GRAB_HEADBUTT_REAR_SHEET := preload(
 	"res://assets/sprites/characters/mangler/prese/testata-rear.png"
 )
@@ -379,6 +414,9 @@ var grabbed_target: Mangler
 var grabbed_by: Mangler
 var grab_headbutt_hit_landed := false
 var grab_headbow_explosion_spawned := false
+var super_frozen_target: Mangler
+var super_start_aura_spawned := false
+var super_drum_roll_completed_loops := 0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var grab_front_sprite: AnimatedSprite2D = $GrabFrontSprite
@@ -1371,6 +1409,103 @@ func configure_grab_headbow_combined_frames() -> void:
 		frames.add_frame(&"grab_headbow_combined", atlas_frame)
 
 
+func configure_super_start_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"super_start"):
+		frames.remove_animation(&"super_start")
+	frames.add_animation(&"super_start")
+	frames.set_animation_speed(&"super_start", 48.0)
+	frames.set_animation_loop(&"super_start", false)
+	for source_index in range(SUPER_START_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = SUPER_START_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % SUPER_START_COLUMNS),
+				float(floori(float(source_index) / SUPER_START_COLUMNS))
+			) * SUPER_START_CELL_SIZE,
+			SUPER_START_CELL_SIZE
+		)
+		frames.add_frame(&"super_start", atlas_frame)
+
+
+func configure_super_rotate_run_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"super_rotate_run"):
+		frames.remove_animation(&"super_rotate_run")
+	frames.add_animation(&"super_rotate_run")
+	frames.set_animation_speed(&"super_rotate_run", 48.0)
+	frames.set_animation_loop(&"super_rotate_run", false)
+	for source_index in range(SUPER_ROTATE_RUN_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = SUPER_ROTATE_RUN_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % SUPER_ROTATE_RUN_COLUMNS),
+				float(floori(float(source_index) / SUPER_ROTATE_RUN_COLUMNS))
+			) * SUPER_ROTATE_RUN_CELL_SIZE,
+			SUPER_ROTATE_RUN_CELL_SIZE
+		)
+		frames.add_frame(&"super_rotate_run", atlas_frame)
+
+
+func configure_super_run_only_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"super_run_only"):
+		frames.remove_animation(&"super_run_only")
+	frames.add_animation(&"super_run_only")
+	frames.set_animation_speed(&"super_run_only", 48.0)
+	frames.set_animation_loop(&"super_run_only", true)
+	for source_index in range(SUPER_RUN_ONLY_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = SUPER_RUN_ONLY_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % SUPER_RUN_ONLY_COLUMNS),
+				float(floori(float(source_index) / SUPER_RUN_ONLY_COLUMNS))
+			) * SUPER_RUN_ONLY_CELL_SIZE,
+			SUPER_RUN_ONLY_CELL_SIZE
+		)
+		frames.add_frame(&"super_run_only", atlas_frame)
+
+
+func configure_super_drum_roll_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"super_drum_roll"):
+		frames.remove_animation(&"super_drum_roll")
+	frames.add_animation(&"super_drum_roll")
+	frames.set_animation_speed(&"super_drum_roll", 48.0)
+	frames.set_animation_loop(&"super_drum_roll", false)
+	for source_index in range(SUPER_DRUM_ROLL_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = SUPER_DRUM_ROLL_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % SUPER_DRUM_ROLL_COLUMNS),
+				float(floori(float(source_index) / SUPER_DRUM_ROLL_COLUMNS))
+			) * SUPER_DRUM_ROLL_CELL_SIZE,
+			SUPER_DRUM_ROLL_CELL_SIZE
+		)
+		frames.add_frame(&"super_drum_roll", atlas_frame)
+
+
+func configure_super_drum_hurt_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"super_drum_hurt"):
+		frames.remove_animation(&"super_drum_hurt")
+	frames.add_animation(&"super_drum_hurt")
+	frames.set_animation_speed(&"super_drum_hurt", 48.0)
+	frames.set_animation_loop(&"super_drum_hurt", true)
+	for source_index in range(
+		SUPER_DRUM_HURT_SOURCE_START_FRAME,
+		SUPER_DRUM_HURT_SOURCE_END_FRAME + 1
+	):
+		frames.add_frame(
+			&"super_drum_hurt",
+			frames.get_frame_texture(&"hurt_high", source_index)
+		)
+
+
 func configure_grabbed_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"grabbed"):
@@ -1440,6 +1575,24 @@ func _physics_process(delta: float) -> void:
 		handle_input()
 	if combat.is_special_720_punch:
 		velocity.x = get_special_720_movement_velocity()
+	if (
+		(
+			animated_sprite.animation == &"super_run_only"
+			or (
+				animated_sprite.animation == &"super_rotate_run"
+				and animated_sprite.frame >= SUPER_ROTATE_RUN_MOVE_FRAME
+			)
+		)
+		and is_instance_valid(super_frozen_target)
+	):
+		var target_offset := super_frozen_target.global_position.x - global_position.x
+		if absf(target_offset) > SUPER_ROTATE_RUN_STOP_DISTANCE:
+			velocity.x = signf(target_offset) * SUPER_ROTATE_RUN_SPEED
+		elif animated_sprite.animation == &"super_run_only":
+			velocity.x = 0.0
+			start_super_drum_roll()
+		else:
+			velocity.x = 0.0
 
 	update_state()
 	update_physical_collision()
@@ -1482,6 +1635,10 @@ func handle_input() -> void:
 	combat.set_guarding(is_holding_back() and is_on_floor())
 
 	if is_on_floor():
+		if is_super_start_command_pressed():
+			input_buffer.clear()
+			start_super_start()
+			return
 		if is_grab_chord_pressed():
 			input_buffer.clear()
 			start_direct_grab()
@@ -1573,6 +1730,149 @@ func is_grab_chord_pressed() -> bool:
 	)
 
 
+func is_super_start_command_pressed() -> bool:
+	var light_kick_action := get_input_action("light_kick")
+	var medium_kick_action := get_input_action("medium_kick")
+	var chord_pressed := (
+		Input.is_action_pressed(light_kick_action)
+		and Input.is_action_pressed(medium_kick_action)
+		and (
+			Input.is_action_just_pressed(light_kick_action)
+			or Input.is_action_just_pressed(medium_kick_action)
+		)
+	)
+	return chord_pressed and input_buffer.matches_recent_sequence([
+		FighterInputBuffer.Direction.BACK,
+		FighterInputBuffer.Direction.DOWN_BACK,
+		FighterInputBuffer.Direction.DOWN,
+		FighterInputBuffer.Direction.DOWN_FORWARD,
+		FighterInputBuffer.Direction.FORWARD,
+	], 30)
+
+
+func start_super_start() -> void:
+	super_start_aura_spawned = false
+	super_drum_roll_completed_loops = 0
+	velocity = Vector2.ZERO
+	combat.cancel_current_action()
+	combat.set_guarding(false)
+	change_state(State.ATTACKING)
+	super_frozen_target = opponent if is_instance_valid(opponent) else null
+	if is_instance_valid(super_frozen_target):
+		z_index = super_frozen_target.z_index + ATTACK_FOREGROUND_Z_OFFSET
+		super_frozen_target.freeze_for_super_start()
+	animated_sprite.play(&"super_start")
+
+
+func start_super_drum_roll() -> void:
+	if animated_sprite.animation == &"super_drum_roll":
+		return
+	super_drum_roll_completed_loops = 0
+	velocity.x = 0.0
+	if is_instance_valid(super_frozen_target):
+		super_frozen_target.start_super_drum_hurt_reaction()
+	animated_sprite.play(&"super_drum_roll")
+
+
+func start_super_drum_hurt_reaction() -> void:
+	combat.cancel_current_action()
+	controls_enabled = false
+	change_state(State.HIT)
+	can_move = false
+	velocity = Vector2.ZERO
+	animated_sprite.play(&"super_drum_hurt")
+
+
+func spawn_super_drum_roll_impact() -> Node2D:
+	if not is_instance_valid(super_frozen_target):
+		return null
+	# Segue la hurtbox reale della testa, inclusi scala e profilo di collisione correnti.
+	var impact_position := super_frozen_target.head_hurtbox.global_position
+	var explosion := spawn_grab_headbutt_impact_explosion(impact_position)
+	if explosion == null:
+		return null
+	explosion.name = "SuperDrumRollImpact"
+	explosion.add_to_group("super_drum_roll_impact")
+	for child in explosion.get_children():
+		if child is CanvasItem:
+			child.modulate = Color(1.0, 0.08, 0.03, child.modulate.a)
+	return explosion
+
+
+func freeze_for_super_start() -> void:
+	var was_guarding := combat.is_blocking or current_state in [State.BLOCKING, State.BLOCK_RECOVERY]
+	combat.cancel_current_action()
+	controls_enabled = false
+	can_move = false
+	velocity = Vector2.ZERO
+	if was_guarding:
+		change_state(State.BLOCKING)
+		animated_sprite.play(&"block_high")
+		animated_sprite.frame = animated_sprite.sprite_frames.get_frame_count(&"block_high") - 1
+		animated_sprite.pause()
+	else:
+		change_state(State.IDLE)
+		animated_sprite.play(&"idle")
+	can_move = false
+
+
+func release_super_freeze() -> void:
+	z_index = default_z_index
+	if is_instance_valid(super_frozen_target):
+		super_frozen_target.controls_enabled = true
+		super_frozen_target.can_move = true
+		super_frozen_target.combat.set_guarding(false)
+		super_frozen_target.change_state(State.IDLE)
+	super_frozen_target = null
+
+
+func spawn_super_start_aura_explosion() -> Node2D:
+	if super_start_aura_spawned:
+		return null
+	super_start_aura_spawned = true
+	var aura := Node2D.new()
+	aura.name = "SuperStartAuraExplosion"
+	aura.add_to_group("super_start_aura")
+	aura.position = Vector2(0.0, -150.0)
+	aura.z_index = animated_sprite.z_index + 2
+	add_child(aura)
+	var additive_material := CanvasItemMaterial.new()
+	additive_material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	var flash := Sprite2D.new()
+	flash.name = "AuraFlash"
+	flash.texture = create_sonic_glow_texture()
+	flash.scale = Vector2(0.55, 0.75)
+	flash.modulate = Color(1.0, 0.9, 0.12, 0.92)
+	flash.material = additive_material
+	aura.add_child(flash)
+	var flash_tween := flash.create_tween()
+	flash_tween.tween_property(flash, "scale", Vector2(1.65, 1.9), 0.18)
+	flash_tween.parallel().tween_property(flash, "modulate:a", 0.0, 0.38)
+	var particles := CPUParticles2D.new()
+	particles.name = "AuraParticles"
+	particles.amount = 64
+	particles.one_shot = true
+	particles.explosiveness = 1.0
+	particles.lifetime = 0.48
+	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	particles.emission_sphere_radius = 68.0
+	particles.direction = Vector2.UP
+	particles.spread = 180.0
+	particles.initial_velocity_min = 95.0
+	particles.initial_velocity_max = 285.0
+	particles.radial_accel_min = 45.0
+	particles.radial_accel_max = 130.0
+	particles.gravity = Vector2.ZERO
+	particles.scale_amount_min = 1.5
+	particles.scale_amount_max = 4.2
+	particles.color = Color(1.0, 0.86, 0.08, 0.96)
+	particles.material = additive_material
+	particles.emitting = true
+	aura.add_child(particles)
+	get_tree().create_timer(0.58).timeout.connect(aura.queue_free)
+	return aura
+
+
 func start_direct_grab() -> void:
 	grab_succeeded = false
 	grab_headbow_explosion_spawned = false
@@ -1633,8 +1933,9 @@ func spawn_grab_headbow_final_explosion() -> void:
 	if grab_headbow_explosion_spawned or not is_instance_valid(grabbed_target):
 		return
 	grab_headbow_explosion_spawned = true
-	spawn_grab_headbutt_impact_explosion(
-		grabbed_target.global_position + Vector2(0.0, -220.0)
+	spawn_hit_effect(
+		grabbed_target.global_position + Vector2(0.0, -220.0),
+		is_facing_right
 	)
 
 
@@ -1929,6 +2230,11 @@ func update_sprite_scale() -> void:
 		&"special_sonic_boom",
 		&"grab_tentative", &"grab_tentative_recovery",
 		&"grab_headbow_combined",
+		&"super_start",
+		&"super_rotate_run",
+		&"super_run_only",
+		&"super_drum_roll",
+		&"super_drum_hurt",
 		&"grab_headbutt",
 		&"grabbed",
 		&"hurted_in_jump",
@@ -2309,6 +2615,7 @@ func is_attack_in_front(attacker: Mangler) -> bool:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	release_super_freeze()
 	release_grab()
 	set_combined_grab_hidden(false)
 	clear_attack_afterimages()
@@ -2539,6 +2846,8 @@ func spawn_sweep_motion_afterimage() -> void:
 
 func spawn_hit_effect(world_position: Vector2, facing_right: bool = true) -> void:
 	var particles := CPUParticles2D.new()
+	particles.name = "LightPunchHitEffect"
+	particles.add_to_group("light_punch_hit_effect")
 	particles.z_index = z_index + 2
 	particles.one_shot = true
 	particles.explosiveness = 1.0
@@ -2724,6 +3033,19 @@ func clear_attack_afterimages() -> void:
 func _on_animation_finished() -> void:
 	if animated_sprite.animation == &"grabbed" and is_instance_valid(grabbed_by):
 		animated_sprite.pause()
+	elif animated_sprite.animation == &"super_start":
+		velocity.x = 0.0
+		animated_sprite.play(&"super_rotate_run")
+	elif animated_sprite.animation == &"super_rotate_run":
+		velocity.x = 0.0
+		animated_sprite.play(&"super_run_only")
+	elif animated_sprite.animation == &"super_drum_roll":
+		super_drum_roll_completed_loops += 1
+		if super_drum_roll_completed_loops < SUPER_DRUM_ROLL_TOTAL_LOOPS:
+			animated_sprite.play(&"super_drum_roll")
+		else:
+			release_super_freeze()
+			change_state(State.IDLE)
 	elif animated_sprite.animation == &"grab_headbow_combined" and is_instance_valid(grabbed_target):
 		spawn_grab_headbow_final_explosion()
 		shift_grab_pair_forward()
@@ -2746,6 +3068,16 @@ func _on_animation_frame_changed() -> void:
 		and animated_sprite.frame == GRAB_HEADBOW_EXPLOSION_FRAME
 	):
 		spawn_grab_headbow_final_explosion()
+	elif (
+		animated_sprite.animation == &"super_start"
+		and animated_sprite.frame == SUPER_START_AURA_FRAME
+	):
+		spawn_super_start_aura_explosion()
+	elif (
+		animated_sprite.animation == &"super_drum_roll"
+		and animated_sprite.frame in SUPER_DRUM_ROLL_IMPACT_FRAMES
+	):
+		spawn_super_drum_roll_impact()
 	if animated_sprite.animation == &"grab_headbutt":
 		if animated_sprite.frame == GRAB_HEADBUTT_ACTIVE_FRAME:
 			perform_grab_headbutt_hit()

@@ -457,12 +457,12 @@ func _test_combat_flow() -> void:
 		"il tentativo di presa sincronizza i fogli rear e front"
 	)
 	var combined_grab_last_frame := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"grab_headbow_combined", 48)
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"grab_headbow_combined", 28)
 		as AtlasTexture
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"grab_headbow_combined")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"grab_headbow_combined") == 49
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"grab_headbow_combined") == 29
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"grab_headbow_combined"), 48.0
 		)
@@ -470,7 +470,86 @@ func _test_combat_flow() -> void:
 		and Mangler.GRAB_HEADBOW_EXPLOSION_FRAME == 18
 		and combined_grab_last_frame != null
 		and combined_grab_last_frame.atlas == Mangler.GRAB_HEADBOW_COMBINED_SHEET,
-		"la presa diretta usa 49 frame a 48 FPS e attiva l'esplosione al frame 19"
+		"la presa diretta usa i frame 1-29 a 48 FPS e attiva l'esplosione al frame 19"
+	)
+	var super_start_last_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"super_start", 24)
+		as AtlasTexture
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"super_start")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"super_start") == 25
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"super_start"), 48.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"super_start")
+		and super_start_last_frame != null
+		and super_start_last_frame.atlas == Mangler.SUPER_START_SHEET,
+		"super_start usa tutti i 25 frame a 48 FPS senza loop"
+	)
+	var super_rotate_last_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"super_rotate_run", 24)
+		as AtlasTexture
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"super_rotate_run")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"super_rotate_run") == 25
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"super_rotate_run"), 48.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"super_rotate_run")
+		and Mangler.SUPER_ROTATE_RUN_MOVE_FRAME == 19
+		and super_rotate_last_frame != null
+		and super_rotate_last_frame.atlas == Mangler.SUPER_ROTATE_RUN_SHEET,
+		"super_rotate_run usa 25 frame a 48 FPS e avanza dal frame 20"
+	)
+	var super_run_last_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"super_run_only", 23)
+		as AtlasTexture
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"super_run_only") == 24
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"super_run_only"), 48.0
+		)
+		and player1.animated_sprite.sprite_frames.get_animation_loop(&"super_run_only")
+		and Mangler.SUPER_ROTATE_RUN_STOP_DISTANCE >= 120.0
+		and super_run_last_frame != null
+		and super_run_last_frame.atlas == Mangler.SUPER_RUN_ONLY_SHEET,
+		"super_run_only usa 24 frame a 48 FPS in loop e rileva il contatto fisico"
+	)
+	var super_drum_last_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"super_drum_roll", 23)
+		as AtlasTexture
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"super_drum_roll") == 24
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"super_drum_roll"), 48.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"super_drum_roll")
+		and Mangler.SUPER_DRUM_ROLL_TOTAL_LOOPS == 2
+		and super_drum_last_frame != null
+		and super_drum_last_frame.atlas == Mangler.SUPER_DRUM_ROLL_SHEET,
+		"super_drum_roll usa 24 frame a 48 FPS e viene contato per due esecuzioni"
+	)
+	var super_drum_hurt_first_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"super_drum_hurt", 0)
+		as AtlasTexture
+	)
+	var super_drum_hurt_last_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"super_drum_hurt", 9)
+		as AtlasTexture
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.get_frame_count(&"super_drum_hurt") == 10
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"super_drum_hurt"), 48.0
+		)
+		and player1.animated_sprite.sprite_frames.get_animation_loop(&"super_drum_hurt")
+		and super_drum_hurt_first_frame.region.position == Vector2(1536.0, 0.0)
+		and super_drum_hurt_last_frame.region.position == Vector2(0.0, 1536.0),
+		"la reazione del rullo usa hurt-high dal fotogramma 4 al 13 in loop"
 	)
 	var headbutt_rear_frame := (
 		player1.animated_sprite.sprite_frames.get_frame_texture(&"grab_headbutt", 16)
@@ -1739,6 +1818,7 @@ func _test_combat_flow() -> void:
 
 	player1.combat.cancel_current_action()
 	player1.change_state(Mangler.State.IDLE)
+	var grab_attacker_original_position := player1.global_position
 	var grab_target_original_position := player2.global_position
 	player2.global_position = player1.global_position + Vector2(420.0, 0.0)
 	player1.start_direct_grab()
@@ -1751,18 +1831,41 @@ func _test_combat_flow() -> void:
 		"se la presa diretta è fuori portata, Mangler resta in IDLE"
 	)
 	player2.global_position = player1.global_position + Vector2(120.0, 0.0)
+	var shift_helper_attacker_x := player1.global_position.x
+	var shift_helper_victim_x := player2.global_position.x
+	player1.global_position.x = 500.0
+	player2.global_position.x = 620.0
+	player1.grabbed_target = player2
+	player1.shift_grab_pair_forward()
+	_expect(
+		is_equal_approx(
+			player1.global_position.x,
+			clampf(
+				500.0
+				+ (Mangler.GRAB_END_FORWARD_SHIFT if player1.is_facing_right else -Mangler.GRAB_END_FORWARD_SHIFT),
+				player1.stage_left_limit,
+				player1.stage_right_limit
+			)
+		)
+		and is_equal_approx(
+			player2.global_position.x,
+			clampf(
+				620.0
+				+ (Mangler.GRAB_END_FORWARD_SHIFT if player1.is_facing_right else -Mangler.GRAB_END_FORWARD_SHIFT),
+				player2.stage_left_limit,
+				player2.stage_right_limit
+			)
+		),
+		"la chiusura della presa sposta entrambi di 15 px rispettando i bordi"
+	)
+	player1.global_position.x = shift_helper_attacker_x
+	player2.global_position.x = shift_helper_victim_x
+	player1.grabbed_target = null
 	player2.animated_sprite.play(&"idle")
 	player2.animated_sprite.frame = 7
 	player2.animated_sprite.pause()
 	var combined_grab_impacts_before := player1.get_tree().get_node_count_in_group(
-		"grab_headbutt_impact"
-	)
-	var grab_attacker_start_x := player1.global_position.x
-	var grab_victim_start_x := player2.global_position.x
-	var grab_end_shift := (
-		Mangler.GRAB_END_FORWARD_SHIFT
-		if player1.is_facing_right
-		else -Mangler.GRAB_END_FORWARD_SHIFT
+		"light_punch_hit_effect"
 	)
 	player1.start_direct_grab()
 	await create_timer(0.43).timeout
@@ -1781,9 +1884,9 @@ func _test_combat_flow() -> void:
 		and not player2.animated_sprite.visible
 		and not player2.ground_shadow.visible
 		and player1.grab_headbow_explosion_spawned
-		and player1.get_tree().get_node_count_in_group("grab_headbutt_impact")
+		and player1.get_tree().get_node_count_in_group("light_punch_hit_effect")
 		> combined_grab_impacts_before,
-		"al frame 19 della presa combinata esplode l'impatto mentre la vittima è nascosta"
+		"al frame 19 la presa usa l'esplosione rossa del light punch"
 	)
 	await create_timer(0.70).timeout
 	_expect(
@@ -1797,13 +1900,114 @@ func _test_combat_flow() -> void:
 		and player2.controls_enabled,
 		"al termine della presa entrambi tornano visibili in IDLE"
 	)
-	_expect(
-		is_equal_approx(player1.global_position.x, grab_attacker_start_x + grab_end_shift)
-		and is_equal_approx(player2.global_position.x, grab_victim_start_x + grab_end_shift),
-		"al termine della presa entrambi avanzano di 30 px"
-	)
+	player1.global_position = grab_attacker_original_position
 	player2.global_position = grab_target_original_position
 	player2.combat.reset()
+
+	player1.combat.cancel_current_action()
+	player1.change_state(Mangler.State.IDLE)
+	player2.combat.set_guarding(false)
+	player2.change_state(Mangler.State.IDLE)
+	var super_test_player1_position := player1.global_position
+	var super_test_player2_position := player2.global_position
+	player1.start_super_start()
+	await create_timer(0.40).timeout
+	var super_auras := player1.get_tree().get_nodes_in_group("super_start_aura")
+	var super_aura := super_auras.back() as Node2D if not super_auras.is_empty() else null
+	_expect(
+		player1.super_start_aura_spawned
+		and super_aura != null
+		and super_aura.get_node_or_null("AuraFlash") != null
+		and super_aura.get_node_or_null("AuraParticles") != null,
+		"al frame 19 super_start esplode in un'aura di particelle gialle"
+	)
+	await create_timer(0.15).timeout
+	_expect(
+		player1.animated_sprite.animation == &"super_rotate_run"
+		and player1.animated_sprite.is_playing()
+		and player2.current_state == Mangler.State.IDLE
+		and player2.animated_sprite.animation == &"idle"
+		and player2.animated_sprite.is_playing()
+		and not player2.controls_enabled
+		and not player2.can_move
+		and player1.z_index > player2.z_index
+		and Mangler.SUPER_ROTATE_RUN_SPEED == 480.0
+		and player1.has_attack_motion_effect(&"super_rotate_run")
+		and player1.has_attack_motion_effect(&"super_run_only"),
+		"la super corre veloce con scia, attaccante davanti e avversario in idle animato"
+	)
+	var super_run_start_x := player1.global_position.x
+	await create_timer(0.42).timeout
+	_expect(
+		player1.animated_sprite.animation == &"super_rotate_run"
+		and player1.animated_sprite.frame >= Mangler.SUPER_ROTATE_RUN_MOVE_FRAME
+		and player1.global_position.x != super_run_start_x,
+		"dal frame 20 della corsa rotante Mangler avanza verso l'avversario"
+	)
+	await create_timer(0.10).timeout
+	_expect(
+		player1.animated_sprite.animation in [&"super_run_only", &"super_drum_roll"]
+		and player1.animated_sprite.is_playing(),
+		"dopo la corsa rotante parte run_only in loop fino al contatto"
+	)
+	player1.global_position.x = player2.global_position.x - Mangler.SUPER_ROTATE_RUN_STOP_DISTANCE
+	player1.animated_sprite.play(&"super_run_only")
+	await process_frame
+	player1._physics_process(0.0)
+	_expect(
+		player1.animated_sprite.animation == &"super_drum_roll"
+		and player1.super_drum_roll_completed_loops == 0
+		and player2.current_state == Mangler.State.HIT
+		and player2.animated_sprite.animation == &"super_drum_hurt"
+		and player2.animated_sprite.is_playing(),
+		"al contatto il drum roll avvia hurt-high 4-13 in loop sull'avversario"
+	)
+	player1.animated_sprite.frame = Mangler.SUPER_DRUM_ROLL_IMPACT_FRAMES[0]
+	player1._on_animation_frame_changed()
+	var drum_impacts := player1.get_tree().get_nodes_in_group("super_drum_roll_impact")
+	var latest_drum_impact := drum_impacts.back() as Node2D if not drum_impacts.is_empty() else null
+	_expect(
+		latest_drum_impact != null
+		and latest_drum_impact.global_position.is_equal_approx(
+			player2.head_hurtbox.global_position
+		),
+		"il drum roll genera esplosioni rosse all'altezza della testa avversaria"
+	)
+	player1._on_animation_finished()
+	var first_drum_loop_restarted := (
+		player1.animated_sprite.animation == &"super_drum_roll"
+		and player1.super_drum_roll_completed_loops == 1
+	)
+	player1._on_animation_finished()
+	_expect(
+		first_drum_loop_restarted
+		and player1.super_drum_roll_completed_loops == 2
+		and player1.current_state == Mangler.State.IDLE
+		and player2.controls_enabled
+		and player2.current_state == Mangler.State.IDLE
+		and player2.animated_sprite.animation == &"idle",
+		"dopo due loop di drum roll entrambi i personaggi tornano attivi"
+	)
+	player1.release_super_freeze()
+	player1.global_position = super_test_player1_position
+	player2.global_position = super_test_player2_position
+	player1.combat.cancel_current_action()
+	player1.change_state(Mangler.State.IDLE)
+	player2.combat.set_guarding(true)
+	player1.start_super_start()
+	await process_frame
+	_expect(
+		player2.current_state == Mangler.State.BLOCKING
+		and player2.animated_sprite.animation == &"block_high"
+		and player2.animated_sprite.frame
+		== player2.animated_sprite.sprite_frames.get_frame_count(&"block_high") - 1
+		and not player2.animated_sprite.is_playing()
+		and not player2.controls_enabled,
+		"super_start congela in parata alta chi stava già parando"
+	)
+	player1.release_super_freeze()
+	player1.combat.cancel_current_action()
+	player1.change_state(Mangler.State.IDLE)
 
 	player1.combat.cancel_current_action()
 	player1.change_state(Mangler.State.IDLE)

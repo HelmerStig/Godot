@@ -16,6 +16,14 @@ const PROFILES := {
 		"start_ratio": 0.24, "end_ratio": 0.80, "tint": Color(1.0, 0.58, 0.26),
 		"alpha": 0.33, "lifetime": 0.18, "offset": 11.0, "stretch": 1.065,
 	},
+	&"super_rotate_run": {
+		"start_ratio": 0.72, "end_ratio": 1.0, "tint": Color(1.0, 0.78, 0.22),
+		"alpha": 0.30, "lifetime": 0.14, "offset": 13.0, "stretch": 1.07,
+	},
+	&"super_run_only": {
+		"start_ratio": 0.0, "end_ratio": 1.0, "tint": Color(1.0, 0.72, 0.16),
+		"alpha": 0.32, "lifetime": 0.15, "offset": 15.0, "stretch": 1.08,
+	},
 	&"crouched_heavy_kick": {
 		"start_ratio": 0.12, "end_ratio": 0.63, "tint": Color(0.82, 0.9, 1.0),
 		"alpha": 0.28, "lifetime": 0.14, "offset": 8.0, "stretch": 1.04,
