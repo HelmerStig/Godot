@@ -39,5 +39,7 @@ static func configure_all(fighter: Mangler) -> void:
 	fighter.configure_special_720_punch_frames()
 	fighter.configure_special_sonic_boom_frames()
 	fighter.configure_grab_tentative_frames()
+	fighter.configure_grab_headbow_combined_frames()
 	fighter.configure_grab_headbutt_frames()
 	fighter.configure_grabbed_frames()
+	fighter.configure_hurted_in_jump_frames()

@@ -454,7 +454,23 @@ func _test_combat_flow() -> void:
 		and grab_front_frame != null
 		and grab_front_frame.atlas == Mangler.GRAB_TENTATIVE_FRONT_SHEET
 		and player1.grab_front_sprite.sprite_frames.get_frame_count(&"grab_tentative_front") == 25,
-		"la presa separa e sincronizza i 25 frame rear e front"
+		"il tentativo di presa sincronizza i fogli rear e front"
+	)
+	var combined_grab_last_frame := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"grab_headbow_combined", 48)
+		as AtlasTexture
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"grab_headbow_combined")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"grab_headbow_combined") == 49
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"grab_headbow_combined"), 48.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"grab_headbow_combined")
+		and Mangler.GRAB_HEADBOW_EXPLOSION_FRAME == 18
+		and combined_grab_last_frame != null
+		and combined_grab_last_frame.atlas == Mangler.GRAB_HEADBOW_COMBINED_SHEET,
+		"la presa diretta usa 49 frame a 48 FPS e attiva l'esplosione al frame 19"
 	)
 	var headbutt_rear_frame := (
 		player1.animated_sprite.sprite_frames.get_frame_texture(&"grab_headbutt", 16)
@@ -937,6 +953,15 @@ func _test_combat_flow() -> void:
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurt_low"),
 		"hurt_low non è configurato in loop"
+	)
+	_expect(
+		player1.animated_sprite.sprite_frames.has_animation(&"hurted_in_jump")
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"hurted_in_jump") == 25
+		and is_equal_approx(
+			player1.animated_sprite.sprite_frames.get_animation_speed(&"hurted_in_jump"), 24.0
+		)
+		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurted_in_jump"),
+		"hurted_in_jump usa 25 frame non ciclici a 24 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"sweep_knockdown"),
@@ -1716,53 +1741,66 @@ func _test_combat_flow() -> void:
 	player1.change_state(Mangler.State.IDLE)
 	var grab_target_original_position := player2.global_position
 	player2.global_position = player1.global_position + Vector2(420.0, 0.0)
-	player1.start_grab_tentative()
-	await create_timer(1.08).timeout
+	player1.start_direct_grab()
+	await process_frame
 	_expect(
 		player1.current_state == Mangler.State.IDLE
 		and player1.animated_sprite.animation == &"idle"
 		and not player1.grab_succeeded
 		and not player1.grab_front_sprite.visible,
-		"se il tentativo di presa manca, riproduce 24-1 e torna in IDLE"
+		"se la presa diretta è fuori portata, Mangler resta in IDLE"
 	)
 	player2.global_position = player1.global_position + Vector2(120.0, 0.0)
-	var health_before_grab_headbutt := player2.combat.current_health
-	var headbutt_afterimages_before := player1.attack_afterimage_spawn_count
-	player1.start_grab_tentative()
-	await create_timer(0.56).timeout
+	player2.animated_sprite.play(&"idle")
+	player2.animated_sprite.frame = 7
+	player2.animated_sprite.pause()
+	var combined_grab_impacts_before := player1.get_tree().get_node_count_in_group(
+		"grab_headbutt_impact"
+	)
+	var grab_attacker_start_x := player1.global_position.x
+	var grab_victim_start_x := player2.global_position.x
+	var grab_end_shift := (
+		Mangler.GRAB_END_FORWARD_SHIFT
+		if player1.is_facing_right
+		else -Mangler.GRAB_END_FORWARD_SHIFT
+	)
+	player1.start_direct_grab()
+	await create_timer(0.43).timeout
 	_expect(
 		player1.grab_succeeded
-		and player1.animated_sprite.animation == &"grab_headbutt"
+		and player1.animated_sprite.animation == &"grab_headbow_combined"
 		and player1.animated_sprite.is_playing()
-		and player1.grab_front_sprite.visible
-		and player1.grab_front_sprite.animation == &"grab_headbutt_front"
-		and player1.grab_front_sprite.frame == player1.animated_sprite.frame
+		and not player1.grab_front_sprite.visible
+		and is_equal_approx(
+			player1.animated_sprite.position.x,
+			Mangler.REWORK_SPRITE_POSITION.x
+			+ (Mangler.GRAB_HEADBOW_FORWARD_OFFSET if player1.is_facing_right else -Mangler.GRAB_HEADBOW_FORWARD_OFFSET)
+		)
 		and player2.grabbed_by == player1
 		and not player2.controls_enabled
-		and player2.animated_sprite.animation == &"grabbed"
-		and player2.animated_sprite.is_playing(),
-		"se la presa riesce, avvia subito la testata e mantiene l'avversario immobilizzato"
+		and not player2.animated_sprite.visible
+		and not player2.ground_shadow.visible
+		and player1.grab_headbow_explosion_spawned
+		and player1.get_tree().get_node_count_in_group("grab_headbutt_impact")
+		> combined_grab_impacts_before,
+		"al frame 19 della presa combinata esplode l'impatto mentre la vittima è nascosta"
 	)
 	await create_timer(0.70).timeout
 	_expect(
-		player1.grab_headbutt_hit_landed
-		and player2.combat.current_health == health_before_grab_headbutt - Mangler.GRAB_HEADBUTT_DAMAGE
-		and player2.grabbed_by == player1
-		and not player2.controls_enabled
-		and player2.animated_sprite.animation == &"hurt_high",
-		"la testata colpisce al frame 17 senza permettere risposta o parata"
-	)
-	_expect(
-		player1.attack_afterimage_spawn_count > headbutt_afterimages_before
-		and player1.get_tree().get_node_count_in_group("grab_headbutt_front_afterimage") > 0,
-		"durante l'affondo la testata genera scie sincronizzate rear e front"
-	)
-	await create_timer(0.38).timeout
-	_expect(
 		player1.current_state == Mangler.State.IDLE
+		and player1.animated_sprite.animation == &"idle"
+		and player2.current_state == Mangler.State.IDLE
+		and player2.animated_sprite.animation == &"idle"
+		and player2.animated_sprite.visible
+		and player2.ground_shadow.visible
 		and player2.grabbed_by == null
 		and player2.controls_enabled,
-		"al termine della testata entrambi i personaggi vengono liberati"
+		"al termine della presa entrambi tornano visibili in IDLE"
+	)
+	_expect(
+		is_equal_approx(player1.global_position.x, grab_attacker_start_x + grab_end_shift)
+		and is_equal_approx(player2.global_position.x, grab_victim_start_x + grab_end_shift),
+		"al termine della presa entrambi avanzano di 30 px"
 	)
 	player2.global_position = grab_target_original_position
 	player2.combat.reset()
@@ -2316,6 +2354,38 @@ func _test_combat_flow() -> void:
 	player2.combat.reset()
 	player2.change_state(Mangler.State.IDLE)
 	await create_timer(player1.get_animation_duration(&"crouched_punch_crouched") + 0.05).timeout
+	var airborne_hit_ground_y := player2.shadow_ground_y
+	player2.global_position.y = airborne_hit_ground_y - 90.0
+	player2.velocity = Vector2(0.0, 80.0)
+	player2.change_state(Mangler.State.JUMPING)
+	player2.move_and_slide()
+	await physics_frame
+	player2.combat.take_damage(0, player1)
+	_expect(
+		player2.current_state == Mangler.State.HIT
+		and player2.animated_sprite.animation == &"hurted_in_jump",
+		"un personaggio colpito in salto avvia hurted_in_jump"
+	)
+	player2.global_position.y = airborne_hit_ground_y
+	player2.velocity = Vector2(0.0, 1.0)
+	player2.move_and_slide()
+	await physics_frame
+	await physics_frame
+	_expect(
+		player2.current_state == Mangler.State.HIT
+		and player2.animated_sprite.animation == &"hurted_in_jump"
+		and player2.animated_sprite.frame == 24
+		and not player2.animated_sprite.is_playing(),
+		"all'atterraggio mantiene il fotogramma 25 di hurted_in_jump"
+	)
+	await create_timer(1.05).timeout
+	_expect(
+		player2.current_state == Mangler.State.KNOCKDOWN_RECOVERY
+		and player2.animated_sprite.animation == &"knockdown_recovery",
+		"dopo un secondo a terra avvia knockdown_recovery"
+	)
+	await create_timer(0.75).timeout
+	_expect(player2.current_state == Mangler.State.IDLE, "la recovery dal colpo aereo torna in IDLE")
 
 	var position_before_hit := player2.position.x
 	player2.combat.take_damage(20, player1)

@@ -119,11 +119,14 @@ Ultimo risultato noto (10 agosto 2026): caricamento senza errori di parsing e `S
 ### Comuni
 
 - Guardia: tenere la direzione opposta all'avversario.
-- Presa di Mangler: pugno leggero + calcio leggero a terra; il tentativo usa 25 frame a 60 FPS, avvia la testata se riesce e riproduce 24–1 a 60 FPS se manca.
-- Rendering presa: lo sprite principale usa il livello `rear`; `GrabFrontSprite` replica lo stesso frame con il livello `front` sopra la vittima.
+- Presa di Mangler: pugno leggero + calcio leggero a terra; `grab_tentative` è saltato e la portata viene verificata immediatamente.
+- Se l'avversario è in portata parte `Mangler2-headbut_mangler_mangler.png`: foglio combinato 7×7, 49 frame a 48 FPS, spostato di 80 px in avanti e non ciclico, con esplosione giallo-arancio al frame 19. Durante la sequenza vittima e ombra sono nascoste; alla fine entrambi avanzano di 30 px nella direzione della testata e tornano visibili in `IDLE`.
+- La testata separata resta configurata ma il suo avvio automatico è temporaneamente disattivato per controllare le posizioni della presa.
 - Follow-up presa: `testata-rear.png` e `testata-front.png`, 25 frame sincronizzati a 25 FPS, impatto high non parabile al frame 17 per 15 danni; la vittima resta immobilizzata fino alla fine.
 - Effetto testata: scia dorata rear/front attiva circa dai frame 11–19, con intensità da mossa potente.
+- Impatto testata: flash additivo e 34 scintille giallo-arancio sul volto della vittima al frame 17.
 - Reazione vittima presa: `grabbed.png`, sequenza sorgente 10–25–10 a 24 FPS; un impatto interrompe la sequenza e avvia `hurt_high`.
+- Reazione colpo aereo: `assets/sprites/characters/mangler/11-hurted_in_jump.png`, 25 frame a 24 FPS; frame 25 a terra per 1 secondo, poi `knockdown_recovery`.
 - Reset training: `R`.
 - Overlay collisioni: `F3`.
 - Slow motion: `F4`.

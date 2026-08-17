@@ -40,6 +40,7 @@ const LEGACY_SPRITE_SCALE := Vector2(0.7, 0.7)
 const LEGACY_SPRITE_POSITION := Vector2(0.0, -120.0)
 const REWORK_SPRITE_SCALE := Vector2(0.85, 0.85)
 const REWORK_SPRITE_POSITION := Vector2(0.0, -115.0)
+const GRAB_HEADBOW_FORWARD_OFFSET := 80.0
 const JUMP_LIGHT_KICK_SPRITE_SCALE := Vector2(0.8, 0.8)
 const GRAVITY := BASE_GRAVITY * JUMP_SPEED_MULTIPLIER * JUMP_SPEED_MULTIPLIER
 const GROUND_COLLISION_LAYER := 1
@@ -223,6 +224,16 @@ const GRAB_TENTATIVE_FRONT_SHEET := preload(
 const GRAB_TENTATIVE_FRAME_COUNT := 25
 const GRAB_TENTATIVE_COLUMNS := 5
 const GRAB_TENTATIVE_CELL_SIZE := Vector2(512.0, 512.0)
+const GRAB_HEADBOW_COMBINED_SHEET := preload(
+	"res://assets/sprites/characters/mangler/prese/Mangler2-headbut_mangler_mangler.png"
+)
+const GRAB_HEADBOW_COMBINED_FRAME_COUNT := 49
+const GRAB_HEADBOW_COMBINED_COLUMNS := 7
+const GRAB_HEADBOW_COMBINED_CELL_SIZE := Vector2(512.0, 512.0)
+const GRAB_HEADBOW_EXPLOSION_FRAME := 18
+const DIRECT_GRAB_MAX_DISTANCE := 210.0
+const DIRECT_GRAB_MAX_VERTICAL_DISTANCE := 120.0
+const GRAB_END_FORWARD_SHIFT := 30.0
 const GRAB_HEADBUTT_REAR_SHEET := preload(
 	"res://assets/sprites/characters/mangler/prese/testata-rear.png"
 )
@@ -241,6 +252,12 @@ const GRABBED_FRAME_COUNT := 25
 const GRABBED_START_FRAME := 9
 const GRABBED_COLUMNS := 5
 const GRABBED_CELL_SIZE := Vector2(512.0, 512.0)
+const HURTED_IN_JUMP_SHEET := preload(
+	"res://assets/sprites/characters/mangler/11-hurted_in_jump.png"
+)
+const HURTED_IN_JUMP_FRAME_COUNT := 25
+const HURTED_IN_JUMP_COLUMNS := 5
+const HURTED_IN_JUMP_CELL_SIZE := Vector2(512.0, 512.0)
 const SONIC_PROJECTILE_SPEED_MULTIPLIERS := {
 	&"light_punch": 1.0,
 	&"medium_punch": 1.3,
@@ -361,6 +378,7 @@ var grab_succeeded := false
 var grabbed_target: Mangler
 var grabbed_by: Mangler
 var grab_headbutt_hit_landed := false
+var grab_headbow_explosion_spawned := false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var grab_front_sprite: AnimatedSprite2D = $GrabFrontSprite
@@ -1333,6 +1351,26 @@ func configure_grab_headbutt_frames() -> void:
 		front_frames.add_frame(&"grab_headbutt_front", front_atlas_frame)
 
 
+func configure_grab_headbow_combined_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"grab_headbow_combined"):
+		frames.remove_animation(&"grab_headbow_combined")
+	frames.add_animation(&"grab_headbow_combined")
+	frames.set_animation_speed(&"grab_headbow_combined", 48.0)
+	frames.set_animation_loop(&"grab_headbow_combined", false)
+	for source_index in range(GRAB_HEADBOW_COMBINED_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = GRAB_HEADBOW_COMBINED_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % GRAB_HEADBOW_COMBINED_COLUMNS),
+				float(floori(float(source_index) / GRAB_HEADBOW_COMBINED_COLUMNS))
+			) * GRAB_HEADBOW_COMBINED_CELL_SIZE,
+			GRAB_HEADBOW_COMBINED_CELL_SIZE
+		)
+		frames.add_frame(&"grab_headbow_combined", atlas_frame)
+
+
 func configure_grabbed_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"grabbed"):
@@ -1356,6 +1394,26 @@ func configure_grabbed_frames() -> void:
 			&"grabbed",
 			frames.get_frame_texture(&"grabbed", source_index - GRABBED_START_FRAME)
 		)
+
+
+func configure_hurted_in_jump_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"hurted_in_jump"):
+		frames.remove_animation(&"hurted_in_jump")
+	frames.add_animation(&"hurted_in_jump")
+	frames.set_animation_speed(&"hurted_in_jump", 24.0)
+	frames.set_animation_loop(&"hurted_in_jump", false)
+	for source_index in range(HURTED_IN_JUMP_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = HURTED_IN_JUMP_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % HURTED_IN_JUMP_COLUMNS),
+				float(floori(float(source_index) / HURTED_IN_JUMP_COLUMNS))
+			) * HURTED_IN_JUMP_CELL_SIZE,
+			HURTED_IN_JUMP_CELL_SIZE
+		)
+		frames.add_frame(&"hurted_in_jump", atlas_frame)
 
 
 func _physics_process(delta: float) -> void:
@@ -1426,7 +1484,7 @@ func handle_input() -> void:
 	if is_on_floor():
 		if is_grab_chord_pressed():
 			input_buffer.clear()
-			start_grab_tentative()
+			start_direct_grab()
 			return
 		if is_special_720_punch_chord_pressed():
 			input_buffer.clear()
@@ -1515,37 +1573,36 @@ func is_grab_chord_pressed() -> bool:
 	)
 
 
-func start_grab_tentative() -> void:
+func start_direct_grab() -> void:
 	grab_succeeded = false
+	grab_headbow_explosion_spawned = false
 	grabbed_target = null
 	velocity = Vector2.ZERO
 	combat.set_guarding(false)
-	change_state(State.ATTACKING)
-	grab_box_shape.set_deferred("disabled", false)
-	grab_front_sprite.animation = &"grab_tentative_front"
-	grab_front_sprite.visible = true
-	grab_front_sprite.frame = 0
-	animated_sprite.play(&"grab_tentative")
-
-
-func try_complete_grab() -> void:
-	if grab_succeeded:
+	var target := get_direct_grab_target()
+	if target == null:
 		return
-	for area in grab_box.get_overlapping_areas():
-		if not area.is_in_group("hurtbox"):
-			continue
-		var target := area.get_parent() as Mangler
-		if target == null or target == self or is_instance_valid(target.grabbed_by):
-			continue
-		grab_succeeded = true
-		grabbed_target = target
-		z_index = target.z_index - 1
-		target.become_grabbed(self)
-		grab_box_shape.set_deferred("disabled", true)
-		start_grab_headbutt()
-		return
+	grab_succeeded = true
+	grabbed_target = target
+	z_index = target.z_index - 1
+	target.freeze_for_grab_preview(self)
+	target.set_combined_grab_hidden(true)
 	grab_box_shape.set_deferred("disabled", true)
-	animated_sprite.play(&"grab_tentative_recovery")
+	grab_front_sprite.visible = false
+	change_state(State.ATTACKING)
+	animated_sprite.play(&"grab_headbow_combined")
+
+
+func get_direct_grab_target() -> Mangler:
+	if opponent == null or not is_instance_valid(opponent) or is_instance_valid(opponent.grabbed_by):
+		return null
+	var offset := opponent.global_position - global_position
+	var forward_distance := offset.x if is_facing_right else -offset.x
+	if forward_distance < 0.0 or forward_distance > DIRECT_GRAB_MAX_DISTANCE:
+		return null
+	if absf(offset.y) > DIRECT_GRAB_MAX_VERTICAL_DISTANCE:
+		return null
+	return opponent
 
 
 func become_grabbed(attacker: Mangler) -> void:
@@ -1555,6 +1612,42 @@ func become_grabbed(attacker: Mangler) -> void:
 	can_move = false
 	velocity = Vector2.ZERO
 	animated_sprite.play(&"grabbed")
+
+
+func freeze_for_grab_preview(attacker: Mangler) -> void:
+	combat.cancel_current_action()
+	grabbed_by = attacker
+	controls_enabled = false
+	can_move = false
+	velocity = Vector2.ZERO
+	animated_sprite.pause()
+
+
+func set_combined_grab_hidden(hidden: bool) -> void:
+	animated_sprite.visible = not hidden
+	grab_front_sprite.visible = false
+	ground_shadow.visible = not hidden
+
+
+func spawn_grab_headbow_final_explosion() -> void:
+	if grab_headbow_explosion_spawned or not is_instance_valid(grabbed_target):
+		return
+	grab_headbow_explosion_spawned = true
+	spawn_grab_headbutt_impact_explosion(
+		grabbed_target.global_position + Vector2(0.0, -220.0)
+	)
+
+
+func shift_grab_pair_forward() -> void:
+	if not is_instance_valid(grabbed_target):
+		return
+	var shift := GRAB_END_FORWARD_SHIFT if is_facing_right else -GRAB_END_FORWARD_SHIFT
+	global_position.x = clampf(global_position.x + shift, stage_left_limit, stage_right_limit)
+	grabbed_target.global_position.x = clampf(
+		grabbed_target.global_position.x + shift,
+		grabbed_target.stage_left_limit,
+		grabbed_target.stage_right_limit
+	)
 
 
 func start_grab_headbutt() -> void:
@@ -1571,6 +1664,10 @@ func perform_grab_headbutt_hit() -> void:
 		return
 	grab_headbutt_hit_landed = true
 	grab_headbutt_hitbox_shape.set_deferred("disabled", false)
+	var impact_direction := 1.0 if is_facing_right else -1.0
+	spawn_grab_headbutt_impact_explosion(
+		grabbed_target.global_position + Vector2(-impact_direction * 34.0, -228.0)
+	)
 	grabbed_target.combat.set_guarding(false)
 	grabbed_target.combat.take_damage(
 		GRAB_HEADBUTT_DAMAGE,
@@ -1587,14 +1684,57 @@ func perform_grab_headbutt_hit() -> void:
 		grabbed_target.start_hit_reaction(AttackData.HitHeight.HIGH, self, 0, false)
 
 
+func spawn_grab_headbutt_impact_explosion(world_position: Vector2) -> Node2D:
+	var explosion := Node2D.new()
+	explosion.name = "GrabHeadbuttImpactExplosion"
+	explosion.add_to_group("grab_headbutt_impact")
+	explosion.z_index = 60
+	var effect_parent: Node = get_tree().current_scene
+	if effect_parent == null:
+		effect_parent = get_tree().root
+	effect_parent.add_child(explosion)
+	explosion.global_position = world_position
+	var additive_material := CanvasItemMaterial.new()
+	additive_material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	var flash := Sprite2D.new()
+	flash.name = "ImpactFlash"
+	flash.texture = create_sonic_glow_texture()
+	flash.scale = Vector2(0.32, 0.32)
+	flash.material = additive_material
+	explosion.add_child(flash)
+	var flash_tween := flash.create_tween()
+	flash_tween.tween_property(flash, "scale", Vector2(0.9, 0.9), 0.11)
+	flash_tween.parallel().tween_property(flash, "modulate:a", 0.0, 0.24)
+	var sparks := CPUParticles2D.new()
+	sparks.name = "ImpactSparks"
+	sparks.amount = 34
+	sparks.one_shot = true
+	sparks.explosiveness = 1.0
+	sparks.lifetime = 0.34
+	sparks.spread = 180.0
+	sparks.gravity = Vector2.ZERO
+	sparks.initial_velocity_min = 75.0
+	sparks.initial_velocity_max = 235.0
+	sparks.scale_amount_min = 1.5
+	sparks.scale_amount_max = 3.8
+	sparks.color = Color(1.0, 0.72, 0.16, 0.96)
+	sparks.material = additive_material
+	sparks.emitting = true
+	explosion.add_child(sparks)
+	get_tree().create_timer(0.44).timeout.connect(explosion.queue_free)
+	return explosion
+
+
 func release_grab() -> void:
 	if is_instance_valid(grabbed_target):
 		grabbed_target.combat.cancel_current_action()
 		grabbed_target.grabbed_by = null
 		grabbed_target.controls_enabled = true
+		grabbed_target.set_combined_grab_hidden(false)
 		grabbed_target.change_state(State.IDLE)
 	grabbed_target = null
 	grab_succeeded = false
+	grab_headbow_explosion_spawned = false
 	grabbed_by = null
 	grab_box_shape.set_deferred("disabled", true)
 	grab_headbutt_hitbox_shape.set_deferred("disabled", true)
@@ -1788,8 +1928,10 @@ func update_sprite_scale() -> void:
 		&"special_720_punch",
 		&"special_sonic_boom",
 		&"grab_tentative", &"grab_tentative_recovery",
+		&"grab_headbow_combined",
 		&"grab_headbutt",
 		&"grabbed",
+		&"hurted_in_jump",
 		&"crouched_medium_punch", &"crouched_medium_punch_crouched",
 		&"crouched_power_punch",
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
@@ -1804,6 +1946,10 @@ func update_sprite_scale() -> void:
 	animated_sprite.position = (
 		REWORK_SPRITE_POSITION if uses_reworked_art else LEGACY_SPRITE_POSITION
 	)
+	if animated_sprite.animation == &"grab_headbow_combined":
+		animated_sprite.position.x += (
+			GRAB_HEADBOW_FORWARD_OFFSET if is_facing_right else -GRAB_HEADBOW_FORWARD_OFFSET
+		)
 	grab_front_sprite.scale = animated_sprite.scale
 	grab_front_sprite.position = animated_sprite.position
 
@@ -1923,6 +2069,26 @@ func start_hit_reaction(
 	else:
 		velocity.x = 0.0
 	return get_animation_duration(hit_animation, start_frame)
+
+
+func start_airborne_hit_knockdown(attacker: Mangler) -> void:
+	change_state(State.HIT)
+	if animated_sprite.sprite_frames.has_animation(&"hurted_in_jump"):
+		animated_sprite.play(&"hurted_in_jump")
+	var push_direction := -1.0 if is_facing_right else 1.0
+	if attacker != null and is_instance_valid(attacker):
+		push_direction = signf(global_position.x - attacker.global_position.x)
+		if is_zero_approx(push_direction):
+			push_direction = -1.0 if is_facing_right else 1.0
+	velocity.x = push_direction * HIT_PUSHBACK_SPEED
+
+
+func hold_airborne_hit_landing_pose() -> void:
+	velocity = Vector2.ZERO
+	if animated_sprite.animation != &"hurted_in_jump":
+		animated_sprite.play(&"hurted_in_jump")
+	animated_sprite.frame = HURTED_IN_JUMP_FRAME_COUNT - 1
+	animated_sprite.pause()
 
 
 func start_sweep_knockdown(attacker: Mangler) -> float:
@@ -2120,6 +2286,7 @@ func flip_character() -> void:
 	grab_box.scale.x = 1.0 if is_facing_right else -1.0
 	grab_headbutt_hitbox.scale.x = 1.0 if is_facing_right else -1.0
 	update_animation()
+	update_sprite_scale()
 
 
 func is_holding_back() -> bool:
@@ -2143,6 +2310,7 @@ func is_attack_in_front(attacker: Mangler) -> bool:
 
 func reset_fighter(spawn_position: Vector2) -> void:
 	release_grab()
+	set_combined_grab_hidden(false)
 	clear_attack_afterimages()
 	aerial_attack_used = false
 	force_idle_until_landing = false
@@ -2556,13 +2724,13 @@ func clear_attack_afterimages() -> void:
 func _on_animation_finished() -> void:
 	if animated_sprite.animation == &"grabbed" and is_instance_valid(grabbed_by):
 		animated_sprite.pause()
-	elif animated_sprite.animation == &"grab_headbutt":
+	elif animated_sprite.animation == &"grab_headbow_combined" and is_instance_valid(grabbed_target):
+		spawn_grab_headbow_final_explosion()
+		shift_grab_pair_forward()
 		release_grab()
 		change_state(State.IDLE)
-	elif animated_sprite.animation == &"grab_tentative":
-		try_complete_grab()
-	elif animated_sprite.animation == &"grab_tentative_recovery":
-		grab_front_sprite.visible = false
+	elif animated_sprite.animation == &"grab_headbutt":
+		release_grab()
 		change_state(State.IDLE)
 	elif current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
 		change_state(State.IDLE)
@@ -2573,8 +2741,11 @@ func _on_animation_finished() -> void:
 func _on_animation_frame_changed() -> void:
 	sync_grab_front_frame()
 	emit_attack_motion_effect()
-	if animated_sprite.animation == &"grab_tentative" and animated_sprite.frame == 24:
-		try_complete_grab()
+	if (
+		animated_sprite.animation == &"grab_headbow_combined"
+		and animated_sprite.frame == GRAB_HEADBOW_EXPLOSION_FRAME
+	):
+		spawn_grab_headbow_final_explosion()
 	if animated_sprite.animation == &"grab_headbutt":
 		if animated_sprite.frame == GRAB_HEADBUTT_ACTIVE_FRAME:
 			perform_grab_headbutt_hit()

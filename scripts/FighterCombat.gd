@@ -430,6 +430,7 @@ func take_damage(
 ) -> void:
 	if fighter.current_state in [Mangler.State.KNOCKDOWN_RECOVERY, Mangler.State.KNOCKED_DOWN]:
 		return
+	var was_airborne := not fighter.is_on_floor()
 
 	var attack_was_blocked := (
 		(is_blocking or fighter.current_state == Mangler.State.BLOCKING)
@@ -451,6 +452,8 @@ func take_damage(
 		block_reaction(blockstun, hit_height, attacker)
 	elif causes_knockdown:
 		sweep_knockdown_reaction(attacker)
+	elif was_airborne:
+		airborne_knockdown_reaction(attacker)
 	else:
 		if hit_height == AttackData.HitHeight.MID:
 			hit_reaction_start_frame = 4
@@ -517,6 +520,25 @@ func hit_reaction(
 	if hit_generation != action_generation or current_health <= 0:
 		return
 	fighter.velocity.x = 0.0
+	fighter.change_state(Mangler.State.IDLE)
+
+
+func airborne_knockdown_reaction(attacker: Mangler) -> void:
+	cancel_current_action()
+	var knockdown_generation := action_generation
+	fighter.start_airborne_hit_knockdown(attacker)
+	while not fighter.is_on_floor():
+		await get_tree().physics_frame
+		if knockdown_generation != action_generation or current_health <= 0:
+			return
+	fighter.hold_airborne_hit_landing_pose()
+	await get_tree().create_timer(1.0).timeout
+	if knockdown_generation != action_generation or current_health <= 0:
+		return
+	var recovery_duration := fighter.start_knockdown_recovery()
+	await get_tree().create_timer(recovery_duration).timeout
+	if knockdown_generation != action_generation or current_health <= 0:
+		return
 	fighter.change_state(Mangler.State.IDLE)
 
 
