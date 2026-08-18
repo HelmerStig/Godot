@@ -282,6 +282,28 @@ func _test_arianna_idle() -> void:
 		and crouch_recovery_last.region == crouch_first.region,
 		"Arianna crouch usa 1-19 e recovery 18-1 a 48 FPS"
 	)
+	var guard_high_first := frames.get_frame_texture(&"block_high", 0) as AtlasTexture
+	var guard_high_last := frames.get_frame_texture(&"block_high", 15) as AtlasTexture
+	var guard_high_recovery_first := (
+		frames.get_frame_texture(&"block_high_recovery", 0) as AtlasTexture
+	)
+	var guard_high_recovery_last := (
+		frames.get_frame_texture(&"block_high_recovery", 14) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"block_high") == 16
+		and frames.get_frame_count(&"block_high_recovery") == 15
+		and is_equal_approx(frames.get_animation_speed(&"block_high"), 48.0)
+		and is_equal_approx(frames.get_animation_speed(&"block_high_recovery"), 48.0)
+		and not frames.get_animation_loop(&"block_high")
+		and not frames.get_animation_loop(&"block_high_recovery")
+		and guard_high_first.atlas == Arianna.ARIANNA_GUARD_HIGH_SHEET
+		and guard_high_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and guard_high_last.region == Rect2(1536.0, 1536.0, 512.0, 512.0)
+		and guard_high_recovery_first.region == Rect2(1024.0, 1536.0, 512.0, 512.0)
+		and guard_high_recovery_last.region == guard_high_first.region,
+		"Arianna guardia alta usa 1-16 e recovery 15-1 a 48 FPS"
+	)
 	var light_punch_first := frames.get_frame_texture(&"arianna_light_punch", 0) as AtlasTexture
 	var light_punch_last := frames.get_frame_texture(&"arianna_light_punch", 8) as AtlasTexture
 	var light_punch_recovery_first := (
@@ -491,6 +513,43 @@ func _test_arianna_idle() -> void:
 		and live_arianna.current_state == Mangler.State.IDLE,
 		"Arianna mantiene il frame 19 accovacciata e al rilascio torna 18-1 fino a idle"
 	)
+	live_arianna.input_buffer.clear()
+	live_arianna.last_back_tap_frame = -100000
+	live_arianna.opponent.combat.is_attacking = false
+	live_arianna.input_buffer.record_input_snapshot(-1, 0, [], true)
+	live_arianna._physics_process(0.0)
+	var live_guard_stays_inactive_without_attack := (
+		live_arianna.current_state != Mangler.State.BLOCKING
+		and live_arianna.animated_sprite.animation == &"backwalk"
+	)
+	live_arianna.opponent.combat.is_attacking = true
+	live_arianna.input_buffer.record_input_snapshot(-1, 0, [], true)
+	live_arianna._physics_process(0.0)
+	live_arianna.animated_sprite.frame = 15
+	live_arianna._on_animation_finished()
+	var live_guard_high_held := (
+		live_arianna.current_state == Mangler.State.BLOCKING
+		and live_arianna.combat.is_blocking
+		and live_arianna.animated_sprite.animation == &"block_high"
+		and live_arianna.animated_sprite.frame == 15
+	)
+	live_arianna.opponent.combat.is_attacking = false
+	live_arianna._physics_process(0.0)
+	var live_guard_high_released := (
+		live_arianna.current_state == Mangler.State.BLOCK_RECOVERY
+		and not live_arianna.combat.is_blocking
+		and live_arianna.animated_sprite.animation == &"block_high_recovery"
+	)
+	live_arianna._on_animation_finished()
+	_expect(
+		live_guard_stays_inactive_without_attack
+		and live_guard_high_held
+		and live_guard_high_released
+		and live_arianna.current_state == Mangler.State.IDLE,
+		"Arianna attiva la guardia solo durante l'attacco e poi torna indietro fino a idle"
+	)
+	live_arianna.input_buffer.record_input_snapshot(0, 0, [], true)
+	live_arianna.last_back_tap_frame = -100000
 	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 400.0
 	live_arianna.is_facing_right = true
 	live_arianna.animated_sprite.flip_h = false

@@ -34,7 +34,7 @@ const ARIANNA_BACK_JUMP_SOURCE_END := 48
 const ARIANNA_BACK_JUMP_FRAME_COUNT := (
 	ARIANNA_BACK_JUMP_SOURCE_END - ARIANNA_BACK_JUMP_SOURCE_START + 1
 )
-const ARIANNA_BACK_JUMP_DISTANCE := 50.0
+const ARIANNA_BACK_JUMP_DISTANCE := 80.0
 const ARIANNA_BACK_JUMP_DURATION := 0.5
 const ARIANNA_BACK_JUMP_SPEED := ARIANNA_BACK_JUMP_DISTANCE / ARIANNA_BACK_JUMP_DURATION
 const ARIANNA_CROUCH_SHEET := preload(
@@ -43,6 +43,12 @@ const ARIANNA_CROUCH_SHEET := preload(
 const ARIANNA_CROUCH_FRAME_COUNT := 19
 const ARIANNA_CROUCH_COLUMNS := 5
 const ARIANNA_CROUCH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_GUARD_HIGH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/guard_high.png"
+)
+const ARIANNA_GUARD_HIGH_FRAME_COUNT := 16
+const ARIANNA_GUARD_HIGH_COLUMNS := 4
+const ARIANNA_GUARD_HIGH_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/light-punch/light-punch.png"
 )
@@ -92,6 +98,11 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if is_player_controlled:
 		input_buffer.update(is_facing_right)
+	var opponent_is_attacking := (
+		is_instance_valid(opponent)
+		and opponent.combat != null
+		and opponent.combat.is_attacking
+	)
 	if not back_jump_active and not is_on_floor():
 		velocity.y += ARIANNA_JUMP_GRAVITY * _delta
 	if back_jump_active:
@@ -124,6 +135,36 @@ func _physics_process(_delta: float) -> void:
 		current_state = State.ATTACKING
 		move_and_slide()
 		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
+		update_facing_direction()
+		update_ground_shadow()
+		return
+	if current_state not in [State.BLOCKING, State.BLOCK_RECOVERY]:
+		# Come Mangler, indietro prepara logicamente la parata prima dell'impatto;
+		# l'animazione high viene però mostrata soltanto ad attacco già attivo.
+		combat.set_guarding(
+			controls_enabled
+			and can_move
+			and is_on_floor()
+			and input_buffer.is_back_held()
+		)
+	if current_state in [State.BLOCKING, State.BLOCK_RECOVERY]:
+		if input_buffer.is_back_just_pressed() and is_on_floor():
+			var guard_back_tap_frame := Engine.get_physics_frames()
+			if guard_back_tap_frame - last_back_tap_frame <= BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES:
+				combat.set_guarding(false)
+				_start_back_jump()
+				return
+			last_back_tap_frame = guard_back_tap_frame
+		if (
+			current_state == State.BLOCKING
+			and (not input_buffer.is_back_held() or not opponent_is_attacking)
+		):
+			combat.set_guarding(false)
+			_start_high_guard_recovery()
+		velocity = Vector2.ZERO
+		update_physical_collision()
+		update_collision_profile()
+		move_and_slide()
 		update_facing_direction()
 		update_ground_shadow()
 		return
@@ -188,6 +229,15 @@ func _physics_process(_delta: float) -> void:
 			_start_back_jump()
 		last_back_tap_frame = current_frame
 	if back_jump_active:
+		return
+	if (
+		controls_enabled
+		and can_move
+		and is_on_floor()
+		and input_buffer.is_back_held()
+		and opponent_is_attacking
+	):
+		_start_high_guard()
 		return
 	if is_on_floor() and input_buffer.is_forward_just_pressed():
 		var current_frame := Engine.get_physics_frames()
@@ -377,6 +427,33 @@ func configure_crouch_frames() -> void:
 		frames.add_frame(&"arianna_crouch_recovery", _make_crouch_frame(source_index))
 
 
+func configure_block_high_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"block_high", &"block_high_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(ARIANNA_GUARD_HIGH_FRAME_COUNT):
+		frames.add_frame(&"block_high", _make_guard_high_frame(source_index))
+	for source_index in range(ARIANNA_GUARD_HIGH_FRAME_COUNT - 2, -1, -1):
+		frames.add_frame(&"block_high_recovery", _make_guard_high_frame(source_index))
+
+
+func _make_guard_high_frame(source_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_GUARD_HIGH_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_GUARD_HIGH_COLUMNS),
+			float(source_index / ARIANNA_GUARD_HIGH_COLUMNS)
+		) * ARIANNA_GUARD_HIGH_CELL_SIZE,
+		ARIANNA_GUARD_HIGH_CELL_SIZE
+	)
+	return atlas_frame
+
+
 func _make_crouch_frame(source_index: int) -> AtlasTexture:
 	var atlas_frame := AtlasTexture.new()
 	atlas_frame.atlas = ARIANNA_CROUCH_SHEET
@@ -503,6 +580,18 @@ func _start_crouch_recovery() -> void:
 	state_changed.emit(previous_state, current_state)
 
 
+func _start_high_guard() -> void:
+	received_block_height = AttackData.HitHeight.HIGH
+	block_started_crouched = false
+	combat.set_guarding(true)
+	change_state(State.BLOCKING)
+
+
+func _start_high_guard_recovery() -> void:
+	received_block_height = AttackData.HitHeight.HIGH
+	change_state(State.BLOCK_RECOVERY)
+
+
 func get_crouch_progress() -> float:
 	if animated_sprite.animation == &"arianna_crouch_recovery":
 		var final_frame := animated_sprite.sprite_frames.get_frame_count(
@@ -596,6 +685,9 @@ func _on_animation_finished() -> void:
 		# tornare subito in idle mentre il timer completa lo spostamento.
 		change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_crouch_recovery":
+		change_state(State.IDLE)
+	elif animated_sprite.animation == &"block_high_recovery":
+		combat.set_guarding(false)
 		change_state(State.IDLE)
 	else:
 		super._on_animation_finished()
