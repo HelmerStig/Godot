@@ -371,6 +371,82 @@ func _test_arianna_idle() -> void:
 		and light_punch_recovery_last.region == light_punch_first.region,
 		"Arianna light punch esegue 1-9 e 9-1 a 48 FPS"
 	)
+	var low_light_first := frames.get_frame_texture(&"arianna_low_light_punch", 0) as AtlasTexture
+	var low_light_last := frames.get_frame_texture(&"arianna_low_light_punch", 14) as AtlasTexture
+	var low_light_recovery_first := (
+		frames.get_frame_texture(&"arianna_low_light_punch_recovery", 0) as AtlasTexture
+	)
+	var low_light_recovery_last := (
+		frames.get_frame_texture(&"arianna_low_light_punch_recovery", 13) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_low_light_punch") == 15
+		and frames.get_frame_count(&"arianna_low_light_punch_recovery") == 14
+		and is_equal_approx(frames.get_animation_speed(&"arianna_low_light_punch"), 48.0)
+		and is_equal_approx(frames.get_animation_speed(&"arianna_low_light_punch_recovery"), 48.0)
+		and not frames.get_animation_loop(&"arianna_low_light_punch")
+		and low_light_first.atlas == Arianna.ARIANNA_LOW_LIGHT_PUNCH_SHEET
+		and low_light_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and low_light_last.region == Rect2(2048.0, 1024.0, 512.0, 512.0)
+		and low_light_recovery_first.region == Rect2(1536.0, 1024.0, 512.0, 512.0)
+		and low_light_recovery_last.region == low_light_first.region,
+		"Arianna light punch basso usa 1-15 e recovery 14-1 a 48 FPS"
+	)
+	var medium_punch_first := frames.get_frame_texture(&"arianna_medium_punch", 0) as AtlasTexture
+	var medium_punch_last := frames.get_frame_texture(&"arianna_medium_punch", 24) as AtlasTexture
+	var medium_punch_recovery_first := (
+		frames.get_frame_texture(&"arianna_medium_punch_recovery", 0) as AtlasTexture
+	)
+	var medium_punch_recovery_last := (
+		frames.get_frame_texture(&"arianna_medium_punch_recovery", 23) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_medium_punch") == 25
+		and frames.get_frame_count(&"arianna_medium_punch_recovery") == 24
+		and is_equal_approx(frames.get_animation_speed(&"arianna_medium_punch"), 48.0)
+		and is_equal_approx(frames.get_animation_speed(&"arianna_medium_punch_recovery"), 48.0)
+		and not frames.get_animation_loop(&"arianna_medium_punch")
+		and medium_punch_first.atlas == Arianna.ARIANNA_MEDIUM_PUNCH_SHEET
+		and medium_punch_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and medium_punch_last.region == Rect2(2048.0, 2048.0, 512.0, 512.0)
+		and medium_punch_recovery_first.region == Rect2(1536.0, 2048.0, 512.0, 512.0)
+		and medium_punch_recovery_last.region == medium_punch_first.region,
+		"Arianna medium punch usa 1-25 e recovery 24-1 a 48 FPS"
+	)
+	var low_medium_first := frames.get_frame_texture(&"arianna_low_medium_punch", 0) as AtlasTexture
+	var low_medium_last := frames.get_frame_texture(&"arianna_low_medium_punch", 11) as AtlasTexture
+	var low_medium_recovery_first := (
+		frames.get_frame_texture(&"arianna_low_medium_punch_recovery", 0) as AtlasTexture
+	)
+	var low_medium_recovery_last := (
+		frames.get_frame_texture(&"arianna_low_medium_punch_recovery", 7) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_low_medium_punch") == 12
+		and frames.get_frame_count(&"arianna_low_medium_punch_recovery") == 8
+		and is_equal_approx(frames.get_animation_speed(&"arianna_low_medium_punch"), 24.0)
+		and is_equal_approx(frames.get_animation_speed(&"arianna_low_medium_punch_recovery"), 24.0)
+		and not frames.get_animation_loop(&"arianna_low_medium_punch")
+		and low_medium_first.atlas == Arianna.ARIANNA_LOW_MEDIUM_PUNCH_SHEET
+		and low_medium_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and low_medium_last.region == Rect2(512.0, 1024.0, 512.0, 512.0)
+		and low_medium_recovery_first.region == Rect2(0.0, 1024.0, 512.0, 512.0)
+		and low_medium_recovery_last.region == Rect2(1536.0, 0.0, 512.0, 512.0)
+		and not arianna.get_attack_motion_profile(&"arianna_low_medium_punch").is_empty(),
+		"Arianna medium punch basso usa 1-12 e recovery 11-4 a 24 FPS con scia strong"
+	)
+	var strong_punch_first := frames.get_frame_texture(&"arianna_strong_punch", 0) as AtlasTexture
+	var strong_punch_last := frames.get_frame_texture(&"arianna_strong_punch", 48) as AtlasTexture
+	_expect(
+		frames.get_frame_count(&"arianna_strong_punch") == 49
+		and is_equal_approx(frames.get_animation_speed(&"arianna_strong_punch"), 48.0)
+		and not frames.get_animation_loop(&"arianna_strong_punch")
+		and strong_punch_first.atlas == Arianna.ARIANNA_STRONG_PUNCH_SHEET
+		and strong_punch_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and strong_punch_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0)
+		and not arianna.get_attack_motion_profile(&"arianna_strong_punch").is_empty(),
+		"Arianna strong punch usa tutti i 49 frame a 48 FPS con effetti strong"
+	)
 	var jump_first := frames.get_frame_texture(&"jump", 0) as AtlasTexture
 	var jump_last := frames.get_frame_texture(&"jump", 63) as AtlasTexture
 	_expect(
@@ -502,6 +578,37 @@ func _test_arianna_idle() -> void:
 		arianna.z_index == arianna_default_z,
 		"Arianna ripristina lo z-index al termine dell'attacco"
 	)
+	arianna._start_low_light_punch()
+	arianna.animated_sprite.frame = Arianna.ARIANNA_LOW_LIGHT_PUNCH_ACTIVE_START_FRAME
+	arianna._on_animation_frame_changed()
+	var low_light_shape := arianna.combat.hitbox_shape.shape as RectangleShape2D
+	var low_light_configured := (
+		arianna.low_light_punch_active
+		and arianna.animated_sprite.animation == &"arianna_low_light_punch"
+		and not arianna.combat.hitbox_shape.disabled
+		and low_light_shape.size == Arianna.ARIANNA_LOW_LIGHT_PUNCH_HITBOX_SIZE
+		and arianna.combat.hitbox_shape.position == Arianna.ARIANNA_LOW_LIGHT_PUNCH_HITBOX_POSITION
+		and arianna.combat.get_effective_hit_height(arianna.combat.current_attack)
+			== AttackData.HitHeight.MID
+		and arianna.get_block_animation(AttackData.HitHeight.MID) == &"block_mid"
+	)
+	arianna._on_animation_finished()
+	var low_light_reversed := (
+		arianna.animated_sprite.animation == &"arianna_low_light_punch_recovery"
+	)
+	arianna.input_buffer.record_input_snapshot(0, 1, [], arianna.is_facing_right)
+	arianna._on_animation_finished()
+	_expect(
+		low_light_configured
+		and low_light_reversed
+		and not arianna.low_light_punch_active
+		and arianna.current_state == Mangler.State.CROUCHING
+		and arianna.animated_sprite.animation == &"crouch"
+		and arianna.animated_sprite.frame == Arianna.ARIANNA_CROUCH_FRAME_COUNT - 1,
+		"il light punch basso è MID e mantenendo giù conclude nella posa crouch"
+	)
+	arianna.input_buffer.record_input_snapshot(0, 0, [], arianna.is_facing_right)
+	arianna.change_state(Mangler.State.IDLE)
 	arianna.queue_free()
 	await process_frame
 	var live_arena := (load("res://scenes/MainArena.tscn") as PackedScene).instantiate()
@@ -656,6 +763,110 @@ func _test_arianna_idle() -> void:
 	live_arianna.opponent.combat.current_attack = null
 	live_arianna.input_buffer.record_input_snapshot(0, 0, [], true)
 	live_arianna.last_back_tap_frame = -100000
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 120.0
+	live_arianna.is_facing_right = true
+	live_arianna.animated_sprite.flip_h = false
+	live_arianna.input_buffer.clear()
+	var health_before_low_light := live_arianna.opponent.combat.current_health
+	live_arianna.input_buffer.record_input_snapshot(0, 1, [&"light_punch"], true)
+	live_arianna._physics_process(0.0)
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_LOW_LIGHT_PUNCH_ACTIVE_START_FRAME
+	live_arianna._on_animation_frame_changed()
+	await physics_frame
+	await physics_frame
+	var live_low_light_hit := (
+		live_arianna.opponent.combat.current_health
+			== health_before_low_light - live_arianna.character_data.get_attack(&"light_punch").damage
+		and live_arianna.opponent.current_state == Mangler.State.HIT
+		and live_arianna.opponent.animated_sprite.animation == &"hurt_mid"
+	)
+	live_arianna._on_animation_finished()
+	live_arianna.input_buffer.record_input_snapshot(0, 0, [], true)
+	live_arianna._on_animation_finished()
+	_expect(
+		live_low_light_hit,
+		"il pugno leggero basso infligge danno reale e genera hurt_mid"
+	)
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.input_buffer.clear()
+	var health_before_medium_punch := live_arianna.opponent.combat.current_health
+	live_arianna.input_buffer.record_input_snapshot(0, 0, [&"medium_punch"], true)
+	live_arianna._physics_process(0.0)
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_MEDIUM_PUNCH_ACTIVE_START_FRAME
+	live_arianna._on_animation_frame_changed()
+	await physics_frame
+	await physics_frame
+	var live_medium_punch_hit := (
+		live_arianna.opponent.combat.current_health
+			== health_before_medium_punch - live_arianna.character_data.get_attack(&"medium_punch").damage
+		and live_arianna.opponent.current_state == Mangler.State.HIT
+		and live_arianna.opponent.animated_sprite.animation == &"hurt_high"
+	)
+	live_arianna._on_animation_finished()
+	live_arianna._on_animation_finished()
+	_expect(
+		live_medium_punch_hit
+		and live_arianna.current_state == Mangler.State.IDLE,
+		"il pugno medio di Arianna infligge danno e genera hurt_high"
+	)
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.input_buffer.clear()
+	var health_before_low_medium := live_arianna.opponent.combat.current_health
+	var afterimages_before_low_medium := live_arianna.attack_afterimage_spawn_count
+	live_arianna.input_buffer.record_input_snapshot(0, 1, [&"medium_punch"], true)
+	live_arianna._physics_process(0.0)
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_LOW_MEDIUM_PUNCH_ACTIVE_START_FRAME
+	live_arianna._on_animation_frame_changed()
+	await physics_frame
+	await physics_frame
+	var live_low_medium_hit := (
+		live_arianna.opponent.combat.current_health
+			== health_before_low_medium - live_arianna.character_data.get_attack(&"medium_punch").damage
+		and live_arianna.opponent.current_state == Mangler.State.HIT
+		and live_arianna.opponent.animated_sprite.animation == &"hurt_mid"
+		and live_arianna.attack_afterimage_spawn_count > afterimages_before_low_medium
+	)
+	live_arianna._on_animation_finished()
+	live_arianna._on_animation_finished()
+	_expect(
+		live_low_medium_hit
+		and live_arianna.current_state == Mangler.State.CROUCHING,
+		"il pugno medio basso infligge danno MID, usa la scia e torna alla crouch pose"
+	)
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.input_buffer.clear()
+	live_arianna.change_state(Mangler.State.IDLE)
+	var health_before_strong := live_arianna.opponent.combat.current_health
+	var afterimages_before_strong := live_arianna.attack_afterimage_spawn_count
+	live_arianna.input_buffer.record_input_snapshot(0, 0, [&"heavy_punch"], true)
+	live_arianna._physics_process(0.0)
+	var strong_hitbox_shape := live_arianna.combat.hitbox_shape.shape as RectangleShape2D
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_STRONG_PUNCH_ACTIVE_START_FRAME
+	live_arianna._on_animation_frame_changed()
+	await physics_frame
+	await physics_frame
+	var live_strong_hit := (
+		live_arianna.opponent.combat.current_health
+			== health_before_strong - live_arianna.character_data.get_attack(&"heavy_punch").damage
+		and live_arianna.opponent.current_state == Mangler.State.HIT
+		and live_arianna.opponent.animated_sprite.animation == &"hurt_high"
+		and strong_hitbox_shape.size == Vector2(110.0, 65.0)
+		and live_arianna.attack_afterimage_spawn_count > afterimages_before_strong
+	)
+	live_arianna._on_animation_finished()
+	_expect(
+		live_strong_hit
+		and live_arianna.current_state == Mangler.State.IDLE
+		and not live_arianna.strong_punch_active,
+		"lo strong punch usa la hitbox accorciata, infligge danno HIGH e conclude in idle"
+	)
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
 	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 400.0
 	live_arianna.is_facing_right = true
 	live_arianna.animated_sprite.flip_h = false

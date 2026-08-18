@@ -46,6 +46,10 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Arianna guardia bassa | hold down+back durante attacco LOW avversario | `block_low_crouched` → `block_low_recovery` | 48 | — | — | hold frame 16 finché l'attacco resta attivo | 1-16; fine attacco/rilascio 15-1 | 0 | low guard | no |
 | Arianna salto | jump | `jump` | 48 | stacco al frame 6 | — | fino all'atterraggio | 64 | 0 | movement | no |
 | Arianna pugno leggero | standing light punch | `arianna_light_punch` → `arianna_light_punch_recovery` | 48 | 6 | 3 | 9 | 18 (1-9, poi 9-1) | 5 | high | no |
+| Arianna pugno leggero basso | down + light punch | `arianna_low_light_punch` → `arianna_low_light_punch_recovery` | 48 | 11 | 4 | 14 | 29 (1-15, poi 14-1) | 5 | mid | no |
+| Arianna pugno medio | standing medium punch | `arianna_medium_punch` → `arianna_medium_punch_recovery` | 48 | 20 | 5 | 24 | 49 (1-25, poi 24-1) | 10 | high | no |
+| Arianna pugno medio basso | down + medium punch | `arianna_low_medium_punch` → `arianna_low_medium_punch_recovery` | 24 | 9 | 3 | 11 | 20 (1-12, poi 11-4) | 10 | mid | no |
+| Arianna pugno forte | standing strong punch | `arianna_strong_punch` | 48 | 22 | 6 | 27 | 49 (1-49) | 15 | high | no |
 | Testata da presa | grab follow-up | `grab_headbutt` | 25 | 16 | 1 | 8 | 25 | 15 | high/unblockable | no |
 | Vittima afferrata | reaction | `grabbed` | 24 | — | — | — | 32 (sorgente 10–25–10) | 0 | reaction | no |
 | Colpito in salto | airborne reaction | `hurted_in_jump` | 24 | — | — | — | 25 + 1 s hold | 0 | knockdown | sì |

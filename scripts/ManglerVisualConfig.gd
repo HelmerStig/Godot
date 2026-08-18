@@ -38,7 +38,10 @@ const AIRBORNE := [
 	&"jump_light_punch", &"jump_light_kick", &"jump_medium_kick", &"jump_heavy_kick",
 	&"jump_medium_punch",
 ]
-const HEAVY := [&"heavy_punch", &"crouched_power_punch", &"heavy_kick"]
+const HEAVY := [
+	&"heavy_punch", &"crouched_power_punch", &"heavy_kick", &"arianna_low_medium_punch",
+	&"arianna_strong_punch",
+]
 const MEDIUM := [
 	&"medium_open_hand_slap", &"crouched_medium_punch", &"crouched_medium_punch_crouched",
 	&"light_kick", &"medium_kick", &"crouched_medium_kick",

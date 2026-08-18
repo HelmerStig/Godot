@@ -72,6 +72,47 @@ const ARIANNA_LIGHT_PUNCH_ACTIVE_START_FRAME := 6
 const ARIANNA_LIGHT_PUNCH_ACTIVE_END_FRAME := 8
 const ARIANNA_LIGHT_PUNCH_HITBOX_SIZE := Vector2(160.0, 50.0)
 const ARIANNA_LIGHT_PUNCH_HITBOX_POSITION := Vector2(85.0, -170.0)
+const ARIANNA_LOW_LIGHT_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/light-punch/ligth-punch-low.png"
+)
+const ARIANNA_LOW_LIGHT_PUNCH_FRAME_COUNT := 25
+const ARIANNA_LOW_LIGHT_PUNCH_LAST_PLAYED_FRAME := 15
+const ARIANNA_LOW_LIGHT_PUNCH_COLUMNS := 5
+const ARIANNA_LOW_LIGHT_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_LOW_LIGHT_PUNCH_ACTIVE_START_FRAME := 11
+const ARIANNA_LOW_LIGHT_PUNCH_ACTIVE_END_FRAME := 14
+const ARIANNA_LOW_LIGHT_PUNCH_HITBOX_SIZE := Vector2(165.0, 45.0)
+const ARIANNA_LOW_LIGHT_PUNCH_HITBOX_POSITION := Vector2(87.5, -115.0)
+const ARIANNA_MEDIUM_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/medium-punch/medium-punch.png"
+)
+const ARIANNA_MEDIUM_PUNCH_FRAME_COUNT := 25
+const ARIANNA_MEDIUM_PUNCH_COLUMNS := 5
+const ARIANNA_MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_MEDIUM_PUNCH_ACTIVE_START_FRAME := 20
+const ARIANNA_MEDIUM_PUNCH_ACTIVE_END_FRAME := 24
+const ARIANNA_MEDIUM_PUNCH_HITBOX_SIZE := Vector2(190.0, 45.0)
+const ARIANNA_MEDIUM_PUNCH_HITBOX_POSITION := Vector2(100.0, -195.0)
+const ARIANNA_LOW_MEDIUM_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/medium-punch/medium-punch-low.png"
+)
+const ARIANNA_LOW_MEDIUM_PUNCH_FRAME_COUNT := 12
+const ARIANNA_LOW_MEDIUM_PUNCH_COLUMNS := 5
+const ARIANNA_LOW_MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_LOW_MEDIUM_PUNCH_ACTIVE_START_FRAME := 9
+const ARIANNA_LOW_MEDIUM_PUNCH_ACTIVE_END_FRAME := 11
+const ARIANNA_LOW_MEDIUM_PUNCH_HITBOX_SIZE := Vector2(200.0, 48.0)
+const ARIANNA_LOW_MEDIUM_PUNCH_HITBOX_POSITION := Vector2(105.0, -120.0)
+const ARIANNA_STRONG_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/strong-punch/strong-punch.png"
+)
+const ARIANNA_STRONG_PUNCH_FRAME_COUNT := 49
+const ARIANNA_STRONG_PUNCH_COLUMNS := 7
+const ARIANNA_STRONG_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_STRONG_PUNCH_ACTIVE_START_FRAME := 22
+const ARIANNA_STRONG_PUNCH_ACTIVE_END_FRAME := 27
+const ARIANNA_STRONG_PUNCH_HITBOX_SIZE := Vector2(110.0, 65.0)
+const ARIANNA_STRONG_PUNCH_HITBOX_POSITION := Vector2(100.0, -180.0)
 const ARIANNA_JUMP_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/jump.png"
 )
@@ -85,6 +126,10 @@ const ARIANNA_SPRITE_SCALE := Vector2(0.85, 0.85)
 const ARIANNA_SPRITE_POSITION := Vector2(0.0, -120.0)
 
 var light_punch_active := false
+var low_light_punch_active := false
+var medium_punch_active := false
+var low_medium_punch_active := false
+var strong_punch_active := false
 var jump_facing_locked := false
 var jump_rotation_finished := false
 var jump_started_left_of_opponent := true
@@ -103,6 +148,10 @@ func _ready() -> void:
 	super._ready()
 	configure_jump_frames()
 	configure_back_jump_frames()
+	configure_low_light_punch_frames()
+	configure_medium_punch_frames()
+	configure_low_medium_punch_frames()
+	configure_strong_punch_frames()
 	_activate_idle()
 	call_deferred("_activate_idle")
 
@@ -142,7 +191,7 @@ func _physics_process(_delta: float) -> void:
 		update_facing_direction()
 		update_ground_shadow()
 		return
-	if light_punch_active:
+	if light_punch_active or medium_punch_active or low_medium_punch_active or strong_punch_active:
 		velocity = Vector2.ZERO
 		current_state = State.ATTACKING
 		move_and_slide()
@@ -150,6 +199,31 @@ func _physics_process(_delta: float) -> void:
 		update_facing_direction()
 		update_ground_shadow()
 		return
+	if (
+		controls_enabled
+		and can_move
+		and input_buffer != null
+		and is_on_floor()
+		and current_state not in [State.JUMP_STARTUP, State.JUMPING]
+	):
+		var strong_direction := input_buffer.consume_attack(&"heavy_punch")
+		if strong_direction != FighterInputBuffer.NO_DIRECTION:
+			_start_strong_punch()
+			return
+	if (
+		controls_enabled
+		and can_move
+		and input_buffer != null
+		and is_on_floor()
+		and current_state not in [State.JUMP_STARTUP, State.JUMPING]
+	):
+		var medium_direction := input_buffer.consume_attack(&"medium_punch")
+		if medium_direction != FighterInputBuffer.NO_DIRECTION:
+			if input_buffer.is_down_held() or medium_direction == FighterInputBuffer.Direction.DOWN:
+				_start_low_medium_punch()
+			else:
+				_start_medium_punch()
+			return
 	if current_state not in [State.BLOCKING, State.BLOCK_RECOVERY]:
 		# Come Mangler, indietro prepara logicamente la parata prima dell'impatto;
 		# l'animazione high viene però mostrata soltanto ad attacco già attivo.
@@ -180,16 +254,21 @@ func _physics_process(_delta: float) -> void:
 		update_facing_direction()
 		update_ground_shadow()
 		return
+	var light_punch_direction := FighterInputBuffer.NO_DIRECTION
 	if (
 		controls_enabled
 		and can_move
 		and input_buffer != null
 		and is_on_floor()
 		and current_state not in [State.JUMP_STARTUP, State.JUMPING]
-		and input_buffer.consume_attack(&"light_punch") != FighterInputBuffer.NO_DIRECTION
 	):
-		_start_light_punch()
-		return
+		light_punch_direction = input_buffer.consume_attack(&"light_punch")
+		if light_punch_direction != FighterInputBuffer.NO_DIRECTION:
+			if input_buffer.is_down_held() or light_punch_direction == FighterInputBuffer.Direction.DOWN:
+				_start_low_light_punch()
+			else:
+				_start_light_punch()
+			return
 	var horizontal_axis := input_buffer.get_horizontal_axis() if input_buffer != null else 0.0
 	if (
 		controls_enabled
@@ -570,6 +649,117 @@ func _make_light_punch_frame(source_index: int) -> AtlasTexture:
 	return atlas_frame
 
 
+func configure_low_light_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"arianna_low_light_punch", &"arianna_low_light_punch_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(ARIANNA_LOW_LIGHT_PUNCH_LAST_PLAYED_FRAME):
+		frames.add_frame(&"arianna_low_light_punch", _make_low_light_punch_frame(source_index))
+	for source_index in range(ARIANNA_LOW_LIGHT_PUNCH_LAST_PLAYED_FRAME - 2, -1, -1):
+		frames.add_frame(
+			&"arianna_low_light_punch_recovery",
+			_make_low_light_punch_frame(source_index)
+		)
+
+
+func _make_low_light_punch_frame(source_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_LOW_LIGHT_PUNCH_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_LOW_LIGHT_PUNCH_COLUMNS),
+			float(source_index / ARIANNA_LOW_LIGHT_PUNCH_COLUMNS)
+		) * ARIANNA_LOW_LIGHT_PUNCH_CELL_SIZE,
+		ARIANNA_LOW_LIGHT_PUNCH_CELL_SIZE
+	)
+	return atlas_frame
+
+
+func configure_medium_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"arianna_medium_punch", &"arianna_medium_punch_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(ARIANNA_MEDIUM_PUNCH_FRAME_COUNT):
+		frames.add_frame(&"arianna_medium_punch", _make_medium_punch_frame(source_index))
+	for source_index in range(ARIANNA_MEDIUM_PUNCH_FRAME_COUNT - 2, -1, -1):
+		frames.add_frame(
+			&"arianna_medium_punch_recovery",
+			_make_medium_punch_frame(source_index)
+		)
+
+
+func _make_medium_punch_frame(source_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_MEDIUM_PUNCH_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_MEDIUM_PUNCH_COLUMNS),
+			float(source_index / ARIANNA_MEDIUM_PUNCH_COLUMNS)
+		) * ARIANNA_MEDIUM_PUNCH_CELL_SIZE,
+		ARIANNA_MEDIUM_PUNCH_CELL_SIZE
+	)
+	return atlas_frame
+
+
+func configure_low_medium_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"arianna_low_medium_punch", &"arianna_low_medium_punch_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 24.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(ARIANNA_LOW_MEDIUM_PUNCH_FRAME_COUNT):
+		frames.add_frame(&"arianna_low_medium_punch", _make_low_medium_punch_frame(source_index))
+	# Il ritorno parte dal fotogramma sorgente 11 e si ferma al 4.
+	for source_index in range(ARIANNA_LOW_MEDIUM_PUNCH_FRAME_COUNT - 2, 2, -1):
+		frames.add_frame(
+			&"arianna_low_medium_punch_recovery",
+			_make_low_medium_punch_frame(source_index)
+		)
+
+
+func _make_low_medium_punch_frame(source_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_LOW_MEDIUM_PUNCH_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_LOW_MEDIUM_PUNCH_COLUMNS),
+			float(source_index / ARIANNA_LOW_MEDIUM_PUNCH_COLUMNS)
+		) * ARIANNA_LOW_MEDIUM_PUNCH_CELL_SIZE,
+		ARIANNA_LOW_MEDIUM_PUNCH_CELL_SIZE
+	)
+	return atlas_frame
+
+
+func configure_strong_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"arianna_strong_punch"):
+		frames.remove_animation(&"arianna_strong_punch")
+	frames.add_animation(&"arianna_strong_punch")
+	frames.set_animation_speed(&"arianna_strong_punch", 48.0)
+	frames.set_animation_loop(&"arianna_strong_punch", false)
+	for source_index in range(ARIANNA_STRONG_PUNCH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = ARIANNA_STRONG_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % ARIANNA_STRONG_PUNCH_COLUMNS),
+				float(source_index / ARIANNA_STRONG_PUNCH_COLUMNS)
+			) * ARIANNA_STRONG_PUNCH_CELL_SIZE,
+			ARIANNA_STRONG_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"arianna_strong_punch", atlas_frame)
+
+
 func configure_jump_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"jump"):
@@ -748,6 +938,148 @@ func _start_light_punch() -> void:
 	animated_sprite.play(&"arianna_light_punch")
 
 
+func _start_low_light_punch() -> void:
+	var attack := character_data.get_attack(&"light_punch")
+	if attack == null:
+		return
+	light_punch_active = true
+	low_light_punch_active = true
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.is_crouched_light_punch = false
+	combat.current_attack = attack
+	var middle_variant := AttackVariantData.new()
+	middle_variant.variant_id = &"arianna_low"
+	middle_variant.animation_name = &"arianna_low_light_punch"
+	middle_variant.hit_height = AttackData.HitHeight.MID
+	combat.current_variant = middle_variant
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_LOW_LIGHT_PUNCH_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_LOW_LIGHT_PUNCH_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_low_light_punch")
+
+
+func _resolve_low_light_punch_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if (
+		attack_generation != combat.action_generation
+		or not low_light_punch_active
+		or not combat.is_attacking
+	):
+		return
+	for area in combat.hitbox.get_overlapping_areas():
+		combat._apply_hit_to_area(area)
+
+
+func _start_medium_punch() -> void:
+	var attack := character_data.get_attack(&"medium_punch")
+	if attack == null:
+		return
+	medium_punch_active = true
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.current_attack = attack
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_MEDIUM_PUNCH_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_MEDIUM_PUNCH_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_medium_punch")
+
+
+func _resolve_medium_punch_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if (
+		attack_generation != combat.action_generation
+		or not medium_punch_active
+		or not combat.is_attacking
+	):
+		return
+	for area in combat.hitbox.get_overlapping_areas():
+		combat._apply_hit_to_area(area)
+
+
+func _start_low_medium_punch() -> void:
+	var attack := character_data.get_attack(&"medium_punch")
+	if attack == null:
+		return
+	low_medium_punch_active = true
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.current_attack = attack
+	var middle_variant := AttackVariantData.new()
+	middle_variant.variant_id = &"arianna_low"
+	middle_variant.animation_name = &"arianna_low_medium_punch"
+	middle_variant.hit_height = AttackData.HitHeight.MID
+	combat.current_variant = middle_variant
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_LOW_MEDIUM_PUNCH_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_LOW_MEDIUM_PUNCH_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_low_medium_punch")
+
+
+func _resolve_low_medium_punch_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if (
+		attack_generation != combat.action_generation
+		or not low_medium_punch_active
+		or not combat.is_attacking
+	):
+		return
+	for area in combat.hitbox.get_overlapping_areas():
+		combat._apply_hit_to_area(area)
+
+
+func _start_strong_punch() -> void:
+	var attack := character_data.get_attack(&"heavy_punch")
+	if attack == null:
+		return
+	strong_punch_active = true
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.current_attack = attack
+	var high_variant := AttackVariantData.new()
+	high_variant.variant_id = &"arianna_standing"
+	high_variant.animation_name = &"arianna_strong_punch"
+	high_variant.hit_height = AttackData.HitHeight.HIGH
+	combat.current_variant = high_variant
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_STRONG_PUNCH_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_STRONG_PUNCH_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_strong_punch")
+
+
+func _resolve_strong_punch_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if (
+		attack_generation != combat.action_generation
+		or not strong_punch_active
+		or not combat.is_attacking
+	):
+		return
+	for area in combat.hitbox.get_overlapping_areas():
+		combat._apply_hit_to_area(area)
+
+
 func _on_animation_finished() -> void:
 	if animated_sprite.animation == &"arianna_light_punch":
 		combat.disable_hitbox()
@@ -762,6 +1094,62 @@ func _on_animation_finished() -> void:
 		light_punch_active = false
 		current_state = State.IDLE
 		animated_sprite.play(&"idle")
+	elif animated_sprite.animation == &"arianna_low_light_punch":
+		combat.disable_hitbox()
+		animated_sprite.play(&"arianna_low_light_punch_recovery")
+	elif animated_sprite.animation == &"arianna_low_light_punch_recovery":
+		combat.disable_hitbox()
+		combat.is_attacking = false
+		combat.current_attack = null
+		combat.current_variant = null
+		combat.hit_targets.clear()
+		restore_default_render_order()
+		light_punch_active = false
+		low_light_punch_active = false
+		if input_buffer != null and input_buffer.is_down_held():
+			change_state(State.CROUCHING)
+			animated_sprite.frame = ARIANNA_CROUCH_FRAME_COUNT - 1
+			animated_sprite.pause()
+		else:
+			change_state(State.IDLE)
+	elif animated_sprite.animation == &"arianna_medium_punch":
+		combat.disable_hitbox()
+		animated_sprite.play(&"arianna_medium_punch_recovery")
+	elif animated_sprite.animation == &"arianna_medium_punch_recovery":
+		combat.disable_hitbox()
+		combat.is_attacking = false
+		combat.current_attack = null
+		combat.current_variant = null
+		combat.hit_targets.clear()
+		restore_default_render_order()
+		medium_punch_active = false
+		change_state(State.IDLE)
+	elif animated_sprite.animation == &"arianna_low_medium_punch":
+		combat.disable_hitbox()
+		animated_sprite.play(&"arianna_low_medium_punch_recovery")
+	elif animated_sprite.animation == &"arianna_low_medium_punch_recovery":
+		combat.disable_hitbox()
+		combat.is_attacking = false
+		combat.current_attack = null
+		combat.current_variant = null
+		combat.hit_targets.clear()
+		restore_default_render_order()
+		low_medium_punch_active = false
+		if input_buffer != null and input_buffer.is_down_held():
+			change_state(State.CROUCHING)
+			animated_sprite.frame = ARIANNA_CROUCH_FRAME_COUNT - 1
+			animated_sprite.pause()
+		else:
+			change_state(State.IDLE)
+	elif animated_sprite.animation == &"arianna_strong_punch":
+		combat.disable_hitbox()
+		combat.is_attacking = false
+		combat.current_attack = null
+		combat.current_variant = null
+		combat.hit_targets.clear()
+		restore_default_render_order()
+		strong_punch_active = false
+		change_state(State.IDLE)
 	elif animated_sprite.animation == &"jump":
 		jump_rotation_finished = true
 		_update_jump_facing()
@@ -789,6 +1177,34 @@ func _on_animation_frame_changed() -> void:
 		jump_rotation_finished = true
 		_update_jump_facing()
 	if animated_sprite.animation != &"arianna_light_punch":
+		if animated_sprite.animation == &"arianna_strong_punch":
+			if animated_sprite.frame == ARIANNA_STRONG_PUNCH_ACTIVE_START_FRAME:
+				combat.enable_hitbox()
+				_resolve_strong_punch_overlap(combat.action_generation)
+			elif animated_sprite.frame > ARIANNA_STRONG_PUNCH_ACTIVE_END_FRAME:
+				combat.disable_hitbox()
+			return
+		if animated_sprite.animation == &"arianna_low_medium_punch":
+			if animated_sprite.frame == ARIANNA_LOW_MEDIUM_PUNCH_ACTIVE_START_FRAME:
+				combat.enable_hitbox()
+				_resolve_low_medium_punch_overlap(combat.action_generation)
+			elif animated_sprite.frame > ARIANNA_LOW_MEDIUM_PUNCH_ACTIVE_END_FRAME:
+				combat.disable_hitbox()
+			return
+		if animated_sprite.animation == &"arianna_medium_punch":
+			if animated_sprite.frame == ARIANNA_MEDIUM_PUNCH_ACTIVE_START_FRAME:
+				combat.enable_hitbox()
+				_resolve_medium_punch_overlap(combat.action_generation)
+			elif animated_sprite.frame > ARIANNA_MEDIUM_PUNCH_ACTIVE_END_FRAME:
+				combat.disable_hitbox()
+			return
+		if animated_sprite.animation != &"arianna_low_light_punch":
+			return
+		if animated_sprite.frame == ARIANNA_LOW_LIGHT_PUNCH_ACTIVE_START_FRAME:
+			combat.enable_hitbox()
+			_resolve_low_light_punch_overlap(combat.action_generation)
+		elif animated_sprite.frame > ARIANNA_LOW_LIGHT_PUNCH_ACTIVE_END_FRAME:
+			combat.disable_hitbox()
 		return
 	if animated_sprite.frame == ARIANNA_LIGHT_PUNCH_ACTIVE_START_FRAME:
 		combat.enable_hitbox()
