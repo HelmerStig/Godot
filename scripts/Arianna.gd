@@ -113,6 +113,19 @@ const ARIANNA_STRONG_PUNCH_ACTIVE_START_FRAME := 22
 const ARIANNA_STRONG_PUNCH_ACTIVE_END_FRAME := 27
 const ARIANNA_STRONG_PUNCH_HITBOX_SIZE := Vector2(110.0, 65.0)
 const ARIANNA_STRONG_PUNCH_HITBOX_POSITION := Vector2(100.0, -180.0)
+const ARIANNA_CROUCHED_STRONG_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/strong-punch/strong-punch-crouched.png"
+)
+const ARIANNA_CROUCHED_STRONG_PUNCH_SOURCE_FRAME_COUNT := 49
+const ARIANNA_CROUCHED_STRONG_PUNCH_COLUMNS := 7
+const ARIANNA_CROUCHED_STRONG_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_CROUCHED_STRONG_PUNCH_SKIP_START := 21
+const ARIANNA_CROUCHED_STRONG_PUNCH_SKIP_END := 34
+const ARIANNA_CROUCHED_STRONG_PUNCH_FRAME_COUNT := 35
+const ARIANNA_CROUCHED_STRONG_PUNCH_ACTIVE_START_FRAME := 7
+const ARIANNA_CROUCHED_STRONG_PUNCH_ACTIVE_END_FRAME := 20
+const ARIANNA_CROUCHED_STRONG_PUNCH_HITBOX_SIZE := Vector2(190.0, 100.0)
+const ARIANNA_CROUCHED_STRONG_PUNCH_HITBOX_POSITION := Vector2(100.0, -165.0)
 const ARIANNA_JUMP_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/jump.png"
 )
@@ -130,6 +143,7 @@ var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
 var strong_punch_active := false
+var crouched_strong_punch_active := false
 var jump_facing_locked := false
 var jump_rotation_finished := false
 var jump_started_left_of_opponent := true
@@ -152,6 +166,7 @@ func _ready() -> void:
 	configure_medium_punch_frames()
 	configure_low_medium_punch_frames()
 	configure_strong_punch_frames()
+	configure_crouched_strong_punch_frames()
 	_activate_idle()
 	call_deferred("_activate_idle")
 
@@ -191,7 +206,13 @@ func _physics_process(_delta: float) -> void:
 		update_facing_direction()
 		update_ground_shadow()
 		return
-	if light_punch_active or medium_punch_active or low_medium_punch_active or strong_punch_active:
+	if (
+		light_punch_active
+		or medium_punch_active
+		or low_medium_punch_active
+		or strong_punch_active
+		or crouched_strong_punch_active
+	):
 		velocity = Vector2.ZERO
 		current_state = State.ATTACKING
 		move_and_slide()
@@ -208,7 +229,10 @@ func _physics_process(_delta: float) -> void:
 	):
 		var strong_direction := input_buffer.consume_attack(&"heavy_punch")
 		if strong_direction != FighterInputBuffer.NO_DIRECTION:
-			_start_strong_punch()
+			if input_buffer.is_down_held() or strong_direction == FighterInputBuffer.Direction.DOWN:
+				_start_crouched_strong_punch()
+			else:
+				_start_strong_punch()
 			return
 	if (
 		controls_enabled
@@ -760,6 +784,31 @@ func configure_strong_punch_frames() -> void:
 		frames.add_frame(&"arianna_strong_punch", atlas_frame)
 
 
+func configure_crouched_strong_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"arianna_crouched_strong_punch"):
+		frames.remove_animation(&"arianna_crouched_strong_punch")
+	frames.add_animation(&"arianna_crouched_strong_punch")
+	frames.set_animation_speed(&"arianna_crouched_strong_punch", 48.0)
+	frames.set_animation_loop(&"arianna_crouched_strong_punch", false)
+	for source_index in range(ARIANNA_CROUCHED_STRONG_PUNCH_SOURCE_FRAME_COUNT):
+		if (
+			source_index >= ARIANNA_CROUCHED_STRONG_PUNCH_SKIP_START
+			and source_index <= ARIANNA_CROUCHED_STRONG_PUNCH_SKIP_END
+		):
+			continue
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = ARIANNA_CROUCHED_STRONG_PUNCH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % ARIANNA_CROUCHED_STRONG_PUNCH_COLUMNS),
+				float(source_index / ARIANNA_CROUCHED_STRONG_PUNCH_COLUMNS)
+			) * ARIANNA_CROUCHED_STRONG_PUNCH_CELL_SIZE,
+			ARIANNA_CROUCHED_STRONG_PUNCH_CELL_SIZE
+		)
+		frames.add_frame(&"arianna_crouched_strong_punch", atlas_frame)
+
+
 func configure_jump_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"jump"):
@@ -1080,6 +1129,42 @@ func _resolve_strong_punch_overlap(attack_generation: int) -> void:
 		combat._apply_hit_to_area(area)
 
 
+func _start_crouched_strong_punch() -> void:
+	var attack := character_data.get_attack(&"heavy_punch")
+	if attack == null:
+		return
+	crouched_strong_punch_active = true
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.current_attack = attack
+	var high_variant := AttackVariantData.new()
+	high_variant.variant_id = &"arianna_crouched"
+	high_variant.animation_name = &"arianna_crouched_strong_punch"
+	high_variant.hit_height = AttackData.HitHeight.HIGH
+	combat.current_variant = high_variant
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_CROUCHED_STRONG_PUNCH_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_CROUCHED_STRONG_PUNCH_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_crouched_strong_punch")
+
+
+func _resolve_crouched_strong_punch_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if (
+		attack_generation != combat.action_generation
+		or not crouched_strong_punch_active
+		or not combat.is_attacking
+	):
+		return
+	for area in combat.hitbox.get_overlapping_areas():
+		combat._apply_hit_to_area(area)
+
+
 func _on_animation_finished() -> void:
 	if animated_sprite.animation == &"arianna_light_punch":
 		combat.disable_hitbox()
@@ -1150,6 +1235,20 @@ func _on_animation_finished() -> void:
 		restore_default_render_order()
 		strong_punch_active = false
 		change_state(State.IDLE)
+	elif animated_sprite.animation == &"arianna_crouched_strong_punch":
+		combat.disable_hitbox()
+		combat.is_attacking = false
+		combat.current_attack = null
+		combat.current_variant = null
+		combat.hit_targets.clear()
+		restore_default_render_order()
+		crouched_strong_punch_active = false
+		if input_buffer != null and input_buffer.is_down_held():
+			change_state(State.CROUCHING)
+			animated_sprite.frame = ARIANNA_CROUCH_FRAME_COUNT - 1
+			animated_sprite.pause()
+		else:
+			change_state(State.IDLE)
 	elif animated_sprite.animation == &"jump":
 		jump_rotation_finished = true
 		_update_jump_facing()
@@ -1177,6 +1276,13 @@ func _on_animation_frame_changed() -> void:
 		jump_rotation_finished = true
 		_update_jump_facing()
 	if animated_sprite.animation != &"arianna_light_punch":
+		if animated_sprite.animation == &"arianna_crouched_strong_punch":
+			if animated_sprite.frame == ARIANNA_CROUCHED_STRONG_PUNCH_ACTIVE_START_FRAME:
+				combat.enable_hitbox()
+				_resolve_crouched_strong_punch_overlap(combat.action_generation)
+			elif animated_sprite.frame > ARIANNA_CROUCHED_STRONG_PUNCH_ACTIVE_END_FRAME:
+				combat.disable_hitbox()
+			return
 		if animated_sprite.animation == &"arianna_strong_punch":
 			if animated_sprite.frame == ARIANNA_STRONG_PUNCH_ACTIVE_START_FRAME:
 				combat.enable_hitbox()

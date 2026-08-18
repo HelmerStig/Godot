@@ -50,6 +50,7 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Arianna pugno medio | standing medium punch | `arianna_medium_punch` → `arianna_medium_punch_recovery` | 48 | 20 | 5 | 24 | 49 (1-25, poi 24-1) | 10 | high | no |
 | Arianna pugno medio basso | down + medium punch | `arianna_low_medium_punch` → `arianna_low_medium_punch_recovery` | 24 | 9 | 3 | 11 | 20 (1-12, poi 11-4) | 10 | mid | no |
 | Arianna pugno forte | standing strong punch | `arianna_strong_punch` | 48 | 22 | 6 | 27 | 49 (1-49) | 15 | high | no |
+| Arianna pugno forte basso | down + strong punch | `arianna_crouched_strong_punch` | 48 | 7 | 14 | 20 | 35 (1-21, poi 36-49) | 15 | high | no |
 | Testata da presa | grab follow-up | `grab_headbutt` | 25 | 16 | 1 | 8 | 25 | 15 | high/unblockable | no |
 | Vittima afferrata | reaction | `grabbed` | 24 | — | — | — | 32 (sorgente 10–25–10) | 0 | reaction | no |
 | Colpito in salto | airborne reaction | `hurted_in_jump` | 24 | — | — | — | 25 + 1 s hold | 0 | knockdown | sì |

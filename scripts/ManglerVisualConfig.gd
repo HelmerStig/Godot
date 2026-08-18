@@ -4,6 +4,10 @@ class_name ManglerVisualConfig
 ## Unica fonte dei profili degli effetti visivi delle animazioni di Mangler.
 
 const PROFILES := {
+	&"arianna_crouched_strong_punch": {
+		"start_ratio": 0.20, "end_ratio": 0.59, "tint": Color(1.0, 0.78, 0.55),
+		"alpha": 0.3, "lifetime": 0.16, "offset": 10.0, "stretch": 1.06,
+	},
 	&"grab_headbutt": {
 		"start_ratio": 0.42, "end_ratio": 0.75, "tint": Color(1.0, 0.78, 0.52),
 		"alpha": 0.32, "lifetime": 0.17, "offset": 11.0, "stretch": 1.07,

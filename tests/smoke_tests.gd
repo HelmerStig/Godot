@@ -447,6 +447,26 @@ func _test_arianna_idle() -> void:
 		and not arianna.get_attack_motion_profile(&"arianna_strong_punch").is_empty(),
 		"Arianna strong punch usa tutti i 49 frame a 48 FPS con effetti strong"
 	)
+	var crouched_strong_before_skip := (
+		frames.get_frame_texture(&"arianna_crouched_strong_punch", 20) as AtlasTexture
+	)
+	var crouched_strong_after_skip := (
+		frames.get_frame_texture(&"arianna_crouched_strong_punch", 21) as AtlasTexture
+	)
+	var crouched_strong_last := (
+		frames.get_frame_texture(&"arianna_crouched_strong_punch", 34) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_crouched_strong_punch") == 35
+		and is_equal_approx(frames.get_animation_speed(&"arianna_crouched_strong_punch"), 48.0)
+		and not frames.get_animation_loop(&"arianna_crouched_strong_punch")
+		and crouched_strong_before_skip.region == Rect2(3072.0, 1024.0, 512.0, 512.0)
+		and crouched_strong_after_skip.region == Rect2(0.0, 2560.0, 512.0, 512.0)
+		and crouched_strong_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0)
+		and crouched_strong_last.atlas == Arianna.ARIANNA_CROUCHED_STRONG_PUNCH_SHEET
+		and not arianna.get_attack_motion_profile(&"arianna_crouched_strong_punch").is_empty(),
+		"Arianna strong punch basso salta i frame sorgente 22-35 e usa la scia sul doppio pugno"
+	)
 	var jump_first := frames.get_frame_texture(&"jump", 0) as AtlasTexture
 	var jump_last := frames.get_frame_texture(&"jump", 63) as AtlasTexture
 	_expect(
@@ -864,6 +884,31 @@ func _test_arianna_idle() -> void:
 		and live_arianna.current_state == Mangler.State.IDLE
 		and not live_arianna.strong_punch_active,
 		"lo strong punch usa la hitbox accorciata, infligge danno HIGH e conclude in idle"
+	)
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.input_buffer.clear()
+	var health_before_crouched_strong := live_arianna.opponent.combat.current_health
+	var afterimages_before_crouched_strong := live_arianna.attack_afterimage_spawn_count
+	live_arianna.input_buffer.record_input_snapshot(0, 1, [&"heavy_punch"], true)
+	live_arianna._physics_process(0.0)
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_CROUCHED_STRONG_PUNCH_ACTIVE_START_FRAME
+	live_arianna._on_animation_frame_changed()
+	await physics_frame
+	await physics_frame
+	var live_crouched_strong_hit := (
+		live_arianna.opponent.combat.current_health
+			== health_before_crouched_strong - live_arianna.character_data.get_attack(&"heavy_punch").damage
+		and live_arianna.opponent.current_state == Mangler.State.HIT
+		and live_arianna.opponent.animated_sprite.animation == &"hurt_high"
+		and live_arianna.attack_afterimage_spawn_count > afterimages_before_crouched_strong
+	)
+	live_arianna._on_animation_finished()
+	_expect(
+		live_crouched_strong_hit
+		and live_arianna.current_state == Mangler.State.CROUCHING
+		and not live_arianna.crouched_strong_punch_active,
+		"lo strong punch basso infligge danno HIGH, genera la scia e torna in crouch"
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
