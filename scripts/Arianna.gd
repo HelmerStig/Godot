@@ -49,6 +49,18 @@ const ARIANNA_GUARD_HIGH_SHEET := preload(
 const ARIANNA_GUARD_HIGH_FRAME_COUNT := 16
 const ARIANNA_GUARD_HIGH_COLUMNS := 4
 const ARIANNA_GUARD_HIGH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_GUARD_MIDDLE_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/guard_middle.png"
+)
+const ARIANNA_GUARD_MIDDLE_FRAME_COUNT := 13
+const ARIANNA_GUARD_MIDDLE_COLUMNS := 4
+const ARIANNA_GUARD_MIDDLE_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_GUARD_LOW_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/guard_low.png"
+)
+const ARIANNA_GUARD_LOW_FRAME_COUNT := 16
+const ARIANNA_GUARD_LOW_COLUMNS := 4
+const ARIANNA_GUARD_LOW_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/light-punch/light-punch.png"
 )
@@ -160,7 +172,7 @@ func _physics_process(_delta: float) -> void:
 			and (not input_buffer.is_back_held() or not opponent_is_attacking)
 		):
 			combat.set_guarding(false)
-			_start_high_guard_recovery()
+			_start_guard_recovery()
 		velocity = Vector2.ZERO
 		update_physical_collision()
 		update_collision_profile()
@@ -203,6 +215,15 @@ func _physics_process(_delta: float) -> void:
 		_update_jump_facing()
 		update_ground_shadow()
 		return
+	if (
+		input_buffer.is_down_held()
+		and input_buffer.is_back_held()
+		and is_on_floor()
+		and opponent_is_attacking
+		and _get_incoming_guard_height() == AttackData.HitHeight.LOW
+	):
+		_start_guard_for_incoming_attack()
+		return
 	if input_buffer.is_down_held() and is_on_floor():
 		if current_state != State.CROUCHING:
 			change_state(State.CROUCHING)
@@ -237,7 +258,7 @@ func _physics_process(_delta: float) -> void:
 		and input_buffer.is_back_held()
 		and opponent_is_attacking
 	):
-		_start_high_guard()
+		_start_guard_for_incoming_attack()
 		return
 	if is_on_floor() and input_buffer.is_forward_just_pressed():
 		var current_frame := Engine.get_physics_frames()
@@ -454,6 +475,61 @@ func _make_guard_high_frame(source_index: int) -> AtlasTexture:
 	return atlas_frame
 
 
+func configure_block_mid_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"block_mid", &"block_mid_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(ARIANNA_GUARD_MIDDLE_FRAME_COUNT):
+		frames.add_frame(&"block_mid", _make_guard_middle_frame(source_index))
+	for source_index in range(ARIANNA_GUARD_MIDDLE_FRAME_COUNT - 2, -1, -1):
+		frames.add_frame(&"block_mid_recovery", _make_guard_middle_frame(source_index))
+
+
+func _make_guard_middle_frame(source_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_GUARD_MIDDLE_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_GUARD_MIDDLE_COLUMNS),
+			float(source_index / ARIANNA_GUARD_MIDDLE_COLUMNS)
+		) * ARIANNA_GUARD_MIDDLE_CELL_SIZE,
+		ARIANNA_GUARD_MIDDLE_CELL_SIZE
+	)
+	return atlas_frame
+
+
+func configure_block_low_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"block_low", &"block_low_crouched", &"block_low_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(ARIANNA_GUARD_LOW_FRAME_COUNT):
+		for animation_name in [&"block_low", &"block_low_crouched"]:
+			frames.add_frame(animation_name, _make_guard_low_frame(source_index))
+	for source_index in range(ARIANNA_GUARD_LOW_FRAME_COUNT - 2, -1, -1):
+		frames.add_frame(&"block_low_recovery", _make_guard_low_frame(source_index))
+
+
+func _make_guard_low_frame(source_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_GUARD_LOW_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_GUARD_LOW_COLUMNS),
+			float(source_index / ARIANNA_GUARD_LOW_COLUMNS)
+		) * ARIANNA_GUARD_LOW_CELL_SIZE,
+		ARIANNA_GUARD_LOW_CELL_SIZE
+	)
+	return atlas_frame
+
+
 func _make_crouch_frame(source_index: int) -> AtlasTexture:
 	var atlas_frame := AtlasTexture.new()
 	atlas_frame.atlas = ARIANNA_CROUCH_SHEET
@@ -580,15 +656,24 @@ func _start_crouch_recovery() -> void:
 	state_changed.emit(previous_state, current_state)
 
 
-func _start_high_guard() -> void:
-	received_block_height = AttackData.HitHeight.HIGH
-	block_started_crouched = false
+func _start_guard_for_incoming_attack() -> void:
+	received_block_height = _get_incoming_guard_height()
+	block_started_crouched = input_buffer.is_down_held()
 	combat.set_guarding(true)
 	change_state(State.BLOCKING)
 
 
-func _start_high_guard_recovery() -> void:
-	received_block_height = AttackData.HitHeight.HIGH
+func _get_incoming_guard_height() -> AttackData.HitHeight:
+	if (
+		is_instance_valid(opponent)
+		and opponent.combat != null
+		and opponent.combat.current_attack != null
+	):
+		return opponent.combat.get_effective_hit_height(opponent.combat.current_attack)
+	return AttackData.HitHeight.HIGH
+
+
+func _start_guard_recovery() -> void:
 	change_state(State.BLOCK_RECOVERY)
 
 
@@ -686,7 +771,9 @@ func _on_animation_finished() -> void:
 		change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_crouch_recovery":
 		change_state(State.IDLE)
-	elif animated_sprite.animation == &"block_high_recovery":
+	elif animated_sprite.animation in [
+		&"block_high_recovery", &"block_mid_recovery", &"block_low_recovery"
+	]:
 		combat.set_guarding(false)
 		change_state(State.IDLE)
 	else:

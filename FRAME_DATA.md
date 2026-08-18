@@ -42,6 +42,8 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Arianna salto indietro | double-tap back | `arianna_back_jump` | 48 | — | — | idle subito dopo frame 49 | 28-49 di `back-jump.png`; 50 px orizzontali in 1 s | 0 | movement | no |
 | Arianna accovacciata | hold down | `crouch` → `arianna_crouch_recovery` | 48 | — | — | hold frame 19 | 1-19; rilascio 18-1 | 0 | stance | no |
 | Arianna guardia alta | hold back durante attacco avversario | `block_high` → `block_high_recovery` | 48 | — | — | hold frame 16 finché l'attacco resta attivo | 1-16; fine attacco/rilascio 15-1 | 0 | high guard | no |
+| Arianna guardia media | hold back durante attacco MID avversario | `block_mid` → `block_mid_recovery` | 48 | — | — | hold frame 13 finché l'attacco resta attivo | 1-13; fine attacco/rilascio 12-1 | 0 | mid guard | no |
+| Arianna guardia bassa | hold down+back durante attacco LOW avversario | `block_low_crouched` → `block_low_recovery` | 48 | — | — | hold frame 16 finché l'attacco resta attivo | 1-16; fine attacco/rilascio 15-1 | 0 | low guard | no |
 | Arianna salto | jump | `jump` | 48 | stacco al frame 6 | — | fino all'atterraggio | 64 | 0 | movement | no |
 | Arianna pugno leggero | standing light punch | `arianna_light_punch` → `arianna_light_punch_recovery` | 48 | 6 | 3 | 9 | 18 (1-9, poi 9-1) | 5 | high | no |
 | Testata da presa | grab follow-up | `grab_headbutt` | 25 | 16 | 1 | 8 | 25 | 15 | high/unblockable | no |

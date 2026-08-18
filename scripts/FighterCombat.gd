@@ -826,7 +826,11 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	if target == null or target == fighter or hit_targets.has(target) or current_attack == null:
 		return
 	hit_targets.append(target)
-	if current_attack.attack_id == &"light_punch" and not is_crouched_light_punch:
+	if (
+		current_attack.attack_id == &"light_punch"
+		and not is_crouched_light_punch
+		and not _target_will_block(target)
+	):
 		fighter.spawn_hit_effect(target.global_position + Vector2(0.0, -220.0), fighter.is_facing_right)
 	var effective_hit_height := get_effective_hit_height(current_attack)
 	if (
