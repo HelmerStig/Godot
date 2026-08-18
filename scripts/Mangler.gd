@@ -2718,7 +2718,7 @@ func _on_combat_knocked_out() -> void:
 
 
 func _on_combat_attack_started(attack_name: StringName) -> void:
-	bring_player_one_to_foreground()
+	bring_attacker_to_foreground()
 	if (
 		combat.current_variant != null
 		and animated_sprite.sprite_frames.has_animation(combat.current_variant.animation_name)
@@ -2787,16 +2787,13 @@ func _on_combat_attack_finished() -> void:
 	attack_finished.emit()
 
 
-func bring_player_one_to_foreground() -> void:
-	if player_number != 1:
-		return
+func bring_attacker_to_foreground() -> void:
 	var opponent_z := opponent.z_index if is_instance_valid(opponent) else default_z_index
 	z_index = maxi(default_z_index, opponent_z + ATTACK_FOREGROUND_Z_OFFSET)
 
 
 func restore_default_render_order() -> void:
-	if player_number == 1:
-		z_index = default_z_index
+	z_index = default_z_index
 
 
 func get_attack_motion_profile(animation_name: StringName) -> Dictionary:

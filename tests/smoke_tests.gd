@@ -236,6 +236,120 @@ func _test_arianna_idle() -> void:
 		and backwalk_last_frame.region == Rect2(0.0, 0.0, 512.0, 512.0),
 		"Arianna backwalk riusa i 48 frame di 01-walk in ordine inverso"
 	)
+	var run_first_frame := frames.get_frame_texture(&"run", 0) as AtlasTexture
+	var run_last_frame := frames.get_frame_texture(&"run", 47) as AtlasTexture
+	_expect(
+		frames.get_frame_count(&"run") == 48
+		and is_equal_approx(frames.get_animation_speed(&"run"), 24.0)
+		and frames.get_animation_loop(&"run")
+		and run_first_frame.atlas == Arianna.ARIANNA_RUN_SHEET
+		and run_first_frame.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and run_last_frame.region == Rect2(2560.0, 3072.0, 512.0, 512.0),
+		"Arianna run usa i primi 48 frame della griglia 7x7 in loop a 24 FPS"
+	)
+	var back_jump_first := frames.get_frame_texture(&"arianna_back_jump", 0) as AtlasTexture
+	var back_jump_peak := frames.get_frame_texture(&"arianna_back_jump", 11) as AtlasTexture
+	var back_jump_last := frames.get_frame_texture(&"arianna_back_jump", 21) as AtlasTexture
+	_expect(
+		frames.get_frame_count(&"arianna_back_jump") == 22
+		and is_equal_approx(frames.get_animation_speed(&"arianna_back_jump"), 48.0)
+		and not frames.get_animation_loop(&"arianna_back_jump")
+		and back_jump_first.atlas == Arianna.ARIANNA_BACK_JUMP_SHEET
+		and back_jump_first.region == Rect2(3072.0, 1536.0, 512.0, 512.0)
+		and back_jump_peak.region == Rect2(1536.0, 2560.0, 512.0, 512.0)
+		and back_jump_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
+		"Arianna back jump usa i frame sorgente 28-49 di back-jump.png a 48 FPS"
+	)
+	var crouch_first := frames.get_frame_texture(&"crouch", 0) as AtlasTexture
+	var crouch_last := frames.get_frame_texture(&"crouch", 18) as AtlasTexture
+	var crouch_recovery_first := (
+		frames.get_frame_texture(&"arianna_crouch_recovery", 0) as AtlasTexture
+	)
+	var crouch_recovery_last := (
+		frames.get_frame_texture(&"arianna_crouch_recovery", 17) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"crouch") == 19
+		and frames.get_frame_count(&"arianna_crouch_recovery") == 18
+		and is_equal_approx(frames.get_animation_speed(&"crouch"), 48.0)
+		and is_equal_approx(frames.get_animation_speed(&"arianna_crouch_recovery"), 48.0)
+		and not frames.get_animation_loop(&"crouch")
+		and not frames.get_animation_loop(&"arianna_crouch_recovery")
+		and crouch_first.atlas == Arianna.ARIANNA_CROUCH_SHEET
+		and crouch_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and crouch_last.region == Rect2(1536.0, 1536.0, 512.0, 512.0)
+		and crouch_recovery_first.region == Rect2(1024.0, 1536.0, 512.0, 512.0)
+		and crouch_recovery_last.region == crouch_first.region,
+		"Arianna crouch usa 1-19 e recovery 18-1 a 48 FPS"
+	)
+	var light_punch_first := frames.get_frame_texture(&"arianna_light_punch", 0) as AtlasTexture
+	var light_punch_last := frames.get_frame_texture(&"arianna_light_punch", 8) as AtlasTexture
+	var light_punch_recovery_first := (
+		frames.get_frame_texture(&"arianna_light_punch_recovery", 0) as AtlasTexture
+	)
+	var light_punch_recovery_last := (
+		frames.get_frame_texture(&"arianna_light_punch_recovery", 8) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_light_punch") == 9
+		and frames.get_frame_count(&"arianna_light_punch_recovery") == 9
+		and is_equal_approx(frames.get_animation_speed(&"arianna_light_punch"), 48.0)
+		and is_equal_approx(frames.get_animation_speed(&"arianna_light_punch_recovery"), 48.0)
+		and not frames.get_animation_loop(&"arianna_light_punch")
+		and not frames.get_animation_loop(&"arianna_light_punch_recovery")
+		and light_punch_first.atlas == Arianna.ARIANNA_LIGHT_PUNCH_SHEET
+		and light_punch_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and light_punch_last.region == Rect2(512.0, 512.0, 512.0, 512.0)
+		and light_punch_recovery_first.region == light_punch_last.region
+		and light_punch_recovery_last.region == light_punch_first.region,
+		"Arianna light punch esegue 1-9 e 9-1 a 48 FPS"
+	)
+	var jump_first := frames.get_frame_texture(&"jump", 0) as AtlasTexture
+	var jump_last := frames.get_frame_texture(&"jump", 63) as AtlasTexture
+	_expect(
+		frames.get_frame_count(&"jump") == 64
+		and is_equal_approx(frames.get_animation_speed(&"jump"), 48.0)
+		and not frames.get_animation_loop(&"jump")
+		and jump_first.atlas == Arianna.ARIANNA_JUMP_SHEET
+		and jump_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and jump_last.region == Rect2(3584.0, 3584.0, 512.0, 512.0),
+		"Arianna jump usa tutti i 64 frame della griglia 8x8 a 48 FPS"
+	)
+	arianna.start_jump(1.0)
+	var jump_prepared := (
+		arianna.current_state == Mangler.State.JUMP_STARTUP
+		and arianna.animated_sprite.animation == &"jump"
+		and arianna.velocity == Vector2.ZERO
+	)
+	arianna.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	arianna._on_animation_frame_changed()
+	arianna.update_physical_collision()
+	arianna.update_collision_profile()
+	var air_collision := arianna.collision_shape.shape as RectangleShape2D
+	_expect(
+		jump_prepared
+		and arianna.current_state == Mangler.State.JUMPING
+		and arianna.velocity.x > 0.0
+		and is_equal_approx(arianna.velocity.y, arianna.character_data.jump_velocity)
+		and air_collision.size == Arianna.ARIANNA_AIR_COLLISION_SIZE
+		and arianna.collision_shape.position == Arianna.ARIANNA_AIR_COLLISION_POSITION
+		and arianna.collision_layer == 0
+		and arianna.collision_mask == Mangler.GROUND_COLLISION_LAYER,
+		"Arianna stacca al frame 6 conservando la direzione scelta"
+	)
+	arianna.input_buffer.record_input_snapshot(
+		0, 0, [&"light_punch"], arianna.is_facing_right
+	)
+	arianna._physics_process(0.0)
+	_expect(
+		not arianna.light_punch_active
+		and arianna.current_state == Mangler.State.JUMPING
+		and arianna.input_buffer.consume_attack(&"light_punch")
+			== FighterInputBuffer.NO_DIRECTION,
+		"il light punch terrestre viene scartato durante il salto"
+	)
+	arianna.velocity = Vector2.ZERO
+	arianna.change_state(Mangler.State.IDLE)
 	arianna.is_facing_right = true
 	var forward_right_is_valid := arianna.is_forward_input(1.0)
 	var backward_right_is_rejected := not arianna.is_forward_input(-1.0)
@@ -282,12 +396,53 @@ func _test_arianna_idle() -> void:
 		walked_backward and arianna.animated_sprite.animation == &"idle",
 		"tenere indietro muove Arianna con backwalk e mantiene il facing"
 	)
+	arianna.set_physics_process(false)
+	var arianna_default_z := arianna.z_index
+	arianna._start_light_punch()
+	var light_punch_started := (
+		arianna.light_punch_active
+		and arianna.current_state == Mangler.State.ATTACKING
+		and arianna.animated_sprite.animation == &"arianna_light_punch"
+		and is_zero_approx(arianna.velocity.x)
+		and arianna.combat.current_attack != null
+		and (arianna.combat.hitbox_shape.shape as RectangleShape2D).size
+			== Arianna.ARIANNA_LIGHT_PUNCH_HITBOX_SIZE
+		and arianna.combat.hitbox_shape.position
+			== Arianna.ARIANNA_LIGHT_PUNCH_HITBOX_POSITION
+		and arianna.z_index > arianna_default_z
+	)
+	arianna.animated_sprite.frame = Arianna.ARIANNA_LIGHT_PUNCH_ACTIVE_START_FRAME
+	arianna._on_animation_frame_changed()
+	var light_punch_hitbox_activated := not arianna.combat.hitbox_shape.disabled
+	arianna._on_animation_finished()
+	var light_punch_hitbox_deactivated := arianna.combat.hitbox_shape.disabled
+	var light_punch_reversed := (
+		arianna.light_punch_active
+		and arianna.animated_sprite.animation == &"arianna_light_punch_recovery"
+	)
+	arianna._on_animation_finished()
+	_expect(
+		light_punch_started
+		and light_punch_hitbox_activated
+		and light_punch_hitbox_deactivated
+		and light_punch_reversed
+		and not arianna.light_punch_active
+		and arianna.current_state == Mangler.State.IDLE
+		and arianna.animated_sprite.animation == &"idle",
+		"il pugno leggero attiva la hitbox sul braccio, torna indietro e conclude in idle"
+	)
+	_expect(
+		arianna.z_index == arianna_default_z,
+		"Arianna ripristina lo z-index al termine dell'attacco"
+	)
 	arianna.queue_free()
 	await process_frame
 	var live_arena := (load("res://scenes/MainArena.tscn") as PackedScene).instantiate()
 	root.add_child(live_arena)
 	await process_frame
 	var live_arianna := live_arena.get_node("Player1") as Arianna
+	await physics_frame
+	await physics_frame
 	var live_idle_frame := live_arianna.animated_sprite.sprite_frames.get_frame_texture(
 		&"idle", 0
 	) as AtlasTexture
@@ -296,6 +451,134 @@ func _test_arianna_idle() -> void:
 		and live_idle_frame != null
 		and live_idle_frame.atlas == Arianna.ARIANNA_IDLE_SHEET,
 		"lo stage mostra l'atlante idle di Arianna sul Player 1"
+	)
+	await physics_frame
+	await physics_frame
+	live_arianna.controls_enabled = true
+	live_arianna.can_move = true
+	live_arianna.input_buffer.record_input_snapshot(
+		0, 0, [&"light_punch"], live_arianna.is_facing_right
+	)
+	live_arianna._physics_process(0.0)
+	var live_light_punch_started := (
+		live_arianna.is_on_floor()
+		and live_arianna.light_punch_active
+		and live_arianna.animated_sprite.animation == &"arianna_light_punch"
+	)
+	live_arianna._on_animation_finished()
+	live_arianna._on_animation_finished()
+	live_arianna.is_player_controlled = false
+	live_arianna.input_buffer.clear()
+	live_arianna.input_buffer.record_input_snapshot(0, 1, [], live_arianna.is_facing_right)
+	live_arianna._physics_process(0.0)
+	live_arianna.animated_sprite.frame = 18
+	live_arianna._on_animation_finished()
+	var live_crouch_held := (
+		live_arianna.current_state == Mangler.State.CROUCHING
+		and live_arianna.animated_sprite.animation == &"crouch"
+		and live_arianna.animated_sprite.frame == 18
+	)
+	live_arianna.input_buffer.record_input_snapshot(0, 0, [], live_arianna.is_facing_right)
+	live_arianna._physics_process(0.0)
+	var live_crouch_released := (
+		live_arianna.current_state == Mangler.State.STANDING_UP
+		and live_arianna.animated_sprite.animation == &"arianna_crouch_recovery"
+	)
+	live_arianna._on_animation_finished()
+	_expect(
+		live_crouch_held
+		and live_crouch_released
+		and live_arianna.current_state == Mangler.State.IDLE,
+		"Arianna mantiene il frame 19 accovacciata e al rilascio torna 18-1 fino a idle"
+	)
+	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 400.0
+	live_arianna.is_facing_right = true
+	live_arianna.animated_sprite.flip_h = false
+	live_arianna.is_player_controlled = false
+	live_arianna.input_buffer.clear()
+	live_arianna.input_buffer.record_input_snapshot(1, 0, [], true)
+	live_arianna._physics_process(0.0)
+	live_arianna.input_buffer.record_input_snapshot(0, 0, [], true)
+	live_arianna._physics_process(0.0)
+	live_arianna.input_buffer.record_input_snapshot(1, 0, [], true)
+	live_arianna._physics_process(0.0)
+	var live_run_started := (
+		live_arianna.current_state == Mangler.State.RUNNING
+		and live_arianna.animated_sprite.animation == &"run"
+		and live_arianna.animated_sprite.is_playing()
+		and is_equal_approx(
+			absf(live_arianna.velocity.x),
+			live_arianna.character_data.run_speed * Arianna.ARIANNA_RUN_SPEED_MULTIPLIER
+		)
+	)
+	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 121.0
+	live_arianna._physics_process(1.0 / 60.0)
+	_expect(
+		live_run_started
+		and live_arianna.current_state == Mangler.State.IDLE
+		and live_arianna.animated_sprite.animation == &"idle",
+		"la corsa di Arianna termina in idle alla collisione con l'avversario"
+	)
+	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 200.0
+	live_arianna.is_player_controlled = true
+	live_arianna.controls_enabled = true
+	live_arianna.can_move = true
+	live_arianna.is_player_controlled = false
+	live_arianna.input_buffer.clear()
+	live_arianna.input_buffer.record_input_snapshot(-1, 0, [], true)
+	live_arianna._physics_process(0.0)
+	live_arianna.input_buffer.record_input_snapshot(0, 0, [], true)
+	live_arianna._physics_process(0.0)
+	live_arianna.input_buffer.record_input_snapshot(-1, 0, [], true)
+	live_arianna._physics_process(0.0)
+	var back_jump_started_x := live_arianna.back_jump_start_x
+	var back_jump_started_y := live_arianna.back_jump_start_y
+	var live_back_jump_started := (
+		live_arianna.back_jump_active
+		and live_arianna.current_state == Mangler.State.BACK_HOP
+		and live_arianna.animated_sprite.animation == &"arianna_back_jump"
+		and is_zero_approx(live_arianna.velocity.y)
+	)
+	live_arianna._on_animation_finished()
+	var live_back_jump_returns_to_idle_animation := (
+		live_arianna.back_jump_active
+		and live_arianna.current_state == Mangler.State.IDLE
+		and live_arianna.animated_sprite.animation == &"idle"
+		and live_arianna.animated_sprite.is_playing()
+	)
+	live_arianna._physics_process(Arianna.ARIANNA_BACK_JUMP_DURATION)
+	_expect(
+		live_back_jump_started
+		and live_back_jump_returns_to_idle_animation
+		and is_equal_approx(
+			back_jump_started_x - live_arianna.position.x,
+			Arianna.ARIANNA_BACK_JUMP_DISTANCE
+		)
+		and is_equal_approx(live_arianna.position.y, back_jump_started_y)
+		and live_arianna.current_state == Mangler.State.IDLE,
+		"il back jump torna subito visivamente in idle e completa 50 px in un secondo"
+	)
+	live_arianna.is_player_controlled = true
+	live_arianna.controls_enabled = true
+	live_arianna.can_move = true
+	live_arianna.start_jump(0.0)
+	var facing_before_cross := live_arianna.is_facing_right
+	live_arianna.global_position.x = live_arianna.opponent.global_position.x + 10.0
+	live_arianna._update_jump_facing()
+	var facing_locked_during_rotation := live_arianna.is_facing_right == facing_before_cross
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_JUMP_FRAME_COUNT - 1
+	live_arianna._on_animation_frame_changed()
+	_expect(live_light_punch_started, "nello stage Arianna esegue il light punch a terra")
+	_expect(
+		live_arianna.current_state in [Mangler.State.JUMP_STARTUP, Mangler.State.JUMPING]
+		and live_arianna.animated_sprite.animation == &"jump",
+		"nello stage Arianna avvia il salto"
+	)
+	_expect(
+		facing_locked_during_rotation
+		and not live_arianna.is_facing_right
+		and live_arianna.animated_sprite.flip_h,
+		"Arianna cambia facing solo dopo rotazione completa e sorpasso"
 	)
 	live_arena.queue_free()
 	await process_frame
@@ -2429,6 +2712,18 @@ func _test_combat_flow() -> void:
 	_expect(
 		player1.z_index == player1_default_z,
 		"Player 1 ripristina l'ordine grafico normale al termine dell'attacco"
+	)
+	var player2_default_z := player2.z_index
+	player2.combat.try_attack(&"light_punch")
+	_expect(
+		player2.z_index > player1.z_index,
+		"anche Player 2 passa davanti all'avversario quando attacca"
+	)
+	player2.combat.cancel_current_action()
+	player2.change_state(Mangler.State.IDLE)
+	_expect(
+		player2.z_index == player2_default_z,
+		"Player 2 ripristina lo z-index quando l'attacco viene interrotto"
 	)
 
 	var medium_punch := player1.character_data.get_attack(&"medium_punch")

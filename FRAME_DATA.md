@@ -38,6 +38,11 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Arianna idle | standing idle | `idle` | 24 | — | — | loop | 1-24 | 0 | base | sì |
 | Arianna camminata avanti | standing walk | `walk` | 24 | — | — | loop finché si tiene avanti | 1-48 | 0 | base | sì |
 | Arianna camminata indietro | standing backwalk | `backwalk` | 24 | — | — | loop finché si tiene indietro | 48-1 di `01-walk.png` | 0 | base | sì |
+| Arianna corsa | double-tap forward | `run` | 24 | — | — | loop fino a collisione | 1-48 | 0 | movement | sì |
+| Arianna salto indietro | double-tap back | `arianna_back_jump` | 48 | — | — | idle subito dopo frame 49 | 28-49 di `back-jump.png`; 50 px orizzontali in 1 s | 0 | movement | no |
+| Arianna accovacciata | hold down | `crouch` → `arianna_crouch_recovery` | 48 | — | — | hold frame 19 | 1-19; rilascio 18-1 | 0 | stance | no |
+| Arianna salto | jump | `jump` | 48 | stacco al frame 6 | — | fino all'atterraggio | 64 | 0 | movement | no |
+| Arianna pugno leggero | standing light punch | `arianna_light_punch` → `arianna_light_punch_recovery` | 48 | 6 | 3 | 9 | 18 (1-9, poi 9-1) | 5 | high | no |
 | Testata da presa | grab follow-up | `grab_headbutt` | 25 | 16 | 1 | 8 | 25 | 15 | high/unblockable | no |
 | Vittima afferrata | reaction | `grabbed` | 24 | — | — | — | 32 (sorgente 10–25–10) | 0 | reaction | no |
 | Colpito in salto | airborne reaction | `hurted_in_jump` | 24 | — | — | — | 25 + 1 s hold | 0 | knockdown | sì |

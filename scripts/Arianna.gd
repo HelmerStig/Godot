@@ -17,8 +17,65 @@ const ARIANNA_WALK_SHEET := preload(
 const ARIANNA_WALK_FRAME_COUNT := 48
 const ARIANNA_WALK_COLUMNS := 7
 const ARIANNA_WALK_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_RUN_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/run.png"
+)
+const ARIANNA_RUN_FRAME_COUNT := 48
+const ARIANNA_RUN_COLUMNS := 7
+const ARIANNA_RUN_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_RUN_SPEED_MULTIPLIER := 2.0
+const ARIANNA_BACK_JUMP_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/back-jump.png"
+)
+const ARIANNA_BACK_JUMP_COLUMNS := 7
+const ARIANNA_BACK_JUMP_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_BACK_JUMP_SOURCE_START := 27
+const ARIANNA_BACK_JUMP_SOURCE_END := 48
+const ARIANNA_BACK_JUMP_FRAME_COUNT := (
+	ARIANNA_BACK_JUMP_SOURCE_END - ARIANNA_BACK_JUMP_SOURCE_START + 1
+)
+const ARIANNA_BACK_JUMP_DISTANCE := 50.0
+const ARIANNA_BACK_JUMP_DURATION := 0.5
+const ARIANNA_BACK_JUMP_SPEED := ARIANNA_BACK_JUMP_DISTANCE / ARIANNA_BACK_JUMP_DURATION
+const ARIANNA_CROUCH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/crouched.png"
+)
+const ARIANNA_CROUCH_FRAME_COUNT := 19
+const ARIANNA_CROUCH_COLUMNS := 5
+const ARIANNA_CROUCH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_LIGHT_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/light-punch/light-punch.png"
+)
+const ARIANNA_LIGHT_PUNCH_FRAME_COUNT := 12
+const ARIANNA_LIGHT_PUNCH_LAST_PLAYED_FRAME := 9
+const ARIANNA_LIGHT_PUNCH_COLUMNS := 7
+const ARIANNA_LIGHT_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_LIGHT_PUNCH_ACTIVE_START_FRAME := 6
+const ARIANNA_LIGHT_PUNCH_ACTIVE_END_FRAME := 8
+const ARIANNA_LIGHT_PUNCH_HITBOX_SIZE := Vector2(160.0, 50.0)
+const ARIANNA_LIGHT_PUNCH_HITBOX_POSITION := Vector2(85.0, -170.0)
+const ARIANNA_JUMP_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/jump.png"
+)
+const ARIANNA_JUMP_FRAME_COUNT := 64
+const ARIANNA_JUMP_COLUMNS := 8
+const ARIANNA_JUMP_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_JUMP_GRAVITY := 1400.0
+const ARIANNA_AIR_COLLISION_SIZE := Vector2(120.0, 90.0)
+const ARIANNA_AIR_COLLISION_POSITION := Vector2(0.0, -90.0)
 const ARIANNA_SPRITE_SCALE := Vector2(0.85, 0.85)
 const ARIANNA_SPRITE_POSITION := Vector2(0.0, -120.0)
+
+var light_punch_active := false
+var jump_facing_locked := false
+var jump_rotation_finished := false
+var jump_started_left_of_opponent := true
+var run_direction := 1.0
+var back_jump_active := false
+var back_jump_start_x := 0.0
+var back_jump_start_y := 0.0
+var back_jump_direction := -1.0
+var back_jump_elapsed := 0.0
 
 
 func _ready() -> void:
@@ -26,6 +83,8 @@ func _ready() -> void:
 	# Player 2 sovrascriva l'atlante idle di Arianna durante il proprio _ready().
 	animated_sprite.sprite_frames = animated_sprite.sprite_frames.duplicate(true)
 	super._ready()
+	configure_jump_frames()
+	configure_back_jump_frames()
 	_activate_idle()
 	call_deferred("_activate_idle")
 
@@ -33,17 +92,146 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if is_player_controlled:
 		input_buffer.update(is_facing_right)
+	if not back_jump_active and not is_on_floor():
+		velocity.y += ARIANNA_JUMP_GRAVITY * _delta
+	if back_jump_active:
+		back_jump_elapsed = minf(back_jump_elapsed + _delta, ARIANNA_BACK_JUMP_DURATION)
+		var movement_progress := back_jump_elapsed / ARIANNA_BACK_JUMP_DURATION
+		var target_x := clampf(
+			back_jump_start_x + back_jump_direction * ARIANNA_BACK_JUMP_DISTANCE,
+			stage_left_limit,
+			stage_right_limit
+		)
+		position.x = lerpf(back_jump_start_x, target_x, movement_progress)
+		position.y = back_jump_start_y
+		velocity.x = (
+			back_jump_direction * ARIANNA_BACK_JUMP_SPEED
+			if movement_progress < 1.0
+			else 0.0
+		)
+		velocity.y = 0.0
+		collision_layer = 0
+		collision_mask = GROUND_COLLISION_LAYER
+		if movement_progress >= 1.0:
+			_finish_back_jump()
+			update_ground_shadow()
+			return
+		update_facing_direction()
+		update_ground_shadow()
+		return
+	if light_punch_active:
+		velocity = Vector2.ZERO
+		current_state = State.ATTACKING
+		move_and_slide()
+		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
+		update_facing_direction()
+		update_ground_shadow()
+		return
+	if (
+		controls_enabled
+		and can_move
+		and input_buffer != null
+		and is_on_floor()
+		and current_state not in [State.JUMP_STARTUP, State.JUMPING]
+		and input_buffer.consume_attack(&"light_punch") != FighterInputBuffer.NO_DIRECTION
+	):
+		_start_light_punch()
+		return
 	var horizontal_axis := input_buffer.get_horizontal_axis() if input_buffer != null else 0.0
+	if (
+		controls_enabled
+		and can_move
+		and is_on_floor()
+		and Input.is_action_just_pressed(get_input_action("jump"))
+	):
+		start_jump(horizontal_axis)
+	if current_state in [State.JUMP_STARTUP, State.JUMPING]:
+		# Il light punch terrestre non viene accodato durante il salto: la futura
+		# variante aerea avrà animazione e dati d'attacco dedicati.
+		input_buffer.consume_attack(&"light_punch")
+		update_physical_collision()
+		update_collision_profile()
+		var was_jumping := current_state in [State.JUMP_STARTUP, State.JUMPING]
+		move_and_slide()
+		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
+		update_state()
+		update_physical_collision()
+		update_collision_profile()
+		if was_jumping and current_state not in [State.JUMP_STARTUP, State.JUMPING]:
+			jump_rotation_finished = true
+		_update_jump_facing()
+		update_ground_shadow()
+		return
+	if input_buffer.is_down_held() and is_on_floor():
+		if current_state != State.CROUCHING:
+			change_state(State.CROUCHING)
+		velocity = Vector2.ZERO
+		update_physical_collision()
+		update_collision_profile()
+		move_and_slide()
+		update_facing_direction()
+		update_ground_shadow()
+		return
+	if current_state == State.CROUCHING:
+		_start_crouch_recovery()
+	if current_state == State.STANDING_UP and animated_sprite.animation == &"arianna_crouch_recovery":
+		velocity = Vector2.ZERO
+		update_physical_collision()
+		update_collision_profile()
+		move_and_slide()
+		update_facing_direction()
+		update_ground_shadow()
+		return
+	if is_on_floor() and input_buffer.is_back_just_pressed():
+		var current_frame := Engine.get_physics_frames()
+		if current_frame - last_back_tap_frame <= BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES:
+			_start_back_jump()
+		last_back_tap_frame = current_frame
+	if back_jump_active:
+		return
+	if is_on_floor() and input_buffer.is_forward_just_pressed():
+		var current_frame := Engine.get_physics_frames()
+		if current_frame - last_forward_tap_frame <= RUN_DOUBLE_TAP_WINDOW_FRAMES:
+			_start_run()
+		last_forward_tap_frame = current_frame
+	if current_state == State.RUNNING:
+		velocity.x = (
+			run_direction * character_data.run_speed * ARIANNA_RUN_SPEED_MULTIPLIER
+		)
+		if is_on_floor():
+			velocity.y = 0.0
+		update_physical_collision()
+		update_collision_profile()
+		move_and_slide()
+		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
+		var reached_stage_edge := (
+			(run_direction < 0.0 and is_equal_approx(position.x, stage_left_limit))
+			or (run_direction > 0.0 and is_equal_approx(position.x, stage_right_limit))
+		)
+		if _has_run_collision() or reached_stage_edge:
+			velocity = Vector2.ZERO
+			change_state(State.IDLE)
+		else:
+			if animated_sprite.animation != &"run" or not animated_sprite.is_playing():
+				animated_sprite.play(&"run")
+		update_facing_direction()
+		update_ground_shadow()
+		return
 	var walking_forward := controls_enabled and can_move and is_forward_input(horizontal_axis)
 	var walking_backward := controls_enabled and can_move and is_backward_input(horizontal_axis)
 	var is_walking := walking_forward or walking_backward
-	velocity = Vector2(
+	velocity.x = (
 		signf(horizontal_axis) * character_data.walk_speed
 		if is_walking
-		else 0.0,
-		0.0
+		else 0.0
 	)
+	# Finché Godot non conferma il contatto, conserva la piccola velocità di
+	# gravità necessaria a registrare il pavimento tramite move_and_slide().
+	if is_on_floor():
+		velocity.y = 0.0
 	current_state = State.WALKING if is_walking else State.IDLE
+	update_physical_collision()
+	update_collision_profile()
 	move_and_slide()
 	position.x = clampf(position.x, stage_left_limit, stage_right_limit)
 	var desired_animation: StringName = (
@@ -126,6 +314,307 @@ func configure_backwalk_frames() -> void:
 			ARIANNA_WALK_CELL_SIZE
 		)
 		frames.add_frame(&"backwalk", atlas_frame)
+
+
+func configure_run_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"run"):
+		frames.remove_animation(&"run")
+	frames.add_animation(&"run")
+	frames.set_animation_speed(&"run", 24.0)
+	frames.set_animation_loop(&"run", true)
+	for source_index in range(ARIANNA_RUN_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = ARIANNA_RUN_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % ARIANNA_RUN_COLUMNS),
+				float(floori(float(source_index) / ARIANNA_RUN_COLUMNS))
+			) * ARIANNA_RUN_CELL_SIZE,
+			ARIANNA_RUN_CELL_SIZE
+		)
+		frames.add_frame(&"run", atlas_frame)
+
+
+func configure_back_jump_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"arianna_back_jump"):
+		frames.remove_animation(&"arianna_back_jump")
+	frames.add_animation(&"arianna_back_jump")
+	frames.set_animation_speed(&"arianna_back_jump", 48.0)
+	frames.set_animation_loop(&"arianna_back_jump", false)
+	for source_index in range(
+		ARIANNA_BACK_JUMP_SOURCE_START,
+		ARIANNA_BACK_JUMP_SOURCE_END + 1
+	):
+		frames.add_frame(&"arianna_back_jump", _make_back_jump_frame(source_index))
+
+
+func _make_back_jump_frame(frame_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_BACK_JUMP_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(frame_index % ARIANNA_BACK_JUMP_COLUMNS),
+			float(frame_index / ARIANNA_BACK_JUMP_COLUMNS)
+		) * ARIANNA_BACK_JUMP_CELL_SIZE,
+		ARIANNA_BACK_JUMP_CELL_SIZE
+	)
+	return atlas_frame
+
+
+func configure_crouch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"crouch", &"arianna_crouch_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(ARIANNA_CROUCH_FRAME_COUNT):
+		frames.add_frame(&"crouch", _make_crouch_frame(source_index))
+	for source_index in range(ARIANNA_CROUCH_FRAME_COUNT - 2, -1, -1):
+		frames.add_frame(&"arianna_crouch_recovery", _make_crouch_frame(source_index))
+
+
+func _make_crouch_frame(source_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_CROUCH_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_CROUCH_COLUMNS),
+			float(floori(float(source_index) / ARIANNA_CROUCH_COLUMNS))
+		) * ARIANNA_CROUCH_CELL_SIZE,
+		ARIANNA_CROUCH_CELL_SIZE
+	)
+	return atlas_frame
+
+
+func configure_light_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"arianna_light_punch", &"arianna_light_punch_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(ARIANNA_LIGHT_PUNCH_LAST_PLAYED_FRAME):
+		frames.add_frame(&"arianna_light_punch", _make_light_punch_frame(source_index))
+	for source_index in range(ARIANNA_LIGHT_PUNCH_LAST_PLAYED_FRAME - 1, -1, -1):
+		frames.add_frame(&"arianna_light_punch_recovery", _make_light_punch_frame(source_index))
+
+
+func _make_light_punch_frame(source_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_LIGHT_PUNCH_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_LIGHT_PUNCH_COLUMNS),
+			float(floori(float(source_index) / ARIANNA_LIGHT_PUNCH_COLUMNS))
+		) * ARIANNA_LIGHT_PUNCH_CELL_SIZE,
+		ARIANNA_LIGHT_PUNCH_CELL_SIZE
+	)
+	return atlas_frame
+
+
+func configure_jump_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"jump"):
+		frames.remove_animation(&"jump")
+	frames.add_animation(&"jump")
+	frames.set_animation_speed(&"jump", 48.0)
+	frames.set_animation_loop(&"jump", false)
+	for source_index in range(ARIANNA_JUMP_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = ARIANNA_JUMP_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % ARIANNA_JUMP_COLUMNS),
+				float(floori(float(source_index) / ARIANNA_JUMP_COLUMNS))
+			) * ARIANNA_JUMP_CELL_SIZE,
+			ARIANNA_JUMP_CELL_SIZE
+		)
+		frames.add_frame(&"jump", atlas_frame)
+
+
+func begin_jump_ascent() -> void:
+	if current_state != State.JUMP_STARTUP:
+		return
+	velocity = Vector2(
+		pending_jump_direction * character_data.air_speed * pending_jump_horizontal_multiplier,
+		character_data.jump_velocity
+	)
+	change_state(State.JUMPING)
+
+
+func start_jump(horizontal_direction: float) -> void:
+	jump_facing_locked = true
+	jump_rotation_finished = false
+	if is_instance_valid(opponent):
+		jump_started_left_of_opponent = global_position.x < opponent.global_position.x
+	super.start_jump(horizontal_direction)
+
+
+func _start_run() -> void:
+	run_direction = 1.0 if is_facing_right else -1.0
+	velocity = Vector2(
+		run_direction * character_data.run_speed * ARIANNA_RUN_SPEED_MULTIPLIER,
+		0.0
+	)
+	change_state(State.RUNNING)
+
+
+func _start_back_jump() -> void:
+	back_jump_active = true
+	back_jump_start_x = position.x
+	back_jump_start_y = position.y
+	back_jump_elapsed = 0.0
+	back_jump_direction = -1.0 if is_facing_right else 1.0
+	velocity = Vector2(
+		back_jump_direction * ARIANNA_BACK_JUMP_SPEED,
+		0.0
+	)
+	change_state(State.BACK_HOP)
+	animated_sprite.play(&"arianna_back_jump")
+
+
+func _finish_back_jump() -> void:
+	position.x = clampf(
+		back_jump_start_x + back_jump_direction * ARIANNA_BACK_JUMP_DISTANCE,
+		stage_left_limit,
+		stage_right_limit
+	)
+	position.y = back_jump_start_y
+	back_jump_active = false
+	back_jump_elapsed = 0.0
+	velocity = Vector2.ZERO
+	update_physical_collision()
+	update_collision_profile()
+	change_state(State.IDLE)
+
+
+func _start_crouch_recovery() -> void:
+	var previous_state := current_state
+	current_state = State.STANDING_UP
+	can_move = false
+	velocity = Vector2.ZERO
+	animated_sprite.play(&"arianna_crouch_recovery")
+	update_collision_profile()
+	state_changed.emit(previous_state, current_state)
+
+
+func get_crouch_progress() -> float:
+	if animated_sprite.animation == &"arianna_crouch_recovery":
+		var final_frame := animated_sprite.sprite_frames.get_frame_count(
+			&"arianna_crouch_recovery"
+		) - 1
+		if final_frame <= 0:
+			return 0.0
+		return 1.0 - clampf(float(animated_sprite.frame) / float(final_frame), 0.0, 1.0)
+	return super.get_crouch_progress()
+
+
+func _has_run_collision() -> bool:
+	for collision_index in range(get_slide_collision_count()):
+		var collision := get_slide_collision(collision_index)
+		if collision.get_collider() is Mangler or absf(collision.get_normal().x) > 0.5:
+			return true
+	return false
+
+
+func _update_jump_facing() -> void:
+	if not jump_facing_locked or not jump_rotation_finished:
+		return
+	if not is_instance_valid(opponent):
+		jump_facing_locked = false
+		return
+	var has_crossed_opponent := (
+		global_position.x > opponent.global_position.x
+		if jump_started_left_of_opponent
+		else global_position.x < opponent.global_position.x
+	)
+	if has_crossed_opponent:
+		update_facing_direction()
+	if current_state not in [State.JUMP_STARTUP, State.JUMPING] or has_crossed_opponent:
+		jump_facing_locked = false
+
+
+func update_collision_profile() -> void:
+	# `is_on_floor()` è false nei primissimi frame di caricamento, prima che
+	# CharacterBody2D abbia eseguito move_and_slide(). Usarlo qui ridurrebbe la
+	# pushbox già in idle e lascerebbe Arianna sospesa sopra il pavimento.
+	var is_airborne := current_state in [State.JUMP_STARTUP, State.JUMPING]
+	if is_airborne:
+		set_box_profile(
+			collision_shape,
+			ARIANNA_AIR_COLLISION_SIZE,
+			ARIANNA_AIR_COLLISION_POSITION
+		)
+		return
+	super.update_collision_profile()
+
+
+func _start_light_punch() -> void:
+	var attack := character_data.get_attack(&"light_punch")
+	if attack == null:
+		return
+	light_punch_active = true
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.current_attack = attack
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_LIGHT_PUNCH_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_LIGHT_PUNCH_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_light_punch")
+
+
+func _on_animation_finished() -> void:
+	if animated_sprite.animation == &"arianna_light_punch":
+		combat.disable_hitbox()
+		animated_sprite.play(&"arianna_light_punch_recovery")
+	elif animated_sprite.animation == &"arianna_light_punch_recovery":
+		combat.disable_hitbox()
+		combat.is_attacking = false
+		combat.current_attack = null
+		combat.current_variant = null
+		combat.hit_targets.clear()
+		restore_default_render_order()
+		light_punch_active = false
+		current_state = State.IDLE
+		animated_sprite.play(&"idle")
+	elif animated_sprite.animation == &"jump":
+		jump_rotation_finished = true
+		_update_jump_facing()
+	elif animated_sprite.animation == &"arianna_back_jump":
+		# Il moto Godot dura più dei 22 frame: conclusa la sequenza visiva,
+		# tornare subito in idle mentre il timer completa lo spostamento.
+		change_state(State.IDLE)
+	elif animated_sprite.animation == &"arianna_crouch_recovery":
+		change_state(State.IDLE)
+	else:
+		super._on_animation_finished()
+
+
+func _on_animation_frame_changed() -> void:
+	super._on_animation_frame_changed()
+	if (
+		animated_sprite.animation == &"jump"
+		and animated_sprite.frame == ARIANNA_JUMP_FRAME_COUNT - 1
+	):
+		jump_rotation_finished = true
+		_update_jump_facing()
+	if animated_sprite.animation != &"arianna_light_punch":
+		return
+	if animated_sprite.frame == ARIANNA_LIGHT_PUNCH_ACTIVE_START_FRAME:
+		combat.enable_hitbox()
+	elif animated_sprite.frame > ARIANNA_LIGHT_PUNCH_ACTIVE_END_FRAME:
+		combat.disable_hitbox()
 
 
 func is_forward_input(horizontal_axis: float) -> bool:
