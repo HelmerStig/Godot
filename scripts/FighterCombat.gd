@@ -850,6 +850,10 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		current_attack.attack_id == &"medium_kick"
 		and not is_crouched_medium_kick
 		and not is_airborne_medium_kick
+		and not (
+			current_variant != null
+			and current_variant.variant_id in [&"arianna_standing", &"arianna_low"]
+		)
 	):
 		effective_damage = int(current_attack.damage / 2)
 		effective_hit_height = (

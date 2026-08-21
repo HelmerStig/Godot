@@ -44,7 +44,7 @@ const AIRBORNE := [
 ]
 const HEAVY := [
 	&"heavy_punch", &"crouched_power_punch", &"heavy_kick", &"arianna_low_medium_punch",
-	&"arianna_strong_punch",
+	&"arianna_strong_punch", &"arianna_strong_kick",
 ]
 const MEDIUM := [
 	&"medium_open_hand_slap", &"crouched_medium_punch", &"crouched_medium_punch_crouched",

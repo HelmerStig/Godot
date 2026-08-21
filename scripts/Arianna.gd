@@ -158,6 +158,27 @@ const ARIANNA_MEDIUM_KICK_ACTIVE_START_FRAME := 17
 const ARIANNA_MEDIUM_KICK_ACTIVE_END_FRAME := 20
 const ARIANNA_MEDIUM_KICK_HITBOX_SIZE := Vector2(210.0, 55.0)
 const ARIANNA_MEDIUM_KICK_HITBOX_POSITION := Vector2(110.0, -155.0)
+const ARIANNA_LOW_MEDIUM_KICK_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/medium-kick/medium_kick_low.png"
+)
+const ARIANNA_LOW_MEDIUM_KICK_COLUMNS := 7
+const ARIANNA_LOW_MEDIUM_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_LOW_MEDIUM_KICK_SOURCE_START := 7
+const ARIANNA_LOW_MEDIUM_KICK_SOURCE_END := 20
+const ARIANNA_LOW_MEDIUM_KICK_ACTIVE_START_FRAME := 10
+const ARIANNA_LOW_MEDIUM_KICK_ACTIVE_END_FRAME := 13
+const ARIANNA_LOW_MEDIUM_KICK_HITBOX_SIZE := Vector2(140.0, 45.0)
+const ARIANNA_LOW_MEDIUM_KICK_HITBOX_POSITION := Vector2(115.0, -80.0)
+const ARIANNA_STRONG_KICK_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/strong-kick/strong_kick.png"
+)
+const ARIANNA_STRONG_KICK_SOURCE_FRAME_COUNT := 64
+const ARIANNA_STRONG_KICK_COLUMNS := 8
+const ARIANNA_STRONG_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_STRONG_KICK_ACTIVE_START_FRAME := 24
+const ARIANNA_STRONG_KICK_ACTIVE_END_FRAME := 30
+const ARIANNA_STRONG_KICK_HITBOX_SIZE := Vector2(220.0, 70.0)
+const ARIANNA_STRONG_KICK_HITBOX_POSITION := Vector2(115.0, -150.0)
 const ARIANNA_JUMP_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/jump.png"
 )
@@ -179,6 +200,8 @@ var crouched_strong_punch_active := false
 var light_kick_active := false
 var low_light_kick_active := false
 var medium_kick_active := false
+var low_medium_kick_active := false
+var strong_kick_active := false
 var jump_facing_locked := false
 var jump_rotation_finished := false
 var jump_started_left_of_opponent := true
@@ -205,6 +228,8 @@ func _ready() -> void:
 	configure_light_kick_frames()
 	configure_low_light_kick_frames()
 	configure_medium_kick_frames()
+	configure_low_medium_kick_frames()
+	configure_strong_kick_frames()
 	_activate_idle()
 	call_deferred("_activate_idle")
 
@@ -252,6 +277,7 @@ func _physics_process(_delta: float) -> void:
 		or crouched_strong_punch_active
 		or light_kick_active
 		or medium_kick_active
+		or strong_kick_active
 	):
 		velocity = Vector2.ZERO
 		current_state = State.ATTACKING
@@ -260,6 +286,11 @@ func _physics_process(_delta: float) -> void:
 		update_facing_direction()
 		update_ground_shadow()
 		return
+	if controls_enabled and can_move and input_buffer != null and is_on_floor():
+		var strong_kick_direction := input_buffer.consume_attack(&"heavy_kick")
+		if strong_kick_direction != FighterInputBuffer.NO_DIRECTION:
+			_start_strong_kick()
+			return
 	if (
 		controls_enabled
 		and can_move
@@ -269,7 +300,10 @@ func _physics_process(_delta: float) -> void:
 	):
 		var medium_kick_direction := input_buffer.consume_attack(&"medium_kick")
 		if medium_kick_direction != FighterInputBuffer.NO_DIRECTION:
-			_start_medium_kick()
+			if input_buffer.is_down_held() or medium_kick_direction == FighterInputBuffer.Direction.DOWN:
+				_start_low_medium_kick()
+			else:
+				_start_medium_kick()
 			return
 	if (
 		controls_enabled
@@ -955,6 +989,50 @@ func _make_medium_kick_frame(source_index: int) -> AtlasTexture:
 	return atlas_frame
 
 
+func configure_low_medium_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	for animation_name in [&"arianna_low_medium_kick", &"arianna_low_medium_kick_recovery"]:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(ARIANNA_LOW_MEDIUM_KICK_SOURCE_START, ARIANNA_LOW_MEDIUM_KICK_SOURCE_END + 1):
+		frames.add_frame(&"arianna_low_medium_kick", _make_low_medium_kick_frame(source_index))
+	for source_index in range(ARIANNA_LOW_MEDIUM_KICK_SOURCE_END - 1, ARIANNA_LOW_MEDIUM_KICK_SOURCE_START - 1, -1):
+		frames.add_frame(&"arianna_low_medium_kick_recovery", _make_low_medium_kick_frame(source_index))
+
+
+func _make_low_medium_kick_frame(source_index: int) -> AtlasTexture:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_LOW_MEDIUM_KICK_SHEET
+	atlas_frame.region = Rect2(Vector2(
+		float(source_index % ARIANNA_LOW_MEDIUM_KICK_COLUMNS),
+		float(source_index / ARIANNA_LOW_MEDIUM_KICK_COLUMNS)
+	) * ARIANNA_LOW_MEDIUM_KICK_CELL_SIZE, ARIANNA_LOW_MEDIUM_KICK_CELL_SIZE)
+	return atlas_frame
+
+
+func configure_strong_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"arianna_strong_kick"):
+		frames.remove_animation(&"arianna_strong_kick")
+	frames.add_animation(&"arianna_strong_kick")
+	frames.set_animation_speed(&"arianna_strong_kick", 48.0)
+	frames.set_animation_loop(&"arianna_strong_kick", false)
+	for source_index in range(ARIANNA_STRONG_KICK_SOURCE_FRAME_COUNT):
+		var source_frame := source_index + 1
+		if source_frame in range(13, 25) or source_frame in range(44, 53):
+			continue
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = ARIANNA_STRONG_KICK_SHEET
+		atlas_frame.region = Rect2(Vector2(
+			float(source_index % ARIANNA_STRONG_KICK_COLUMNS),
+			float(source_index / ARIANNA_STRONG_KICK_COLUMNS)
+		) * ARIANNA_STRONG_KICK_CELL_SIZE, ARIANNA_STRONG_KICK_CELL_SIZE)
+		frames.add_frame(&"arianna_strong_kick", atlas_frame)
+
+
 func configure_jump_frames() -> void:
 	var frames := animated_sprite.sprite_frames
 	if frames.has_animation(&"jump"):
@@ -1408,6 +1486,67 @@ func _resolve_medium_kick_overlap(attack_generation: int) -> void:
 		combat._apply_hit_to_area(area)
 
 
+func _start_low_medium_kick() -> void:
+	var attack := character_data.get_attack(&"medium_kick")
+	if attack == null:
+		return
+	medium_kick_active = true
+	low_medium_kick_active = true
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.current_attack = attack
+	var low_variant := AttackVariantData.new()
+	low_variant.variant_id = &"arianna_low"
+	low_variant.animation_name = &"arianna_low_medium_kick"
+	low_variant.hit_height = AttackData.HitHeight.LOW
+	combat.current_variant = low_variant
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_LOW_MEDIUM_KICK_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_LOW_MEDIUM_KICK_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_low_medium_kick")
+
+
+func _resolve_low_medium_kick_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if attack_generation != combat.action_generation or not low_medium_kick_active or not combat.is_attacking:
+		return
+	for area in combat.hitbox.get_overlapping_areas():
+		combat._apply_hit_to_area(area)
+
+
+func _start_strong_kick() -> void:
+	var attack := character_data.get_attack(&"heavy_kick")
+	if attack == null:
+		return
+	strong_kick_active = true
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.current_attack = attack
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_STRONG_KICK_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_STRONG_KICK_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_strong_kick")
+
+
+func _resolve_strong_kick_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if attack_generation != combat.action_generation or not strong_kick_active or not combat.is_attacking:
+		return
+	for area in combat.hitbox.get_overlapping_areas():
+		combat._apply_hit_to_area(area)
+
+
 func _resolve_crouched_strong_punch_overlap(attack_generation: int) -> void:
 	await get_tree().physics_frame
 	if (
@@ -1546,6 +1685,33 @@ func _on_animation_finished() -> void:
 		restore_default_render_order()
 		medium_kick_active = false
 		change_state(State.IDLE)
+	elif animated_sprite.animation == &"arianna_low_medium_kick":
+		combat.disable_hitbox()
+		animated_sprite.play(&"arianna_low_medium_kick_recovery")
+	elif animated_sprite.animation == &"arianna_low_medium_kick_recovery":
+		combat.disable_hitbox()
+		combat.is_attacking = false
+		combat.current_attack = null
+		combat.current_variant = null
+		combat.hit_targets.clear()
+		restore_default_render_order()
+		medium_kick_active = false
+		low_medium_kick_active = false
+		if input_buffer != null and input_buffer.is_down_held():
+			change_state(State.CROUCHING)
+			animated_sprite.frame = ARIANNA_CROUCH_FRAME_COUNT - 1
+			animated_sprite.pause()
+		else:
+			change_state(State.IDLE)
+	elif animated_sprite.animation == &"arianna_strong_kick":
+		combat.disable_hitbox()
+		combat.is_attacking = false
+		combat.current_attack = null
+		combat.current_variant = null
+		combat.hit_targets.clear()
+		restore_default_render_order()
+		strong_kick_active = false
+		change_state(State.IDLE)
 	elif animated_sprite.animation == &"jump":
 		jump_rotation_finished = true
 		_update_jump_facing()
@@ -1573,6 +1739,20 @@ func _on_animation_frame_changed() -> void:
 		jump_rotation_finished = true
 		_update_jump_facing()
 	if animated_sprite.animation != &"arianna_light_punch":
+		if animated_sprite.animation == &"arianna_strong_kick":
+			if animated_sprite.frame == ARIANNA_STRONG_KICK_ACTIVE_START_FRAME:
+				combat.enable_hitbox()
+				_resolve_strong_kick_overlap(combat.action_generation)
+			elif animated_sprite.frame > ARIANNA_STRONG_KICK_ACTIVE_END_FRAME:
+				combat.disable_hitbox()
+			return
+		if animated_sprite.animation == &"arianna_low_medium_kick":
+			if animated_sprite.frame == ARIANNA_LOW_MEDIUM_KICK_ACTIVE_START_FRAME:
+				combat.enable_hitbox()
+				_resolve_low_medium_kick_overlap(combat.action_generation)
+			elif animated_sprite.frame > ARIANNA_LOW_MEDIUM_KICK_ACTIVE_END_FRAME:
+				combat.disable_hitbox()
+			return
 		if animated_sprite.animation == &"arianna_medium_kick":
 			if animated_sprite.frame == ARIANNA_MEDIUM_KICK_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
