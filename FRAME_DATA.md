@@ -51,6 +51,9 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Arianna pugno medio basso | down + medium punch | `arianna_low_medium_punch` → `arianna_low_medium_punch_recovery` | 24 | 9 | 3 | 11 | 20 (1-12, poi 11-4) | 10 | mid | no |
 | Arianna pugno forte | standing strong punch | `arianna_strong_punch` | 48 | 22 | 6 | 27 | 49 (1-49) | 15 | high | no |
 | Arianna pugno forte basso | down + strong punch | `arianna_crouched_strong_punch` | 48 | 7 | 14 | 20 | 35 (1-21, poi 36-49) | 15 | high | no |
+| Arianna calcio leggero | standing light kick | `arianna_light_kick` → `arianna_light_kick_recovery` | 48 | 9 | 4 | 12 | 25 (11-23, poi 22-11) | 8 | mid | no |
+| Arianna calcio leggero basso | down + light kick | `arianna_low_light_kick` → `arianna_low_light_kick_recovery` | 60 | 17 | 4 | 20 | 41 (1-21, poi 20-1) | 8 | low | no |
+| Arianna calcio medio | standing medium kick | `arianna_medium_kick` → `arianna_medium_kick_recovery` | 48 | 17 | 4 | 20 | 41 (8-28, poi 27-8) | 12 | mid | no |
 | Testata da presa | grab follow-up | `grab_headbutt` | 25 | 16 | 1 | 8 | 25 | 15 | high/unblockable | no |
 | Vittima afferrata | reaction | `grabbed` | 24 | — | — | — | 32 (sorgente 10–25–10) | 0 | reaction | no |
 | Colpito in salto | airborne reaction | `hurted_in_jump` | 24 | — | — | — | 25 + 1 s hold | 0 | knockdown | sì |

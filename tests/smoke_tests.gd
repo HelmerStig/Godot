@@ -467,6 +467,76 @@ func _test_arianna_idle() -> void:
 		and not arianna.get_attack_motion_profile(&"arianna_crouched_strong_punch").is_empty(),
 		"Arianna strong punch basso salta i frame sorgente 22-35 e usa la scia sul doppio pugno"
 	)
+	var light_kick_first := frames.get_frame_texture(&"arianna_light_kick", 0) as AtlasTexture
+	var light_kick_last := frames.get_frame_texture(&"arianna_light_kick", 12) as AtlasTexture
+	var light_kick_recovery_first := (
+		frames.get_frame_texture(&"arianna_light_kick_recovery", 0) as AtlasTexture
+	)
+	var light_kick_recovery_last := (
+		frames.get_frame_texture(&"arianna_light_kick_recovery", 11) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_light_kick") == 13
+		and frames.get_frame_count(&"arianna_light_kick_recovery") == 12
+		and is_equal_approx(frames.get_animation_speed(&"arianna_light_kick"), 48.0)
+		and is_equal_approx(frames.get_animation_speed(&"arianna_light_kick_recovery"), 48.0)
+		and not frames.get_animation_loop(&"arianna_light_kick")
+		and not frames.get_animation_loop(&"arianna_light_kick_recovery")
+		and light_kick_first.atlas == Arianna.ARIANNA_LIGHT_KICK_SHEET
+		and light_kick_first.region == Rect2(0.0, 1024.0, 512.0, 512.0)
+		and light_kick_last.region == Rect2(1024.0, 2048.0, 512.0, 512.0)
+		and light_kick_recovery_first.region == Rect2(512.0, 2048.0, 512.0, 512.0)
+		and light_kick_recovery_last.region == light_kick_first.region,
+		"Arianna light kick usa i sorgente 11-23 e recovery 22-11 a 48 FPS"
+	)
+	var low_light_kick_first := (
+		frames.get_frame_texture(&"arianna_low_light_kick", 0) as AtlasTexture
+	)
+	var low_light_kick_last := (
+		frames.get_frame_texture(&"arianna_low_light_kick", 20) as AtlasTexture
+	)
+	var low_light_kick_recovery_first := (
+		frames.get_frame_texture(&"arianna_low_light_kick_recovery", 0) as AtlasTexture
+	)
+	var low_light_kick_recovery_last := (
+		frames.get_frame_texture(&"arianna_low_light_kick_recovery", 19) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_low_light_kick") == 21
+		and frames.get_frame_count(&"arianna_low_light_kick_recovery") == 20
+		and is_equal_approx(frames.get_animation_speed(&"arianna_low_light_kick"), 60.0)
+		and is_equal_approx(frames.get_animation_speed(&"arianna_low_light_kick_recovery"), 60.0)
+		and not frames.get_animation_loop(&"arianna_low_light_kick")
+		and not frames.get_animation_loop(&"arianna_low_light_kick_recovery")
+		and low_light_kick_first.atlas == Arianna.ARIANNA_LOW_LIGHT_KICK_SHEET
+		and low_light_kick_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and low_light_kick_last.region == Rect2(3072.0, 1024.0, 512.0, 512.0)
+		and low_light_kick_recovery_first.region == Rect2(2560.0, 1024.0, 512.0, 512.0)
+		and low_light_kick_recovery_last.region == low_light_kick_first.region,
+		"Arianna light kick basso usa 1-21 e recovery 20-1 a 60 FPS"
+	)
+	var medium_kick_first := frames.get_frame_texture(&"arianna_medium_kick", 0) as AtlasTexture
+	var medium_kick_last := frames.get_frame_texture(&"arianna_medium_kick", 20) as AtlasTexture
+	var medium_kick_recovery_first := (
+		frames.get_frame_texture(&"arianna_medium_kick_recovery", 0) as AtlasTexture
+	)
+	var medium_kick_recovery_last := (
+		frames.get_frame_texture(&"arianna_medium_kick_recovery", 19) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_medium_kick") == 21
+		and frames.get_frame_count(&"arianna_medium_kick_recovery") == 20
+		and is_equal_approx(frames.get_animation_speed(&"arianna_medium_kick"), 48.0)
+		and is_equal_approx(frames.get_animation_speed(&"arianna_medium_kick_recovery"), 48.0)
+		and not frames.get_animation_loop(&"arianna_medium_kick")
+		and not frames.get_animation_loop(&"arianna_medium_kick_recovery")
+		and medium_kick_first.atlas == Arianna.ARIANNA_MEDIUM_KICK_SHEET
+		and medium_kick_first.region == Rect2(0.0, 512.0, 512.0, 512.0)
+		and medium_kick_last.region == Rect2(3072.0, 1536.0, 512.0, 512.0)
+		and medium_kick_recovery_first.region == Rect2(2560.0, 1536.0, 512.0, 512.0)
+		and medium_kick_recovery_last.region == medium_kick_first.region,
+		"Arianna medium kick usa i sorgente 8-28 e recovery 27-8 a 48 FPS"
+	)
 	var jump_first := frames.get_frame_texture(&"jump", 0) as AtlasTexture
 	var jump_last := frames.get_frame_texture(&"jump", 63) as AtlasTexture
 	_expect(
@@ -909,6 +979,96 @@ func _test_arianna_idle() -> void:
 		and live_arianna.current_state == Mangler.State.CROUCHING
 		and not live_arianna.crouched_strong_punch_active,
 		"lo strong punch basso infligge danno HIGH, genera la scia e torna in crouch"
+	)
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.input_buffer.clear()
+	live_arianna.change_state(Mangler.State.IDLE)
+	var health_before_light_kick := live_arianna.opponent.combat.current_health
+	live_arianna.input_buffer.record_input_snapshot(0, 0, [&"light_kick"], true)
+	live_arianna._physics_process(0.0)
+	var light_kick_shape := live_arianna.combat.hitbox_shape.shape as RectangleShape2D
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_LIGHT_KICK_ACTIVE_START_FRAME
+	live_arianna._on_animation_frame_changed()
+	await physics_frame
+	await physics_frame
+	var live_light_kick_hit := (
+		live_arianna.opponent.combat.current_health
+			== health_before_light_kick - live_arianna.character_data.get_attack(&"light_kick").damage
+		and live_arianna.opponent.current_state == Mangler.State.HIT
+		and live_arianna.opponent.animated_sprite.animation == &"hurt_mid"
+		and live_arianna.combat.get_effective_hit_height(
+			live_arianna.character_data.get_attack(&"light_kick")
+		) == AttackData.HitHeight.MID
+		and light_kick_shape.size == Vector2(165.0, 55.0)
+	)
+	live_arianna._on_animation_finished()
+	live_arianna._on_animation_finished()
+	_expect(
+		live_light_kick_hit
+		and live_arianna.current_state == Mangler.State.IDLE
+		and not live_arianna.light_kick_active,
+		"il light kick infligge danno MID, genera hurt_mid e conclude in idle"
+	)
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.input_buffer.clear()
+	live_arianna.change_state(Mangler.State.IDLE)
+	var health_before_low_light_kick := live_arianna.opponent.combat.current_health
+	live_arianna.input_buffer.record_input_snapshot(0, 1, [&"light_kick"], true)
+	live_arianna._physics_process(0.0)
+	var low_light_kick_shape := live_arianna.combat.hitbox_shape.shape as RectangleShape2D
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_LOW_LIGHT_KICK_ACTIVE_START_FRAME
+	live_arianna._on_animation_frame_changed()
+	await physics_frame
+	await physics_frame
+	var live_low_light_kick_hit := (
+		live_arianna.opponent.combat.current_health
+			== health_before_low_light_kick - live_arianna.character_data.get_attack(&"light_kick").damage
+		and live_arianna.opponent.current_state == Mangler.State.HIT
+		and live_arianna.opponent.animated_sprite.animation == &"hurt_low"
+		and live_arianna.combat.get_effective_hit_height(
+			live_arianna.character_data.get_attack(&"light_kick")
+		) == AttackData.HitHeight.LOW
+		and low_light_kick_shape.size == Arianna.ARIANNA_LOW_LIGHT_KICK_HITBOX_SIZE
+	)
+	live_arianna._on_animation_finished()
+	live_arianna._on_animation_finished()
+	_expect(
+		live_low_light_kick_hit
+		and live_arianna.current_state == Mangler.State.CROUCHING
+		and not live_arianna.low_light_kick_active,
+		"il light kick basso genera hurt_low e mantenendo giù conclude in crouch"
+	)
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.input_buffer.clear()
+	live_arianna.change_state(Mangler.State.IDLE)
+	var health_before_medium_kick := live_arianna.opponent.combat.current_health
+	live_arianna.input_buffer.record_input_snapshot(0, 0, [&"medium_kick"], true)
+	live_arianna._physics_process(0.0)
+	var medium_kick_shape := live_arianna.combat.hitbox_shape.shape as RectangleShape2D
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_MEDIUM_KICK_ACTIVE_START_FRAME
+	live_arianna._on_animation_frame_changed()
+	await physics_frame
+	await physics_frame
+	var live_medium_kick_hit := (
+		live_arianna.opponent.combat.current_health
+			== health_before_medium_kick - live_arianna.character_data.get_attack(&"medium_kick").damage
+		and live_arianna.opponent.current_state == Mangler.State.HIT
+		and live_arianna.opponent.animated_sprite.animation == &"hurt_mid"
+		and live_arianna.combat.get_effective_hit_height(
+			live_arianna.character_data.get_attack(&"medium_kick")
+		) == AttackData.HitHeight.MID
+		and medium_kick_shape.size == Arianna.ARIANNA_MEDIUM_KICK_HITBOX_SIZE
+	)
+	live_arianna._on_animation_finished()
+	live_arianna._on_animation_finished()
+	_expect(
+		live_medium_kick_hit
+		and live_arianna.current_state == Mangler.State.IDLE
+		and not live_arianna.medium_kick_active,
+		"il medium kick genera hurt_mid e conclude in idle"
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)

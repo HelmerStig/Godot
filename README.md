@@ -199,6 +199,9 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe. Nell'are
 - Il pugno forte di Arianna usa tutti i 49 frame della griglia 7×7 di `strong-punch/strong-punch.png`, una volta a 48 FPS, quindi torna in idle. La hitbox alta è attiva sui frame visibili 23–28 e genera `hurt_high` oppure `block_high`; durante il caricamento e il colpo usa lo stesso profilo di scia Godot delle mosse forti di Mangler.
 - Giù + pugno forte usa `strong-punch/strong-punch-crouched.png` a 48 FPS, saltando i frame sorgente 22–35: la sequenza risultante riproduce 1→21 e poi 36→49. Hitbox e scia strong sono attive durante il doppio pugno (posizioni animazione 8–21); il colpo è `HIGH`, quindi genera `hurt_high` o `block_high`. Mantenendo giù, alla fine torna direttamente alla crouch pose.
 - L'esplosione rossa del light punch viene generata soltanto su un colpo realmente entrato: se il bersaglio sta parando correttamente, resta visibile solo la reazione di guardia senza effetto rosso.
+- Il calcio leggero in piedi di Arianna usa i frame sorgente 11→23 e torna 22→11 a 48 FPS prima dell'idle. La hitbox segue la gamba distesa e il colpo è medio: `hurt_mid` se entra, `block_mid` se viene parato.
+- Con giù + calcio leggero Arianna usa il nuovo `light_kick_low.png` 7×7: frame 1→21 e ritorno 20→1 a 60 FPS. Il colpo è basso (`hurt_low`/`block_low`) e mantenendo giù termina nella crouch pose.
+- Il calcio medio in piedi usa `medium_kick.png`, sorgenti 8→28 e ritorno 27→8 a 48 FPS. La hitbox segue la gamba alta e genera `hurt_mid` oppure `block_mid`.
 - Il follow-up con la vecchia testata separata resta configurato, ma non viene avviato automaticamente durante questa anteprima.
 - Anche la testata usa livelli sincronizzati: `testata-rear.png` dietro alla vittima e `testata-front.png` davanti.
 - Durante l'affondo della testata, i livelli `rear` e `front` generano una breve scia dorata sincronizzata.
