@@ -190,12 +190,14 @@ const ARIANNA_LOW_STRONG_KICK_ACTIVE_END_FRAME := 34
 const ARIANNA_LOW_STRONG_KICK_HITBOX_SIZE := Vector2(250.0, 60.0)
 const ARIANNA_LOW_STRONG_KICK_HITBOX_POSITION := Vector2(125.0, -65.0)
 const ARIANNA_JUMP_SHEET := preload(
-	"res://assets/sprites/characters/arianna/basic-moves/jump.png"
+	"res://assets/sprites/characters/arianna/basic-moves/custom_jump.png"
 )
-const ARIANNA_JUMP_FRAME_COUNT := 64
-const ARIANNA_JUMP_COLUMNS := 8
+const ARIANNA_JUMP_FRAME_COUNT := 49
+const ARIANNA_JUMP_COLUMNS := 7
 const ARIANNA_JUMP_CELL_SIZE := Vector2(512.0, 512.0)
-const ARIANNA_JUMP_GRAVITY := 1400.0
+const ARIANNA_JUMP_FPS := 32.0
+const ARIANNA_JUMP_TAKEOFF_FRAME := 9 # Zero-based: fotogramma visibile 6.
+const ARIANNA_JUMP_GRAVITY := 1800.0
 const ARIANNA_AIR_COLLISION_SIZE := Vector2(120.0, 90.0)
 const ARIANNA_AIR_COLLISION_POSITION := Vector2(0.0, -90.0)
 const ARIANNA_SPRITE_SCALE := Vector2(0.85, 0.85)
@@ -215,6 +217,7 @@ var strong_kick_active := false
 var low_strong_kick_active := false
 var jump_facing_locked := false
 var jump_rotation_finished := false
+var jump_takeoff_armed := false
 var jump_started_left_of_opponent := true
 var run_direction := 1.0
 var back_jump_active := false
@@ -1070,7 +1073,7 @@ func configure_jump_frames() -> void:
 	if frames.has_animation(&"jump"):
 		frames.remove_animation(&"jump")
 	frames.add_animation(&"jump")
-	frames.set_animation_speed(&"jump", 48.0)
+	frames.set_animation_speed(&"jump", ARIANNA_JUMP_FPS)
 	frames.set_animation_loop(&"jump", false)
 	for source_index in range(ARIANNA_JUMP_FRAME_COUNT):
 		var atlas_frame := AtlasTexture.new()
@@ -1086,7 +1089,11 @@ func configure_jump_frames() -> void:
 
 
 func begin_jump_ascent() -> void:
-	if current_state != State.JUMP_STARTUP:
+	if (
+		current_state != State.JUMP_STARTUP
+		or not jump_takeoff_armed
+		or animated_sprite.frame < ARIANNA_JUMP_TAKEOFF_FRAME
+	):
 		return
 	velocity = Vector2(
 		pending_jump_direction * character_data.air_speed * pending_jump_horizontal_multiplier,
@@ -1098,9 +1105,25 @@ func begin_jump_ascent() -> void:
 func start_jump(horizontal_direction: float) -> void:
 	jump_facing_locked = true
 	jump_rotation_finished = false
+	jump_takeoff_armed = false
 	if is_instance_valid(opponent):
 		jump_started_left_of_opponent = global_position.x < opponent.global_position.x
 	super.start_jump(horizontal_direction)
+	animated_sprite.frame = 0
+	jump_takeoff_armed = true
+
+
+func update_animation() -> void:
+	if (
+		current_state == State.JUMPING
+		and animated_sprite.animation == &"jump"
+		and (
+			animated_sprite.frame == ARIANNA_JUMP_FRAME_COUNT - 1
+			and not animated_sprite.is_playing()
+		)
+	):
+		return
+	super.update_animation()
 
 
 func _start_run() -> void:
@@ -1810,6 +1833,13 @@ func _on_animation_finished() -> void:
 
 
 func _on_animation_frame_changed() -> void:
+	if (
+		current_state == State.JUMP_STARTUP
+		and jump_takeoff_armed
+		and animated_sprite.animation == &"jump"
+		and animated_sprite.frame >= ARIANNA_JUMP_TAKEOFF_FRAME
+	):
+		begin_jump_ascent()
 	super._on_animation_frame_changed()
 	if (
 		animated_sprite.animation == &"jump"

@@ -595,15 +595,15 @@ func _test_arianna_idle() -> void:
 		"Arianna strong kick basso usa l'effetto movimento delle mosse potenti"
 	)
 	var jump_first := frames.get_frame_texture(&"jump", 0) as AtlasTexture
-	var jump_last := frames.get_frame_texture(&"jump", 63) as AtlasTexture
+	var jump_last := frames.get_frame_texture(&"jump", 48) as AtlasTexture
 	_expect(
-		frames.get_frame_count(&"jump") == 64
-		and is_equal_approx(frames.get_animation_speed(&"jump"), 48.0)
+		frames.get_frame_count(&"jump") == 49
+		and is_equal_approx(frames.get_animation_speed(&"jump"), 24.0)
 		and not frames.get_animation_loop(&"jump")
 		and jump_first.atlas == Arianna.ARIANNA_JUMP_SHEET
 		and jump_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
-		and jump_last.region == Rect2(3584.0, 3584.0, 512.0, 512.0),
-		"Arianna jump usa tutti i 64 frame della griglia 8x8 a 48 FPS"
+		and jump_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
+		"Arianna jump usa tutti i 49 frame della griglia 7x7 custom_jump a 24 FPS"
 	)
 	arianna.start_jump(1.0)
 	var jump_prepared := (
@@ -611,7 +611,7 @@ func _test_arianna_idle() -> void:
 		and arianna.animated_sprite.animation == &"jump"
 		and arianna.velocity == Vector2.ZERO
 	)
-	arianna.animated_sprite.frame = Mangler.JUMP_TAKEOFF_FRAME
+	arianna.animated_sprite.frame = Arianna.ARIANNA_JUMP_TAKEOFF_FRAME
 	arianna._on_animation_frame_changed()
 	arianna.update_physical_collision()
 	arianna.update_collision_profile()
@@ -619,6 +619,7 @@ func _test_arianna_idle() -> void:
 	_expect(
 		jump_prepared
 		and arianna.current_state == Mangler.State.JUMPING
+		and Arianna.ARIANNA_JUMP_TAKEOFF_FRAME == 5
 		and arianna.velocity.x > 0.0
 		and is_equal_approx(arianna.velocity.y, arianna.character_data.jump_velocity)
 		and air_collision.size == Arianna.ARIANNA_AIR_COLLISION_SIZE
