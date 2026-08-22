@@ -6,7 +6,7 @@ class_name ManglerVisualConfig
 const PROFILES := {
 	&"arianna_crouched_strong_punch": {
 		"start_ratio": 0.20, "end_ratio": 0.59, "tint": Color(1.0, 0.78, 0.55),
-		"alpha": 0.3, "lifetime": 0.16, "offset": 10.0, "stretch": 1.06,
+		"alpha": 0.24, "lifetime": 0.13, "offset": 7.0, "stretch": 1.035,
 	},
 	&"grab_headbutt": {
 		"start_ratio": 0.42, "end_ratio": 0.75, "tint": Color(1.0, 0.78, 0.52),
@@ -30,11 +30,11 @@ const PROFILES := {
 	},
 	&"crouched_heavy_kick": {
 		"start_ratio": 0.12, "end_ratio": 0.63, "tint": Color(0.82, 0.9, 1.0),
-		"alpha": 0.28, "lifetime": 0.14, "offset": 8.0, "stretch": 1.04,
+		"alpha": 0.22, "lifetime": 0.12, "offset": 6.0, "stretch": 1.025,
 	},
 	&"jump_heavy_punch": {
 		"start_ratio": 0.10, "end_ratio": 0.90, "tint": Color(1.0, 0.72, 0.35),
-		"alpha": 0.40, "lifetime": 0.22, "offset": 14.0, "stretch": 1.12,
+		"alpha": 0.30, "lifetime": 0.17, "offset": 10.0, "stretch": 1.07,
 	},
 }
 
@@ -44,7 +44,7 @@ const AIRBORNE := [
 ]
 const HEAVY := [
 	&"heavy_punch", &"crouched_power_punch", &"heavy_kick", &"arianna_low_medium_punch",
-	&"arianna_strong_punch", &"arianna_strong_kick",
+	&"arianna_strong_punch", &"arianna_strong_kick", &"arianna_low_strong_kick",
 ]
 const MEDIUM := [
 	&"medium_open_hand_slap", &"crouched_medium_punch", &"crouched_medium_punch_crouched",
@@ -62,7 +62,7 @@ static func get_motion_profile(animation_name: StringName) -> Dictionary:
 	if animation_name in AIRBORNE:
 		return _profile(0.18, 0.78, Color(0.72, 0.88, 1.0), 0.24, 0.13, 7.0, 1.03)
 	if animation_name in HEAVY:
-		return _profile(0.28, 0.78, Color(1.0, 0.78, 0.55), 0.3, 0.16, 10.0, 1.06)
+		return _profile(0.28, 0.78, Color(1.0, 0.78, 0.55), 0.24, 0.13, 7.0, 1.035)
 	if animation_name in MEDIUM:
 		return _profile(0.24, 0.72, Color(0.86, 0.92, 1.0), 0.22, 0.12, 6.0, 1.025)
 	if animation_name in LIGHT:

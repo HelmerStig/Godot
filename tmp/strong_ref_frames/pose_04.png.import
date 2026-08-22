@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://oiupojs20e8u"
-path="res://.godot/imported/strong_kick.png-425608c8dac4d627fae79bd6b8212d5c.ctex"
+uid="uid://cmcbwcvn50tfj"
+path="res://.godot/imported/pose_04.png-7d60cd681f5e4a0d4dfa8e54b471b2d1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/arianna/basic-moves/strong-kick/strong_kick.png"
-dest_files=["res://.godot/imported/strong_kick.png-425608c8dac4d627fae79bd6b8212d5c.ctex"]
+source_file="res://tmp/strong_ref_frames/pose_04.png"
+dest_files=["res://.godot/imported/pose_04.png-7d60cd681f5e4a0d4dfa8e54b471b2d1.ctex"]
 
 [params]
 

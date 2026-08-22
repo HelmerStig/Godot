@@ -560,25 +560,39 @@ func _test_arianna_idle() -> void:
 		Arianna.ARIANNA_LOW_MEDIUM_KICK_HITBOX_SIZE == Vector2(140.0, 45.0),
 		"Arianna medium kick basso usa la hitbox accorciata di 80 px"
 	)
-	var strong_kick_before_first_skip := frames.get_frame_texture(&"arianna_strong_kick", 11) as AtlasTexture
-	var strong_kick_after_first_skip := frames.get_frame_texture(&"arianna_strong_kick", 12) as AtlasTexture
-	var strong_kick_before_second_skip := frames.get_frame_texture(&"arianna_strong_kick", 30) as AtlasTexture
-	var strong_kick_after_second_skip := frames.get_frame_texture(&"arianna_strong_kick", 31) as AtlasTexture
-	var strong_kick_last := frames.get_frame_texture(&"arianna_strong_kick", 42) as AtlasTexture
+	var strong_kick_first := frames.get_frame_texture(&"arianna_strong_kick", 0) as AtlasTexture
+	var strong_kick_last := frames.get_frame_texture(&"arianna_strong_kick", 35) as AtlasTexture
 	_expect(
-		frames.get_frame_count(&"arianna_strong_kick") == 43
-		and is_equal_approx(frames.get_animation_speed(&"arianna_strong_kick"), 48.0)
+		frames.get_frame_count(&"arianna_strong_kick") == 36
+		and is_equal_approx(frames.get_animation_speed(&"arianna_strong_kick"), 32.0)
 		and not frames.get_animation_loop(&"arianna_strong_kick")
-		and strong_kick_before_first_skip.region == Rect2(1536.0, 512.0, 512.0, 512.0)
-		and strong_kick_after_first_skip.region == Rect2(0.0, 1536.0, 512.0, 512.0)
-		and strong_kick_before_second_skip.region == Rect2(1024.0, 2560.0, 512.0, 512.0)
-		and strong_kick_after_second_skip.region == Rect2(2048.0, 3072.0, 512.0, 512.0)
-		and strong_kick_last.region == Rect2(3584.0, 3584.0, 512.0, 512.0),
-		"Arianna strong kick salta i sorgente 13-24 e 44-52 a 48 FPS"
+		and strong_kick_first.atlas == Arianna.ARIANNA_STRONG_KICK_SHEET
+		and strong_kick_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and strong_kick_last.region == Rect2(2560.0, 2560.0, 512.0, 512.0),
+		"Arianna strong kick usa tutti i 36 fotogrammi a 32 FPS"
 	)
 	_expect(
 		not arianna.get_attack_motion_profile(&"arianna_strong_kick").is_empty(),
 		"Arianna strong kick usa l'effetto movimento delle mosse potenti"
+	)
+	var low_strong_kick_first := (
+		frames.get_frame_texture(&"arianna_low_strong_kick", 0) as AtlasTexture
+	)
+	var low_strong_kick_last := (
+		frames.get_frame_texture(&"arianna_low_strong_kick", 47) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_low_strong_kick") == 48
+		and is_equal_approx(frames.get_animation_speed(&"arianna_low_strong_kick"), 48.0)
+		and not frames.get_animation_loop(&"arianna_low_strong_kick")
+		and low_strong_kick_first.atlas == Arianna.ARIANNA_LOW_STRONG_KICK_SHEET
+		and low_strong_kick_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and low_strong_kick_last.region == Rect2(3584.0, 2560.0, 512.0, 512.0),
+		"Arianna strong kick basso usa tutti i 48 frame a 48 FPS"
+	)
+	_expect(
+		not arianna.get_attack_motion_profile(&"arianna_low_strong_kick").is_empty(),
+		"Arianna strong kick basso usa l'effetto movimento delle mosse potenti"
 	)
 	var jump_first := frames.get_frame_texture(&"jump", 0) as AtlasTexture
 	var jump_last := frames.get_frame_texture(&"jump", 63) as AtlasTexture
@@ -1142,6 +1156,38 @@ func _test_arianna_idle() -> void:
 		and not live_arianna.low_medium_kick_active,
 		"il medium kick basso genera hurt_low, usa la hitbox ridotta e torna in crouch"
 	)
+	live_arianna.opponent.combat.reset()
+	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.input_buffer.clear()
+	live_arianna.change_state(Mangler.State.IDLE)
+	live_arianna._start_strong_kick()
+	_expect(
+		live_arianna.animated_sprite.animation == &"arianna_strong_kick"
+		and live_arianna.combat.current_variant != null
+		and live_arianna.combat.current_variant.hit_height == AttackData.HitHeight.HIGH,
+		"lo strong kick di Arianna genera hurt_high o block_high"
+	)
+	live_arianna._on_animation_finished()
+	live_arianna.input_buffer.clear()
+	live_arianna.input_buffer.record_input_snapshot(0, 1, [&"heavy_kick"], true)
+	live_arianna._physics_process(0.0)
+	var low_strong_kick_shape := live_arianna.combat.hitbox_shape.shape as RectangleShape2D
+	_expect(
+		live_arianna.animated_sprite.animation == &"arianna_low_strong_kick"
+		and live_arianna.low_strong_kick_active
+		and live_arianna.combat.current_variant != null
+		and live_arianna.combat.current_variant.hit_height == AttackData.HitHeight.LOW
+		and live_arianna.combat.current_variant.causes_knockdown
+		and low_strong_kick_shape.size == Arianna.ARIANNA_LOW_STRONG_KICK_HITBOX_SIZE,
+		"il strong kick basso usa hitbox LOW e provoca sweep knockdown"
+	)
+	live_arianna.animated_sprite.frame = Arianna.ARIANNA_LOW_STRONG_KICK_ACTIVE_START_FRAME
+	live_arianna._on_animation_frame_changed()
+	_expect(
+		not live_arianna.combat.hitbox_shape.disabled,
+		"lo strong kick basso attiva la hitbox durante l'estensione della gamba"
+	)
+	live_arianna._on_animation_finished()
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
 	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 400.0
