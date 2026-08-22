@@ -579,16 +579,16 @@ func _test_arianna_idle() -> void:
 		frames.get_frame_texture(&"arianna_low_strong_kick", 0) as AtlasTexture
 	)
 	var low_strong_kick_last := (
-		frames.get_frame_texture(&"arianna_low_strong_kick", 47) as AtlasTexture
+		frames.get_frame_texture(&"arianna_low_strong_kick", 48) as AtlasTexture
 	)
 	_expect(
-		frames.get_frame_count(&"arianna_low_strong_kick") == 48
+		frames.get_frame_count(&"arianna_low_strong_kick") == 49
 		and is_equal_approx(frames.get_animation_speed(&"arianna_low_strong_kick"), 48.0)
 		and not frames.get_animation_loop(&"arianna_low_strong_kick")
 		and low_strong_kick_first.atlas == Arianna.ARIANNA_LOW_STRONG_KICK_SHEET
 		and low_strong_kick_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
-		and low_strong_kick_last.region == Rect2(3584.0, 2560.0, 512.0, 512.0),
-		"Arianna strong kick basso usa tutti i 48 frame a 48 FPS"
+		and low_strong_kick_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
+		"Arianna strong kick basso usa tutti i 49 frame a 48 FPS"
 	)
 	_expect(
 		not arianna.get_attack_motion_profile(&"arianna_low_strong_kick").is_empty(),
