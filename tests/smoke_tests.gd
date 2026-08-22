@@ -598,12 +598,14 @@ func _test_arianna_idle() -> void:
 	var jump_last := frames.get_frame_texture(&"jump", 48) as AtlasTexture
 	_expect(
 		frames.get_frame_count(&"jump") == 49
-		and is_equal_approx(frames.get_animation_speed(&"jump"), 24.0)
+		and is_equal_approx(
+			frames.get_animation_speed(&"jump"), Arianna.ARIANNA_JUMP_FPS
+		)
 		and not frames.get_animation_loop(&"jump")
 		and jump_first.atlas == Arianna.ARIANNA_JUMP_SHEET
 		and jump_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
 		and jump_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
-		"Arianna jump usa tutti i 49 frame della griglia 7x7 custom_jump a 24 FPS"
+		"Arianna jump usa tutti i 49 frame custom_jump agli FPS dedicati"
 	)
 	arianna.start_jump(1.0)
 	var jump_prepared := (
@@ -619,14 +621,19 @@ func _test_arianna_idle() -> void:
 	_expect(
 		jump_prepared
 		and arianna.current_state == Mangler.State.JUMPING
-		and Arianna.ARIANNA_JUMP_TAKEOFF_FRAME == 5
 		and arianna.velocity.x > 0.0
 		and is_equal_approx(arianna.velocity.y, arianna.character_data.jump_velocity)
 		and air_collision.size == Arianna.ARIANNA_AIR_COLLISION_SIZE
 		and arianna.collision_shape.position == Arianna.ARIANNA_AIR_COLLISION_POSITION
+		and is_equal_approx(
+			Arianna.ARIANNA_AIR_COLLISION_POSITION.y
+				+ Arianna.ARIANNA_AIR_COLLISION_SIZE.y * 0.5,
+			Mangler.STANDING_COLLISION_POSITION.y
+				+ Mangler.STANDING_COLLISION_SIZE.y * 0.5
+		)
 		and arianna.collision_layer == 0
 		and arianna.collision_mask == Mangler.GROUND_COLLISION_LAYER,
-		"Arianna stacca al frame 6 conservando la direzione scelta"
+		"Arianna stacca al frame dedicato senza spostare il bordo inferiore della collisione"
 	)
 	arianna.input_buffer.record_input_snapshot(
 		0, 0, [&"light_punch"], arianna.is_facing_right

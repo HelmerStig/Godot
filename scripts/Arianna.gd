@@ -196,10 +196,12 @@ const ARIANNA_JUMP_FRAME_COUNT := 49
 const ARIANNA_JUMP_COLUMNS := 7
 const ARIANNA_JUMP_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_JUMP_FPS := 32.0
-const ARIANNA_JUMP_TAKEOFF_FRAME := 9 # Zero-based: fotogramma visibile 6.
+const ARIANNA_JUMP_TAKEOFF_FRAME := 9 # Zero-based: 9 = fotogramma visibile 10.
 const ARIANNA_JUMP_GRAVITY := 1800.0
 const ARIANNA_AIR_COLLISION_SIZE := Vector2(120.0, 90.0)
-const ARIANNA_AIR_COLLISION_POSITION := Vector2(0.0, -90.0)
+# Il bordo inferiore resta a y=0 come nella collisione standing: cambiando
+# profilo a stacco/atterraggio l'origine del fighter non scende né risale.
+const ARIANNA_AIR_COLLISION_POSITION := Vector2(0.0, -45.0)
 const ARIANNA_SPRITE_SCALE := Vector2(0.85, 0.85)
 const ARIANNA_SPRITE_POSITION := Vector2(0.0, -120.0)
 
@@ -1235,7 +1237,7 @@ func update_collision_profile() -> void:
 	# `is_on_floor()` è false nei primissimi frame di caricamento, prima che
 	# CharacterBody2D abbia eseguito move_and_slide(). Usarlo qui ridurrebbe la
 	# pushbox già in idle e lascerebbe Arianna sospesa sopra il pavimento.
-	var is_airborne := current_state in [State.JUMP_STARTUP, State.JUMPING]
+	var is_airborne := current_state == State.JUMPING
 	if is_airborne:
 		set_box_profile(
 			collision_shape,
