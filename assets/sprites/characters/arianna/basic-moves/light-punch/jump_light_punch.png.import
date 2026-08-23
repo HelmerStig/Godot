@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ci4s1205g5hkl"
-path="res://.godot/imported/jump_light_punch_autosprite_candidate.png-4f249bbb1c0906bf2622a6faa28c66bd.ctex"
+uid="uid://mmb1euxeh3fk"
+path="res://.godot/imported/jump_light_punch.png-a252a1c16424d364418c61ae32d87a42.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/arianna/basic-moves/light-punch/jump_light_punch_autosprite_candidate.png"
-dest_files=["res://.godot/imported/jump_light_punch_autosprite_candidate.png-4f249bbb1c0906bf2622a6faa28c66bd.ctex"]
+source_file="res://assets/sprites/characters/arianna/basic-moves/light-punch/jump_light_punch.png"
+dest_files=["res://.godot/imported/jump_light_punch.png-a252a1c16424d364418c61ae32d87a42.ctex"]
 
 [params]
 

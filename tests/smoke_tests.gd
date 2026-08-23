@@ -607,6 +607,22 @@ func _test_arianna_idle() -> void:
 		and jump_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
 		"Arianna jump usa tutti i 49 frame custom_jump agli FPS dedicati"
 	)
+	var jump_light_first := frames.get_frame_texture(&"arianna_jump_light_punch", 0) as AtlasTexture
+	var jump_light_active := frames.get_frame_texture(&"arianna_jump_light_punch", 5) as AtlasTexture
+	var jump_light_hold_end := frames.get_frame_texture(&"arianna_jump_light_punch", 11) as AtlasTexture
+	var jump_light_recovery := frames.get_frame_texture(&"arianna_jump_light_punch", 12) as AtlasTexture
+	var jump_light_last := frames.get_frame_texture(&"arianna_jump_light_punch", 16) as AtlasTexture
+	_expect(
+		frames.get_frame_count(&"arianna_jump_light_punch") == 17
+		and is_equal_approx(frames.get_animation_speed(&"arianna_jump_light_punch"), 48.0)
+		and not frames.get_animation_loop(&"arianna_jump_light_punch")
+		and jump_light_first.region == Rect2(3072.0, 512.0, 512.0, 512.0)
+		and jump_light_active.region == Rect2(2048.0, 1024.0, 512.0, 512.0)
+		and jump_light_hold_end.region == jump_light_active.region
+		and jump_light_recovery.region == Rect2(1536.0, 1024.0, 512.0, 512.0)
+		and jump_light_last.region == jump_light_first.region,
+		"Arianna jump light punch usa 14-19, mantiene il 19 per 7 frame e torna 18-14 a 48 FPS"
+	)
 	arianna.start_jump(1.0)
 	var jump_prepared := (
 		arianna.current_state == Mangler.State.JUMP_STARTUP
@@ -640,11 +656,30 @@ func _test_arianna_idle() -> void:
 	)
 	arianna._physics_process(0.0)
 	_expect(
-		not arianna.light_punch_active
-		and arianna.current_state == Mangler.State.JUMPING
+		arianna.jump_light_punch_active
+		and arianna.current_state == Mangler.State.ATTACKING
+		and arianna.animated_sprite.animation == &"arianna_jump_light_punch"
+		and arianna.animated_sprite.scale == Arianna.ARIANNA_JUMP_LIGHT_PUNCH_SPRITE_SCALE
 		and arianna.input_buffer.consume_attack(&"light_punch")
 			== FighterInputBuffer.NO_DIRECTION,
-		"il light punch terrestre viene scartato durante il salto"
+		"il light punch durante il salto avvia la variante aerea dedicata"
+	)
+	arianna._finish_jump_light_punch(false)
+	_expect(
+		arianna.current_state == Mangler.State.JUMPING
+		and arianna.animated_sprite.animation == &"jump"
+		and arianna.animated_sprite.frame == 31,
+		"terminato il light punch aereo Arianna riprende custom_jump dal frame 32"
+	)
+	arianna.jump_light_punch_active = true
+	arianna.current_state = Mangler.State.ATTACKING
+	arianna._finish_jump_light_punch(true)
+	_expect(
+		arianna.current_state == Mangler.State.IDLE
+		and arianna.animated_sprite.animation == &"idle"
+		and arianna.animated_sprite.scale == Arianna.ARIANNA_SPRITE_SCALE
+		and not arianna.jump_light_punch_active,
+		"se il light punch aereo termina al suolo Arianna passa direttamente in idle"
 	)
 	arianna.velocity = Vector2.ZERO
 	arianna.change_state(Mangler.State.IDLE)
