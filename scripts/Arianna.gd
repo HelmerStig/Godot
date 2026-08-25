@@ -86,6 +86,19 @@ const ARIANNA_JUMP_LIGHT_PUNCH_RESUME_JUMP_FRAME := 31
 const ARIANNA_JUMP_LIGHT_PUNCH_HITBOX_SIZE := Vector2(170.0, 55.0)
 const ARIANNA_JUMP_LIGHT_PUNCH_HITBOX_POSITION := Vector2(90.0, -125.0)
 const ARIANNA_JUMP_LIGHT_PUNCH_SPRITE_SCALE := Vector2(0.78, 0.78)
+const ARIANNA_JUMP_MEDIUM_PUNCH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/medium-punch/jump_medium_punch.png"
+)
+const ARIANNA_JUMP_MEDIUM_PUNCH_SOURCE_START := 4
+const ARIANNA_JUMP_MEDIUM_PUNCH_SOURCE_END := 24
+const ARIANNA_JUMP_MEDIUM_PUNCH_COLUMNS := 5
+const ARIANNA_JUMP_MEDIUM_PUNCH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_JUMP_MEDIUM_PUNCH_ACTIVE_START_FRAME := 15
+const ARIANNA_JUMP_MEDIUM_PUNCH_ACTIVE_END_FRAME := 20
+const ARIANNA_JUMP_MEDIUM_PUNCH_RESUME_JUMP_FRAME := 28
+const ARIANNA_JUMP_MEDIUM_PUNCH_HITBOX_SIZE := Vector2(200.0, 48.0)
+const ARIANNA_JUMP_MEDIUM_PUNCH_HITBOX_POSITION := Vector2(105.0, -145.0)
+const ARIANNA_JUMP_MEDIUM_PUNCH_SPRITE_SCALE := Vector2(0.78, 0.78)
 const ARIANNA_LOW_LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/light-punch/ligth-punch-low.png"
 )
@@ -221,6 +234,7 @@ const ARIANNA_SPRITE_POSITION := Vector2(0.0, -120.0)
 
 var light_punch_active := false
 var jump_light_punch_active := false
+var jump_medium_punch_active := false
 var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
@@ -251,6 +265,7 @@ func _ready() -> void:
 	super._ready()
 	configure_jump_frames()
 	configure_jump_light_punch_frames()
+	configure_jump_medium_punch_frames()
 	configure_back_jump_frames()
 	configure_low_light_punch_frames()
 	configure_medium_punch_frames()
@@ -302,13 +317,16 @@ func _physics_process(_delta: float) -> void:
 		update_facing_direction()
 		update_ground_shadow()
 		return
-	if jump_light_punch_active:
+	if jump_light_punch_active or jump_medium_punch_active:
 		update_physical_collision()
 		update_collision_profile()
 		move_and_slide()
 		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
 		if is_on_floor():
-			_finish_jump_light_punch(true)
+			if jump_medium_punch_active:
+				_finish_jump_medium_punch(true)
+			else:
+				_finish_jump_light_punch(true)
 		else:
 			update_facing_direction()
 		update_ground_shadow()
@@ -448,6 +466,14 @@ func _physics_process(_delta: float) -> void:
 	):
 		start_jump(horizontal_axis)
 	if current_state in [State.JUMP_STARTUP, State.JUMPING]:
+		var jump_medium_punch_direction := input_buffer.consume_attack(&"medium_punch")
+		if (
+			current_state == State.JUMPING
+			and jump_medium_punch_direction != FighterInputBuffer.NO_DIRECTION
+			and not aerial_attack_used
+		):
+			_start_jump_medium_punch()
+			return
 		var jump_light_punch_direction := input_buffer.consume_attack(&"light_punch")
 		if (
 			current_state == State.JUMPING
@@ -578,7 +604,11 @@ func update_sprite_scale() -> void:
 	animated_sprite.scale = (
 		ARIANNA_JUMP_LIGHT_PUNCH_SPRITE_SCALE
 		if animated_sprite.animation == &"arianna_jump_light_punch"
-		else ARIANNA_SPRITE_SCALE
+		else (
+			ARIANNA_JUMP_MEDIUM_PUNCH_SPRITE_SCALE
+			if animated_sprite.animation == &"arianna_jump_medium_punch"
+			else ARIANNA_SPRITE_SCALE
+		)
 	)
 	animated_sprite.position = ARIANNA_SPRITE_POSITION
 	grab_front_sprite.scale = ARIANNA_SPRITE_SCALE
@@ -1160,6 +1190,40 @@ func configure_jump_light_punch_frames() -> void:
 		frames.add_frame(&"arianna_jump_light_punch", atlas_frame)
 
 
+func configure_jump_medium_punch_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"arianna_jump_medium_punch"):
+		frames.remove_animation(&"arianna_jump_medium_punch")
+	frames.add_animation(&"arianna_jump_medium_punch")
+	frames.set_animation_speed(&"arianna_jump_medium_punch", 48.0)
+	frames.set_animation_loop(&"arianna_jump_medium_punch", false)
+	for source_index in range(
+		ARIANNA_JUMP_MEDIUM_PUNCH_SOURCE_START,
+		ARIANNA_JUMP_MEDIUM_PUNCH_SOURCE_END + 1
+	):
+		_add_jump_medium_punch_frame(frames, source_index)
+	# Recovery: dal fotogramma visibile 23 al 7, saltandone uno ogni due.
+	for source_index in range(
+		ARIANNA_JUMP_MEDIUM_PUNCH_SOURCE_END - 2,
+		5,
+		-2
+	):
+		_add_jump_medium_punch_frame(frames, source_index)
+
+
+func _add_jump_medium_punch_frame(frames: SpriteFrames, source_index: int) -> void:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_JUMP_MEDIUM_PUNCH_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_JUMP_MEDIUM_PUNCH_COLUMNS),
+			float(source_index / ARIANNA_JUMP_MEDIUM_PUNCH_COLUMNS)
+		) * ARIANNA_JUMP_MEDIUM_PUNCH_CELL_SIZE,
+		ARIANNA_JUMP_MEDIUM_PUNCH_CELL_SIZE
+	)
+	frames.add_frame(&"arianna_jump_medium_punch", atlas_frame)
+
+
 func begin_jump_ascent() -> void:
 	if (
 		current_state != State.JUMP_STARTUP
@@ -1307,7 +1371,11 @@ func update_collision_profile() -> void:
 	# `is_on_floor()` è false nei primissimi frame di caricamento, prima che
 	# CharacterBody2D abbia eseguito move_and_slide(). Usarlo qui ridurrebbe la
 	# pushbox già in idle e lascerebbe Arianna sospesa sopra il pavimento.
-	var is_airborne := current_state == State.JUMPING or jump_light_punch_active
+	var is_airborne := (
+		current_state == State.JUMPING
+		or jump_light_punch_active
+		or jump_medium_punch_active
+	)
 	if is_airborne:
 		set_box_profile(
 			collision_shape,
@@ -1389,6 +1457,59 @@ func _finish_jump_light_punch(landed: bool) -> void:
 	change_state(State.JUMPING)
 	animated_sprite.play(&"jump")
 	animated_sprite.frame = ARIANNA_JUMP_LIGHT_PUNCH_RESUME_JUMP_FRAME
+
+
+func _start_jump_medium_punch() -> void:
+	var attack := character_data.get_attack(&"medium_punch")
+	if attack == null:
+		return
+	jump_medium_punch_active = true
+	aerial_attack_used = true
+	current_state = State.ATTACKING
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.is_airborne_medium_punch = true
+	combat.current_attack = attack
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_JUMP_MEDIUM_PUNCH_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_JUMP_MEDIUM_PUNCH_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	bring_attacker_to_foreground()
+	animated_sprite.scale = ARIANNA_JUMP_MEDIUM_PUNCH_SPRITE_SCALE
+	animated_sprite.play(&"arianna_jump_medium_punch")
+
+
+func _resolve_jump_medium_punch_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if (
+		attack_generation != combat.action_generation
+		or not jump_medium_punch_active
+		or not combat.is_attacking
+	):
+		return
+	for area in combat.hitbox.get_overlapping_areas():
+		combat._apply_hit_to_area(area)
+
+
+func _finish_jump_medium_punch(landed: bool) -> void:
+	combat.disable_hitbox()
+	combat.is_attacking = false
+	combat.is_airborne_medium_punch = false
+	combat.current_attack = null
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	restore_default_render_order()
+	jump_medium_punch_active = false
+	animated_sprite.scale = ARIANNA_SPRITE_SCALE
+	if landed or is_on_floor():
+		velocity = Vector2.ZERO
+		change_state(State.IDLE)
+		return
+	change_state(State.JUMPING)
+	animated_sprite.play(&"jump")
+	animated_sprite.frame = ARIANNA_JUMP_MEDIUM_PUNCH_RESUME_JUMP_FRAME
 
 
 func _start_low_light_punch() -> void:
@@ -1773,6 +1894,8 @@ func _resolve_crouched_strong_punch_overlap(attack_generation: int) -> void:
 func _on_animation_finished() -> void:
 	if animated_sprite.animation == &"arianna_jump_light_punch":
 		_finish_jump_light_punch(false)
+	elif animated_sprite.animation == &"arianna_jump_medium_punch":
+		_finish_jump_medium_punch(false)
 	elif animated_sprite.animation == &"arianna_light_punch":
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_light_punch_recovery")
@@ -1973,6 +2096,13 @@ func _on_animation_frame_changed() -> void:
 			combat.enable_hitbox()
 			_resolve_jump_light_punch_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_JUMP_LIGHT_PUNCH_ACTIVE_END_FRAME:
+			combat.disable_hitbox()
+		return
+	if animated_sprite.animation == &"arianna_jump_medium_punch":
+		if animated_sprite.frame == ARIANNA_JUMP_MEDIUM_PUNCH_ACTIVE_START_FRAME:
+			combat.enable_hitbox()
+			_resolve_jump_medium_punch_overlap(combat.action_generation)
+		elif animated_sprite.frame > ARIANNA_JUMP_MEDIUM_PUNCH_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if (

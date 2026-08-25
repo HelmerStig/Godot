@@ -623,6 +623,21 @@ func _test_arianna_idle() -> void:
 		and jump_light_last.region == jump_light_first.region,
 		"Arianna jump light punch usa 14-19, mantiene il 19 per 7 frame e torna 18-14 a 48 FPS"
 	)
+	var jump_medium_first := (
+		frames.get_frame_texture(&"arianna_jump_medium_punch", 0) as AtlasTexture
+	)
+	var jump_medium_last := (
+		frames.get_frame_texture(&"arianna_jump_medium_punch", 29) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_jump_medium_punch") == 30
+		and is_equal_approx(frames.get_animation_speed(&"arianna_jump_medium_punch"), 48.0)
+		and not frames.get_animation_loop(&"arianna_jump_medium_punch")
+		and jump_medium_first.atlas == Arianna.ARIANNA_JUMP_MEDIUM_PUNCH_SHEET
+		and jump_medium_first.region == Rect2(2048.0, 0.0, 512.0, 512.0)
+		and jump_medium_last.region == Rect2(512.0, 512.0, 512.0, 512.0),
+		"Arianna jump medium punch usa 5-25 e torna 23-7 saltando un frame a 48 FPS"
+	)
 	arianna.start_jump(1.0)
 	var jump_prepared := (
 		arianna.current_state == Mangler.State.JUMP_STARTUP
@@ -680,6 +695,25 @@ func _test_arianna_idle() -> void:
 		and arianna.animated_sprite.scale == Arianna.ARIANNA_SPRITE_SCALE
 		and not arianna.jump_light_punch_active,
 		"se il light punch aereo termina al suolo Arianna passa direttamente in idle"
+	)
+	arianna.current_state = Mangler.State.JUMPING
+	arianna.aerial_attack_used = false
+	arianna._start_jump_medium_punch()
+	_expect(
+		arianna.jump_medium_punch_active
+		and arianna.current_state == Mangler.State.ATTACKING
+		and arianna.animated_sprite.animation == &"arianna_jump_medium_punch"
+		and arianna.animated_sprite.scale == Arianna.ARIANNA_JUMP_MEDIUM_PUNCH_SPRITE_SCALE
+		and arianna.combat.is_airborne_medium_punch,
+		"il medium punch durante il salto avvia la variante aerea dedicata"
+	)
+	arianna._finish_jump_medium_punch(false)
+	_expect(
+		arianna.current_state == Mangler.State.JUMPING
+		and arianna.animated_sprite.animation == &"jump"
+		and arianna.animated_sprite.frame == 28
+		and not arianna.jump_medium_punch_active,
+		"terminato il medium punch aereo Arianna riprende custom_jump dal frame 29"
 	)
 	arianna.velocity = Vector2.ZERO
 	arianna.change_state(Mangler.State.IDLE)

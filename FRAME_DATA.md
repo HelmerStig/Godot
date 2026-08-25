@@ -46,6 +46,7 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Arianna guardia bassa | hold down+back durante attacco LOW avversario | `block_low_crouched` → `block_low_recovery` | 48 | — | — | hold frame 16 finché l'attacco resta attivo | 1-16; fine attacco/rilascio 15-1 | 0 | low guard | no |
 | Arianna salto | jump | `jump` | configurabile (`ARIANNA_JUMP_FPS`) | stacco configurabile (`ARIANNA_JUMP_TAKEOFF_FRAME`, zero-based) | — | sequenza continua; idle solo al suolo | 49 | 0 | movement | no |
 | Arianna pugno leggero in salto | airborne light punch | `arianna_jump_light_punch` | 48 | sorgenti 14-18 | frame 19 × 7 intervalli | 18-14, poi `jump` dal frame 32; idle se al suolo | 17 runtime | 5 | high | no |
+| Arianna pugno medio in salto | airborne medium punch | `arianna_jump_medium_punch` | 48 | sorgenti 5-19 | 20-25 | recovery 23→7 a passi di 2, poi `jump` dal frame 29; idle se al suolo | 30 runtime | 10 | high | no |
 | Arianna pugno leggero | standing light punch | `arianna_light_punch` → `arianna_light_punch_recovery` | 48 | 6 | 3 | 9 | 18 (1-9, poi 9-1) | 5 | high | no |
 | Arianna pugno leggero basso | down + light punch | `arianna_low_light_punch` → `arianna_low_light_punch_recovery` | 48 | 11 | 4 | 14 | 29 (1-15, poi 14-1) | 5 | mid | no |
 | Arianna pugno medio | standing medium punch | `arianna_medium_punch` → `arianna_medium_punch_recovery` | 48 | 20 | 5 | 24 | 49 (1-25, poi 24-1) | 10 | high | no |
