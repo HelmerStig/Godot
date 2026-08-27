@@ -653,6 +653,29 @@ func _test_arianna_idle() -> void:
 		and jump_strong_last.region == Rect2(2560.0, 1536.0, 512.0, 512.0),
 		"Arianna jump strong punch usa tutti i 27 frame a 48 FPS"
 	)
+	var jump_light_kick_first := (
+		frames.get_frame_texture(&"arianna_jump_light_kick", 0) as AtlasTexture
+	)
+	var jump_light_kick_impact := (
+		frames.get_frame_texture(&"arianna_jump_light_kick", 14) as AtlasTexture
+	)
+	var jump_light_kick_recovery := (
+		frames.get_frame_texture(&"arianna_jump_light_kick", 15) as AtlasTexture
+	)
+	var jump_light_kick_last := (
+		frames.get_frame_texture(&"arianna_jump_light_kick", 28) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_jump_light_kick") == 29
+		and is_equal_approx(frames.get_animation_speed(&"arianna_jump_light_kick"), 48.0)
+		and not frames.get_animation_loop(&"arianna_jump_light_kick")
+		and jump_light_kick_first.atlas == Arianna.ARIANNA_JUMP_LIGHT_KICK_SHEET
+		and jump_light_kick_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and jump_light_kick_impact.region == Rect2(0.0, 1024.0, 512.0, 512.0)
+		and jump_light_kick_recovery.region == Rect2(3072.0, 512.0, 512.0, 512.0)
+		and jump_light_kick_last.region == jump_light_kick_first.region,
+		"Arianna jump light kick usa 1-15 e torna 14-1 a 48 FPS"
+	)
 	arianna.start_jump(1.0)
 	var jump_prepared := (
 		arianna.current_state == Mangler.State.JUMP_STARTUP
@@ -749,6 +772,42 @@ func _test_arianna_idle() -> void:
 		and arianna.animated_sprite.scale == Arianna.ARIANNA_SPRITE_SCALE
 		and not arianna.jump_strong_punch_active,
 		"terminato lo strong punch aereo Arianna riprende custom_jump dal frame 40"
+	)
+	arianna.current_state = Mangler.State.JUMPING
+	arianna.aerial_attack_used = false
+	arianna._start_jump_light_kick()
+	_expect(
+		arianna.jump_light_kick_active
+		and arianna.current_state == Mangler.State.ATTACKING
+		and arianna.animated_sprite.animation == &"arianna_jump_light_kick"
+		and arianna.animated_sprite.scale == Arianna.ARIANNA_JUMP_LIGHT_KICK_SPRITE_SCALE
+		and arianna.combat.is_airborne_light_kick
+		and arianna.combat.current_variant != null
+		and arianna.combat.current_variant.hit_height == AttackData.HitHeight.MID
+		and arianna.combat.get_effective_hit_height(arianna.combat.current_attack)
+			== AttackData.HitHeight.MID,
+		"il light kick durante il salto avvia la variante aerea dedicata"
+	)
+	arianna.animated_sprite.frame = Arianna.ARIANNA_JUMP_LIGHT_KICK_ACTIVE_START_FRAME
+	arianna._on_animation_frame_changed()
+	_expect(
+		not arianna.combat.hitbox_shape.disabled,
+		"la hitbox del light kick aereo è attiva dal fotogramma visibile 9"
+	)
+	arianna.animated_sprite.frame = Arianna.ARIANNA_JUMP_LIGHT_KICK_ACTIVE_END_FRAME
+	arianna._on_animation_frame_changed()
+	_expect(
+		not arianna.combat.hitbox_shape.disabled,
+		"la hitbox del light kick aereo resta attiva fino al fotogramma visibile 15"
+	)
+	arianna._finish_jump_light_kick(false)
+	_expect(
+		arianna.current_state == Mangler.State.JUMPING
+		and arianna.animated_sprite.animation == &"jump"
+		and arianna.animated_sprite.frame == 39
+		and arianna.animated_sprite.scale == Arianna.ARIANNA_SPRITE_SCALE
+		and not arianna.jump_light_kick_active,
+		"terminato il light kick aereo Arianna riprende custom_jump dal frame 40"
 	)
 	arianna.velocity = Vector2.ZERO
 	arianna.change_state(Mangler.State.IDLE)

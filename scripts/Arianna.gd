@@ -112,6 +112,19 @@ const ARIANNA_JUMP_STRONG_PUNCH_HITBOX_SIZE := Vector2(210.0, 70.0)
 const ARIANNA_JUMP_STRONG_PUNCH_HITBOX_POSITION := Vector2(105.0, -105.0)
 const ARIANNA_JUMP_STRONG_PUNCH_HITBOX_ROTATION := deg_to_rad(18.0)
 const ARIANNA_JUMP_STRONG_PUNCH_SPRITE_SCALE := Vector2(0.78, 0.78)
+const ARIANNA_JUMP_LIGHT_KICK_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/light-kick/light_kick_jump.png"
+)
+const ARIANNA_JUMP_LIGHT_KICK_SOURCE_FRAME_COUNT := 15
+const ARIANNA_JUMP_LIGHT_KICK_COLUMNS := 7
+const ARIANNA_JUMP_LIGHT_KICK_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_JUMP_LIGHT_KICK_ACTIVE_START_FRAME := 8
+const ARIANNA_JUMP_LIGHT_KICK_ACTIVE_END_FRAME := 14
+const ARIANNA_JUMP_LIGHT_KICK_RESUME_JUMP_FRAME := 39
+const ARIANNA_JUMP_LIGHT_KICK_HITBOX_SIZE := Vector2(170.0, 55.0)
+const ARIANNA_JUMP_LIGHT_KICK_HITBOX_POSITION := Vector2(95.0, -55.0)
+const ARIANNA_JUMP_LIGHT_KICK_HITBOX_ROTATION := deg_to_rad(12.0)
+const ARIANNA_JUMP_LIGHT_KICK_SPRITE_SCALE := Vector2(0.78, 0.78)
 const ARIANNA_LOW_LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/light-punch/ligth-punch-low.png"
 )
@@ -249,6 +262,7 @@ var light_punch_active := false
 var jump_light_punch_active := false
 var jump_medium_punch_active := false
 var jump_strong_punch_active := false
+var jump_light_kick_active := false
 var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
@@ -281,6 +295,7 @@ func _ready() -> void:
 	configure_jump_light_punch_frames()
 	configure_jump_medium_punch_frames()
 	configure_jump_strong_punch_frames()
+	configure_jump_light_kick_frames()
 	configure_back_jump_frames()
 	configure_low_light_punch_frames()
 	configure_medium_punch_frames()
@@ -332,13 +347,20 @@ func _physics_process(_delta: float) -> void:
 		update_facing_direction()
 		update_ground_shadow()
 		return
-	if jump_light_punch_active or jump_medium_punch_active or jump_strong_punch_active:
+	if (
+		jump_light_punch_active
+		or jump_medium_punch_active
+		or jump_strong_punch_active
+		or jump_light_kick_active
+	):
 		update_physical_collision()
 		update_collision_profile()
 		move_and_slide()
 		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
 		if is_on_floor():
-			if jump_strong_punch_active:
+			if jump_light_kick_active:
+				_finish_jump_light_kick(true)
+			elif jump_strong_punch_active:
 				_finish_jump_strong_punch(true)
 			elif jump_medium_punch_active:
 				_finish_jump_medium_punch(true)
@@ -483,6 +505,14 @@ func _physics_process(_delta: float) -> void:
 	):
 		start_jump(horizontal_axis)
 	if current_state in [State.JUMP_STARTUP, State.JUMPING]:
+		var jump_light_kick_direction := input_buffer.consume_attack(&"light_kick")
+		if (
+			current_state == State.JUMPING
+			and jump_light_kick_direction != FighterInputBuffer.NO_DIRECTION
+			and not aerial_attack_used
+		):
+			_start_jump_light_kick()
+			return
 		var jump_strong_punch_direction := input_buffer.consume_attack(&"heavy_punch")
 		if (
 			current_state == State.JUMPING
@@ -635,7 +665,11 @@ func update_sprite_scale() -> void:
 			else (
 				ARIANNA_JUMP_STRONG_PUNCH_SPRITE_SCALE
 				if animated_sprite.animation == &"arianna_jump_strong_punch"
-				else ARIANNA_SPRITE_SCALE
+				else (
+					ARIANNA_JUMP_LIGHT_KICK_SPRITE_SCALE
+					if animated_sprite.animation == &"arianna_jump_light_kick"
+					else ARIANNA_SPRITE_SCALE
+				)
 			)
 		)
 	)
@@ -1273,6 +1307,32 @@ func configure_jump_strong_punch_frames() -> void:
 		frames.add_frame(&"arianna_jump_strong_punch", atlas_frame)
 
 
+func configure_jump_light_kick_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"arianna_jump_light_kick"):
+		frames.remove_animation(&"arianna_jump_light_kick")
+	frames.add_animation(&"arianna_jump_light_kick")
+	frames.set_animation_speed(&"arianna_jump_light_kick", 48.0)
+	frames.set_animation_loop(&"arianna_jump_light_kick", false)
+	for source_index in range(ARIANNA_JUMP_LIGHT_KICK_SOURCE_FRAME_COUNT):
+		_add_jump_light_kick_frame(frames, source_index)
+	for source_index in range(ARIANNA_JUMP_LIGHT_KICK_SOURCE_FRAME_COUNT - 2, -1, -1):
+		_add_jump_light_kick_frame(frames, source_index)
+
+
+func _add_jump_light_kick_frame(frames: SpriteFrames, source_index: int) -> void:
+	var atlas_frame := AtlasTexture.new()
+	atlas_frame.atlas = ARIANNA_JUMP_LIGHT_KICK_SHEET
+	atlas_frame.region = Rect2(
+		Vector2(
+			float(source_index % ARIANNA_JUMP_LIGHT_KICK_COLUMNS),
+			float(source_index / ARIANNA_JUMP_LIGHT_KICK_COLUMNS)
+		) * ARIANNA_JUMP_LIGHT_KICK_CELL_SIZE,
+		ARIANNA_JUMP_LIGHT_KICK_CELL_SIZE
+	)
+	frames.add_frame(&"arianna_jump_light_kick", atlas_frame)
+
+
 func begin_jump_ascent() -> void:
 	if (
 		current_state != State.JUMP_STARTUP
@@ -1425,6 +1485,7 @@ func update_collision_profile() -> void:
 		or jump_light_punch_active
 		or jump_medium_punch_active
 		or jump_strong_punch_active
+		or jump_light_kick_active
 	)
 	if is_airborne:
 		set_box_profile(
@@ -1613,6 +1674,63 @@ func _finish_jump_strong_punch(landed: bool) -> void:
 	change_state(State.JUMPING)
 	animated_sprite.play(&"jump")
 	animated_sprite.frame = ARIANNA_JUMP_STRONG_PUNCH_RESUME_JUMP_FRAME
+
+
+func _start_jump_light_kick() -> void:
+	var attack := character_data.get_attack(&"light_kick")
+	if attack == null:
+		return
+	jump_light_kick_active = true
+	aerial_attack_used = true
+	current_state = State.ATTACKING
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.is_airborne_light_kick = true
+	combat.current_attack = attack
+	var middle_variant := AttackVariantData.new()
+	middle_variant.variant_id = &"arianna_airborne"
+	middle_variant.animation_name = &"arianna_jump_light_kick"
+	middle_variant.hit_height = AttackData.HitHeight.MID
+	combat.current_variant = middle_variant
+	combat.hit_targets.clear()
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_JUMP_LIGHT_KICK_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_JUMP_LIGHT_KICK_HITBOX_POSITION
+	combat.hitbox_shape.rotation = ARIANNA_JUMP_LIGHT_KICK_HITBOX_ROTATION
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_jump_light_kick")
+
+
+func _resolve_jump_light_kick_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if (
+		attack_generation != combat.action_generation
+		or not jump_light_kick_active
+		or not combat.is_attacking
+	):
+		return
+	for area in combat.hitbox.get_overlapping_areas():
+		combat._apply_hit_to_area(area)
+
+
+func _finish_jump_light_kick(landed: bool) -> void:
+	combat.disable_hitbox()
+	combat.is_attacking = false
+	combat.is_airborne_light_kick = false
+	combat.current_attack = null
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	restore_default_render_order()
+	jump_light_kick_active = false
+	animated_sprite.scale = ARIANNA_SPRITE_SCALE
+	combat.hitbox_shape.rotation = 0.0
+	if landed or is_on_floor():
+		velocity = Vector2.ZERO
+		change_state(State.IDLE)
+		return
+	change_state(State.JUMPING)
+	animated_sprite.play(&"jump")
+	animated_sprite.frame = ARIANNA_JUMP_LIGHT_KICK_RESUME_JUMP_FRAME
 
 
 func _start_low_light_punch() -> void:
@@ -2001,6 +2119,8 @@ func _on_animation_finished() -> void:
 		_finish_jump_medium_punch(false)
 	elif animated_sprite.animation == &"arianna_jump_strong_punch":
 		_finish_jump_strong_punch(false)
+	elif animated_sprite.animation == &"arianna_jump_light_kick":
+		_finish_jump_light_kick(false)
 	elif animated_sprite.animation == &"arianna_light_punch":
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_light_punch_recovery")
@@ -2215,6 +2335,13 @@ func _on_animation_frame_changed() -> void:
 			combat.enable_hitbox()
 			_resolve_jump_strong_punch_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_JUMP_STRONG_PUNCH_ACTIVE_END_FRAME:
+			combat.disable_hitbox()
+		return
+	if animated_sprite.animation == &"arianna_jump_light_kick":
+		if animated_sprite.frame == ARIANNA_JUMP_LIGHT_KICK_ACTIVE_START_FRAME:
+			combat.enable_hitbox()
+			_resolve_jump_light_kick_overlap(combat.action_generation)
+		elif animated_sprite.frame > ARIANNA_JUMP_LIGHT_KICK_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if (
