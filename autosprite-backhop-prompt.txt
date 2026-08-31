@@ -1,3 +1,29 @@
 
 
 Side-scrolling animation facing right (east). Camera locked, character centered with full body visible. Character performs the following action in place: character throwing a cross punch charged from ovest facing image-right (east), camera elevation 0 degrees. Plain grey background. No camera movement, no parallax, no extra characters or props. Keep scale, lighting, and proportions consistent throughout. One punch only, the punch must be very powerful and exaggerated
+
+
+Side-scrolling animation facing right (east). Camera locked, character centered with full body visible. Character performs the following action in place: Create a 16-frame knockdown animation (4×4 spritesheet, 512×512px):
+
+Frames 1–2: Guard stance, facing right, feet planted.
+
+Frames 3–4: Sweep kicks the legs. Character loses balance, knees buckle.
+
+Frames 5–8: Falls backward. Hips drop, torso tilts back, arms open for balance. Feet lift slightly.
+
+Frames 9–11: Impact. Back and shoulders hit ground heavily but naturally.
+
+Frames 12–15: Body settles on ground. Small recoil, then fully still.
+
+Frame 16: Final knocked-down pose on back—no standing up.
+
+Requirements:
+- Non-looping, 16 FPS
+- Character faces right throughout, never turns
+- Fall is compact (no traveling across canvas)
+- No spin, flip, or exaggerated launch
+- Full body visible every frame
+- Preserve character identity (face, clothes, colors, proportions)
+- Transparent background
+
+Avoid: Standing back up, spinning, flying, blood, effects, background, camera movement, body distortion.. Plain grey background. No camera movement, no parallax, no extra characters or props. Keep scale, lighting, and proportions consistent throughout.
