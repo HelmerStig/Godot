@@ -152,6 +152,14 @@ const ARIANNA_JUMP_STRONG_KICK_HITBOX_SIZE := Vector2(220.0, 65.0)
 const ARIANNA_JUMP_STRONG_KICK_HITBOX_POSITION := Vector2(125.0, -60.0)
 const ARIANNA_JUMP_STRONG_KICK_HITBOX_ROTATION := deg_to_rad(10.0)
 const ARIANNA_JUMP_STRONG_KICK_SPRITE_SCALE := Vector2(0.78, 0.78)
+const ARIANNA_BASEBALL_SPECIAL_SHEET := preload(
+	"res://assets/sprites/characters/arianna/special/baseball_special.png"
+)
+const ARIANNA_BASEBALL_SPECIAL_FRAME_COUNT := 49
+const ARIANNA_BASEBALL_SPECIAL_COLUMNS := 7
+const ARIANNA_BASEBALL_SPECIAL_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_BASEBALL_TORNADO_SPAWN_FRAME := 23
+const ARIANNA_BASEBALL_TORNADO_SPAWN_OFFSET := Vector2(175.0, -80.0)
 const ARIANNA_LOW_LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/light-punch/ligth-punch-low.png"
 )
@@ -292,6 +300,9 @@ var jump_strong_punch_active := false
 var jump_light_kick_active := false
 var jump_medium_kick_active := false
 var jump_strong_kick_active := false
+var baseball_special_active := false
+var baseball_tornado_spawned := false
+var baseball_special_strength: StringName = &"light"
 var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
@@ -327,6 +338,7 @@ func _ready() -> void:
 	configure_jump_light_kick_frames()
 	configure_jump_medium_kick_frames()
 	configure_jump_strong_kick_frames()
+	configure_baseball_special_frames()
 	configure_back_jump_frames()
 	configure_low_light_punch_frames()
 	configure_medium_punch_frames()
@@ -408,7 +420,8 @@ func _physics_process(_delta: float) -> void:
 		update_ground_shadow()
 		return
 	if (
-		light_punch_active
+		baseball_special_active
+		or light_punch_active
 		or medium_punch_active
 		or low_medium_punch_active
 		or strong_punch_active
@@ -424,6 +437,14 @@ func _physics_process(_delta: float) -> void:
 		update_facing_direction()
 		update_ground_shadow()
 		return
+	if (
+		controls_enabled
+		and can_move
+		and input_buffer != null
+		and is_on_floor()
+	):
+		if _try_start_baseball_special():
+			return
 	if controls_enabled and can_move and input_buffer != null and is_on_floor():
 		var strong_kick_direction := input_buffer.consume_attack(&"heavy_kick")
 		if strong_kick_direction != FighterInputBuffer.NO_DIRECTION:
@@ -1444,6 +1465,26 @@ func configure_jump_strong_kick_frames() -> void:
 		frames.add_frame(&"arianna_jump_strong_kick", atlas_frame)
 
 
+func configure_baseball_special_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"arianna_baseball_special"):
+		frames.remove_animation(&"arianna_baseball_special")
+	frames.add_animation(&"arianna_baseball_special")
+	frames.set_animation_speed(&"arianna_baseball_special", 48.0)
+	frames.set_animation_loop(&"arianna_baseball_special", false)
+	for source_index in range(ARIANNA_BASEBALL_SPECIAL_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = ARIANNA_BASEBALL_SPECIAL_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % ARIANNA_BASEBALL_SPECIAL_COLUMNS),
+				float(source_index / ARIANNA_BASEBALL_SPECIAL_COLUMNS)
+			) * ARIANNA_BASEBALL_SPECIAL_CELL_SIZE,
+			ARIANNA_BASEBALL_SPECIAL_CELL_SIZE
+		)
+		frames.add_frame(&"arianna_baseball_special", atlas_frame)
+
+
 func begin_jump_ascent() -> void:
 	if (
 		current_state != State.JUMP_STARTUP
@@ -1608,6 +1649,84 @@ func update_collision_profile() -> void:
 		)
 		return
 	super.update_collision_profile()
+
+
+func _start_baseball_special(strength: StringName = &"light") -> void:
+	baseball_special_active = true
+	baseball_tornado_spawned = false
+	baseball_special_strength = strength
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.disable_hitbox()
+	combat.is_attacking = true
+	combat.current_attack = null
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	bring_attacker_to_foreground()
+	animated_sprite.play(&"arianna_baseball_special")
+
+
+func _try_start_baseball_special() -> bool:
+	var has_complete_quarter_circle := input_buffer.matches_recent_sequence([
+		FighterInputBuffer.Direction.DOWN,
+		FighterInputBuffer.Direction.DOWN_FORWARD,
+		FighterInputBuffer.Direction.FORWARD,
+	])
+	var has_diagonal_finish := input_buffer.matches_recent_sequence([
+		FighterInputBuffer.Direction.DOWN,
+		FighterInputBuffer.Direction.DOWN_FORWARD,
+	])
+	if not has_complete_quarter_circle and not has_diagonal_finish:
+		return false
+	var selected_strength: StringName = &""
+	for attack_entry in [
+		[&"heavy_punch", &"heavy"],
+		[&"medium_punch", &"medium"],
+		[&"light_punch", &"light"],
+	]:
+		var attack_direction := input_buffer.consume_attack(attack_entry[0])
+		if attack_direction in [
+			FighterInputBuffer.Direction.DOWN_FORWARD,
+			FighterInputBuffer.Direction.FORWARD,
+		]:
+			selected_strength = attack_entry[1]
+			break
+	if selected_strength == &"":
+		return false
+	input_buffer.clear()
+	_start_baseball_special(selected_strength)
+	return true
+
+
+func _finish_baseball_special() -> void:
+	combat.disable_hitbox()
+	combat.is_attacking = false
+	combat.current_attack = null
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	restore_default_render_order()
+	baseball_special_active = false
+	baseball_tornado_spawned = false
+	baseball_special_strength = &"light"
+	velocity = Vector2.ZERO
+	change_state(State.IDLE)
+
+
+func _spawn_baseball_tornado() -> AriannaTornadoProjectile:
+	var tornado := AriannaTornadoProjectile.new()
+	tornado.setup(self, is_facing_right, baseball_special_strength)
+	var projectile_parent: Node = get_tree().current_scene
+	if projectile_parent == null:
+		projectile_parent = get_tree().root
+	projectile_parent.add_child(tornado)
+	var facing_sign := 1.0 if is_facing_right else -1.0
+	tornado.global_position = global_position + Vector2(
+		ARIANNA_BASEBALL_TORNADO_SPAWN_OFFSET.x * facing_sign,
+		ARIANNA_BASEBALL_TORNADO_SPAWN_OFFSET.y
+	)
+	baseball_tornado_spawned = true
+	return tornado
 
 
 func _start_light_punch() -> void:
@@ -2342,7 +2461,9 @@ func _resolve_crouched_strong_punch_overlap(attack_generation: int) -> void:
 
 
 func _on_animation_finished() -> void:
-	if animated_sprite.animation == &"arianna_jump_light_punch":
+	if animated_sprite.animation == &"arianna_baseball_special":
+		_finish_baseball_special()
+	elif animated_sprite.animation == &"arianna_jump_light_punch":
 		_finish_jump_light_punch(false)
 	elif animated_sprite.animation == &"arianna_jump_medium_punch":
 		_finish_jump_medium_punch(false)
@@ -2541,6 +2662,13 @@ func _on_animation_finished() -> void:
 
 
 func _on_animation_frame_changed() -> void:
+	if animated_sprite.animation == &"arianna_baseball_special":
+		if (
+			animated_sprite.frame == ARIANNA_BASEBALL_TORNADO_SPAWN_FRAME
+			and not baseball_tornado_spawned
+		):
+			_spawn_baseball_tornado()
+		return
 	if (
 		current_state == State.JUMP_STARTUP
 		and jump_takeoff_armed

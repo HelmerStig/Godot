@@ -714,6 +714,83 @@ func _test_arianna_idle() -> void:
 		and jump_strong_kick_last.region == Rect2(512.0, 2048.0, 512.0, 512.0),
 		"Arianna jump strong kick usa tutti i 30 frame a 48 FPS"
 	)
+	var baseball_special_first := (
+		frames.get_frame_texture(&"arianna_baseball_special", 0) as AtlasTexture
+	)
+	var baseball_special_last := (
+		frames.get_frame_texture(&"arianna_baseball_special", 48) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_baseball_special") == 49
+		and is_equal_approx(frames.get_animation_speed(&"arianna_baseball_special"), 48.0)
+		and not frames.get_animation_loop(&"arianna_baseball_special")
+		and baseball_special_first.atlas == Arianna.ARIANNA_BASEBALL_SPECIAL_SHEET
+		and baseball_special_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and baseball_special_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
+		"la speciale baseball di Arianna usa tutti i 49 frame a 48 FPS"
+	)
+	var tornado_preview := AriannaTornadoProjectile.new()
+	tornado_preview.setup(arianna, true)
+	root.add_child(tornado_preview)
+	await process_frame
+	var tornado_frames := tornado_preview.tornado_sprite.sprite_frames
+	var tornado_first := tornado_frames.get_frame_texture(&"spin", 0) as AtlasTexture
+	var tornado_last := tornado_frames.get_frame_texture(&"spin", 48) as AtlasTexture
+	_expect(
+		tornado_frames.get_frame_count(&"spin") == 49
+		and is_equal_approx(tornado_frames.get_animation_speed(&"spin"), 48.0)
+		and tornado_frames.get_animation_loop(&"spin")
+		and tornado_first.atlas == AriannaTornadoProjectile.TORNADO_SHEET
+		and tornado_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and tornado_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
+		"il tornado baseball usa tutti i 49 frame in loop a 48 FPS"
+	)
+	_expect(
+		tornado_preview.tornado_sprite.scale.x >= AriannaTornadoProjectile.START_SCALE.x
+		and tornado_preview.tornado_sprite.scale.x <= 0.60
+		and is_equal_approx(AriannaTornadoProjectile.GROWTH_DURATION, 0.50)
+		and tornado_preview.get_node_or_null("WindGlow") != null
+		and (tornado_preview.get_node_or_null("WindTrail") as CPUParticles2D).emitting
+		and (tornado_preview.get_node_or_null("BaseDust") as CPUParticles2D).emitting,
+		"il tornado cresce rapidamente e usa alone, scia di vento e polvere alla base"
+	)
+	var tornado_collision := tornado_preview.get_node_or_null(
+		"CollisionShape2D"
+	) as CollisionShape2D
+	var tornado_shape := tornado_collision.shape as RectangleShape2D
+	_expect(
+		tornado_preview.collision_layer == 2
+		and tornado_preview.collision_mask == 4
+		and tornado_shape.size == AriannaTornadoProjectile.HITBOX_SIZE
+		and AriannaTornadoProjectile.DAMAGE == 10,
+		"il tornado usa una hitbox MID e infligge 10 danni al primo contatto"
+	)
+	var preview_explosion := tornado_preview.spawn_impact_explosion(Vector2.ZERO)
+	_expect(
+		preview_explosion.is_in_group("arianna_tornado_impact")
+		and preview_explosion.get_node_or_null("BlueFlash") != null
+		and (preview_explosion.get_node_or_null("BlueSparks") as CPUParticles2D).amount == 90
+		and AriannaTornadoProjectile.IMPACT_OFFSET == Vector2(0.0, -150.0),
+		"l'impatto genera 90 scintille azzurre all'altezza della pancia"
+	)
+	preview_explosion.queue_free()
+	tornado_preview.queue_free()
+	await process_frame
+	var medium_tornado := AriannaTornadoProjectile.new()
+	medium_tornado.setup(arianna, true, &"medium")
+	var heavy_tornado := AriannaTornadoProjectile.new()
+	heavy_tornado.setup(arianna, true, &"heavy")
+	_expect(
+		medium_tornado.movement_speed == 560.0
+		and medium_tornado.impact_damage == 14
+		and is_equal_approx(medium_tornado.effect_intensity, 1.35)
+		and heavy_tornado.movement_speed == 700.0
+		and heavy_tornado.impact_damage == 18
+		and is_equal_approx(heavy_tornado.effect_intensity, 1.70),
+		"le varianti media e forte aumentano velocità, luce e danno del tornado"
+	)
+	medium_tornado.free()
+	heavy_tornado.free()
 	arianna.start_jump(1.0)
 	var jump_prepared := (
 		arianna.current_state == Mangler.State.JUMP_STARTUP
@@ -907,6 +984,96 @@ func _test_arianna_idle() -> void:
 		and not arianna.jump_strong_kick_active,
 		"terminato lo strong kick aereo Arianna riprende custom_jump dal frame 35"
 	)
+	arianna.velocity = Vector2.ZERO
+	arianna.change_state(Mangler.State.IDLE)
+	arianna._start_baseball_special()
+	_expect(
+		arianna.baseball_special_active
+		and arianna.current_state == Mangler.State.ATTACKING
+		and arianna.animated_sprite.animation == &"arianna_baseball_special"
+		and arianna.combat.is_attacking
+		and arianna.combat.current_attack == null,
+		"il quarto di luna con light punch avvia la speciale baseball senza hitbox prematura"
+	)
+	arianna.animated_sprite.frame = Arianna.ARIANNA_BASEBALL_TORNADO_SPAWN_FRAME
+	arianna._on_animation_frame_changed()
+	await process_frame
+	var spawned_tornado := (
+		get_first_node_in_group("arianna_baseball_tornado")
+		as AriannaTornadoProjectile
+	)
+	var tornado_count_before_repeat: int = get_nodes_in_group(
+		"arianna_baseball_tornado"
+	).size()
+	arianna._on_animation_frame_changed()
+	_expect(
+		is_instance_valid(spawned_tornado)
+		and arianna.baseball_tornado_spawned
+		and spawned_tornado.travel_direction == (1.0 if arianna.is_facing_right else -1.0)
+		and is_equal_approx(
+			spawned_tornado.global_position.y,
+			arianna.global_position.y + Arianna.ARIANNA_BASEBALL_TORNADO_SPAWN_OFFSET.y
+		)
+		and get_nodes_in_group("arianna_baseball_tornado").size()
+			== tornado_count_before_repeat,
+		"al frame d'impatto la speciale genera una sola tromba d'aria dalla mazza"
+	)
+	if is_instance_valid(spawned_tornado):
+		spawned_tornado.queue_free()
+	await process_frame
+	arianna._finish_baseball_special()
+	_expect(
+		arianna.current_state == Mangler.State.IDLE
+		and arianna.animated_sprite.animation == &"idle"
+		and not arianna.baseball_special_active
+		and not arianna.combat.is_attacking,
+		"la speciale baseball completa l'animazione e torna in idle"
+	)
+	arianna.input_buffer.clear()
+	arianna.input_buffer.record_input_snapshot(0, 1, [], arianna.is_facing_right)
+	arianna.input_buffer.record_input_snapshot(1, 1, [&"light_punch"], arianna.is_facing_right)
+	var diagonal_baseball_command_started := arianna._try_start_baseball_special()
+	_expect(
+		diagonal_baseball_command_started
+		and arianna.baseball_special_active
+		and arianna.animated_sprite.animation == &"arianna_baseball_special",
+		"la speciale baseball accetta light punch sulla diagonale finale"
+	)
+	arianna._finish_baseball_special()
+	arianna.input_buffer.clear()
+	arianna.input_buffer.record_input_snapshot(0, 1, [], arianna.is_facing_right)
+	arianna.input_buffer.record_input_snapshot(1, 1, [], arianna.is_facing_right)
+	arianna.input_buffer.record_input_snapshot(1, 0, [&"light_punch"], arianna.is_facing_right)
+	var forward_baseball_command_started := arianna._try_start_baseball_special()
+	_expect(
+		forward_baseball_command_started
+		and arianna.baseball_special_active
+		and arianna.animated_sprite.animation == &"arianna_baseball_special",
+		"la speciale baseball accetta il quarto di luna completo con light punch su avanti"
+	)
+	arianna._finish_baseball_special()
+	arianna.input_buffer.clear()
+	arianna.input_buffer.record_input_snapshot(0, 1, [], arianna.is_facing_right)
+	arianna.input_buffer.record_input_snapshot(1, 1, [], arianna.is_facing_right)
+	arianna.input_buffer.record_input_snapshot(1, 0, [&"medium_punch"], arianna.is_facing_right)
+	var medium_baseball_command_started := arianna._try_start_baseball_special()
+	_expect(
+		medium_baseball_command_started
+		and arianna.baseball_special_strength == &"medium",
+		"quarto di luna avanti più pugno medio avvia il tornado medio"
+	)
+	arianna._finish_baseball_special()
+	arianna.input_buffer.clear()
+	arianna.input_buffer.record_input_snapshot(0, 1, [], arianna.is_facing_right)
+	arianna.input_buffer.record_input_snapshot(1, 1, [], arianna.is_facing_right)
+	arianna.input_buffer.record_input_snapshot(1, 0, [&"heavy_punch"], arianna.is_facing_right)
+	var heavy_baseball_command_started := arianna._try_start_baseball_special()
+	_expect(
+		heavy_baseball_command_started
+		and arianna.baseball_special_strength == &"heavy",
+		"quarto di luna avanti più pugno forte avvia il tornado forte"
+	)
+	arianna._finish_baseball_special()
 	arianna.velocity = Vector2.ZERO
 	arianna.change_state(Mangler.State.IDLE)
 	arianna.is_facing_right = true
