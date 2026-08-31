@@ -167,9 +167,12 @@ const ARIANNA_HURT_MEDIUM_SOURCE_FRAME_COUNT := 8
 const ARIANNA_HURT_MEDIUM_COLUMNS := 5
 const ARIANNA_HURT_MEDIUM_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_HURT_MEDIUM_PUSHBACK_MULTIPLIER := 0.45
-const ARIANNA_HURT_HIGH_POSE := preload(
-	"res://assets/sprites/characters/arianna/basic-moves/hurt_high-pose.png"
+const ARIANNA_HURT_HIGH_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/hurt_high.png"
 )
+const ARIANNA_HURT_HIGH_FRAME_COUNT := 7
+const ARIANNA_HURT_HIGH_COLUMNS := 5
+const ARIANNA_HURT_HIGH_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_HURT_LOW_POSE := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/hurt_low-pose.png"
 )
@@ -353,7 +356,7 @@ func _ready() -> void:
 	configure_jump_strong_kick_frames()
 	configure_baseball_special_frames()
 	configure_hurt_medium_frames()
-	configure_hurt_pose_frames(&"hurt_high", ARIANNA_HURT_HIGH_POSE)
+	configure_hurt_high_frames()
 	configure_hurt_pose_frames(&"hurt_low", ARIANNA_HURT_LOW_POSE)
 	configure_back_jump_frames()
 	configure_low_light_punch_frames()
@@ -1536,6 +1539,26 @@ func configure_hurt_medium_frames() -> void:
 			ARIANNA_HURT_MEDIUM_CELL_SIZE
 		)
 		frames.add_frame(&"hurt_mid", atlas_frame)
+
+
+func configure_hurt_high_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"hurt_high"):
+		frames.remove_animation(&"hurt_high")
+	frames.add_animation(&"hurt_high")
+	frames.set_animation_speed(&"hurt_high", 24.0)
+	frames.set_animation_loop(&"hurt_high", false)
+	for source_index in range(ARIANNA_HURT_HIGH_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = ARIANNA_HURT_HIGH_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % ARIANNA_HURT_HIGH_COLUMNS),
+				float(source_index / ARIANNA_HURT_HIGH_COLUMNS)
+			) * ARIANNA_HURT_HIGH_CELL_SIZE,
+			ARIANNA_HURT_HIGH_CELL_SIZE
+		)
+		frames.add_frame(&"hurt_high", atlas_frame)
 
 
 func configure_hurt_pose_frames(animation_name: StringName, pose_texture: Texture2D) -> void:

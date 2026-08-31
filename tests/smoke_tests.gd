@@ -742,12 +742,18 @@ func _test_arianna_idle() -> void:
 		and arianna_hurt_mid_last.region == arianna_hurt_mid_first.region,
 		"hurt_mid di Arianna usa 1-8-1 a 48 FPS"
 	)
+	var arianna_hurt_high_first := frames.get_frame_texture(&"hurt_high", 0) as AtlasTexture
+	var arianna_hurt_high_last := frames.get_frame_texture(&"hurt_high", 6) as AtlasTexture
 	_expect(
-		frames.get_frame_count(&"hurt_high") == 1
-		and frames.get_frame_texture(&"hurt_high", 0) == Arianna.ARIANNA_HURT_HIGH_POSE
+		frames.get_frame_count(&"hurt_high") == 7
+		and is_equal_approx(frames.get_animation_speed(&"hurt_high"), 24.0)
+		and not frames.get_animation_loop(&"hurt_high")
+		and arianna_hurt_high_first.atlas == Arianna.ARIANNA_HURT_HIGH_SHEET
+		and arianna_hurt_high_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and arianna_hurt_high_last.region == Rect2(512.0, 512.0, 512.0, 512.0)
 		and frames.get_frame_count(&"hurt_low") == 1
 		and frames.get_frame_texture(&"hurt_low", 0) == Arianna.ARIANNA_HURT_LOW_POSE,
-		"hurt_high e hurt_low di Arianna non riusano più gli sprite di Mangler"
+		"hurt_high usa 7 frame Arianna e hurt_low non riusa Mangler"
 	)
 	var reaction_test_position := arianna.position
 	arianna.start_hit_reaction(AttackData.HitHeight.MID, null, 4, true)
@@ -785,10 +791,10 @@ func _test_arianna_idle() -> void:
 		is_instance_valid(low_hurt_explosion)
 		and is_equal_approx(
 			low_hurt_explosion.global_position.y,
-			arianna.global_position.y - 150.0
+			arianna.global_position.y + Mangler.HURT_LOW_EFFECT_OFFSET.y
 		)
 		and (low_hurt_explosion.get_node("BlueSparks") as CPUParticles2D).amount == 64,
-		"hurt_low genera un'esplosione azzurra all'altezza dello stomaco"
+		"hurt_low genera un'esplosione azzurra sulle gambe"
 	)
 	if is_instance_valid(low_hurt_explosion):
 		low_hurt_explosion.queue_free()
@@ -802,9 +808,9 @@ func _test_arianna_idle() -> void:
 	arianna.start_hit_reaction(AttackData.HitHeight.HIGH, null, 0, false)
 	_expect(
 		arianna.animated_sprite.animation == &"hurt_high"
-		and arianna.animated_sprite.sprite_frames.get_frame_texture(&"hurt_high", 0)
-			== Arianna.ARIANNA_HURT_HIGH_POSE,
-		"pugni light e medium HIGH mostrano la posa hurt_high di Arianna"
+		and (arianna.animated_sprite.sprite_frames.get_frame_texture(&"hurt_high", 0) as AtlasTexture).atlas
+			== Arianna.ARIANNA_HURT_HIGH_SHEET,
+		"pugni light e medium HIGH mostrano lo spritesheet hurt_high di Arianna"
 	)
 	arianna.change_state(Mangler.State.IDLE)
 	var tornado_preview := AriannaTornadoProjectile.new()

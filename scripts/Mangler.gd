@@ -59,6 +59,8 @@ const BACK_HOP_TAKEOFF_FRAME := 12
 const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
 const HIT_PUSHBACK_SPEED := 180.0
 const HIT_PUSHBACK_DECELERATION := 720.0
+const HURT_MID_EFFECT_OFFSET := Vector2(0.0, -150.0)
+const HURT_LOW_EFFECT_OFFSET := Vector2(0.0, -72.0)
 const ATTACK_FOREGROUND_Z_OFFSET := 1
 const SPECIAL_720_MOVE_SPEED := 75.0
 const IDLE_SHEET := preload("res://assets/sprites/characters/mangler/01-mangler-idle.png")
@@ -2429,7 +2431,7 @@ func start_hit_reaction(
 		var final_frame := animated_sprite.sprite_frames.get_frame_count(hit_animation) - 1
 		animated_sprite.frame = clampi(start_frame, 0, final_frame)
 	if hit_height in [AttackData.HitHeight.MID, AttackData.HitHeight.LOW]:
-		spawn_hurt_blue_explosion()
+		spawn_hurt_blue_explosion(hit_height)
 
 	if apply_pushback:
 		var push_direction := -1.0 if is_facing_right else 1.0
@@ -2443,7 +2445,7 @@ func start_hit_reaction(
 	return get_animation_duration(hit_animation, start_frame)
 
 
-func spawn_hurt_blue_explosion() -> Node2D:
+func spawn_hurt_blue_explosion(hit_height: AttackData.HitHeight) -> Node2D:
 	var explosion := Node2D.new()
 	explosion.name = "LowHurtBlueExplosion"
 	explosion.add_to_group("hurt_blue_explosion")
@@ -2452,7 +2454,12 @@ func spawn_hurt_blue_explosion() -> Node2D:
 	if effect_parent == null:
 		effect_parent = get_tree().root
 	effect_parent.add_child(explosion)
-	explosion.global_position = global_position + Vector2(0.0, -150.0)
+	var effect_offset := (
+		HURT_LOW_EFFECT_OFFSET
+		if hit_height == AttackData.HitHeight.LOW
+		else HURT_MID_EFFECT_OFFSET
+	)
+	explosion.global_position = global_position + effect_offset
 	var additive_material := CanvasItemMaterial.new()
 	additive_material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	var flash := Sprite2D.new()
