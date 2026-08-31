@@ -676,6 +676,44 @@ func _test_arianna_idle() -> void:
 		and jump_light_kick_last.region == jump_light_kick_first.region,
 		"Arianna jump light kick usa 1-15 e torna 14-1 a 48 FPS"
 	)
+	var jump_medium_kick_first := (
+		frames.get_frame_texture(&"arianna_jump_medium_kick", 0) as AtlasTexture
+	)
+	var jump_medium_kick_peak := (
+		frames.get_frame_texture(&"arianna_jump_medium_kick", 34) as AtlasTexture
+	)
+	var jump_medium_kick_recovery := (
+		frames.get_frame_texture(&"arianna_jump_medium_kick", 35) as AtlasTexture
+	)
+	var jump_medium_kick_last := (
+		frames.get_frame_texture(&"arianna_jump_medium_kick", 47) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_jump_medium_kick") == 48
+		and is_equal_approx(frames.get_animation_speed(&"arianna_jump_medium_kick"), 60.0)
+		and not frames.get_animation_loop(&"arianna_jump_medium_kick")
+		and jump_medium_kick_first.atlas == Arianna.ARIANNA_JUMP_MEDIUM_KICK_SHEET
+		and jump_medium_kick_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and jump_medium_kick_peak.region == Rect2(3072.0, 2048.0, 512.0, 512.0)
+		and jump_medium_kick_recovery.region == Rect2(2560.0, 2048.0, 512.0, 512.0)
+		and jump_medium_kick_last.region == Rect2(0.0, 1536.0, 512.0, 512.0),
+		"Arianna jump medium kick usa 1-35 e torna 34-22 a 60 FPS"
+	)
+	var jump_strong_kick_first := (
+		frames.get_frame_texture(&"arianna_jump_strong_kick", 0) as AtlasTexture
+	)
+	var jump_strong_kick_last := (
+		frames.get_frame_texture(&"arianna_jump_strong_kick", 29) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_jump_strong_kick") == 30
+		and is_equal_approx(frames.get_animation_speed(&"arianna_jump_strong_kick"), 48.0)
+		and not frames.get_animation_loop(&"arianna_jump_strong_kick")
+		and jump_strong_kick_first.atlas == Arianna.ARIANNA_JUMP_STRONG_KICK_SHEET
+		and jump_strong_kick_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and jump_strong_kick_last.region == Rect2(512.0, 2048.0, 512.0, 512.0),
+		"Arianna jump strong kick usa tutti i 30 frame a 48 FPS"
+	)
 	arianna.start_jump(1.0)
 	var jump_prepared := (
 		arianna.current_state == Mangler.State.JUMP_STARTUP
@@ -808,6 +846,66 @@ func _test_arianna_idle() -> void:
 		and arianna.animated_sprite.scale == Arianna.ARIANNA_SPRITE_SCALE
 		and not arianna.jump_light_kick_active,
 		"terminato il light kick aereo Arianna riprende custom_jump dal frame 40"
+	)
+	arianna.current_state = Mangler.State.JUMPING
+	arianna.aerial_attack_used = false
+	arianna._start_jump_medium_kick()
+	_expect(
+		arianna.jump_medium_kick_active
+		and arianna.current_state == Mangler.State.ATTACKING
+		and arianna.animated_sprite.animation == &"arianna_jump_medium_kick"
+		and arianna.animated_sprite.scale == Arianna.ARIANNA_JUMP_MEDIUM_KICK_SPRITE_SCALE
+		and arianna.combat.is_airborne_medium_kick
+		and arianna.combat.current_variant != null
+		and arianna.combat.current_variant.hit_height == AttackData.HitHeight.HIGH
+		and arianna.combat.get_effective_hit_height(arianna.combat.current_attack)
+			== AttackData.HitHeight.HIGH
+		and arianna.combat.hitbox_shape.position
+			== Arianna.ARIANNA_JUMP_MEDIUM_KICK_HITBOX_POSITION,
+		"il medium kick durante il salto avvia la variante aerea dedicata"
+	)
+	arianna.animated_sprite.frame = Arianna.ARIANNA_JUMP_MEDIUM_KICK_ACTIVE_START_FRAME
+	arianna._on_animation_frame_changed()
+	_expect(
+		not arianna.combat.hitbox_shape.disabled,
+		"la hitbox del medium kick aereo si attiva al fotogramma visibile 28"
+	)
+	arianna.animated_sprite.frame = Arianna.ARIANNA_JUMP_MEDIUM_KICK_ACTIVE_END_FRAME
+	arianna._on_animation_frame_changed()
+	_expect(
+		not arianna.combat.hitbox_shape.disabled,
+		"la hitbox del medium kick aereo resta attiva fino alla fine"
+	)
+	arianna._finish_jump_medium_kick(false)
+	_expect(
+		arianna.current_state == Mangler.State.JUMPING
+		and arianna.animated_sprite.animation == &"jump"
+		and arianna.animated_sprite.frame == 29
+		and arianna.animated_sprite.scale == Arianna.ARIANNA_SPRITE_SCALE
+		and not arianna.jump_medium_kick_active,
+		"terminato il medium kick aereo Arianna riprende custom_jump dal frame 30"
+	)
+	arianna.current_state = Mangler.State.JUMPING
+	arianna.aerial_attack_used = false
+	arianna._start_jump_strong_kick()
+	_expect(
+		arianna.jump_strong_kick_active
+		and arianna.current_state == Mangler.State.ATTACKING
+		and arianna.animated_sprite.animation == &"arianna_jump_strong_kick"
+		and arianna.animated_sprite.scale == Arianna.ARIANNA_JUMP_STRONG_KICK_SPRITE_SCALE
+		and arianna.combat.is_airborne_heavy_kick
+		and arianna.combat.current_variant != null
+		and arianna.combat.current_variant.hit_height == AttackData.HitHeight.HIGH,
+		"lo strong kick durante il salto avvia la variante aerea dedicata"
+	)
+	arianna._finish_jump_strong_kick(false)
+	_expect(
+		arianna.current_state == Mangler.State.JUMPING
+		and arianna.animated_sprite.animation == &"jump"
+		and arianna.animated_sprite.frame == 34
+		and arianna.animated_sprite.scale == Arianna.ARIANNA_SPRITE_SCALE
+		and not arianna.jump_strong_kick_active,
+		"terminato lo strong kick aereo Arianna riprende custom_jump dal frame 35"
 	)
 	arianna.velocity = Vector2.ZERO
 	arianna.change_state(Mangler.State.IDLE)

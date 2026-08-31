@@ -207,6 +207,8 @@ Sono presenti asset per Arianna, Bue, Mangler, Mileto, Peirolo e Torpe. Nell'are
 - Il calcio leggero in piedi di Arianna usa i frame sorgente 11→23 e torna 22→11 a 48 FPS prima dell'idle. La hitbox segue la gamba distesa e il colpo è medio: `hurt_mid` se entra, `block_mid` se viene parato.
 - Con giù + calcio leggero Arianna usa il nuovo `light_kick_low.png` 7×7: frame 1→21 e ritorno 20→1 a 60 FPS. Il colpo è basso (`hurt_low`/`block_low`) e mantenendo giù termina nella crouch pose.
 - Il calcio medio in piedi usa `medium_kick.png`, sorgenti 8→28 e ritorno 27→8 a 48 FPS. La hitbox segue la gamba alta e genera `hurt_mid` oppure `block_mid`.
+- In salto il calcio medio usa `medium_kick_jump.png`: esegue i 35 fotogrammi e recupera da 34 a 22 a 60 FPS; la hitbox è attiva dal fotogramma runtime 28 fino alla fine e genera `hurt_high` o `block_high`. Poi riprende `custom_jump` dal fotogramma visibile 30 (oppure torna in idle se Arianna è già atterrata).
+- Lo strong kick in salto usa tutti i 30 fotogrammi di `strong_kick_jump_2.png` a 48 FPS, senza ritorno inverso; quindi riprende `custom_jump` dal fotogramma visibile 35 oppure torna in idle se Arianna è già a terra.
 - Con giù + calcio medio Arianna usa `medium_kick_low.png`, sorgenti 8→21 e ritorno 20→8 a 48 FPS. Genera `hurt_low` o `block_low` e mantenendo giù torna alla crouch pose.
 - Lo strong kick di Arianna usa `strong_kick.png` a 48 FPS, omettendo i sorgente 13–24 e 44–52; i 43 frame rimanenti vengono riprodotti una volta con l'effetto movimento/afterimage delle mosse potenti e poi la mossa torna in idle.
 - Il follow-up con la vecchia testata separata resta configurato, ma non viene avviato automaticamente durante questa anteprima.
