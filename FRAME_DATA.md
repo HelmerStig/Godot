@@ -52,6 +52,10 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Arianna calcio medio in salto | airborne medium kick | `arianna_jump_medium_kick` | 60 | sorgenti 1-27 | dal frame runtime 28 fino alla fine | completa 1→35, recovery 34→22, poi `jump` dal frame 30; idle se al suolo | 48 runtime | 12 | high | no |
 | Arianna calcio potente in salto | airborne strong kick | `arianna_jump_strong_kick` | 48 | sorgenti 1-14 | sorgenti 15-19 | completa 1→30, poi `jump` dal frame 35; idle se al suolo | 30 | 20 | high | no |
 | Arianna speciale baseball | QCF + light/medium/heavy punch | `arianna_baseball_special` | 48 | tornado al frame visibile 24 | 175 px avanti, punta inferiore sulla linea del terreno | tutti i 49 frame, poi idle | 49 | light 420 px/s e luce 1×; medium 560 px/s e luce 1,35×; heavy 700 px/s e luce 1,70× | danni 10/14/18, mid (`hurt_medium`), esplosione azzurra sulla pancia e scomparsa | no |
+| Arianna hurt medium | colpo MID ricevuto | `hurt_mid` | 48 | — | — | sorgenti 1→8, poi 7→1 | 15 runtime | rinculo Godot al 45% | — | no |
+| Arianna hurt high | colpo HIGH ricevuto | `hurt_high` | 24 | — | — | posa Arianna mantenuta durante hitstun | 1 | — | — | no |
+| Arianna hurt low | colpo LOW ricevuto | `hurt_low` | 24 | — | — | posa Arianna mantenuta durante hitstun | 1 | esplosione azzurra sullo stomaco | — | no |
+| Tutti i fighter hurt mid/low | colpo MID o LOW ricevuto | `hurt_mid` / `hurt_low` | dipende dal fighter | — | esplosione a `(0, -150)` | invariata | invariata | lampo e 64 particelle azzurre sullo stomaco | — | no |
 | Arianna pugno leggero | standing light punch | `arianna_light_punch` → `arianna_light_punch_recovery` | 48 | 6 | 3 | 9 | 18 (1-9, poi 9-1) | 5 | high | no |
 | Arianna pugno leggero basso | down + light punch | `arianna_low_light_punch` → `arianna_low_light_punch_recovery` | 48 | 11 | 4 | 14 | 29 (1-15, poi 14-1) | 5 | mid | no |
 | Arianna pugno medio | standing medium punch | `arianna_medium_punch` → `arianna_medium_punch_recovery` | 48 | 20 | 5 | 24 | 49 (1-25, poi 24-1) | 10 | high | no |

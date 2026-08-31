@@ -160,6 +160,19 @@ const ARIANNA_BASEBALL_SPECIAL_COLUMNS := 7
 const ARIANNA_BASEBALL_SPECIAL_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_BASEBALL_TORNADO_SPAWN_FRAME := 23
 const ARIANNA_BASEBALL_TORNADO_SPAWN_OFFSET := Vector2(175.0, -80.0)
+const ARIANNA_HURT_MEDIUM_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/hurt_medium.png"
+)
+const ARIANNA_HURT_MEDIUM_SOURCE_FRAME_COUNT := 8
+const ARIANNA_HURT_MEDIUM_COLUMNS := 5
+const ARIANNA_HURT_MEDIUM_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_HURT_MEDIUM_PUSHBACK_MULTIPLIER := 0.45
+const ARIANNA_HURT_HIGH_POSE := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/hurt_high-pose.png"
+)
+const ARIANNA_HURT_LOW_POSE := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/hurt_low-pose.png"
+)
 const ARIANNA_LOW_LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/light-punch/ligth-punch-low.png"
 )
@@ -339,6 +352,9 @@ func _ready() -> void:
 	configure_jump_medium_kick_frames()
 	configure_jump_strong_kick_frames()
 	configure_baseball_special_frames()
+	configure_hurt_medium_frames()
+	configure_hurt_pose_frames(&"hurt_high", ARIANNA_HURT_HIGH_POSE)
+	configure_hurt_pose_frames(&"hurt_low", ARIANNA_HURT_LOW_POSE)
 	configure_back_jump_frames()
 	configure_low_light_punch_frames()
 	configure_medium_punch_frames()
@@ -358,6 +374,18 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if is_player_controlled:
 		input_buffer.update(is_facing_right)
+	if current_state == State.HIT:
+		if not is_on_floor():
+			velocity.y += ARIANNA_JUMP_GRAVITY * _delta
+		elif velocity.y > 0.0:
+			velocity.y = 0.0
+		update_physical_collision()
+		update_collision_profile()
+		move_and_slide()
+		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
+		update_facing_direction()
+		update_ground_shadow()
+		return
 	var opponent_is_attacking := (
 		is_instance_valid(opponent)
 		and opponent.combat != null
@@ -1483,6 +1511,57 @@ func configure_baseball_special_frames() -> void:
 			ARIANNA_BASEBALL_SPECIAL_CELL_SIZE
 		)
 		frames.add_frame(&"arianna_baseball_special", atlas_frame)
+
+
+func configure_hurt_medium_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"hurt_mid"):
+		frames.remove_animation(&"hurt_mid")
+	frames.add_animation(&"hurt_mid")
+	frames.set_animation_speed(&"hurt_mid", 48.0)
+	frames.set_animation_loop(&"hurt_mid", false)
+	var source_sequence: Array[int] = []
+	for source_index in range(ARIANNA_HURT_MEDIUM_SOURCE_FRAME_COUNT):
+		source_sequence.append(source_index)
+	for source_index in range(ARIANNA_HURT_MEDIUM_SOURCE_FRAME_COUNT - 2, -1, -1):
+		source_sequence.append(source_index)
+	for source_index in source_sequence:
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = ARIANNA_HURT_MEDIUM_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % ARIANNA_HURT_MEDIUM_COLUMNS),
+				float(source_index / ARIANNA_HURT_MEDIUM_COLUMNS)
+			) * ARIANNA_HURT_MEDIUM_CELL_SIZE,
+			ARIANNA_HURT_MEDIUM_CELL_SIZE
+		)
+		frames.add_frame(&"hurt_mid", atlas_frame)
+
+
+func configure_hurt_pose_frames(animation_name: StringName, pose_texture: Texture2D) -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(animation_name):
+		frames.remove_animation(animation_name)
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, 24.0)
+	frames.set_animation_loop(animation_name, false)
+	frames.add_frame(animation_name, pose_texture)
+
+
+func start_hit_reaction(
+	hit_height: AttackData.HitHeight,
+	attacker: Mangler,
+	start_frame: int = 0,
+	apply_pushback: bool = true
+) -> float:
+	if hit_height == AttackData.HitHeight.MID:
+		start_frame = 0
+	var reaction_duration := super.start_hit_reaction(
+		hit_height, attacker, start_frame, apply_pushback
+	)
+	if hit_height == AttackData.HitHeight.MID and apply_pushback:
+		velocity.x *= ARIANNA_HURT_MEDIUM_PUSHBACK_MULTIPLIER
+	return reaction_duration
 
 
 func begin_jump_ascent() -> void:

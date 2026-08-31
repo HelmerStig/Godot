@@ -729,6 +729,84 @@ func _test_arianna_idle() -> void:
 		and baseball_special_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
 		"la speciale baseball di Arianna usa tutti i 49 frame a 48 FPS"
 	)
+	var arianna_hurt_mid_first := frames.get_frame_texture(&"hurt_mid", 0) as AtlasTexture
+	var arianna_hurt_mid_peak := frames.get_frame_texture(&"hurt_mid", 7) as AtlasTexture
+	var arianna_hurt_mid_last := frames.get_frame_texture(&"hurt_mid", 14) as AtlasTexture
+	_expect(
+		frames.get_frame_count(&"hurt_mid") == 15
+		and is_equal_approx(frames.get_animation_speed(&"hurt_mid"), 48.0)
+		and not frames.get_animation_loop(&"hurt_mid")
+		and arianna_hurt_mid_first.atlas == Arianna.ARIANNA_HURT_MEDIUM_SHEET
+		and arianna_hurt_mid_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and arianna_hurt_mid_peak.region == Rect2(1024.0, 512.0, 512.0, 512.0)
+		and arianna_hurt_mid_last.region == arianna_hurt_mid_first.region,
+		"hurt_mid di Arianna usa 1-8-1 a 48 FPS"
+	)
+	_expect(
+		frames.get_frame_count(&"hurt_high") == 1
+		and frames.get_frame_texture(&"hurt_high", 0) == Arianna.ARIANNA_HURT_HIGH_POSE
+		and frames.get_frame_count(&"hurt_low") == 1
+		and frames.get_frame_texture(&"hurt_low", 0) == Arianna.ARIANNA_HURT_LOW_POSE,
+		"hurt_high e hurt_low di Arianna non riusano più gli sprite di Mangler"
+	)
+	var reaction_test_position := arianna.position
+	arianna.start_hit_reaction(AttackData.HitHeight.MID, null, 4, true)
+	var reduced_mid_pushback := absf(arianna.velocity.x)
+	arianna._physics_process(1.0 / 60.0)
+	_expect(
+		arianna.current_state == Mangler.State.HIT
+		and arianna.animated_sprite.animation == &"hurt_mid"
+		and arianna.animated_sprite.frame <= 1
+		and is_equal_approx(
+			reduced_mid_pushback,
+			Mangler.HIT_PUSHBACK_SPEED * Arianna.ARIANNA_HURT_MEDIUM_PUSHBACK_MULTIPLIER
+		),
+		"Arianna mantiene hurt_mid dal primo frame con rinculo ridotto"
+	)
+	var medium_hurt_explosion := get_first_node_in_group(
+		"hurt_blue_explosion"
+	) as Node2D
+	_expect(
+		is_instance_valid(medium_hurt_explosion)
+		and (medium_hurt_explosion.get_node("BlueSparks") as CPUParticles2D).amount == 64,
+		"hurt_medium mantiene l'esplosione azzurra sullo stomaco"
+	)
+	if is_instance_valid(medium_hurt_explosion):
+		medium_hurt_explosion.queue_free()
+	await process_frame
+	arianna.position = reaction_test_position
+	arianna.velocity = Vector2.ZERO
+	arianna.change_state(Mangler.State.IDLE)
+	arianna.start_hit_reaction(AttackData.HitHeight.LOW, null, 0, false)
+	var low_hurt_explosion := get_first_node_in_group(
+		"hurt_blue_explosion"
+	) as Node2D
+	_expect(
+		is_instance_valid(low_hurt_explosion)
+		and is_equal_approx(
+			low_hurt_explosion.global_position.y,
+			arianna.global_position.y - 150.0
+		)
+		and (low_hurt_explosion.get_node("BlueSparks") as CPUParticles2D).amount == 64,
+		"hurt_low genera un'esplosione azzurra all'altezza dello stomaco"
+	)
+	if is_instance_valid(low_hurt_explosion):
+		low_hurt_explosion.queue_free()
+	_expect(
+		arianna.animated_sprite.animation == &"hurt_low"
+		and arianna.animated_sprite.sprite_frames.get_frame_texture(&"hurt_low", 0)
+			== Arianna.ARIANNA_HURT_LOW_POSE,
+		"un colpo LOW mostra Arianna e non Mangler"
+	)
+	arianna.change_state(Mangler.State.IDLE)
+	arianna.start_hit_reaction(AttackData.HitHeight.HIGH, null, 0, false)
+	_expect(
+		arianna.animated_sprite.animation == &"hurt_high"
+		and arianna.animated_sprite.sprite_frames.get_frame_texture(&"hurt_high", 0)
+			== Arianna.ARIANNA_HURT_HIGH_POSE,
+		"pugni light e medium HIGH mostrano la posa hurt_high di Arianna"
+	)
+	arianna.change_state(Mangler.State.IDLE)
 	var tornado_preview := AriannaTornadoProjectile.new()
 	tornado_preview.setup(arianna, true)
 	root.add_child(tornado_preview)

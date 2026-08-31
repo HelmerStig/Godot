@@ -2428,6 +2428,8 @@ func start_hit_reaction(
 		animated_sprite.play(hit_animation)
 		var final_frame := animated_sprite.sprite_frames.get_frame_count(hit_animation) - 1
 		animated_sprite.frame = clampi(start_frame, 0, final_frame)
+	if hit_height in [AttackData.HitHeight.MID, AttackData.HitHeight.LOW]:
+		spawn_hurt_blue_explosion()
 
 	if apply_pushback:
 		var push_direction := -1.0 if is_facing_right else 1.0
@@ -2439,6 +2441,66 @@ func start_hit_reaction(
 	else:
 		velocity.x = 0.0
 	return get_animation_duration(hit_animation, start_frame)
+
+
+func spawn_hurt_blue_explosion() -> Node2D:
+	var explosion := Node2D.new()
+	explosion.name = "LowHurtBlueExplosion"
+	explosion.add_to_group("hurt_blue_explosion")
+	explosion.z_index = z_index + 4
+	var effect_parent: Node = get_tree().current_scene
+	if effect_parent == null:
+		effect_parent = get_tree().root
+	effect_parent.add_child(explosion)
+	explosion.global_position = global_position + Vector2(0.0, -150.0)
+	var additive_material := CanvasItemMaterial.new()
+	additive_material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	var flash := Sprite2D.new()
+	flash.name = "BlueFlash"
+	flash.texture = create_hurt_blue_glow_texture()
+	flash.scale = Vector2(0.32, 0.32)
+	flash.material = additive_material
+	explosion.add_child(flash)
+	var flash_tween := flash.create_tween()
+	flash_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	flash_tween.tween_property(flash, "scale", Vector2(1.2, 1.2), 0.14)
+	flash_tween.parallel().tween_property(flash, "modulate:a", 0.0, 0.28)
+	var sparks := CPUParticles2D.new()
+	sparks.name = "BlueSparks"
+	sparks.amount = 64
+	sparks.one_shot = true
+	sparks.explosiveness = 1.0
+	sparks.lifetime = 0.42
+	sparks.spread = 180.0
+	sparks.gravity = Vector2.ZERO
+	sparks.initial_velocity_min = 85.0
+	sparks.initial_velocity_max = 285.0
+	sparks.scale_amount_min = 1.3
+	sparks.scale_amount_max = 3.8
+	sparks.color = Color(0.24, 0.76, 1.0, 0.94)
+	sparks.material = additive_material
+	explosion.add_child(sparks)
+	sparks.emitting = true
+	get_tree().create_timer(0.52).timeout.connect(explosion.queue_free)
+	return explosion
+
+
+func create_hurt_blue_glow_texture() -> GradientTexture2D:
+	var gradient := Gradient.new()
+	gradient.colors = PackedColorArray([
+		Color(0.78, 0.96, 1.0, 0.98),
+		Color(0.2, 0.7, 1.0, 0.58),
+		Color(0.05, 0.3, 0.95, 0.0),
+	])
+	gradient.offsets = PackedFloat32Array([0.0, 0.44, 1.0])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.width = 180
+	texture.height = 180
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	return texture
 
 
 func start_airborne_hit_knockdown(attacker: Mangler) -> void:
