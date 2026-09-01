@@ -22,6 +22,18 @@ const HITBOX_SIZE := Vector2(145.0, 205.0)
 const HITBOX_POSITION := Vector2(0.0, -8.0)
 const IMPACT_OFFSET := Vector2(0.0, -150.0)
 const IMPACT_PARTICLE_COUNT := 90
+const LIGHT_IMPACT_COLOR := Color(0.3, 0.82, 1.0, 0.96)
+const MEDIUM_IMPACT_COLOR := Color(1.0, 0.82, 0.12, 0.98)
+const HEAVY_IMPACT_COLOR := Color(1.0, 0.22, 0.04, 0.98)
+const LIGHT_FLASH_COLOR := Color(0.35, 0.82, 1.0, 1.0)
+const MEDIUM_FLASH_COLOR := Color(1.0, 0.9, 0.24, 1.0)
+const HEAVY_FLASH_COLOR := Color(1.0, 0.4, 0.06, 1.0)
+const LIGHT_TRAIL_COLOR := Color(0.76, 0.9, 1.0, 0.48)
+const MEDIUM_TRAIL_COLOR := Color(1.0, 0.86, 0.18, 0.58)
+const HEAVY_TRAIL_COLOR := Color(1.0, 0.3, 0.06, 0.62)
+const LIGHT_DUST_COLOR := Color(0.9, 0.94, 1.0, 0.42)
+const MEDIUM_DUST_COLOR := Color(1.0, 0.78, 0.12, 0.48)
+const HEAVY_DUST_COLOR := Color(0.95, 0.18, 0.04, 0.52)
 
 var source_fighter: Fighter
 var travel_direction := 1.0
@@ -29,6 +41,10 @@ var movement_speed := MOVE_SPEED
 var impact_damage := DAMAGE
 var effect_intensity := 1.0
 var strength: StringName = &"light"
+var impact_color := LIGHT_IMPACT_COLOR
+var flash_color := LIGHT_FLASH_COLOR
+var trail_color := LIGHT_TRAIL_COLOR
+var dust_color := LIGHT_DUST_COLOR
 var lifetime := 0.0
 var has_hit := false
 var tornado_sprite: AnimatedSprite2D
@@ -47,14 +63,26 @@ func setup(
 			movement_speed = MEDIUM_MOVE_SPEED
 			impact_damage = MEDIUM_DAMAGE
 			effect_intensity = 1.35
+			impact_color = MEDIUM_IMPACT_COLOR
+			flash_color = MEDIUM_FLASH_COLOR
+			trail_color = MEDIUM_TRAIL_COLOR
+			dust_color = MEDIUM_DUST_COLOR
 		&"heavy":
 			movement_speed = HEAVY_MOVE_SPEED
 			impact_damage = HEAVY_DAMAGE
 			effect_intensity = 1.70
+			impact_color = HEAVY_IMPACT_COLOR
+			flash_color = HEAVY_FLASH_COLOR
+			trail_color = HEAVY_TRAIL_COLOR
+			dust_color = HEAVY_DUST_COLOR
 		_:
 			movement_speed = MOVE_SPEED
 			impact_damage = DAMAGE
 			effect_intensity = 1.0
+			impact_color = LIGHT_IMPACT_COLOR
+			flash_color = LIGHT_FLASH_COLOR
+			trail_color = LIGHT_TRAIL_COLOR
+			dust_color = LIGHT_DUST_COLOR
 
 
 func _ready() -> void:
@@ -126,7 +154,12 @@ func spawn_impact_explosion(world_position: Vector2) -> Node2D:
 	flash.name = "BlueFlash"
 	flash.texture = _create_glow_texture()
 	flash.scale = Vector2(0.35, 0.35) * effect_intensity
-	flash.modulate = Color(0.35, 0.82, 1.0, minf(1.0, 0.72 * effect_intensity))
+	flash.modulate = Color(
+		flash_color.r,
+		flash_color.g,
+		flash_color.b,
+		minf(1.0, 0.72 * effect_intensity)
+	)
 	flash.material = additive_material
 	explosion.add_child(flash)
 	var flash_tween := flash.create_tween()
@@ -147,7 +180,7 @@ func spawn_impact_explosion(world_position: Vector2) -> Node2D:
 	sparks.initial_velocity_max = 340.0
 	sparks.scale_amount_min = 1.5
 	sparks.scale_amount_max = 4.2
-	sparks.color = Color(0.3, 0.82, 1.0, 0.96)
+	sparks.color = impact_color
 	sparks.material = additive_material
 	explosion.add_child(sparks)
 	sparks.emitting = true
@@ -183,7 +216,12 @@ func _create_wind_effects() -> void:
 	glow.texture = _create_glow_texture()
 	glow.position = Vector2(0.0, -92.0)
 	glow.scale = Vector2(1.05, 1.45) * effect_intensity
-	glow.modulate = Color(0.72, 0.9, 1.0, minf(0.72, 0.34 * effect_intensity))
+	glow.modulate = Color(
+		flash_color.r,
+		flash_color.g,
+		flash_color.b,
+		minf(0.72, 0.34 * effect_intensity)
+	)
 	glow.material = additive_material
 	glow.z_index = -1
 	add_child(glow)
@@ -206,7 +244,7 @@ func _create_wind_effects() -> void:
 	wind_trail.gravity = Vector2.ZERO
 	wind_trail.scale_amount_min = 1.2
 	wind_trail.scale_amount_max = 3.2
-	wind_trail.color = Color(0.76, 0.9, 1.0, 0.48)
+	wind_trail.color = trail_color
 	wind_trail.material = additive_material
 	wind_trail.emitting = true
 	wind_trail.z_index = -2
@@ -225,7 +263,7 @@ func _create_wind_effects() -> void:
 	base_dust.gravity = Vector2(0.0, 120.0)
 	base_dust.scale_amount_min = 1.0
 	base_dust.scale_amount_max = 2.6
-	base_dust.color = Color(0.9, 0.94, 1.0, 0.42)
+	base_dust.color = dust_color
 	base_dust.material = additive_material
 	base_dust.emitting = true
 	add_child(base_dust)
@@ -234,9 +272,9 @@ func _create_wind_effects() -> void:
 func _create_glow_texture() -> GradientTexture2D:
 	var gradient := Gradient.new()
 	gradient.colors = PackedColorArray([
-		Color(0.84, 0.96, 1.0, 0.72),
-		Color(0.42, 0.74, 1.0, 0.25),
-		Color(0.2, 0.48, 0.9, 0.0),
+		Color(flash_color.r, flash_color.g, flash_color.b, 0.72),
+		Color(impact_color.r, impact_color.g, impact_color.b, 0.25),
+		Color(impact_color.r, impact_color.g, impact_color.b, 0.0),
 	])
 	gradient.offsets = PackedFloat32Array([0.0, 0.48, 1.0])
 	var texture := GradientTexture2D.new()

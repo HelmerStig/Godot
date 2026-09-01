@@ -1030,10 +1030,14 @@ func _test_arianna_idle() -> void:
 		medium_tornado.movement_speed == 560.0
 		and medium_tornado.impact_damage == 14
 		and is_equal_approx(medium_tornado.effect_intensity, 1.35)
+		and medium_tornado.impact_color == AriannaTornadoProjectile.MEDIUM_IMPACT_COLOR
+		and medium_tornado.trail_color == AriannaTornadoProjectile.MEDIUM_TRAIL_COLOR
 		and heavy_tornado.movement_speed == 700.0
 		and heavy_tornado.impact_damage == 18
-		and is_equal_approx(heavy_tornado.effect_intensity, 1.70),
-		"le varianti media e forte aumentano velocità, luce e danno del tornado"
+		and is_equal_approx(heavy_tornado.effect_intensity, 1.70)
+		and heavy_tornado.impact_color == AriannaTornadoProjectile.HEAVY_IMPACT_COLOR
+		and heavy_tornado.trail_color == AriannaTornadoProjectile.HEAVY_TRAIL_COLOR,
+		"medium usa particelle gialle e heavy arancio-rosse con statistiche dedicate"
 	)
 	medium_tornado.free()
 	heavy_tornado.free()
