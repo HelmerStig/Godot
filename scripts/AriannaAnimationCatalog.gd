@@ -49,6 +49,7 @@ func configure_all() -> void:
 	configure_sweep_knockdown_frames()
 	configure_knockdown_recovery_frames()
 	configure_ko_frames()
+	configure_victory_frames()
 
 
 func configure_idle_frames() -> void:
@@ -887,6 +888,16 @@ func configure_ko_frames() -> void:
 		fighter.ARIANNA_KO_FRAME_COUNT,
 		fighter.ARIANNA_KO_COLUMNS,
 		fighter.ARIANNA_KO_CELL_SIZE
+	)
+
+
+func configure_victory_frames() -> void:
+	configure_full_atlas_animation(
+		&"victory",
+		fighter.ARIANNA_VICTORY_SHEET,
+		fighter.ARIANNA_VICTORY_FRAME_COUNT,
+		fighter.ARIANNA_VICTORY_COLUMNS,
+		fighter.ARIANNA_VICTORY_CELL_SIZE
 	)
 
 

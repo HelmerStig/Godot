@@ -28,7 +28,8 @@ enum State {
 	HIT,
 	SWEEP_KNOCKDOWN,
 	KNOCKDOWN_RECOVERY,
-	KNOCKED_DOWN
+	KNOCKED_DOWN,
+	VICTORY
 }
 
 @export var character_data: CharacterData

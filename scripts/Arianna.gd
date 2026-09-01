@@ -209,6 +209,12 @@ const ARIANNA_KO_SHEET := preload(
 const ARIANNA_KO_FRAME_COUNT := 25
 const ARIANNA_KO_COLUMNS := 5
 const ARIANNA_KO_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_VICTORY_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/victory.png"
+)
+const ARIANNA_VICTORY_FRAME_COUNT := 49
+const ARIANNA_VICTORY_COLUMNS := 7
+const ARIANNA_VICTORY_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_HURT_LOW_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/hurt_low.png"
 )
@@ -399,6 +405,9 @@ func _ready() -> void:
 	whistle_audio_player.stream = ARIANNA_WHISTLE_SOUND
 	whistle_audio_player.volume_db = -2.0
 	add_child(whistle_audio_player)
+	var arena: Node = owner
+	if arena != null and arena.has_signal(&"round_ended"):
+		arena.connect(&"round_ended", _on_round_ended)
 	_activate_idle()
 	call_deferred("_activate_idle")
 
@@ -406,6 +415,11 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if is_player_controlled:
 		input_buffer.update(is_facing_right)
+	if current_state == State.VICTORY:
+		# Durante la vittoria non si fa nulla, l'animazione si blocca sull'ultimo frame.
+		velocity = Vector2.ZERO
+		update_ground_shadow()
+		return
 	if current_state == State.HIT:
 		if not is_on_floor():
 			velocity.y += ARIANNA_JUMP_GRAVITY * _delta
@@ -806,6 +820,17 @@ func _activate_idle() -> void:
 	animated_sprite.position = ARIANNA_SPRITE_POSITION
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	animated_sprite.play(&"idle")
+
+
+func _on_round_ended(winner: int) -> void:
+	"""Gestisce la vittoria quando Arianna vince il round."""
+	if winner == player_number:
+		current_state = State.VICTORY
+		velocity = Vector2.ZERO
+		animated_sprite.position = ARIANNA_SPRITE_POSITION
+		animated_sprite.scale = ARIANNA_SPRITE_SCALE
+		animated_sprite.play(&"victory")
+		# L'animazione si fermerà automaticamente sull'ultimo frame (loop = false)
 
 
 func update_sprite_scale() -> void:
