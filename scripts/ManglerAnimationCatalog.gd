@@ -1181,6 +1181,9 @@ func configure_victory_frames() -> void:
 	frames.set_animation_speed(&"victory", 24.0)
 	frames.set_animation_loop(&"victory", false)
 	for source_index in range(fighter.VICTORY_FRAME_COUNT):
+		# Salta i frame 8, 9, 10, 11
+		if source_index in [8, 9, 10, 11]:
+			continue
 		var atlas_frame := AtlasTexture.new()
 		atlas_frame.atlas = fighter.VICTORY_SHEET
 		atlas_frame.region = Rect2(
