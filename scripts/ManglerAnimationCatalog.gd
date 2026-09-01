@@ -57,6 +57,7 @@ func configure_all() -> void:
 	configure_super_drum_knockdown_frames()
 	configure_grabbed_frames()
 	configure_hurted_in_jump_frames()
+	configure_victory_frames()
 
 
 func configure_idle_frames() -> void:
@@ -1170,3 +1171,23 @@ func configure_hurted_in_jump_frames() -> void:
 			fighter.HURTED_IN_JUMP_CELL_SIZE
 		)
 		frames.add_frame(&"hurted_in_jump", atlas_frame)
+
+
+func configure_victory_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"victory"):
+		frames.remove_animation(&"victory")
+	frames.add_animation(&"victory")
+	frames.set_animation_speed(&"victory", 24.0)
+	frames.set_animation_loop(&"victory", false)
+	for source_index in range(fighter.VICTORY_FRAME_COUNT):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = fighter.VICTORY_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % fighter.VICTORY_COLUMNS),
+				float(floori(float(source_index) / fighter.VICTORY_COLUMNS))
+			) * fighter.VICTORY_CELL_SIZE,
+			fighter.VICTORY_CELL_SIZE
+		)
+		frames.add_frame(&"victory", atlas_frame)

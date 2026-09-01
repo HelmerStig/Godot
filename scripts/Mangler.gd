@@ -275,6 +275,12 @@ const HURTED_IN_JUMP_SHEET := preload(
 const HURTED_IN_JUMP_FRAME_COUNT := 25
 const HURTED_IN_JUMP_COLUMNS := 5
 const HURTED_IN_JUMP_CELL_SIZE := Vector2(512.0, 512.0)
+const VICTORY_SHEET := preload(
+	"res://assets/sprites/characters/mangler/victory.png"
+)
+const VICTORY_FRAME_COUNT := 49
+const VICTORY_COLUMNS := 7
+const VICTORY_CELL_SIZE := Vector2(512.0, 512.0)
 const SONIC_PROJECTILE_SPEED_MULTIPLIERS := {
 	&"light_punch": 1.0,
 	&"medium_punch": 1.3,
@@ -404,6 +410,9 @@ func _ready() -> void:
 	animated_sprite.frame_changed.connect(_on_animation_frame_changed)
 	animated_sprite.animation_changed.connect(update_sprite_scale)
 	combat.configure(character_data)
+	var arena: Node = owner
+	if arena != null and arena.has_signal(&"round_ended"):
+		arena.connect(&"round_ended", _on_round_ended)
 	add_to_group("fighters")
 	update_animation()
 	update_collision_profile()
@@ -414,6 +423,11 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if current_state == State.VICTORY:
+		# Durante la vittoria non si fa nulla, l'animazione si blocca sull'ultimo frame.
+		velocity = Vector2.ZERO
+		update_ground_shadow()
+		return
 	if is_instance_valid(grabbed_by):
 		velocity = Vector2.ZERO
 		update_ground_shadow()
@@ -478,6 +492,7 @@ func handle_input() -> void:
 		State.SWEEP_KNOCKDOWN,
 		State.KNOCKDOWN_RECOVERY,
 		State.KNOCKED_DOWN,
+		State.VICTORY,
 	]:
 		return
 	# Come nei fighting game classici, l'arco viene deciso allo stacco:
@@ -1003,6 +1018,10 @@ func begin_jump_ascent() -> void:
 
 func change_state(next_state: int) -> void:
 	"""Centralizza gli effetti collaterali di ogni transizione di stato."""
+	# Non permettere di uscire dallo stato VICTORY.
+	if current_state == State.VICTORY and next_state != State.VICTORY:
+		return
+	
 	if current_state == next_state:
 		update_animation()
 		return
@@ -1022,7 +1041,7 @@ func change_state(next_state: int) -> void:
 		State.CROUCHING:
 			can_move = true
 			velocity.x = 0.0
-		State.STANDING_UP, State.ATTACKING, State.BLOCKING, State.BLOCK_RECOVERY, State.HIT, State.SWEEP_KNOCKDOWN, State.KNOCKDOWN_RECOVERY, State.KNOCKED_DOWN:
+		State.STANDING_UP, State.ATTACKING, State.BLOCKING, State.BLOCK_RECOVERY, State.HIT, State.SWEEP_KNOCKDOWN, State.KNOCKDOWN_RECOVERY, State.KNOCKED_DOWN, State.VICTORY:
 			can_move = false
 			velocity.x = 0.0
 	update_animation()
@@ -1109,6 +1128,10 @@ func update_animation() -> void:
 				animated_sprite.play(&"ko")
 			return
 
+	if current_state == State.VICTORY:
+		# L'animazione victory è gestita da _on_round_ended; non interrompere.
+		return
+
 	var next_animation: StringName = &"idle"
 	if current_state == State.WALKING:
 		next_animation = &"backwalk" if is_moving_backward() else &"walk"
@@ -1147,7 +1170,8 @@ func update_sprite_scale() -> void:
 		&"light_kick", &"medium_kick", &"heavy_kick", &"medium_open_hand_slap", &"heavy_punch", &"crouch", &"jump", &"block_high",
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery", &"crouched_light_kick", &"crouched_medium_kick",
-		&"crouched_heavy_kick"
+		&"crouched_heavy_kick",
+		&"victory"
 	]
 	if animated_sprite.animation in [&"jump_light_kick", &"jump_medium_kick", &"jump_heavy_kick"]:
 		animated_sprite.scale = JUMP_LIGHT_KICK_SPRITE_SCALE
@@ -1447,6 +1471,7 @@ func update_state() -> void:
 		State.SWEEP_KNOCKDOWN,
 		State.KNOCKDOWN_RECOVERY,
 		State.KNOCKED_DOWN,
+		State.VICTORY,
 	]:
 		return
 
@@ -1540,6 +1565,14 @@ func update_ground_shadow() -> void:
 	)
 	ground_shadow.scale = Vector2(shadow_scale, lerpf(1.0, 0.72, air_ratio))
 	ground_shadow.modulate.a = lerpf(SHADOW_GROUND_ALPHA, SHADOW_AIR_ALPHA, air_ratio)
+
+
+func _on_round_ended(winner: int) -> void:
+	"""Gestisce la vittoria quando Mangler vince il round."""
+	if winner == player_number:
+		change_state(State.VICTORY)
+		animated_sprite.play(&"victory")
+		# L'animazione si fermerà automaticamente sull'ultimo frame (loop = false)
 
 
 func update_facing_direction() -> void:
@@ -1999,6 +2032,9 @@ func clear_attack_afterimages() -> void:
 
 
 func _on_animation_finished() -> void:
+	if animated_sprite.animation == &"victory":
+		# Victory finisce sull'ultimo frame, non cambiare stato.
+		return
 	if animated_sprite.animation == &"grabbed" and is_instance_valid(grabbed_by):
 		animated_sprite.pause()
 	elif animated_sprite.animation == &"super_start":

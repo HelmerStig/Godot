@@ -825,8 +825,7 @@ func _activate_idle() -> void:
 func _on_round_ended(winner: int) -> void:
 	"""Gestisce la vittoria quando Arianna vince il round."""
 	if winner == player_number:
-		current_state = State.VICTORY
-		velocity = Vector2.ZERO
+		change_state(State.VICTORY)
 		animated_sprite.position = ARIANNA_SPRITE_POSITION
 		animated_sprite.scale = ARIANNA_SPRITE_SCALE
 		animated_sprite.play(&"victory")
