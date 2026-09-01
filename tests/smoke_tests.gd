@@ -27,6 +27,44 @@ func _run() -> void:
 		quit(1)
 
 
+func _finish_suite(suite_name: String) -> void:
+	_release_test_actions()
+	if failures == 0:
+		print("%s_TESTS_OK" % suite_name.to_upper())
+		quit(0)
+	else:
+		push_error("%s_TESTS_FAILED: %d assertion(s)" % [suite_name.to_upper(), failures])
+		quit(1)
+
+
+func _test_arena_contract() -> void:
+	print("-- Arena")
+	var arena_scene := load("res://scenes/MainArena.tscn") as PackedScene
+	var arena := arena_scene.instantiate() as MainArena
+	var player1 := arena.get_node("Player1")
+	var player2 := arena.get_node("Player2")
+	_expect(
+		player1 is Arianna and player2 is Mangler and not (player2 is Arianna),
+		"MainArena assegna Arianna al Player 1 e Mangler al Player 2"
+	)
+	_expect(
+		player1 is Fighter and player2 is Fighter,
+		"i nodi dell'arena rispettano il contratto Fighter"
+	)
+	root.add_child(arena)
+	await process_frame
+	_expect(
+		arena.player1.opponent == arena.player2 and arena.player2.opponent == arena.player1,
+		"MainArena collega reciprocamente gli avversari"
+	)
+	_expect(
+		not arena.player1.controls_enabled and not arena.player2.controls_enabled,
+		"l'arena blocca i controlli durante il countdown"
+	)
+	arena.queue_free()
+	await process_frame
+
+
 func _test_attack_data() -> void:
 	print("-- AttackData")
 	var character_data := CharacterData.create_default()

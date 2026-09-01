@@ -28,23 +28,37 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path -LiteralPath $G
 	throw "Godot non trovato. Passa il percorso con -GodotPath 'C:\path\Godot.exe'."
 }
 
-$logPath = Join-Path $ProjectRoot ".godot\smoke-tests.log"
-$arguments = @(
-	"--headless",
-	"--path", "`"$ProjectRoot`"",
-	"--script", "res://tests/smoke_tests.gd",
-	"--log-file", "`"$logPath`""
-)
+$suites = @("input", "arianna", "mangler", "combat", "arena")
+$failedSuites = @()
 
-$process = Start-Process `
-	-FilePath $GodotPath `
-	-ArgumentList $arguments `
-	-WindowStyle Hidden `
-	-Wait `
-	-PassThru
+foreach ($suite in $suites) {
+	$logPath = Join-Path $ProjectRoot ".godot\test-$suite.log"
+	$arguments = @(
+		"--headless",
+		"--path", "`"$ProjectRoot`"",
+		"--script", "res://tests/test_$suite.gd",
+		"--log-file", "`"$logPath`""
+	)
 
-if (Test-Path -LiteralPath $logPath) {
-	Get-Content -Encoding UTF8 -LiteralPath $logPath
+	$process = Start-Process `
+		-FilePath $GodotPath `
+		-ArgumentList $arguments `
+		-WindowStyle Hidden `
+		-Wait `
+		-PassThru
+
+	if (Test-Path -LiteralPath $logPath) {
+		Get-Content -Encoding UTF8 -LiteralPath $logPath
+	}
+	if ($process.ExitCode -ne 0) {
+		$failedSuites += $suite
+	}
 }
 
-exit $process.ExitCode
+if ($failedSuites.Count -gt 0) {
+	Write-Error "Suite fallite: $($failedSuites -join ', ')"
+	exit 1
+}
+
+Write-Output "SMOKE_TESTS_OK"
+exit 0

@@ -81,12 +81,14 @@ Il runner cerca prima il percorso configurato in `.vscode/settings.json`, poi i 
 Esecuzione diretta, valida anche su altri sistemi:
 
 ```text
-godot --headless --path . --script res://tests/smoke_tests.gd
+godot --headless --path . --script res://tests/test_input.gd
 ```
 
-La suite verifica 496 condizioni relative ad animazioni, `AttackData`, `AttackVariantData`, input buffer, combattimento, UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK`.
+Gli altri entry point sono `test_arianna.gd`, `test_mangler.gd`, `test_combat.gd` e `test_arena.gd`. Il file `smoke_tests.gd` resta eseguibile come suite completa di compatibilità.
 
-> Baseline del 1 settembre 2026: 496 asserzioni superate, nessun fallimento e risultato `SMOKE_TESTS_OK` con Godot 4.7.
+Le cinque suite verificano 501 condizioni relative ad animazioni, `AttackData`, `AttackVariantData`, input buffer, combattimento, UI, KO e reset. Ogni processo pubblica il proprio risultato e il runner aggregato termina con `SMOKE_TESTS_OK`.
+
+> Baseline del 1 settembre 2026: 501 asserzioni superate in cinque suite, nessun fallimento e risultato aggregato `SMOKE_TESTS_OK` con Godot 4.7.
 
 ## Architettura
 
@@ -119,7 +121,9 @@ ArenaUI
 - `scripts/ArenaUI.gd`: barre vita, timer e messaggi.
 - `scripts/FighterDebugOverlay.gd`: visualizzazione di corpo, hitbox e hurtbox.
 - `scripts/StageAmbientEffects.gd`: effetti ambientali dello stage.
-- `tests/smoke_tests.gd`: suite headless senza addon esterni.
+- `tests/smoke_tests.gd`: fixture e scenari condivisi delle suite headless.
+- `tests/test_input.gd`, `test_arianna.gd`, `test_mangler.gd`, `test_combat.gd`, `test_arena.gd`: entry point indipendenti per area funzionale.
+- `tests/run_smoke_tests.cmd`: esegue tutte le suite in processi separati e aggrega l'esito.
 
 ## Stati del fighter
 
