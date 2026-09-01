@@ -193,9 +193,12 @@ const ARIANNA_KO_SHEET := preload(
 const ARIANNA_KO_FRAME_COUNT := 25
 const ARIANNA_KO_COLUMNS := 5
 const ARIANNA_KO_CELL_SIZE := Vector2(512.0, 512.0)
-const ARIANNA_HURT_LOW_POSE := preload(
-	"res://assets/sprites/characters/arianna/basic-moves/hurt_low-pose.png"
+const ARIANNA_HURT_LOW_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/hurt_low.png"
 )
+const ARIANNA_HURT_LOW_FRAME_COUNT := 6
+const ARIANNA_HURT_LOW_COLUMNS := 5
+const ARIANNA_HURT_LOW_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_LOW_LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/light-punch/ligth-punch-low.png"
 )
@@ -814,7 +817,12 @@ func start_hit_reaction(
 	start_frame: int = 0,
 	apply_pushback: bool = true
 ) -> float:
-	if hit_height in [AttackData.HitHeight.MID, AttackData.HitHeight.HIGH]:
+	if hit_height in [
+		AttackData.HitHeight.LOW,
+		AttackData.HitHeight.MID,
+		AttackData.HitHeight.HIGH,
+	]:
+		# Le reazioni custom di Arianna riproducono sempre la sequenza completa.
 		start_frame = 0
 	var reaction_duration := super.start_hit_reaction(
 		hit_height, attacker, start_frame, apply_pushback

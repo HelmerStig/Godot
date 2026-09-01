@@ -44,10 +44,10 @@ func configure_all() -> void:
 	configure_baseball_special_frames()
 	configure_hurt_medium_frames()
 	configure_hurt_high_frames()
+	configure_hurt_low_frames()
 	configure_sweep_knockdown_frames()
 	configure_knockdown_recovery_frames()
 	configure_ko_frames()
-	configure_hurt_pose_frames(&"hurt_low", fighter.ARIANNA_HURT_LOW_POSE)
 
 
 func configure_idle_frames() -> void:
@@ -825,14 +825,28 @@ func configure_hurt_high_frames() -> void:
 		frames.add_frame(&"hurt_high", atlas_frame)
 
 
-func configure_hurt_pose_frames(animation_name: StringName, pose_texture: Texture2D) -> void:
+func configure_hurt_low_frames() -> void:
 	var frames := animated_sprite.sprite_frames
-	if frames.has_animation(animation_name):
-		frames.remove_animation(animation_name)
-	frames.add_animation(animation_name)
-	frames.set_animation_speed(animation_name, 24.0)
-	frames.set_animation_loop(animation_name, false)
-	frames.add_frame(animation_name, pose_texture)
+	if frames.has_animation(&"hurt_low"):
+		frames.remove_animation(&"hurt_low")
+	frames.add_animation(&"hurt_low")
+	frames.set_animation_speed(&"hurt_low", 24.0)
+	frames.set_animation_loop(&"hurt_low", false)
+	# Esegue i sei fotogrammi sorgente e torna al primo prima dell'idle.
+	for animation_index in range(fighter.ARIANNA_HURT_LOW_FRAME_COUNT + 1):
+		var source_index: int = (
+			animation_index if animation_index < fighter.ARIANNA_HURT_LOW_FRAME_COUNT else 0
+		)
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = fighter.ARIANNA_HURT_LOW_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % fighter.ARIANNA_HURT_LOW_COLUMNS),
+				float(source_index / fighter.ARIANNA_HURT_LOW_COLUMNS)
+			) * fighter.ARIANNA_HURT_LOW_CELL_SIZE,
+			fighter.ARIANNA_HURT_LOW_CELL_SIZE
+		)
+		frames.add_frame(&"hurt_low", atlas_frame)
 
 
 func configure_sweep_knockdown_frames() -> void:

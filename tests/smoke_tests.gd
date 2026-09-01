@@ -783,6 +783,9 @@ func _test_arianna_idle() -> void:
 	var arianna_hurt_high_first := frames.get_frame_texture(&"hurt_high", 0) as AtlasTexture
 	var arianna_hurt_high_last := frames.get_frame_texture(&"hurt_high", 6) as AtlasTexture
 	var arianna_hurt_high_return := frames.get_frame_texture(&"hurt_high", 7) as AtlasTexture
+	var arianna_hurt_low_first := frames.get_frame_texture(&"hurt_low", 0) as AtlasTexture
+	var arianna_hurt_low_last := frames.get_frame_texture(&"hurt_low", 5) as AtlasTexture
+	var arianna_hurt_low_return := frames.get_frame_texture(&"hurt_low", 6) as AtlasTexture
 	_expect(
 		frames.get_frame_count(&"hurt_high") == 8
 		and is_equal_approx(frames.get_animation_speed(&"hurt_high"), 24.0)
@@ -791,9 +794,14 @@ func _test_arianna_idle() -> void:
 		and arianna_hurt_high_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
 		and arianna_hurt_high_last.region == Rect2(512.0, 512.0, 512.0, 512.0)
 		and arianna_hurt_high_return.region == arianna_hurt_high_first.region
-		and frames.get_frame_count(&"hurt_low") == 1
-		and frames.get_frame_texture(&"hurt_low", 0) == Arianna.ARIANNA_HURT_LOW_POSE,
-		"hurt_high usa i 7 frame Arianna, torna al primo e non va in loop"
+		and frames.get_frame_count(&"hurt_low") == 7
+		and is_equal_approx(frames.get_animation_speed(&"hurt_low"), 24.0)
+		and not frames.get_animation_loop(&"hurt_low")
+		and arianna_hurt_low_first.atlas == Arianna.ARIANNA_HURT_LOW_SHEET
+		and arianna_hurt_low_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and arianna_hurt_low_last.region == Rect2(0.0, 512.0, 512.0, 512.0)
+		and arianna_hurt_low_return.region == arianna_hurt_low_first.region,
+		"hurt_high e hurt_low usano gli atlas Arianna, tornano al primo e non vanno in loop"
 	)
 	var arianna_sweep_first := frames.get_frame_texture(&"sweep_knockdown", 0) as AtlasTexture
 	var arianna_sweep_last := frames.get_frame_texture(&"sweep_knockdown", 24) as AtlasTexture
@@ -877,11 +885,22 @@ func _test_arianna_idle() -> void:
 		low_hurt_explosion.queue_free()
 	_expect(
 		arianna.animated_sprite.animation == &"hurt_low"
-		and arianna.animated_sprite.sprite_frames.get_frame_texture(&"hurt_low", 0)
-			== Arianna.ARIANNA_HURT_LOW_POSE,
-		"un colpo LOW mostra Arianna e non Mangler"
+		and (arianna.animated_sprite.sprite_frames.get_frame_texture(&"hurt_low", 0) as AtlasTexture).atlas
+			== Arianna.ARIANNA_HURT_LOW_SHEET,
+		"un colpo LOW mostra il nuovo spritesheet hurt_low di Arianna"
 	)
-	arianna.change_state(Mangler.State.IDLE)
+	arianna.combat.hit_reaction(0.0, AttackData.HitHeight.LOW, null, 4, false)
+	_expect(
+		arianna.animated_sprite.animation == &"hurt_low"
+		and arianna.animated_sprite.frame == 0,
+		"hurt_low di Arianna esegue sempre la sequenza completa dal primo frame"
+	)
+	await create_timer(0.34).timeout
+	_expect(
+		arianna.current_state == Mangler.State.IDLE
+		and arianna.animated_sprite.animation == &"idle",
+		"dopo 1-6-1 Arianna torna in idle"
+	)
 	arianna.start_hit_reaction(AttackData.HitHeight.HIGH, null, 0, false)
 	_expect(
 		arianna.animated_sprite.animation == &"hurt_high"
