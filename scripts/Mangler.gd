@@ -34,6 +34,7 @@ const BACK_HOP_TAKEOFF_FRAME := 12
 const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
 const HIT_PUSHBACK_SPEED := 180.0
 const HIT_PUSHBACK_DECELERATION := 720.0
+const HURT_HIGH_EFFECT_OFFSET := Vector2(0.0, -220.0)
 const HURT_MID_EFFECT_OFFSET := Vector2(0.0, -150.0)
 const HURT_LOW_EFFECT_OFFSET := Vector2(0.0, -72.0)
 const ATTACK_FOREGROUND_Z_OFFSET := 1
@@ -1292,7 +1293,7 @@ func start_hit_reaction(
 		animated_sprite.play(hit_animation)
 		var final_frame := animated_sprite.sprite_frames.get_frame_count(hit_animation) - 1
 		animated_sprite.frame = clampi(start_frame, 0, final_frame)
-	if hit_height in [AttackData.HitHeight.MID, AttackData.HitHeight.LOW]:
+	if hit_height in [AttackData.HitHeight.HIGH, AttackData.HitHeight.MID, AttackData.HitHeight.LOW]:
 		spawn_hurt_blue_explosion(hit_height)
 
 	if apply_pushback:
@@ -1316,11 +1317,13 @@ func spawn_hurt_blue_explosion(hit_height: AttackData.HitHeight) -> Node2D:
 	if effect_parent == null:
 		effect_parent = get_tree().root
 	effect_parent.add_child(explosion)
-	var effect_offset := (
-		HURT_LOW_EFFECT_OFFSET
-		if hit_height == AttackData.HitHeight.LOW
-		else HURT_MID_EFFECT_OFFSET
-	)
+	var effect_offset: Vector2
+	if hit_height == AttackData.HitHeight.HIGH:
+		effect_offset = HURT_HIGH_EFFECT_OFFSET
+	elif hit_height == AttackData.HitHeight.LOW:
+		effect_offset = HURT_LOW_EFFECT_OFFSET
+	else:
+		effect_offset = HURT_MID_EFFECT_OFFSET
 	explosion.global_position = global_position + effect_offset
 	var additive_material := CanvasItemMaterial.new()
 	additive_material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
