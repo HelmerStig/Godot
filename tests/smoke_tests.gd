@@ -767,6 +767,23 @@ func _test_arianna_idle() -> void:
 		and baseball_special_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
 		"la speciale baseball di Arianna usa tutti i 49 frame a 48 FPS"
 	)
+	var whistle_first := (
+		frames.get_frame_texture(&"arianna_whistle_special", 0) as AtlasTexture
+	)
+	var whistle_last := (
+		frames.get_frame_texture(&"arianna_whistle_special", 23) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_whistle_special") == 24
+		and is_equal_approx(
+			frames.get_animation_speed(&"arianna_whistle_special"), 24.0
+		)
+		and not frames.get_animation_loop(&"arianna_whistle_special")
+		and whistle_first.atlas == Arianna.ARIANNA_WHISTLE_SPECIAL_SHEET
+		and whistle_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and whistle_last.region == Rect2(1536.0, 2048.0, 512.0, 512.0),
+		"la speciale fischio usa i 24 frame validi di whistles.png a 24 FPS"
+	)
 	var arianna_hurt_mid_first := frames.get_frame_texture(&"hurt_mid", 0) as AtlasTexture
 	var arianna_hurt_mid_peak := frames.get_frame_texture(&"hurt_mid", 7) as AtlasTexture
 	var arianna_hurt_mid_last := frames.get_frame_texture(&"hurt_mid", 14) as AtlasTexture
@@ -964,7 +981,10 @@ func _test_arianna_idle() -> void:
 	)
 	arianna.combat.take_damage(arianna.combat.current_health, null)
 	arianna._physics_process(0.0)
-	await create_timer(1.1).timeout
+	var whistle_wait_frames := 0
+	while arianna.whistle_special_active and whistle_wait_frames < 120:
+		await process_frame
+		whistle_wait_frames += 1
 	_expect(
 		arianna.combat.current_health == 0
 		and arianna.current_state == Mangler.State.KNOCKED_DOWN
@@ -1324,6 +1344,68 @@ func _test_arianna_idle() -> void:
 		"quarto di luna avanti più pugno forte avvia il tornado forte"
 	)
 	arianna._finish_baseball_special()
+	var whistle_target_scene := load("res://scenes/Mangler.tscn") as PackedScene
+	var whistle_target := whistle_target_scene.instantiate() as Mangler
+	whistle_target.set_physics_process(false)
+	root.add_child(whistle_target)
+	await process_frame
+	arianna.opponent = whistle_target
+	whistle_target.opponent = arianna
+	whistle_target.controls_enabled = true
+	whistle_target.change_state(Mangler.State.WALKING)
+	arianna.input_buffer.clear()
+	arianna.input_buffer.record_input_snapshot(-1, 0, [], true)
+	arianna.input_buffer.record_input_snapshot(-1, 1, [], true)
+	arianna.input_buffer.record_input_snapshot(0, 1, [], true)
+	arianna.input_buffer.record_input_snapshot(1, 1, [], true)
+	arianna.input_buffer.record_input_snapshot(1, 0, [&"light_kick"], true)
+	await physics_frame
+	await physics_frame
+	await physics_frame
+	arianna.input_buffer.record_input_snapshot(1, 0, [&"medium_kick"], true)
+	var whistle_command_started := arianna._try_start_whistle_special()
+	_expect(
+		whistle_command_started
+		and arianna.whistle_special_active
+		and arianna.animated_sprite.animation == &"arianna_whistle_special"
+		and whistle_target.current_state == Mangler.State.IDLE
+		and not whistle_target.controls_enabled
+		and not whistle_target.can_move,
+		"la mezzaluna tollera 3 frame tra i due calci e mantiene il rivale in idle"
+	)
+	await arianna.animated_sprite.animation_finished
+	await process_frame
+	_expect(
+		not arianna.whistle_special_active
+		and arianna.current_state == Mangler.State.IDLE
+		and arianna.animated_sprite.animation == &"idle"
+		and whistle_target.current_state == Mangler.State.IDLE
+		and whistle_target.controls_enabled,
+		"terminati i 24 frame Arianna e l'avversario vengono rilasciati in idle"
+	)
+	whistle_target.combat.set_guarding(true)
+	whistle_target.controls_enabled = true
+	whistle_target.change_state(Mangler.State.BLOCKING)
+	arianna.input_buffer.record_input_snapshot(-1, 0, [], true)
+	arianna.input_buffer.record_input_snapshot(-1, 1, [], true)
+	arianna.input_buffer.record_input_snapshot(0, 1, [], true)
+	arianna.input_buffer.record_input_snapshot(1, 1, [], true)
+	arianna.input_buffer.record_input_snapshot(
+		1, 0, [&"light_kick", &"medium_kick"], true
+	)
+	var guarded_whistle_started := arianna._try_start_whistle_special()
+	_expect(
+		guarded_whistle_started
+		and whistle_target.current_state == Mangler.State.BLOCKING
+		and whistle_target.combat.is_blocking
+		and whistle_target.controls_enabled
+		and arianna.whistle_frozen_target == null,
+		"la speciale fischio non forza in idle un avversario già in parata"
+	)
+	arianna._finish_whistle_special()
+	whistle_target.combat.set_guarding(false)
+	whistle_target.queue_free()
+	arianna.opponent = null
 	arianna.velocity = Vector2.ZERO
 	arianna.change_state(Mangler.State.IDLE)
 	arianna.is_facing_right = true

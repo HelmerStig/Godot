@@ -162,6 +162,14 @@ const ARIANNA_BASEBALL_SPECIAL_COLUMNS := 7
 const ARIANNA_BASEBALL_SPECIAL_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_BASEBALL_TORNADO_SPAWN_FRAME := 23
 const ARIANNA_BASEBALL_TORNADO_SPAWN_OFFSET := Vector2(175.0, -80.0)
+const ARIANNA_WHISTLE_SPECIAL_SHEET := preload(
+	"res://assets/sprites/characters/arianna/special/whistles.png"
+)
+const ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT := 24
+const ARIANNA_WHISTLE_SPECIAL_COLUMNS := 5
+const ARIANNA_WHISTLE_SPECIAL_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_WHISTLE_MOTION_WINDOW_FRAMES := 72
+const ARIANNA_WHISTLE_CHORD_WINDOW_FRAMES := 6
 const ARIANNA_HURT_MEDIUM_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/hurt_medium.png"
 )
@@ -342,6 +350,10 @@ var jump_strong_kick_active := false
 var baseball_special_active := false
 var baseball_tornado_spawned := false
 var baseball_special_strength: StringName = &"light"
+var whistle_special_active := false
+var whistle_frozen_target: Fighter
+var whistle_target_controls_enabled := true
+var whistle_target_can_move := true
 var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
@@ -468,7 +480,8 @@ func _physics_process(_delta: float) -> void:
 		update_ground_shadow()
 		return
 	if (
-		baseball_special_active
+		whistle_special_active
+		or baseball_special_active
 		or light_punch_active
 		or medium_punch_active
 		or low_medium_punch_active
@@ -491,6 +504,8 @@ func _physics_process(_delta: float) -> void:
 		and input_buffer != null
 		and is_on_floor()
 	):
+		if _try_start_whistle_special():
+			return
 		if _try_start_baseball_special():
 			return
 	if controls_enabled and can_move and input_buffer != null and is_on_floor():
@@ -1017,6 +1032,93 @@ func _start_baseball_special(strength: StringName = &"light") -> void:
 	combat.hit_targets.clear()
 	bring_attacker_to_foreground()
 	animated_sprite.play(&"arianna_baseball_special")
+
+
+func _try_start_whistle_special() -> bool:
+	var has_complete_half_circle := input_buffer.matches_recent_sequence([
+		FighterInputBuffer.Direction.BACK,
+		FighterInputBuffer.Direction.DOWN_BACK,
+		FighterInputBuffer.Direction.DOWN,
+		FighterInputBuffer.Direction.DOWN_FORWARD,
+		FighterInputBuffer.Direction.FORWARD,
+	], ARIANNA_WHISTLE_MOTION_WINDOW_FRAMES)
+	var has_diagonal_finish := input_buffer.matches_recent_sequence([
+		FighterInputBuffer.Direction.BACK,
+		FighterInputBuffer.Direction.DOWN_BACK,
+		FighterInputBuffer.Direction.DOWN,
+		FighterInputBuffer.Direction.DOWN_FORWARD,
+	], ARIANNA_WHISTLE_MOTION_WINDOW_FRAMES)
+	var has_lenient_start := input_buffer.matches_recent_sequence([
+		FighterInputBuffer.Direction.DOWN_BACK,
+		FighterInputBuffer.Direction.DOWN,
+		FighterInputBuffer.Direction.DOWN_FORWARD,
+		FighterInputBuffer.Direction.FORWARD,
+	], ARIANNA_WHISTLE_MOTION_WINDOW_FRAMES)
+	if not has_complete_half_circle and not has_diagonal_finish and not has_lenient_start:
+		return false
+	var chord_direction := input_buffer.consume_attack_chord([
+		&"light_kick", &"medium_kick"
+	], FighterInputBuffer.DEFAULT_ATTACK_BUFFER_FRAMES, ARIANNA_WHISTLE_CHORD_WINDOW_FRAMES)
+	if chord_direction not in [
+		FighterInputBuffer.Direction.DOWN_FORWARD,
+		FighterInputBuffer.Direction.FORWARD,
+	]:
+		return false
+	input_buffer.clear()
+	_start_whistle_special()
+	return true
+
+
+func _start_whistle_special() -> void:
+	whistle_special_active = true
+	current_state = State.ATTACKING
+	velocity = Vector2.ZERO
+	combat.action_generation += 1
+	combat.disable_hitbox()
+	combat.is_attacking = true
+	combat.current_attack = null
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	bring_attacker_to_foreground()
+	_hold_whistle_opponent_idle()
+	animated_sprite.play(&"arianna_whistle_special")
+
+
+func _hold_whistle_opponent_idle() -> void:
+	whistle_frozen_target = null
+	if not is_instance_valid(opponent) or opponent.combat == null:
+		return
+	var opponent_is_guarding := (
+		opponent.combat.is_blocking
+		or opponent.current_state in [State.BLOCKING, State.BLOCK_RECOVERY]
+	)
+	if opponent_is_guarding:
+		return
+	whistle_frozen_target = opponent
+	whistle_target_controls_enabled = opponent.controls_enabled
+	whistle_target_can_move = opponent.can_move
+	opponent.combat.cancel_current_action()
+	opponent.controls_enabled = false
+	opponent.change_state(State.IDLE)
+	opponent.can_move = false
+	opponent.velocity = Vector2.ZERO
+
+
+func _finish_whistle_special() -> void:
+	combat.disable_hitbox()
+	combat.is_attacking = false
+	combat.current_attack = null
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	restore_default_render_order()
+	whistle_special_active = false
+	velocity = Vector2.ZERO
+	if is_instance_valid(whistle_frozen_target):
+		whistle_frozen_target.change_state(State.IDLE)
+		whistle_frozen_target.controls_enabled = whistle_target_controls_enabled
+		whistle_frozen_target.can_move = whistle_target_can_move
+	whistle_frozen_target = null
+	change_state(State.IDLE)
 
 
 func _try_start_baseball_special() -> bool:
@@ -1813,7 +1915,9 @@ func _resolve_crouched_strong_punch_overlap(attack_generation: int) -> void:
 
 
 func _on_animation_finished() -> void:
-	if animated_sprite.animation == &"arianna_baseball_special":
+	if animated_sprite.animation == &"arianna_whistle_special":
+		_finish_whistle_special()
+	elif animated_sprite.animation == &"arianna_baseball_special":
 		_finish_baseball_special()
 	elif animated_sprite.animation == &"arianna_jump_light_punch":
 		_finish_jump_light_punch(false)
