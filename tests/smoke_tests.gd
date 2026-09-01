@@ -1445,9 +1445,15 @@ func _test_arianna_idle() -> void:
 		"la corsa di Bateau non usa collisioni e non viene influenzata dalle hurtbox"
 	)
 	_expect(
-		AriannaBateauProjectile.MOVE_SPEED == 760.0
-		and bateau.animated_sprite.position == AriannaBateauProjectile.SPRITE_POSITION,
-		"Bateau usa la velocità aumentata e l'offset visivo configurato"
+		AriannaBateauProjectile.MOVE_SPEED > 520.0
+		and bateau.animated_sprite.position == AriannaBateauProjectile.SPRITE_POSITION
+		and bateau.get_node_or_null("RunDust") is CPUParticles2D
+		and bateau.get_node_or_null("SpeedTrail") is CPUParticles2D
+		and bateau.get_node_or_null("BlueMagicTrail") is CPUParticles2D
+		and (bateau.get_node("BlueMagicTrail") as CPUParticles2D).texture is GradientTexture2D
+		and (bateau.get_node("BlueMagicTrail") as CPUParticles2D).amount == 58
+		and (bateau.get_node("BlueMagicTrail") as CPUParticles2D).scale_amount_max < 0.6,
+		"Bateau usa velocità, offset, polvere e le due scie configurate"
 	)
 	bateau.set_physics_process(false)
 	bateau.global_position.x = (
@@ -1462,6 +1468,7 @@ func _test_arianna_idle() -> void:
 	)
 	bateau.animated_sprite.frame = AriannaBateauProjectile.ATTACK_HIT_FRAME
 	bateau._on_frame_changed()
+	var bateau_impact := get_first_node_in_group("arianna_bateau_bite_impact")
 	var bite_position := bateau.global_position.x
 	bateau._move_attack_toward_target(0.1)
 	var bateau_bit_target := (
@@ -1470,6 +1477,9 @@ func _test_arianna_idle() -> void:
 			== health_before_bateau
 			- roundi(float(whistle_target.combat.max_health) * AriannaBateauProjectile.DAMAGE_RATIO)
 		and whistle_target.animated_sprite.animation == &"hurt_high"
+		and is_instance_valid(bateau_impact)
+		and bateau_impact.get_node_or_null("BiteSparks") is CPUParticles2D
+		and bateau_impact.get_node_or_null("BiteFlash") is Polygon2D
 		and is_equal_approx(
 			bateau.global_position.x,
 			bite_position + bateau.travel_direction * AriannaBateauProjectile.MOVE_SPEED * 0.1
@@ -1504,6 +1514,24 @@ func _test_arianna_idle() -> void:
 		and bateau.is_queued_for_deletion(),
 		"dopo il morso Bateau attraversa il rivale e continua a muoversi fino all'uscita"
 	)
+	var ko_bateau := AriannaBateauProjectile.new()
+	ko_bateau.setup(arianna, whistle_target)
+	root.add_child(ko_bateau)
+	whistle_target.combat.current_health = roundi(
+		float(whistle_target.combat.max_health) * AriannaBateauProjectile.DAMAGE_RATIO
+	)
+	ko_bateau._apply_bite()
+	await create_timer(AriannaBateauProjectile.HIT_STOP_DURATION + 0.02).timeout
+	_expect(
+		whistle_target.combat.current_health == 0
+		and whistle_target.current_state == Fighter.State.KNOCKED_DOWN
+		and whistle_target.animated_sprite.animation == &"ko"
+		and whistle_target.animated_sprite.is_playing(),
+		"un morso letale riprende e completa l'animazione KO dopo l'hit-stop"
+	)
+	ko_bateau.queue_free()
+	whistle_target.combat.reset()
+	whistle_target.change_state(Fighter.State.IDLE)
 	whistle_target.combat.set_guarding(true)
 	whistle_target.controls_enabled = true
 	whistle_target.change_state(Mangler.State.BLOCKING)
