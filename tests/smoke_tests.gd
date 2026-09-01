@@ -1373,7 +1373,11 @@ func _test_arianna_idle() -> void:
 	)
 	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_AIR_START_FRAME - 1
 	arianna._on_animation_frame_changed()
-	var air_was_absent_before_frame_six := arianna.whistle_air_effect == null
+	var air_was_absent_before_frame_six := (
+		arianna.whistle_air_effect == null
+		and not arianna.whistle_sound_played
+		and not arianna.whistle_audio_player.playing
+	)
 	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_AIR_START_FRAME
 	arianna._on_animation_frame_changed()
 	var whistle_air := arianna.whistle_air_effect
@@ -1384,6 +1388,13 @@ func _test_arianna_idle() -> void:
 		and whistle_air.position == Arianna.ARIANNA_WHISTLE_AIR_MOUTH_OFFSET
 		and whistle_air.direction.x > 0.0,
 		"dal fotogramma 6 il fischio emette aria dalla bocca verso l'avversario"
+	)
+	_expect(
+		air_was_absent_before_frame_six
+		and arianna.whistle_sound_played
+		and arianna.whistle_audio_player.stream == Arianna.ARIANNA_WHISTLE_SOUND
+		and arianna.whistle_audio_player.playing,
+		"il WAV del fischio parte una sola volta al fotogramma visibile 6"
 	)
 	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_AIR_END_FRAME
 	arianna._on_animation_frame_changed()
@@ -1438,6 +1449,12 @@ func _test_arianna_idle() -> void:
 		and bateau.animated_sprite.animation == &"run",
 		"dopo il fischio Bateau entra correndo da fuori schermo"
 	)
+	_expect(
+		bateau.run_audio_player.stream == AriannaBateauProjectile.RUN_SOUND
+		and bateau.run_audio_player.playing
+		and not bateau.attack_audio_player.playing,
+		"all'ingresso di Bateau parte il suono della corsa"
+	)
 	var health_before_bateau := whistle_target.combat.current_health
 	_expect(
 		bateau.get_node_or_null("CollisionShape2D") == null
@@ -1465,6 +1482,16 @@ func _test_arianna_idle() -> void:
 	var bateau_started_attack := (
 		bateau.current_state == AriannaBateauProjectile.State.ATTACKING
 		and bateau.animated_sprite.animation == &"attack"
+	)
+	bateau.animated_sprite.frame = AriannaBateauProjectile.ATTACK_SOUND_FRAME
+	bateau._on_frame_changed()
+	_expect(
+		bateau.run_audio_player.playing
+		and bateau.attack_audio_player.stream == AriannaBateauProjectile.ATTACK_SOUND
+		and bateau.animated_sprite.frame >= AriannaBateauProjectile.ATTACK_SOUND_FRAME
+		and bateau.attack_sound_played
+		and bateau.attack_audio_player.playing,
+		"abbaio e ringhio si sovrappongono alla corsa al frame parametrizzato"
 	)
 	bateau.animated_sprite.frame = AriannaBateauProjectile.ATTACK_HIT_FRAME
 	bateau._on_frame_changed()

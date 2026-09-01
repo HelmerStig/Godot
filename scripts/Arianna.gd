@@ -166,12 +166,16 @@ const ARIANNA_BASEBALL_TORNADO_SPAWN_OFFSET := Vector2(175.0, -80.0)
 const ARIANNA_WHISTLE_SPECIAL_SHEET := preload(
 	"res://assets/sprites/characters/arianna/special/whistles.png"
 )
+const ARIANNA_WHISTLE_SOUND := preload(
+	"res://assets/sprites/characters/arianna/sound/fischio.wav"
+)
 const ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT := 24
 const ARIANNA_WHISTLE_SPECIAL_COLUMNS := 5
 const ARIANNA_WHISTLE_SPECIAL_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_WHISTLE_MOTION_WINDOW_FRAMES := 72
 const ARIANNA_WHISTLE_CHORD_WINDOW_FRAMES := 6
 const ARIANNA_WHISTLE_AIR_START_FRAME := 5 # Zero-based: fotogramma visibile 6.
+const ARIANNA_WHISTLE_SOUND_FRAME := 5 # Zero-based: fotogramma visibile 6.
 const ARIANNA_WHISTLE_AIR_END_FRAME := 19 # Zero-based: fotogramma visibile 20.
 const ARIANNA_WHISTLE_AIR_MOUTH_OFFSET := Vector2(64.0, -238.0)
 const ARIANNA_HURT_MEDIUM_SHEET := preload(
@@ -359,6 +363,8 @@ var whistle_frozen_target: Fighter
 var whistle_target_controls_enabled := true
 var whistle_target_can_move := true
 var whistle_air_effect: CPUParticles2D
+var whistle_audio_player: AudioStreamPlayer
+var whistle_sound_played := false
 var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
@@ -388,6 +394,11 @@ func _ready() -> void:
 	animated_sprite.sprite_frames = animated_sprite.sprite_frames.duplicate(true)
 	super._ready()
 	AnimationCatalog.new(self).configure_all()
+	whistle_audio_player = AudioStreamPlayer.new()
+	whistle_audio_player.name = "WhistleAudio"
+	whistle_audio_player.stream = ARIANNA_WHISTLE_SOUND
+	whistle_audio_player.volume_db = -2.0
+	add_child(whistle_audio_player)
 	_activate_idle()
 	call_deferred("_activate_idle")
 
@@ -1076,6 +1087,9 @@ func _try_start_whistle_special() -> bool:
 
 func _start_whistle_special() -> void:
 	_stop_whistle_air_effect(true)
+	whistle_sound_played = false
+	if is_instance_valid(whistle_audio_player):
+		whistle_audio_player.stop()
 	whistle_special_active = true
 	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
@@ -2211,6 +2225,9 @@ func _on_animation_finished() -> void:
 
 func _on_animation_frame_changed() -> void:
 	if animated_sprite.animation == &"arianna_whistle_special":
+		if animated_sprite.frame == ARIANNA_WHISTLE_SOUND_FRAME and not whistle_sound_played:
+			whistle_sound_played = true
+			whistle_audio_player.play()
 		if animated_sprite.frame in range(
 			ARIANNA_WHISTLE_AIR_START_FRAME,
 			ARIANNA_WHISTLE_AIR_END_FRAME + 1

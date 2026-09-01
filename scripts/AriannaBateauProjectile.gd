@@ -19,10 +19,17 @@ const ATTACK_SHEET := preload(
 const BACK_TO_RUN_SHEET := preload(
 	"res://assets/sprites/characters/arianna/special/Bateau-back_to_run.png"
 )
+const RUN_SOUND := preload(
+	"res://assets/sprites/characters/arianna/sound/corsa-bato.wav"
+)
+const ATTACK_SOUND := preload(
+	"res://assets/sprites/characters/arianna/sound/abbaio-ringhio.wav"
+)
 const RUN_FRAME_COUNT := 49
 const RUN_COLUMNS := 7
 const ATTACK_FRAME_COUNT := 25
 const ATTACK_COLUMNS := 5
+const ATTACK_SOUND_FRAME := 8 # Zero-based: 0 corrisponde al fotogramma visibile 1.
 const BACK_TO_RUN_FRAME_COUNT := 25
 const BACK_TO_RUN_COLUMNS := 5
 const CELL_SIZE := Vector2(512.0, 512.0)
@@ -49,6 +56,9 @@ var has_hit := false
 var run_dust: CPUParticles2D
 var speed_trail: CPUParticles2D
 var blue_magic_trail: CPUParticles2D
+var run_audio_player: AudioStreamPlayer
+var attack_audio_player: AudioStreamPlayer
+var attack_sound_played := false
 
 
 func setup(owner_fighter: Fighter, target: Fighter) -> void:
@@ -71,7 +81,10 @@ func _ready() -> void:
 	animated_sprite.frame_changed.connect(_on_frame_changed)
 	add_child(animated_sprite)
 	_create_movement_effects()
+	run_audio_player = _create_audio_player("RunAudio", RUN_SOUND, 0)
+	attack_audio_player = _create_audio_player("AttackAudio", ATTACK_SOUND, -1.0)
 	animated_sprite.play(&"run")
+	run_audio_player.play()
 
 
 func _physics_process(delta: float) -> void:
@@ -114,10 +127,26 @@ func _start_attack() -> void:
 	if current_state != State.RUNNING:
 		return
 	current_state = State.ATTACKING
+	attack_sound_played = false
 	animated_sprite.play(&"attack")
+	_play_attack_sound_on_configured_frame()
+
+
+func _create_audio_player(
+	player_name: String,
+	audio_stream: AudioStream,
+	volume_db: float
+) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.name = player_name
+	player.stream = audio_stream
+	player.volume_db = volume_db
+	add_child(player)
+	return player
 
 
 func _on_frame_changed() -> void:
+	_play_attack_sound_on_configured_frame()
 	if current_state == State.ATTACKING and animated_sprite.frame % 3 == 0:
 		_spawn_attack_afterimage()
 	if (
@@ -126,6 +155,18 @@ func _on_frame_changed() -> void:
 		and not has_hit
 	):
 		_apply_bite()
+
+
+func _play_attack_sound_on_configured_frame() -> void:
+	if (
+		current_state != State.ATTACKING
+		or animated_sprite.animation != &"attack"
+		or animated_sprite.frame < ATTACK_SOUND_FRAME
+		or attack_sound_played
+	):
+		return
+	attack_sound_played = true
+	attack_audio_player.play()
 
 
 func _apply_bite() -> void:
