@@ -46,6 +46,7 @@ func configure_all() -> void:
 	configure_hurt_high_frames()
 	configure_sweep_knockdown_frames()
 	configure_knockdown_recovery_frames()
+	configure_ko_frames()
 	configure_hurt_pose_frames(&"hurt_low", fighter.ARIANNA_HURT_LOW_POSE)
 
 
@@ -851,6 +852,16 @@ func configure_knockdown_recovery_frames() -> void:
 		fighter.ARIANNA_KNOCKDOWN_RECOVERY_FRAME_COUNT,
 		fighter.ARIANNA_KNOCKDOWN_RECOVERY_COLUMNS,
 		fighter.ARIANNA_KNOCKDOWN_RECOVERY_CELL_SIZE
+	)
+
+
+func configure_ko_frames() -> void:
+	configure_full_atlas_animation(
+		&"ko",
+		fighter.ARIANNA_KO_SHEET,
+		fighter.ARIANNA_KO_FRAME_COUNT,
+		fighter.ARIANNA_KO_COLUMNS,
+		fighter.ARIANNA_KO_CELL_SIZE
 	)
 
 

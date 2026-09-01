@@ -187,6 +187,12 @@ const ARIANNA_KNOCKDOWN_RECOVERY_SHEET := preload(
 const ARIANNA_KNOCKDOWN_RECOVERY_FRAME_COUNT := 25
 const ARIANNA_KNOCKDOWN_RECOVERY_COLUMNS := 5
 const ARIANNA_KNOCKDOWN_RECOVERY_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_KO_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/ko.png"
+)
+const ARIANNA_KO_FRAME_COUNT := 25
+const ARIANNA_KO_COLUMNS := 5
+const ARIANNA_KO_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_HURT_LOW_POSE := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/hurt_low-pose.png"
 )

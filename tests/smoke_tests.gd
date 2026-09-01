@@ -821,6 +821,17 @@ func _test_arianna_idle() -> void:
 		and arianna_recovery_last.region == Rect2(2048.0, 2048.0, 512.0, 512.0),
 		"knockdown_recovery di Arianna usa tutti i 25 frame a 24 FPS"
 	)
+	var arianna_ko_first := frames.get_frame_texture(&"ko", 0) as AtlasTexture
+	var arianna_ko_last := frames.get_frame_texture(&"ko", 24) as AtlasTexture
+	_expect(
+		frames.get_frame_count(&"ko") == 25
+		and is_equal_approx(frames.get_animation_speed(&"ko"), 24.0)
+		and not frames.get_animation_loop(&"ko")
+		and arianna_ko_first.atlas == Arianna.ARIANNA_KO_SHEET
+		and arianna_ko_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and arianna_ko_last.region == Rect2(2048.0, 2048.0, 512.0, 512.0),
+		"KO di Arianna usa tutti i 25 frame a 24 FPS"
+	)
 	var reaction_test_position := arianna.position
 	arianna.start_hit_reaction(AttackData.HitHeight.MID, null, 4, true)
 	var reduced_mid_pushback := absf(arianna.velocity.x)
@@ -932,6 +943,18 @@ func _test_arianna_idle() -> void:
 		and arianna.animated_sprite.animation == &"idle",
 		"completata knockdown_recovery Arianna torna in idle"
 	)
+	arianna.combat.take_damage(arianna.combat.current_health, null)
+	arianna._physics_process(0.0)
+	await create_timer(1.1).timeout
+	_expect(
+		arianna.combat.current_health == 0
+		and arianna.current_state == Mangler.State.KNOCKED_DOWN
+		and arianna.animated_sprite.animation == &"ko"
+		and arianna.animated_sprite.frame == Arianna.ARIANNA_KO_FRAME_COUNT - 1
+		and not arianna.animated_sprite.is_playing(),
+		"a energia esaurita Arianna completa il KO e mantiene l'ultimo frame"
+	)
+	arianna.combat.reset()
 	arianna.change_state(Mangler.State.IDLE)
 	var tornado_preview := AriannaTornadoProjectile.new()
 	tornado_preview.setup(arianna, true)
