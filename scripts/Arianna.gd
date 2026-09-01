@@ -170,6 +170,9 @@ const ARIANNA_WHISTLE_SPECIAL_COLUMNS := 5
 const ARIANNA_WHISTLE_SPECIAL_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_WHISTLE_MOTION_WINDOW_FRAMES := 72
 const ARIANNA_WHISTLE_CHORD_WINDOW_FRAMES := 6
+const ARIANNA_WHISTLE_AIR_START_FRAME := 5 # Zero-based: fotogramma visibile 6.
+const ARIANNA_WHISTLE_AIR_END_FRAME := 19 # Zero-based: fotogramma visibile 20.
+const ARIANNA_WHISTLE_AIR_MOUTH_OFFSET := Vector2(42.0, -238.0)
 const ARIANNA_HURT_MEDIUM_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/hurt_medium.png"
 )
@@ -354,6 +357,7 @@ var whistle_special_active := false
 var whistle_frozen_target: Fighter
 var whistle_target_controls_enabled := true
 var whistle_target_can_move := true
+var whistle_air_effect: CPUParticles2D
 var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
@@ -1070,6 +1074,7 @@ func _try_start_whistle_special() -> bool:
 
 
 func _start_whistle_special() -> void:
+	_stop_whistle_air_effect(true)
 	whistle_special_active = true
 	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
@@ -1105,6 +1110,7 @@ func _hold_whistle_opponent_idle() -> void:
 
 
 func _finish_whistle_special() -> void:
+	_stop_whistle_air_effect()
 	combat.disable_hitbox()
 	combat.is_attacking = false
 	combat.current_attack = null
@@ -1119,6 +1125,67 @@ func _finish_whistle_special() -> void:
 		whistle_frozen_target.can_move = whistle_target_can_move
 	whistle_frozen_target = null
 	change_state(State.IDLE)
+
+
+func _start_whistle_air_effect() -> CPUParticles2D:
+	if is_instance_valid(whistle_air_effect):
+		return whistle_air_effect
+	var facing_sign := 1.0 if is_facing_right else -1.0
+	var air := CPUParticles2D.new()
+	air.name = "WhistleAir"
+	air.add_to_group("arianna_whistle_air")
+	air.position = Vector2(
+		ARIANNA_WHISTLE_AIR_MOUTH_OFFSET.x * facing_sign,
+		ARIANNA_WHISTLE_AIR_MOUTH_OFFSET.y
+	)
+	air.amount = 22
+	air.lifetime = 0.38
+	air.preprocess = 0.08
+	air.direction = Vector2(facing_sign, -0.04).normalized()
+	air.spread = 13.0
+	air.gravity = Vector2.ZERO
+	air.initial_velocity_min = 75.0
+	air.initial_velocity_max = 145.0
+	air.scale_amount_min = 0.7
+	air.scale_amount_max = 2.2
+	air.color = Color(0.82, 0.94, 1.0, 0.52)
+	air.texture = _create_whistle_air_texture()
+	air.z_index = animated_sprite.z_index + 2
+	add_child(air)
+	air.emitting = true
+	whistle_air_effect = air
+	return air
+
+
+func _stop_whistle_air_effect(immediate: bool = false) -> void:
+	if not is_instance_valid(whistle_air_effect):
+		whistle_air_effect = null
+		return
+	var air := whistle_air_effect
+	whistle_air_effect = null
+	air.emitting = false
+	if immediate or not is_inside_tree():
+		air.queue_free()
+	else:
+		get_tree().create_timer(air.lifetime).timeout.connect(air.queue_free)
+
+
+func _create_whistle_air_texture() -> GradientTexture2D:
+	var gradient := Gradient.new()
+	gradient.colors = PackedColorArray([
+		Color(0.94, 0.99, 1.0, 0.72),
+		Color(0.62, 0.86, 1.0, 0.28),
+		Color(0.46, 0.72, 1.0, 0.0),
+	])
+	gradient.offsets = PackedFloat32Array([0.0, 0.48, 1.0])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.width = 42
+	texture.height = 18
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.35, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	return texture
 
 
 func _try_start_baseball_special() -> bool:
@@ -2118,6 +2185,14 @@ func _on_animation_finished() -> void:
 
 
 func _on_animation_frame_changed() -> void:
+	if animated_sprite.animation == &"arianna_whistle_special":
+		if animated_sprite.frame in range(
+			ARIANNA_WHISTLE_AIR_START_FRAME,
+			ARIANNA_WHISTLE_AIR_END_FRAME + 1
+		):
+			_start_whistle_air_effect()
+		else:
+			_stop_whistle_air_effect()
 	if animated_sprite.animation == &"arianna_baseball_special":
 		if (
 			animated_sprite.frame == ARIANNA_BASEBALL_TORNADO_SPAWN_FRAME

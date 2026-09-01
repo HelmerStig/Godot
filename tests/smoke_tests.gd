@@ -981,10 +981,8 @@ func _test_arianna_idle() -> void:
 	)
 	arianna.combat.take_damage(arianna.combat.current_health, null)
 	arianna._physics_process(0.0)
-	var whistle_wait_frames := 0
-	while arianna.whistle_special_active and whistle_wait_frames < 120:
-		await process_frame
-		whistle_wait_frames += 1
+	await arianna.animated_sprite.animation_finished
+	await process_frame
 	_expect(
 		arianna.combat.current_health == 0
 		and arianna.current_state == Mangler.State.KNOCKED_DOWN
@@ -1373,8 +1371,32 @@ func _test_arianna_idle() -> void:
 		and not whistle_target.can_move,
 		"la mezzaluna tollera 3 frame tra i due calci e mantiene il rivale in idle"
 	)
-	await arianna.animated_sprite.animation_finished
-	await process_frame
+	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_AIR_START_FRAME - 1
+	arianna._on_animation_frame_changed()
+	var air_was_absent_before_frame_six := arianna.whistle_air_effect == null
+	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_AIR_START_FRAME
+	arianna._on_animation_frame_changed()
+	var whistle_air := arianna.whistle_air_effect
+	_expect(
+		air_was_absent_before_frame_six
+		and is_instance_valid(whistle_air)
+		and whistle_air.emitting
+		and whistle_air.position == Arianna.ARIANNA_WHISTLE_AIR_MOUTH_OFFSET
+		and whistle_air.direction.x > 0.0,
+		"dal fotogramma 6 il fischio emette aria dalla bocca verso l'avversario"
+	)
+	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_AIR_END_FRAME
+	arianna._on_animation_frame_changed()
+	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_AIR_END_FRAME + 1
+	arianna._on_animation_frame_changed()
+	_expect(
+		is_instance_valid(whistle_air)
+		and not whistle_air.emitting
+		and arianna.whistle_air_effect == null,
+		"dopo il fotogramma 20 l'aria smette di essere emessa e si dissolve"
+	)
+	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT - 1
+	arianna._on_animation_finished()
 	_expect(
 		not arianna.whistle_special_active
 		and arianna.current_state == Mangler.State.IDLE
