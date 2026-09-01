@@ -172,7 +172,7 @@ const ARIANNA_WHISTLE_MOTION_WINDOW_FRAMES := 72
 const ARIANNA_WHISTLE_CHORD_WINDOW_FRAMES := 6
 const ARIANNA_WHISTLE_AIR_START_FRAME := 5 # Zero-based: fotogramma visibile 6.
 const ARIANNA_WHISTLE_AIR_END_FRAME := 19 # Zero-based: fotogramma visibile 20.
-const ARIANNA_WHISTLE_AIR_MOUTH_OFFSET := Vector2(42.0, -238.0)
+const ARIANNA_WHISTLE_AIR_MOUTH_OFFSET := Vector2(64.0, -238.0)
 const ARIANNA_HURT_MEDIUM_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/hurt_medium.png"
 )
@@ -1138,17 +1138,17 @@ func _start_whistle_air_effect() -> CPUParticles2D:
 		ARIANNA_WHISTLE_AIR_MOUTH_OFFSET.x * facing_sign,
 		ARIANNA_WHISTLE_AIR_MOUTH_OFFSET.y
 	)
-	air.amount = 22
-	air.lifetime = 0.38
+	air.amount = 14
+	air.lifetime = 0.32
 	air.preprocess = 0.08
-	air.direction = Vector2(facing_sign, -0.04).normalized()
-	air.spread = 13.0
+	air.direction = Vector2(facing_sign, -0.02).normalized()
+	air.spread = 7.0
 	air.gravity = Vector2.ZERO
-	air.initial_velocity_min = 75.0
-	air.initial_velocity_max = 145.0
-	air.scale_amount_min = 0.7
-	air.scale_amount_max = 2.2
-	air.color = Color(0.82, 0.94, 1.0, 0.52)
+	air.initial_velocity_min = 82.0
+	air.initial_velocity_max = 132.0
+	air.scale_amount_min = 0.42
+	air.scale_amount_max = 1.15
+	air.color = Color(0.86, 0.95, 1.0, 0.30)
 	air.texture = _create_whistle_air_texture()
 	air.z_index = animated_sprite.z_index + 2
 	add_child(air)
@@ -1173,15 +1173,15 @@ func _stop_whistle_air_effect(immediate: bool = false) -> void:
 func _create_whistle_air_texture() -> GradientTexture2D:
 	var gradient := Gradient.new()
 	gradient.colors = PackedColorArray([
-		Color(0.94, 0.99, 1.0, 0.72),
-		Color(0.62, 0.86, 1.0, 0.28),
+		Color(0.94, 0.99, 1.0, 0.42),
+		Color(0.68, 0.88, 1.0, 0.16),
 		Color(0.46, 0.72, 1.0, 0.0),
 	])
 	gradient.offsets = PackedFloat32Array([0.0, 0.48, 1.0])
 	var texture := GradientTexture2D.new()
 	texture.gradient = gradient
-	texture.width = 42
-	texture.height = 18
+	texture.width = 38
+	texture.height = 9
 	texture.fill = GradientTexture2D.FILL_RADIAL
 	texture.fill_from = Vector2(0.35, 0.5)
 	texture.fill_to = Vector2(1.0, 0.5)
