@@ -123,6 +123,10 @@ func start_sweep_knockdown(_attacker: Fighter) -> float:
 	return 0.0
 
 
+func get_sweep_grounded_hold_duration() -> float:
+	return FighterCombat.SWEEP_GROUNDED_HOLD
+
+
 func start_knockdown_recovery() -> float:
 	return 0.0
 

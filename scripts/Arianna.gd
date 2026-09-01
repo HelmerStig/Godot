@@ -175,6 +175,18 @@ const ARIANNA_HURT_HIGH_SHEET := preload(
 const ARIANNA_HURT_HIGH_FRAME_COUNT := 7
 const ARIANNA_HURT_HIGH_COLUMNS := 5
 const ARIANNA_HURT_HIGH_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_SWEEP_KNOCKDOWN_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/sweep_knockdown.png"
+)
+const ARIANNA_SWEEP_KNOCKDOWN_FRAME_COUNT := 25
+const ARIANNA_SWEEP_KNOCKDOWN_COLUMNS := 5
+const ARIANNA_SWEEP_KNOCKDOWN_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_KNOCKDOWN_RECOVERY_SHEET := preload(
+	"res://assets/sprites/characters/arianna/basic-moves/knockdown_recovery.png"
+)
+const ARIANNA_KNOCKDOWN_RECOVERY_FRAME_COUNT := 25
+const ARIANNA_KNOCKDOWN_RECOVERY_COLUMNS := 5
+const ARIANNA_KNOCKDOWN_RECOVERY_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_HURT_LOW_POSE := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/hurt_low-pose.png"
 )
@@ -362,6 +374,22 @@ func _physics_process(_delta: float) -> void:
 			velocity.y += ARIANNA_JUMP_GRAVITY * _delta
 		elif velocity.y > 0.0:
 			velocity.y = 0.0
+		update_physical_collision()
+		update_collision_profile()
+		move_and_slide()
+		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
+		update_facing_direction()
+		update_ground_shadow()
+		return
+	if current_state in [
+		State.SWEEP_KNOCKDOWN,
+		State.KNOCKDOWN_RECOVERY,
+		State.KNOCKED_DOWN,
+	]:
+		# Questi stati sono guidati da FighterCombat: la locomozione non deve
+		# sovrascriverli con IDLE al frame fisico successivo all'impatto.
+		velocity = Vector2.ZERO
+		update_animation()
 		update_physical_collision()
 		update_collision_profile()
 		move_and_slide()
@@ -780,7 +808,7 @@ func start_hit_reaction(
 	start_frame: int = 0,
 	apply_pushback: bool = true
 ) -> float:
-	if hit_height == AttackData.HitHeight.MID:
+	if hit_height in [AttackData.HitHeight.MID, AttackData.HitHeight.HIGH]:
 		start_frame = 0
 	var reaction_duration := super.start_hit_reaction(
 		hit_height, attacker, start_frame, apply_pushback
@@ -788,6 +816,11 @@ func start_hit_reaction(
 	if hit_height == AttackData.HitHeight.MID and apply_pushback:
 		velocity.x *= ARIANNA_HURT_MEDIUM_PUSHBACK_MULTIPLIER
 	return reaction_duration
+
+
+func get_sweep_grounded_hold_duration() -> float:
+	# Il foglio termina già nella posa a terra: la recovery parte subito dopo.
+	return 0.0
 
 
 func begin_jump_ascent() -> void:

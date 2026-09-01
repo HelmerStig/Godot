@@ -547,7 +547,8 @@ func sweep_knockdown_reaction(attacker: Fighter) -> void:
 	var knockdown_generation := action_generation
 	var animation_duration := fighter.start_sweep_knockdown(attacker)
 
-	await get_tree().create_timer(animation_duration + SWEEP_GROUNDED_HOLD).timeout
+	var grounded_hold := fighter.get_sweep_grounded_hold_duration()
+	await get_tree().create_timer(animation_duration + grounded_hold).timeout
 	if knockdown_generation != action_generation or current_health <= 0:
 		return
 	var recovery_duration := fighter.start_knockdown_recovery()

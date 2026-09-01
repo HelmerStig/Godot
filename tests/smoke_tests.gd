@@ -782,16 +782,44 @@ func _test_arianna_idle() -> void:
 	)
 	var arianna_hurt_high_first := frames.get_frame_texture(&"hurt_high", 0) as AtlasTexture
 	var arianna_hurt_high_last := frames.get_frame_texture(&"hurt_high", 6) as AtlasTexture
+	var arianna_hurt_high_return := frames.get_frame_texture(&"hurt_high", 7) as AtlasTexture
 	_expect(
-		frames.get_frame_count(&"hurt_high") == 7
+		frames.get_frame_count(&"hurt_high") == 8
 		and is_equal_approx(frames.get_animation_speed(&"hurt_high"), 24.0)
 		and not frames.get_animation_loop(&"hurt_high")
 		and arianna_hurt_high_first.atlas == Arianna.ARIANNA_HURT_HIGH_SHEET
 		and arianna_hurt_high_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
 		and arianna_hurt_high_last.region == Rect2(512.0, 512.0, 512.0, 512.0)
+		and arianna_hurt_high_return.region == arianna_hurt_high_first.region
 		and frames.get_frame_count(&"hurt_low") == 1
 		and frames.get_frame_texture(&"hurt_low", 0) == Arianna.ARIANNA_HURT_LOW_POSE,
-		"hurt_high usa 7 frame Arianna e hurt_low non riusa Mangler"
+		"hurt_high usa i 7 frame Arianna, torna al primo e non va in loop"
+	)
+	var arianna_sweep_first := frames.get_frame_texture(&"sweep_knockdown", 0) as AtlasTexture
+	var arianna_sweep_last := frames.get_frame_texture(&"sweep_knockdown", 24) as AtlasTexture
+	_expect(
+		frames.get_frame_count(&"sweep_knockdown") == 25
+		and is_equal_approx(frames.get_animation_speed(&"sweep_knockdown"), 24.0)
+		and not frames.get_animation_loop(&"sweep_knockdown")
+		and arianna_sweep_first.atlas == Arianna.ARIANNA_SWEEP_KNOCKDOWN_SHEET
+		and arianna_sweep_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and arianna_sweep_last.region == Rect2(2048.0, 2048.0, 512.0, 512.0),
+		"sweep_knockdown di Arianna usa tutti i 25 frame a 24 FPS"
+	)
+	var arianna_recovery_first := (
+		frames.get_frame_texture(&"knockdown_recovery", 0) as AtlasTexture
+	)
+	var arianna_recovery_last := (
+		frames.get_frame_texture(&"knockdown_recovery", 24) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"knockdown_recovery") == 25
+		and is_equal_approx(frames.get_animation_speed(&"knockdown_recovery"), 24.0)
+		and not frames.get_animation_loop(&"knockdown_recovery")
+		and arianna_recovery_first.atlas == Arianna.ARIANNA_KNOCKDOWN_RECOVERY_SHEET
+		and arianna_recovery_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and arianna_recovery_last.region == Rect2(2048.0, 2048.0, 512.0, 512.0),
+		"knockdown_recovery di Arianna usa tutti i 25 frame a 24 FPS"
 	)
 	var reaction_test_position := arianna.position
 	arianna.start_hit_reaction(AttackData.HitHeight.MID, null, 4, true)
@@ -849,6 +877,60 @@ func _test_arianna_idle() -> void:
 		and (arianna.animated_sprite.sprite_frames.get_frame_texture(&"hurt_high", 0) as AtlasTexture).atlas
 			== Arianna.ARIANNA_HURT_HIGH_SHEET,
 		"pugni light e medium HIGH mostrano lo spritesheet hurt_high di Arianna"
+	)
+	arianna.change_state(Mangler.State.IDLE)
+	arianna.combat.hit_reaction(0.0, AttackData.HitHeight.HIGH, null, 3, false)
+	_expect(
+		arianna.animated_sprite.animation == &"hurt_high"
+		and arianna.animated_sprite.frame == 0,
+		"hurt_high di Arianna esegue sempre la sequenza completa dal primo frame"
+	)
+	await create_timer(0.39).timeout
+	_expect(
+		arianna.current_state == Mangler.State.IDLE
+		and arianna.animated_sprite.animation == &"idle",
+		"dopo 7-1 Arianna torna in idle"
+	)
+	var knockdown_transitions: Array[Dictionary] = []
+	arianna.state_changed.connect(
+		func(_previous_state: int, next_state: int) -> void:
+			knockdown_transitions.append({
+				&"state": next_state,
+				&"animation": arianna.animated_sprite.animation,
+			})
+	)
+	arianna.combat.take_damage(
+		1,
+		null,
+		FighterCombat.DEFAULT_HITSTUN,
+		FighterCombat.DEFAULT_BLOCKSTUN,
+		AttackData.HitHeight.LOW,
+		true
+	)
+	arianna._physics_process(0.0)
+	_expect(
+		arianna.current_state == Mangler.State.SWEEP_KNOCKDOWN
+		and arianna.animated_sprite.animation == &"sweep_knockdown"
+		and is_zero_approx(arianna.get_sweep_grounded_hold_duration()),
+		"un calcio potente basso mantiene lo sweep_knockdown di Arianna nel frame fisico"
+	)
+	await create_timer(2.4).timeout
+	var saw_knockdown_recovery := false
+	for transition: Dictionary in knockdown_transitions:
+		if (
+			transition[&"state"] == Mangler.State.KNOCKDOWN_RECOVERY
+			and transition[&"animation"] == &"knockdown_recovery"
+		):
+			saw_knockdown_recovery = true
+			break
+	_expect(
+		saw_knockdown_recovery,
+		"finito sweep_knockdown Arianna passa subito alla recovery"
+	)
+	_expect(
+		arianna.current_state == Mangler.State.IDLE
+		and arianna.animated_sprite.animation == &"idle",
+		"completata knockdown_recovery Arianna torna in idle"
 	)
 	arianna.change_state(Mangler.State.IDLE)
 	var tornado_preview := AriannaTornadoProjectile.new()

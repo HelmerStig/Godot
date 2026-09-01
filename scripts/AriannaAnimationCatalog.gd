@@ -44,6 +44,8 @@ func configure_all() -> void:
 	configure_baseball_special_frames()
 	configure_hurt_medium_frames()
 	configure_hurt_high_frames()
+	configure_sweep_knockdown_frames()
+	configure_knockdown_recovery_frames()
 	configure_hurt_pose_frames(&"hurt_low", fighter.ARIANNA_HURT_LOW_POSE)
 
 
@@ -804,7 +806,12 @@ func configure_hurt_high_frames() -> void:
 	frames.add_animation(&"hurt_high")
 	frames.set_animation_speed(&"hurt_high", 24.0)
 	frames.set_animation_loop(&"hurt_high", false)
-	for source_index in range(fighter.ARIANNA_HURT_HIGH_FRAME_COUNT):
+	# Riproduce i sette fotogrammi sorgente e richiude visivamente sul primo
+	# prima che FighterCombat riporti Arianna in idle.
+	for animation_index in range(fighter.ARIANNA_HURT_HIGH_FRAME_COUNT + 1):
+		var source_index: int = (
+			animation_index if animation_index < fighter.ARIANNA_HURT_HIGH_FRAME_COUNT else 0
+		)
 		var atlas_frame := AtlasTexture.new()
 		atlas_frame.atlas = fighter.ARIANNA_HURT_HIGH_SHEET
 		atlas_frame.region = Rect2(
@@ -825,3 +832,46 @@ func configure_hurt_pose_frames(animation_name: StringName, pose_texture: Textur
 	frames.set_animation_speed(animation_name, 24.0)
 	frames.set_animation_loop(animation_name, false)
 	frames.add_frame(animation_name, pose_texture)
+
+
+func configure_sweep_knockdown_frames() -> void:
+	configure_full_atlas_animation(
+		&"sweep_knockdown",
+		fighter.ARIANNA_SWEEP_KNOCKDOWN_SHEET,
+		fighter.ARIANNA_SWEEP_KNOCKDOWN_FRAME_COUNT,
+		fighter.ARIANNA_SWEEP_KNOCKDOWN_COLUMNS,
+		fighter.ARIANNA_SWEEP_KNOCKDOWN_CELL_SIZE
+	)
+
+
+func configure_knockdown_recovery_frames() -> void:
+	configure_full_atlas_animation(
+		&"knockdown_recovery",
+		fighter.ARIANNA_KNOCKDOWN_RECOVERY_SHEET,
+		fighter.ARIANNA_KNOCKDOWN_RECOVERY_FRAME_COUNT,
+		fighter.ARIANNA_KNOCKDOWN_RECOVERY_COLUMNS,
+		fighter.ARIANNA_KNOCKDOWN_RECOVERY_CELL_SIZE
+	)
+
+
+func configure_full_atlas_animation(
+	animation_name: StringName,
+	atlas: Texture2D,
+	frame_count: int,
+	columns: int,
+	cell_size: Vector2
+) -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(animation_name):
+		frames.remove_animation(animation_name)
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, 24.0)
+	frames.set_animation_loop(animation_name, false)
+	for source_index in range(frame_count):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = atlas
+		atlas_frame.region = Rect2(
+			Vector2(float(source_index % columns), float(source_index / columns)) * cell_size,
+			cell_size
+		)
+		frames.add_frame(animation_name, atlas_frame)
