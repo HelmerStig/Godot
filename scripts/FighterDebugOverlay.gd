@@ -2,7 +2,7 @@ extends Node2D
 
 ## Overlay provvisorio per verificare collisioni, hurtbox e hitbox attive.
 
-@onready var fighter := get_parent() as Mangler
+@onready var fighter := get_parent() as Fighter
 var hurtbox_shapes: Array[CollisionShape2D] = []
 
 

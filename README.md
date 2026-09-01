@@ -84,9 +84,9 @@ Esecuzione diretta, valida anche su altri sistemi:
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
-La suite verifica oltre 200 condizioni relative ad animazioni, `AttackData`, `AttackVariantData`, input buffer, combattimento, UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK`.
+La suite verifica 496 condizioni relative ad animazioni, `AttackData`, `AttackVariantData`, input buffer, combattimento, UI, KO e reset. Il successo è indicato da `SMOKE_TESTS_OK`.
 
-> Baseline del 10 agosto 2026: il progetto viene caricato senza errori di parsing, ma restano 25 asserzioni non allineate alle animazioni correnti. Non considerare verde il runner finché il log contiene `SMOKE_TESTS_FAILED`.
+> Baseline del 1 settembre 2026: 496 asserzioni superate, nessun fallimento e risultato `SMOKE_TESTS_OK` con Godot 4.7.
 
 ## Architettura
 
@@ -103,12 +103,15 @@ ArenaUI
 - `scenes/MainArena.tscn`: stage, terreno, due fighter, camera e nodi UI.
 - `scenes/Mangler.tscn`: corpo fisico, sprite, hitbox, hurtbox e componente combat.
 - `scenes/stages/DefaultStage.tscn`: sfondo ed effetti ambientali.
+- `scripts/Fighter.gd`: contratto neutrale condiviso per stato, segnali, collisioni e componenti dei fighter.
 - `scripts/Mangler.gd`: input, movimento, orientamento e transizioni di stato.
 - `scripts/AttackData.gd`: schema di danno, timing, stun e hitbox di un attacco.
 - `scripts/AttackVariantData.gd`: frame data, animazione e hitbox delle varianti contestuali.
 - `data/attacks/*.tres`: sei risorse di attacco modificabili dall'Inspector.
 - `scripts/FighterCombat.gd`: esecuzione degli attacchi, danno, guardia, reazioni e KO.
-- `scripts/ManglerAnimationSetup.gd`: punto unico di registrazione delle animazioni runtime.
+- `scripts/ManglerAnimationSetup.gd`: punto di ingresso compatibile per inizializzare le animazioni di Mangler.
+- `scripts/ManglerAnimationCatalog.gd`: catalogo dedicato allo slicing degli atlas e ai frame runtime di Mangler.
+- `scripts/AriannaAnimationCatalog.gd`: catalogo dedicato allo slicing degli atlas e ai frame runtime di Arianna.
 - `scripts/ManglerVisualConfig.gd`: profili degli effetti di movimento e afterimage.
 - `scripts/FighterInputBuffer.gd`: cronologia input, direzioni relative e riconoscimento sequenze.
 - `scripts/CharacterData.gd`: statistiche e configurazione del personaggio.

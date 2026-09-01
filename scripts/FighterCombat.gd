@@ -49,7 +49,7 @@ const STANDING_HEAVY_PUNCH_HITBOX_POSITION := Vector2(117.5, -105.0)
 const CROUCHED_HEAVY_LAUNCH_VERTICAL := 800.0
 const CROUCHED_HEAVY_LAUNCH_HORIZONTAL := 200.0
 
-var fighter: Mangler
+var fighter: Fighter
 var character_data: CharacterData
 var max_health := 100
 var current_health := 100
@@ -59,7 +59,7 @@ var current_attack: AttackData
 var current_variant: Resource
 var current_attack_direction := FighterInputBuffer.Direction.NEUTRAL
 var action_generation := 0
-var hit_targets: Array[Mangler] = []
+var hit_targets: Array[Fighter] = []
 var medium_kick_followup_done := false
 var is_crouched_light_punch := false
 var crouched_punch_started_crouched := false
@@ -84,7 +84,7 @@ var is_special_sonic_boom := false
 
 
 func _ready() -> void:
-	fighter = get_parent() as Mangler
+	fighter = get_parent() as Fighter
 	if hitbox_shape.shape:
 		# Ogni fighter deve poter cambiare la propria hitbox indipendentemente.
 		hitbox_shape.shape = hitbox_shape.shape.duplicate()
@@ -155,42 +155,42 @@ func try_attack(
 			FighterInputBuffer.Direction.DOWN_BACK,
 		]
 	)
-	var starts_crouched := fighter.current_state == Mangler.State.CROUCHING
+	var starts_crouched := fighter.current_state == Fighter.State.CROUCHING
 	var wants_special_720_punch := attack_name == &"special_720_punch"
 	var wants_special_sonic_boom := attack_name == &"special_sonic_boom"
 	var wants_airborne_light_punch := (
 		attack_name == &"light_punch"
-		and fighter.current_state == Mangler.State.JUMPING
+		and fighter.current_state == Fighter.State.JUMPING
 		and not fighter.is_on_floor()
 		and not fighter.aerial_attack_used
 	)
 	var wants_airborne_medium_punch := (
 		attack_name == &"medium_punch"
-		and fighter.current_state == Mangler.State.JUMPING
+		and fighter.current_state == Fighter.State.JUMPING
 		and not fighter.is_on_floor()
 		and not fighter.aerial_attack_used
 	)
 	var wants_airborne_heavy_punch := (
 		attack_name == &"heavy_punch"
-		and fighter.current_state == Mangler.State.JUMPING
+		and fighter.current_state == Fighter.State.JUMPING
 		and not fighter.is_on_floor()
 		and not fighter.aerial_attack_used
 	)
 	var wants_airborne_light_kick := (
 		attack_name == &"light_kick"
-		and fighter.current_state == Mangler.State.JUMPING
+		and fighter.current_state == Fighter.State.JUMPING
 		and not fighter.is_on_floor()
 		and not fighter.aerial_attack_used
 	)
 	var wants_airborne_heavy_kick := (
 		attack_name == &"heavy_kick"
-		and fighter.current_state == Mangler.State.JUMPING
+		and fighter.current_state == Fighter.State.JUMPING
 		and not fighter.is_on_floor()
 		and not fighter.aerial_attack_used
 	)
 	var wants_airborne_medium_kick := (
 		attack_name == &"medium_kick"
-		and fighter.current_state == Mangler.State.JUMPING
+		and fighter.current_state == Fighter.State.JUMPING
 		and not fighter.is_on_floor()
 		and not fighter.aerial_attack_used
 	)
@@ -206,12 +206,12 @@ func try_attack(
 		or wants_airborne_heavy_punch
 	)
 	if (
-		fighter.current_state == Mangler.State.JUMPING
+		fighter.current_state == Fighter.State.JUMPING
 		and not fighter.is_on_floor()
 		and fighter.aerial_attack_used
 	):
 		return
-	if fighter.current_state not in [Mangler.State.IDLE, Mangler.State.WALKING] and not wants_airborne_attack and not (
+	if fighter.current_state not in [Fighter.State.IDLE, Fighter.State.WALKING] and not wants_airborne_attack and not (
 		(
 			wants_crouched_punch
 			or wants_crouched_medium_punch
@@ -260,7 +260,7 @@ func try_attack(
 	medium_kick_followup_done = false
 	configure_hitbox(attack)
 	var preserved_air_velocity := fighter.velocity
-	fighter.change_state(Mangler.State.ATTACKING)
+	fighter.change_state(Fighter.State.ATTACKING)
 	if (
 		is_airborne_light_kick
 		or is_airborne_medium_kick
@@ -404,22 +404,22 @@ func try_attack(
 	is_special_720_punch = false
 	is_special_sonic_boom = false
 	if canceled_near_ground and fighter.is_on_floor():
-		fighter.change_state(Mangler.State.IDLE)
+		fighter.change_state(Fighter.State.IDLE)
 	elif canceled_near_ground:
 		fighter.force_idle_until_landing = true
-		fighter.change_state(Mangler.State.JUMPING)
+		fighter.change_state(Fighter.State.JUMPING)
 	elif should_return_to_jump:
-		fighter.change_state(Mangler.State.JUMPING)
+		fighter.change_state(Fighter.State.JUMPING)
 	elif should_return_to_crouch:
 		fighter.return_to_crouch_pose()
 	else:
-		fighter.change_state(Mangler.State.IDLE)
+		fighter.change_state(Fighter.State.IDLE)
 	attack_finished.emit()
 
 
 func take_damage(
 	damage: int,
-	attacker: Mangler,
+	attacker: Fighter,
 	hitstun: float = DEFAULT_HITSTUN,
 	blockstun: float = DEFAULT_BLOCKSTUN,
 	hit_height: AttackData.HitHeight = AttackData.HitHeight.MID,
@@ -428,12 +428,12 @@ func take_damage(
 	ko_start_frame: int = 0,
 	apply_pushback: bool = true
 ) -> void:
-	if fighter.current_state in [Mangler.State.KNOCKDOWN_RECOVERY, Mangler.State.KNOCKED_DOWN]:
+	if fighter.current_state in [Fighter.State.KNOCKDOWN_RECOVERY, Fighter.State.KNOCKED_DOWN]:
 		return
 	var was_airborne := not fighter.is_on_floor()
 
 	var attack_was_blocked := (
-		(is_blocking or fighter.current_state == Mangler.State.BLOCKING)
+		(is_blocking or fighter.current_state == Fighter.State.BLOCKING)
 		and fighter.is_holding_back()
 		and fighter.is_attack_in_front(attacker)
 		and fighter.is_on_floor()
@@ -463,9 +463,9 @@ func take_damage(
 func block_reaction(
 	duration: float,
 	hit_height: AttackData.HitHeight,
-	attacker: Mangler = null
+	attacker: Fighter = null
 ) -> void:
-	var started_crouched := fighter.current_state == Mangler.State.CROUCHING
+	var started_crouched := fighter.current_state == Fighter.State.CROUCHING
 	cancel_current_action()
 	var block_generation := action_generation
 	var animation_duration := fighter.start_block_reaction(hit_height, started_crouched)
@@ -496,13 +496,13 @@ func block_reaction(
 	await get_tree().create_timer(recovery_duration).timeout
 	if block_generation != action_generation or current_health <= 0:
 		return
-	fighter.change_state(Mangler.State.IDLE)
+	fighter.change_state(Fighter.State.IDLE)
 
 
 func hit_reaction(
 	duration: float,
 	hit_height: AttackData.HitHeight,
-	attacker: Mangler,
+	attacker: Fighter,
 	hit_reaction_start_frame: int = 0,
 	apply_pushback: bool = true
 ) -> void:
@@ -520,10 +520,10 @@ func hit_reaction(
 	if hit_generation != action_generation or current_health <= 0:
 		return
 	fighter.velocity.x = 0.0
-	fighter.change_state(Mangler.State.IDLE)
+	fighter.change_state(Fighter.State.IDLE)
 
 
-func airborne_knockdown_reaction(attacker: Mangler) -> void:
+func airborne_knockdown_reaction(attacker: Fighter) -> void:
 	cancel_current_action()
 	var knockdown_generation := action_generation
 	fighter.start_airborne_hit_knockdown(attacker)
@@ -539,10 +539,10 @@ func airborne_knockdown_reaction(attacker: Mangler) -> void:
 	await get_tree().create_timer(recovery_duration).timeout
 	if knockdown_generation != action_generation or current_health <= 0:
 		return
-	fighter.change_state(Mangler.State.IDLE)
+	fighter.change_state(Fighter.State.IDLE)
 
 
-func sweep_knockdown_reaction(attacker: Mangler) -> void:
+func sweep_knockdown_reaction(attacker: Fighter) -> void:
 	cancel_current_action()
 	var knockdown_generation := action_generation
 	var animation_duration := fighter.start_sweep_knockdown(attacker)
@@ -554,12 +554,12 @@ func sweep_knockdown_reaction(attacker: Mangler) -> void:
 	await get_tree().create_timer(recovery_duration).timeout
 	if knockdown_generation != action_generation or current_health <= 0:
 		return
-	fighter.change_state(Mangler.State.IDLE)
+	fighter.change_state(Fighter.State.IDLE)
 
 
 func die(start_frame: int = 0) -> void:
 	cancel_current_action()
-	fighter.change_state(Mangler.State.KNOCKED_DOWN)
+	fighter.change_state(Fighter.State.KNOCKED_DOWN)
 	if fighter.animated_sprite.sprite_frames.has_animation(&"ko"):
 		fighter.animated_sprite.play(&"ko")
 		var final_frame := fighter.animated_sprite.sprite_frames.get_frame_count(&"ko") - 1
@@ -601,7 +601,7 @@ func cancel_current_action() -> void:
 	is_special_720_punch = false
 	is_special_sonic_boom = false
 	hit_targets.clear()
-	disable_hitbox()
+	disable_hitbox(true)
 
 
 func get_health_percentage() -> float:
@@ -611,7 +611,8 @@ func get_health_percentage() -> float:
 
 
 func enable_hitbox() -> void:
-	hitbox_shape.disabled = false
+	if hitbox_shape:
+		hitbox_shape.disabled = false
 
 
 func perform_special_720_multi_hit(active_duration: float, attack_generation: int) -> void:
@@ -641,9 +642,12 @@ func wait_for_standing_medium_punch_active_frame(attack_generation: int) -> void
 		await get_tree().process_frame
 
 
-func disable_hitbox() -> void:
+func disable_hitbox(deferred: bool = false) -> void:
 	if hitbox_shape:
-		hitbox_shape.disabled = true
+		if deferred:
+			hitbox_shape.set_deferred("disabled", true)
+		else:
+			hitbox_shape.disabled = true
 
 
 func is_attack_button_held(attack_name: StringName) -> bool:
@@ -753,6 +757,8 @@ func get_attack_phase_durations(attack: AttackData) -> Vector3:
 
 
 func get_hit_reaction_start_frame(attack: AttackData) -> int:
+	if current_variant != null and current_variant.hit_reaction_start_frame > 0:
+		return current_variant.hit_reaction_start_frame
 	if get_effective_hit_height(attack) == AttackData.HitHeight.MID:
 		return 4
 	return attack.hit_reaction_start_frame
@@ -781,9 +787,9 @@ func get_current_variant_id() -> StringName:
 	return &"standing"
 
 
-func _target_will_block(target: Mangler) -> bool:
+func _target_will_block(target: Fighter) -> bool:
 	return (
-		(target.combat.is_blocking or target.current_state == Mangler.State.BLOCKING)
+		(target.combat.is_blocking or target.current_state == Fighter.State.BLOCKING)
 		and target.is_holding_back()
 		and target.is_attack_in_front(fighter)
 		and target.is_on_floor()
@@ -822,7 +828,7 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	if not area.is_in_group("hurtbox") or not is_attacking:
 		return
 
-	var target := area.get_parent() as Mangler
+	var target := area.get_parent() as Fighter
 	if target == null or target == fighter or hit_targets.has(target) or current_attack == null:
 		return
 	hit_targets.append(target)
@@ -833,12 +839,6 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	):
 		fighter.spawn_hit_effect(target.global_position + Vector2(0.0, -220.0), fighter.is_facing_right)
 	var effective_hit_height := get_effective_hit_height(current_attack)
-	if (
-		current_attack.attack_id == &"light_punch"
-		and is_crouched_light_punch
-		and _target_will_block(target)
-	):
-		effective_hit_height = AttackData.HitHeight.LOW
 	var effective_reaction_frame := get_hit_reaction_start_frame(current_attack)
 	var effective_damage := current_attack.damage
 	var effective_knockdown: bool = (

@@ -11,7 +11,7 @@ const SPEED := 520.0
 const MAX_LIFETIME := 3.0
 const DAMAGE := 12
 
-var source_fighter: Mangler
+var source_fighter: Fighter
 var travel_direction := 1.0
 var movement_speed := SPEED
 var elapsed := 0.0
@@ -27,7 +27,7 @@ func _ready() -> void:
 	sprite.play(&"fly")
 
 
-func configure(owner_fighter: Mangler, direction: float, speed_multiplier: float = 1.0) -> void:
+func configure(owner_fighter: Fighter, direction: float, speed_multiplier: float = 1.0) -> void:
 	source_fighter = owner_fighter
 	travel_direction = signf(direction)
 	movement_speed = SPEED * maxf(speed_multiplier, 1.0)
@@ -69,7 +69,7 @@ func configure_animation() -> void:
 func _on_area_entered(area: Area2D) -> void:
 	if has_hit or not area.is_in_group("hurtbox"):
 		return
-	var target := area.get_parent() as Mangler
+	var target := area.get_parent() as Fighter
 	if target == null or target == source_fighter:
 		return
 	has_hit = true

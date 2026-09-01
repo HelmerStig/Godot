@@ -23,7 +23,7 @@ const HITBOX_POSITION := Vector2(0.0, -8.0)
 const IMPACT_OFFSET := Vector2(0.0, -150.0)
 const IMPACT_PARTICLE_COUNT := 90
 
-var source_fighter: Mangler
+var source_fighter: Fighter
 var travel_direction := 1.0
 var movement_speed := MOVE_SPEED
 var impact_damage := DAMAGE
@@ -35,7 +35,7 @@ var tornado_sprite: AnimatedSprite2D
 
 
 func setup(
-	owner_fighter: Mangler,
+	owner_fighter: Fighter,
 	facing_right: bool,
 	projectile_strength: StringName = &"light"
 ) -> void:
@@ -97,7 +97,7 @@ func _create_hitbox() -> void:
 func _on_area_entered(area: Area2D) -> void:
 	if has_hit or not area.is_in_group("hurtbox"):
 		return
-	var target := area.get_parent() as Mangler
+	var target := area.get_parent() as Fighter
 	if target == null or target == source_fighter or source_fighter == null:
 		return
 	has_hit = true

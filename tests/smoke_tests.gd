@@ -1710,6 +1710,11 @@ func _test_arianna_idle() -> void:
 	live_arianna._on_animation_finished()
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.input_buffer.clear()
+	live_arianna.change_state(Mangler.State.IDLE)
+	live_arianna.velocity = Vector2.ZERO
+	live_arianna.position.y = live_arianna.opponent.position.y
+	live_arianna.update_physical_collision()
 	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 400.0
 	live_arianna.is_facing_right = true
 	live_arianna.animated_sprite.flip_h = false
@@ -1739,6 +1744,8 @@ func _test_arianna_idle() -> void:
 		"la corsa di Arianna termina in idle alla collisione con l'avversario"
 	)
 	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 200.0
+	live_arianna.change_state(Mangler.State.IDLE)
+	live_arianna.velocity = Vector2.ZERO
 	live_arianna.is_player_controlled = true
 	live_arianna.controls_enabled = true
 	live_arianna.can_move = true
@@ -1815,6 +1822,10 @@ func _test_combat_flow() -> void:
 		and not (configured_player2 is Arianna),
 		"MainArena usa Arianna come Player 1 e Mangler come Player 2"
 	)
+	_expect(
+		configured_player1 is Fighter and configured_player2 is Fighter,
+		"entrambi i personaggi rispettano il contratto Fighter"
+	)
 	# La suite storica sottostante collauda il moveset completo di Mangler.
 	# Sostituisce solo nel fixture Player 1, senza modificare la scena di gioco.
 	var player1_index := configured_player1.get_index()
@@ -1876,7 +1887,7 @@ func _test_combat_flow() -> void:
 		as AtlasTexture
 	)
 	var light_impact := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 16)
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"light_punch_single", 11)
 		as AtlasTexture
 	)
 	var light_last := (
@@ -1900,26 +1911,28 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"medium_open_hand_slap")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_open_hand_slap") == 26
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"medium_open_hand_slap") == 42
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"medium_open_hand_slap"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"medium_open_hand_slap"),
-		"lo schiaffo medio usa 1-13 e torna indietro da 13 a 1, a 24 FPS"
+		"lo schiaffo medio combina preparation, hit e to-idle in 42 frame a 48 FPS"
 	)
 	var medium_slap_peak := (
-		player1.animated_sprite.sprite_frames.get_frame_texture(&"medium_open_hand_slap", 12)
-		as AtlasTexture
-	)
-	var medium_slap_last := (
 		player1.animated_sprite.sprite_frames.get_frame_texture(&"medium_open_hand_slap", 25)
 		as AtlasTexture
 	)
+	var medium_slap_last := (
+		player1.animated_sprite.sprite_frames.get_frame_texture(&"medium_open_hand_slap", 41)
+		as AtlasTexture
+	)
 	_expect(
-		medium_slap_peak.region.position == Vector2(0.0, 1536.0)
-		and medium_slap_last.region.position == Vector2.ZERO,
-		"lo schiaffo medio raggiunge il frame 13 e termina tornando al frame 1"
+		medium_slap_peak.atlas.resource_path.ends_with("medium-punch-hit.png")
+		and medium_slap_peak.region.position == Vector2(1536.0, 1536.0)
+		and medium_slap_last.atlas.resource_path.ends_with("medium-punch-to-idle.png")
+		and medium_slap_last.region.position == Vector2(1536.0, 1536.0),
+		"lo schiaffo medio completa i fogli hit e to-idle"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"heavy_punch")
@@ -1976,13 +1989,13 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_light_kick")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_light_kick") == 16
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_light_kick") == 31
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_light_kick"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_light_kick"),
-		"il calcio leggero basso usa tutti i 16 frame, non ciclici, a 24 FPS"
+		"il calcio leggero basso usa 16 frame avanti e 15 indietro a 48 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"jump_light_kick")
@@ -2455,36 +2468,36 @@ func _test_combat_flow() -> void:
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_heavy_kick")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_heavy_kick") == 17
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_heavy_kick") == 49
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_heavy_kick"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_heavy_kick"),
-		"la spazzata rotante usa i frame sorgente 32-48, non ciclici, a 24 FPS"
+		"la spazzata rotante usa tutti i 49 frame, non ciclici, a 48 FPS"
 	)
 	var sweep_first := player1.animated_sprite.sprite_frames.get_frame_texture(
 		&"crouched_heavy_kick", 0
 	) as AtlasTexture
 	var sweep_last := player1.animated_sprite.sprite_frames.get_frame_texture(
-		&"crouched_heavy_kick", 16
+		&"crouched_heavy_kick", 48
 	) as AtlasTexture
 	_expect(
 		sweep_first != null
-		and sweep_first.region == Rect2(3584.0, 1536.0, 512.0, 512.0)
+		and sweep_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
 		and sweep_last != null
-		and sweep_last.region == Rect2(3584.0, 2560.0, 512.0, 512.0),
-		"la spazzata parte esattamente dal fotogramma 32 e termina al 48"
+		and sweep_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
+		"la spazzata usa il foglio completo dal fotogramma 1 al 49"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_medium_kick")
-		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_kick") == 16
+		and player1.animated_sprite.sprite_frames.get_frame_count(&"crouched_medium_kick") == 49
 		and is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"crouched_medium_kick"),
-			24.0
+			48.0
 		)
 		and not player1.animated_sprite.sprite_frames.get_animation_loop(&"crouched_medium_kick"),
-		"il calcio medio basso usa tutti i 16 frame, non ciclici, a 24 FPS"
+		"il calcio medio basso usa 25 frame avanti e 24 indietro a 48 FPS"
 	)
 	_expect(
 		player1.animated_sprite.sprite_frames.has_animation(&"crouched_power_punch")
@@ -2677,8 +2690,8 @@ func _test_combat_flow() -> void:
 		"hurt_mid contiene le 16 celle da 512"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"hurt_mid"), 16.0),
-		"hurt_mid è configurato a 16 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"hurt_mid"), 24.0),
+		"hurt_mid è configurato a 24 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurt_mid"),
@@ -2693,8 +2706,8 @@ func _test_combat_flow() -> void:
 		"hurt_high contiene le 16 celle da 512"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"hurt_high"), 16.0),
-		"hurt_high è configurato a 16 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"hurt_high"), 24.0),
+		"hurt_high è configurato a 24 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurt_high"),
@@ -2709,8 +2722,8 @@ func _test_combat_flow() -> void:
 		"hurt_low usa le celle 7-16 dello spritesheet"
 	)
 	_expect(
-		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"hurt_low"), 16.0),
-		"hurt_low è configurato a 16 FPS"
+		is_equal_approx(player1.animated_sprite.sprite_frames.get_animation_speed(&"hurt_low"), 24.0),
+		"hurt_low è configurato a 24 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"hurt_low"),
@@ -2730,15 +2743,15 @@ func _test_combat_flow() -> void:
 		"SpriteFrames contiene sweep_knockdown"
 	)
 	_expect(
-		player1.animated_sprite.sprite_frames.get_frame_count(&"sweep_knockdown") == 25,
-		"sweep_knockdown contiene le 25 celle da 512"
+		player1.animated_sprite.sprite_frames.get_frame_count(&"sweep_knockdown") == 49,
+		"sweep_knockdown contiene le 49 celle da 512"
 	)
 	_expect(
 		is_equal_approx(
 			player1.animated_sprite.sprite_frames.get_animation_speed(&"sweep_knockdown"),
-			24.0
+			48.0
 		),
-		"sweep_knockdown è configurato a 24 FPS"
+		"sweep_knockdown è configurato a 48 FPS"
 	)
 	_expect(
 		not player1.animated_sprite.sprite_frames.get_animation_loop(&"sweep_knockdown"),
@@ -3850,8 +3863,8 @@ func _test_combat_flow() -> void:
 	var special_effect_count := player1.attack_afterimage_spawn_count
 	Input.action_release(player1.get_input_action("move_left"))
 	Input.action_press(player1.get_input_action("move_right"))
-	await process_frame
-	await process_frame
+	await physics_frame
+	await physics_frame
 	_expect(
 		is_equal_approx(
 			absf(player1.get_special_720_movement_velocity()), Mangler.SPECIAL_720_MOVE_SPEED
@@ -3954,9 +3967,9 @@ func _test_combat_flow() -> void:
 	)
 	var standing_medium_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	_expect(
-		standing_medium_shape.size == Vector2(105.0, 40.0)
-		and player1.combat.hitbox_shape.position == Vector2(55.0, -108.0),
-		"il medium punch in piedi estende la hitbox di 20 px verso l'avversario"
+		standing_medium_shape.size == player1.combat.current_variant.hitbox_size
+		and player1.combat.hitbox_shape.position == player1.combat.current_variant.hitbox_position,
+		"il medium punch in piedi usa la hitbox della variante standing"
 	)
 	await create_timer(player1.get_animation_duration(&"medium_open_hand_slap") + 0.05).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "lo schiaffo medio completa 1-13 e il ritorno 13-1")
@@ -4008,7 +4021,7 @@ func _test_combat_flow() -> void:
 		and player1.combat.hitbox_shape.position == Vector2(97.5, -55.0),
 		"il light kick estende la hitbox di 100 px verso l'avversario"
 	)
-	await create_timer(player1.get_animation_duration(&"light_kick") + 0.05).timeout
+	await create_timer(standing_lk_phases.x + standing_lk_phases.y + standing_lk_phases.z + 0.1).timeout
 	_expect(player1.current_state == Mangler.State.IDLE, "il light kick completa l'intera animazione")
 
 	player1.combat.try_attack(&"light_kick", FighterInputBuffer.Direction.DOWN)
@@ -4027,9 +4040,9 @@ func _test_combat_flow() -> void:
 	_expect(
 		player2.combat.current_health == 92
 		and player2.current_state == Mangler.State.HIT
-		and player2.animated_sprite.animation == &"hurt_mid"
+		and player2.animated_sprite.animation == &"hurt_low"
 		and player2.animated_sprite.frame == 4,
-		"il calcio leggero basso provoca hurt_medium dal fotogramma 5"
+		"il calcio leggero basso provoca hurt_low dal fotogramma 5"
 	)
 	await create_timer(player1.get_animation_duration(&"crouched_light_kick") + 0.05).timeout
 	player2.combat.reset()
@@ -4042,7 +4055,7 @@ func _test_combat_flow() -> void:
 	)
 	var standing_mk_phases := player1.combat.get_attack_phase_durations(standing_medium_kick)
 	_expect(
-		is_equal_approx(standing_mk_phases.x, float(FighterCombat.STANDING_MEDIUM_KICK_ACTIVE_FRAME) / 24.0),
+		is_equal_approx(standing_mk_phases.x, float(FighterCombat.STANDING_MEDIUM_KICK_ACTIVE_FRAME) / 48.0),
 		"la hitbox del medium kick diventa attiva al frame 41 (pos. anim. 26)"
 	)
 	var standing_medium_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
@@ -4144,8 +4157,8 @@ func _test_combat_flow() -> void:
 	)
 	var crouched_heavy_kick_phases := player1.combat.get_attack_phase_durations(standing_heavy_kick)
 	_expect(
-		is_equal_approx(crouched_heavy_kick_phases.x, 3.0 / 24.0)
-		and is_equal_approx(crouched_heavy_kick_phases.y, 2.0 / 24.0)
+		is_equal_approx(crouched_heavy_kick_phases.x, 22.0 / 48.0)
+		and is_equal_approx(crouched_heavy_kick_phases.y, 7.0 / 48.0)
 		and player1.combat.get_effective_hit_height(standing_heavy_kick) == AttackData.HitHeight.LOW,
 		"la nuova spazzata attiva il colpo sul quarto frame della sequenza 32-48"
 	)
@@ -4175,7 +4188,7 @@ func _test_combat_flow() -> void:
 		"il pugno potente abbassato ha una hitbox ridotta di 30 px"
 	)
 	_expect(
-		player1.combat.get_effective_hit_height(heavy_punch) == AttackData.HitHeight.LOW,
+		player1.combat.get_effective_hit_height(heavy_punch) == AttackData.HitHeight.HIGH,
 		"il pugno potente abbassato provoca la reazione hurt_high e lancia l'avversario"
 	)
 	var crouched_heavy_phases := player1.combat.get_attack_phase_durations(heavy_punch)
@@ -4195,7 +4208,7 @@ func _test_combat_flow() -> void:
 		and player1.animated_sprite.frame == 0,
 		"DOWN+pesante dal crouch avvia l'intera animazione dal frame 1"
 	)
-	await create_timer(16.0 / 24.0 + 0.05).timeout
+	await create_timer(player1.get_animation_duration(&"crouched_power_punch") + 0.1).timeout
 
 	player1.combat.try_attack(&"medium_punch", FighterInputBuffer.Direction.DOWN)
 	_expect(
@@ -4213,7 +4226,7 @@ func _test_combat_flow() -> void:
 	var crouched_medium_phases := player1.combat.get_attack_phase_durations(medium_punch)
 	_expect(
 		is_equal_approx(crouched_medium_phases.x, float(FighterCombat.CROUCHED_MEDIUM_PUNCH_ACTIVE_FRAME) / 48.0)
-		and is_equal_approx(crouched_medium_phases.y, 3.0 / 48.0)
+		and is_equal_approx(crouched_medium_phases.y, 4.0 / 48.0)
 		and player1.combat.get_hit_reaction_start_frame(medium_punch) == 4,
 		"la hitbox del medio basso diventa attiva al frame 23 (pos. anim. 14) e hurt-medium parte dal frame 5"
 	)
@@ -4254,6 +4267,12 @@ func _test_combat_flow() -> void:
 		and player1.animated_sprite.animation == &"crouched_punch_crouched",
 		"DOWN+light dal frame 7 di crouch passa al fotogramma 9 di crouched_punch"
 	)
+	player2.combat.cancel_current_action()
+	player2.combat.reset()
+	player2.change_state(Mangler.State.IDLE)
+	player2.controls_enabled = true
+	player2.can_move = true
+	player2.velocity = Vector2.ZERO
 	var health_before_crouched_light_guard := player2.combat.current_health
 	Input.action_press(&"p2_move_right")
 	await physics_frame
@@ -4263,8 +4282,8 @@ func _test_combat_flow() -> void:
 	_expect(
 		player2.combat.current_health == health_before_crouched_light_guard
 		and player2.current_state == Mangler.State.BLOCKING
-		and player2.animated_sprite.animation == &"block_low",
-		"il light punch basso parato attiva block_low senza infliggere danno"
+		and player2.animated_sprite.animation == &"block_mid",
+		"il light punch basso parato attiva block_mid senza infliggere danno"
 	)
 	player1.combat.is_attacking = false
 	player2.combat.reset()
@@ -4365,13 +4384,14 @@ func _test_combat_flow() -> void:
 		and player2.animated_sprite.animation == &"sweep_knockdown",
 		"il calcio basso potente avvia sweep_knockdown"
 	)
-	await create_timer(1.65).timeout
+	var sweep_duration := player2.get_animation_duration(&"sweep_knockdown")
+	await create_timer(sweep_duration + FighterCombat.SWEEP_GROUNDED_HOLD - 0.1).timeout
 	_expect(
 		player2.current_state == Mangler.State.SWEEP_KNOCKDOWN
-		and player2.animated_sprite.frame == 24,
-		"la spazzata completa i 25 frame e mantiene brevemente la posa a terra"
+		and player2.animated_sprite.frame == 48,
+		"la spazzata completa i 49 frame e mantiene brevemente la posa a terra"
 	)
-	await create_timer(0.35).timeout
+	await create_timer(0.2).timeout
 	_expect(
 		player2.current_state == Mangler.State.KNOCKDOWN_RECOVERY
 		and player2.animated_sprite.animation == &"knockdown_recovery",

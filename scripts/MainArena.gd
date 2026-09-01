@@ -9,8 +9,8 @@ signal round_message_changed(message: String, is_visible: bool)
 signal round_started
 signal round_ended(winner: int)
 
-@onready var player1: Mangler = $Player1
-@onready var player2: Mangler = $Player2
+@onready var player1: Fighter = $Player1
+@onready var player2: Fighter = $Player2
 @onready var camera: Camera2D = $Camera2D
 
 const STAGE_WIDTH := 2304.0
