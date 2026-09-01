@@ -6,6 +6,7 @@ class_name Arianna
 ## finché non verranno integrate le sue mosse.
 
 const AnimationCatalog := preload("res://scripts/AriannaAnimationCatalog.gd")
+const BateauProjectile := preload("res://scripts/AriannaBateauProjectile.gd")
 
 const ARIANNA_IDLE_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/idle.png"
@@ -1110,6 +1111,10 @@ func _hold_whistle_opponent_idle() -> void:
 
 
 func _finish_whistle_special() -> void:
+	var whistle_completed := (
+		animated_sprite.animation == &"arianna_whistle_special"
+		and animated_sprite.frame >= ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT - 1
+	)
 	_stop_whistle_air_effect()
 	combat.disable_hitbox()
 	combat.is_attacking = false
@@ -1124,7 +1129,27 @@ func _finish_whistle_special() -> void:
 		whistle_frozen_target.controls_enabled = whistle_target_controls_enabled
 		whistle_frozen_target.can_move = whistle_target_can_move
 	whistle_frozen_target = null
+	if whistle_completed:
+		_spawn_bateau_projectile()
 	change_state(State.IDLE)
+
+
+func _spawn_bateau_projectile() -> AriannaBateauProjectile:
+	if not is_instance_valid(opponent):
+		return null
+	var bateau := BateauProjectile.new() as AriannaBateauProjectile
+	bateau.setup(self, opponent)
+	var projectile_parent: Node = get_tree().current_scene
+	if projectile_parent == null:
+		projectile_parent = get_tree().root
+	projectile_parent.add_child(bateau)
+	var spawn_x := (
+		stage_left_limit - AriannaBateauProjectile.OFFSCREEN_MARGIN
+		if bateau.travel_direction > 0.0
+		else stage_right_limit + AriannaBateauProjectile.OFFSCREEN_MARGIN
+	)
+	bateau.global_position = Vector2(spawn_x, global_position.y)
+	return bateau
 
 
 func _start_whistle_air_effect() -> CPUParticles2D:

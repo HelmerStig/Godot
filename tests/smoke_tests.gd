@@ -1405,6 +1405,105 @@ func _test_arianna_idle() -> void:
 		and whistle_target.controls_enabled,
 		"terminati i 24 frame Arianna e l'avversario vengono rilasciati in idle"
 	)
+	var bateau := get_first_node_in_group(
+		"arianna_bateau_projectile"
+	) as AriannaBateauProjectile
+	var bateau_frames := bateau.animated_sprite.sprite_frames
+	var bateau_run_first := bateau_frames.get_frame_texture(&"run", 0) as AtlasTexture
+	var bateau_run_last := bateau_frames.get_frame_texture(&"run", 48) as AtlasTexture
+	var bateau_attack_last := bateau_frames.get_frame_texture(&"attack", 24) as AtlasTexture
+	var bateau_back_last := bateau_frames.get_frame_texture(&"back_to_run", 24) as AtlasTexture
+	_expect(
+		bateau_frames.get_frame_count(&"run") == 49
+		and bateau_frames.get_frame_count(&"attack") == 25
+		and bateau_frames.get_frame_count(&"back_to_run") == 25
+		and is_equal_approx(bateau_frames.get_animation_speed(&"run"), 24.0)
+		and is_equal_approx(bateau_frames.get_animation_speed(&"attack"), 24.0)
+		and is_equal_approx(bateau_frames.get_animation_speed(&"back_to_run"), 24.0)
+		and bateau_frames.get_animation_loop(&"run")
+		and not bateau_frames.get_animation_loop(&"attack")
+		and not bateau_frames.get_animation_loop(&"back_to_run")
+		and bateau_run_first.atlas == AriannaBateauProjectile.RUN_SHEET
+		and bateau_run_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0)
+		and bateau_attack_last.region == Rect2(2048.0, 2048.0, 512.0, 512.0)
+		and bateau_back_last.region == Rect2(2048.0, 2048.0, 512.0, 512.0),
+		"Bateau usa run 49, attack 25 e back_to_run 25, tutti a 24 FPS"
+	)
+	_expect(
+		is_instance_valid(bateau)
+		and bateau.current_state == AriannaBateauProjectile.State.RUNNING
+		and bateau.global_position.x
+			== arianna.stage_left_limit - AriannaBateauProjectile.OFFSCREEN_MARGIN
+		and bateau.travel_direction > 0.0
+		and bateau.animated_sprite.animation == &"run",
+		"dopo il fischio Bateau entra correndo da fuori schermo"
+	)
+	var health_before_bateau := whistle_target.combat.current_health
+	_expect(
+		bateau.get_node_or_null("CollisionShape2D") == null
+		and whistle_target.combat.current_health == health_before_bateau,
+		"la corsa di Bateau non usa collisioni e non viene influenzata dalle hurtbox"
+	)
+	_expect(
+		AriannaBateauProjectile.MOVE_SPEED == 760.0
+		and bateau.animated_sprite.position == AriannaBateauProjectile.SPRITE_POSITION,
+		"Bateau usa la velocità aumentata e l'offset visivo configurato"
+	)
+	bateau.set_physics_process(false)
+	bateau.global_position.x = (
+		whistle_target.global_position.x
+		- AriannaBateauProjectile.ATTACK_TRIGGER_DISTANCE
+		+ 1.0
+	)
+	bateau._physics_process(0.0)
+	var bateau_started_attack := (
+		bateau.current_state == AriannaBateauProjectile.State.ATTACKING
+		and bateau.animated_sprite.animation == &"attack"
+	)
+	bateau.animated_sprite.frame = AriannaBateauProjectile.ATTACK_HIT_FRAME
+	bateau._on_frame_changed()
+	var bite_position := bateau.global_position.x
+	bateau._move_attack_toward_target(0.1)
+	var bateau_bit_target := (
+		bateau.has_hit
+		and whistle_target.combat.current_health
+			== health_before_bateau
+			- roundi(float(whistle_target.combat.max_health) * AriannaBateauProjectile.DAMAGE_RATIO)
+		and whistle_target.animated_sprite.animation == &"hurt_high"
+		and is_equal_approx(
+			bateau.global_position.x,
+			bite_position + bateau.travel_direction * AriannaBateauProjectile.MOVE_SPEED * 0.1
+		)
+	)
+	bateau._on_animation_finished()
+	var bateau_started_back_to_run := (
+		bateau.current_state == AriannaBateauProjectile.State.BACK_TO_RUN
+		and bateau.animated_sprite.animation == &"back_to_run"
+	)
+	var back_to_run_start_x := bateau.global_position.x
+	bateau._physics_process(0.1)
+	var bateau_kept_moving_during_back_to_run := is_equal_approx(
+		bateau.global_position.x,
+		back_to_run_start_x + bateau.travel_direction * AriannaBateauProjectile.MOVE_SPEED * 0.1
+	)
+	bateau._on_animation_finished()
+	var bateau_resumed_run := (
+		bateau.current_state == AriannaBateauProjectile.State.EXITING
+		and bateau.animated_sprite.animation == &"run"
+	)
+	bateau.global_position.x = (
+		bateau.visible_right + AriannaBateauProjectile.OFFSCREEN_MARGIN + 1.0
+	)
+	bateau._physics_process(0.0)
+	_expect(
+		bateau_started_attack
+		and bateau_bit_target
+		and bateau_started_back_to_run
+		and bateau_kept_moving_during_back_to_run
+		and bateau_resumed_run
+		and bateau.is_queued_for_deletion(),
+		"dopo il morso Bateau attraversa il rivale e continua a muoversi fino all'uscita"
+	)
 	whistle_target.combat.set_guarding(true)
 	whistle_target.controls_enabled = true
 	whistle_target.change_state(Mangler.State.BLOCKING)

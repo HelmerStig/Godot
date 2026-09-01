@@ -426,11 +426,12 @@ func take_damage(
 	causes_knockdown: bool = false,
 	hit_reaction_start_frame: int = 0,
 	ko_start_frame: int = 0,
-	apply_pushback: bool = true
+	apply_pushback: bool = true,
+	force_grounded_reaction: bool = false
 ) -> void:
 	if fighter.current_state in [Fighter.State.KNOCKDOWN_RECOVERY, Fighter.State.KNOCKED_DOWN]:
 		return
-	var was_airborne := not fighter.is_on_floor()
+	var was_airborne := not fighter.is_on_floor() and not force_grounded_reaction
 
 	var attack_was_blocked := (
 		(is_blocking or fighter.current_state == Fighter.State.BLOCKING)
