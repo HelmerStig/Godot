@@ -771,18 +771,18 @@ func _test_arianna_idle() -> void:
 		frames.get_frame_texture(&"arianna_points_forward_super", 0) as AtlasTexture
 	)
 	var points_forward_last := (
-		frames.get_frame_texture(&"arianna_points_forward_super", 42) as AtlasTexture
+		frames.get_frame_texture(&"arianna_points_forward_super", 33) as AtlasTexture
 	)
 	_expect(
-		frames.get_frame_count(&"arianna_points_forward_super") == 43
+		frames.get_frame_count(&"arianna_points_forward_super") == 34
 		and is_equal_approx(
 			frames.get_animation_speed(&"arianna_points_forward_super"), 24.0
 		)
 		and not frames.get_animation_loop(&"arianna_points_forward_super")
 		and points_forward_first.atlas == Arianna.ARIANNA_POINTS_FORWARD_SUPER_SHEET
-		and points_forward_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and points_forward_first.region == Rect2(1024.0, 512.0, 512.0, 512.0)
 		and points_forward_last.region == Rect2(0.0, 3072.0, 512.0, 512.0),
-		"l'introduzione points forward usa i primi 43 frame a 24 FPS"
+		"points forward usa una sola volta la sequenza 10-43 a 24 FPS"
 	)
 	var whistle_first := (
 		frames.get_frame_texture(&"arianna_whistle_special", 0) as AtlasTexture
@@ -1749,6 +1749,16 @@ func _test_arianna_idle() -> void:
 	)
 	arianna.input_buffer.record_input_snapshot(0, 0, [], arianna.is_facing_right)
 	arianna.change_state(Mangler.State.IDLE)
+	arianna.points_forward_super_active = true
+	arianna._on_round_ended(arianna.player_number)
+	arianna.reset_fighter(arianna.position)
+	_expect(
+		arianna.current_state == Mangler.State.IDLE
+		and arianna.animated_sprite.animation == &"idle"
+		and arianna.can_move
+		and not arianna.points_forward_super_active,
+		"il reset libera Arianna da victory e dai flag delle mosse ancora attivi"
+	)
 	arianna.queue_free()
 	await process_frame
 	var live_arena := (load("res://scenes/MainArena.tscn") as PackedScene).instantiate()
@@ -5017,10 +5027,16 @@ func _test_combat_flow() -> void:
 	_expect(player1.combat.current_health == player1.combat.max_health, "reset vita Player 1")
 	_expect(player2.combat.current_health == player2.combat.max_health, "reset vita Player 2")
 	_expect(
-		player1.current_state == Mangler.State.IDLE
-		and player1.animated_sprite.animation == &"idle"
-		and player1.can_move,
-		"reset stato, animazione e movimento Player 1"
+		player1.current_state == Mangler.State.IDLE,
+		"reset stato Player 1"
+	)
+	_expect(
+		player1.animated_sprite.animation == &"idle",
+		"reset animazione Player 1"
+	)
+	_expect(
+		player1.can_move,
+		"reset movimento Player 1"
 	)
 	_expect(
 		player2.current_state == Mangler.State.IDLE
@@ -5033,6 +5049,15 @@ func _test_combat_flow() -> void:
 	await create_timer(2.1).timeout
 	_expect(bool(arena.get("round_active")), "training riattivato dopo il reset")
 	_expect(player1.controls_enabled and player2.controls_enabled, "controlli riattivati dopo il reset")
+	var arianna_reset_start_x := player1.position.x
+	Input.action_press(&"p1_move_right")
+	await physics_frame
+	await physics_frame
+	Input.action_release(&"p1_move_right")
+	_expect(
+		player1.position.x > arianna_reset_start_x,
+		"il Player 1 può muoversi realmente dopo il restart del round"
+	)
 
 	arena.queue_free()
 	await process_frame

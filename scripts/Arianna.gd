@@ -166,7 +166,9 @@ const ARIANNA_BASEBALL_TORNADO_SPAWN_OFFSET := Vector2(175.0, -80.0)
 const ARIANNA_POINTS_FORWARD_SUPER_SHEET := preload(
 	"res://assets/sprites/characters/arianna/special/points_forward.png"
 )
-const ARIANNA_POINTS_FORWARD_SUPER_FRAME_COUNT := 43
+const ARIANNA_POINTS_FORWARD_SUPER_SOURCE_START := 9 # Zero-based: fotogramma visibile 10.
+const ARIANNA_POINTS_FORWARD_SUPER_SOURCE_END := 42 # Zero-based: fotogramma visibile 43.
+const ARIANNA_POINTS_FORWARD_SUPER_FRAME_COUNT := 34 # Sequenza 10-43, una sola volta.
 const ARIANNA_POINTS_FORWARD_SUPER_COLUMNS := 7
 const ARIANNA_POINTS_FORWARD_SUPER_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_POINTS_FORWARD_SUPER_MOTION_WINDOW_FRAMES := 72
@@ -846,6 +848,47 @@ func _on_round_ended(winner: int) -> void:
 		animated_sprite.scale = ARIANNA_SPRITE_SCALE
 		animated_sprite.play(&"victory")
 		# L'animazione si fermerà automaticamente sull'ultimo frame (loop = false)
+
+
+func reset_fighter(spawn_position: Vector2) -> void:
+	# Le mosse di Arianna sono gestite da flag dedicati: se il round termina
+	# durante una di esse, devono essere azzerati prima del reset condiviso.
+	light_punch_active = false
+	jump_light_punch_active = false
+	jump_medium_punch_active = false
+	jump_strong_punch_active = false
+	jump_light_kick_active = false
+	jump_medium_kick_active = false
+	jump_strong_kick_active = false
+	baseball_special_active = false
+	baseball_tornado_spawned = false
+	points_forward_super_active = false
+	points_forward_frozen_target = null
+	whistle_special_active = false
+	whistle_frozen_target = null
+	low_light_punch_active = false
+	medium_punch_active = false
+	low_medium_punch_active = false
+	strong_punch_active = false
+	crouched_strong_punch_active = false
+	light_kick_active = false
+	low_light_kick_active = false
+	medium_kick_active = false
+	low_medium_kick_active = false
+	strong_kick_active = false
+	low_strong_kick_active = false
+	jump_facing_locked = false
+	jump_rotation_finished = false
+	jump_takeoff_armed = false
+	back_jump_active = false
+	back_jump_elapsed = 0.0
+	_stop_whistle_air_effect(true)
+	if is_instance_valid(whistle_audio_player):
+		whistle_audio_player.stop()
+	super.reset_fighter(spawn_position)
+	animated_sprite.position = ARIANNA_SPRITE_POSITION
+	animated_sprite.scale = ARIANNA_SPRITE_SCALE
+	animated_sprite.play(&"idle")
 
 
 func update_sprite_scale() -> void:

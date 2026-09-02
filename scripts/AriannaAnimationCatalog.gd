@@ -779,13 +779,27 @@ func configure_baseball_special_frames() -> void:
 
 
 func configure_points_forward_super_frames() -> void:
-	configure_full_atlas_animation(
-		&"arianna_points_forward_super",
-		fighter.ARIANNA_POINTS_FORWARD_SUPER_SHEET,
-		fighter.ARIANNA_POINTS_FORWARD_SUPER_FRAME_COUNT,
-		fighter.ARIANNA_POINTS_FORWARD_SUPER_COLUMNS,
-		fighter.ARIANNA_POINTS_FORWARD_SUPER_CELL_SIZE
-	)
+	var frames := animated_sprite.sprite_frames
+	var animation_name := &"arianna_points_forward_super"
+	if frames.has_animation(animation_name):
+		frames.remove_animation(animation_name)
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, 24.0)
+	frames.set_animation_loop(animation_name, false)
+	for source_index in range(
+		fighter.ARIANNA_POINTS_FORWARD_SUPER_SOURCE_START,
+		fighter.ARIANNA_POINTS_FORWARD_SUPER_SOURCE_END + 1
+	):
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = fighter.ARIANNA_POINTS_FORWARD_SUPER_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % fighter.ARIANNA_POINTS_FORWARD_SUPER_COLUMNS),
+				float(source_index / fighter.ARIANNA_POINTS_FORWARD_SUPER_COLUMNS)
+			) * fighter.ARIANNA_POINTS_FORWARD_SUPER_CELL_SIZE,
+			fighter.ARIANNA_POINTS_FORWARD_SUPER_CELL_SIZE
+		)
+		frames.add_frame(animation_name, atlas_frame)
 
 
 func configure_whistle_special_frames() -> void:
