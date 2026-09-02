@@ -767,6 +767,23 @@ func _test_arianna_idle() -> void:
 		and baseball_special_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0),
 		"la speciale baseball di Arianna usa tutti i 49 frame a 48 FPS"
 	)
+	var points_forward_first := (
+		frames.get_frame_texture(&"arianna_points_forward_super", 0) as AtlasTexture
+	)
+	var points_forward_last := (
+		frames.get_frame_texture(&"arianna_points_forward_super", 42) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_points_forward_super") == 43
+		and is_equal_approx(
+			frames.get_animation_speed(&"arianna_points_forward_super"), 24.0
+		)
+		and not frames.get_animation_loop(&"arianna_points_forward_super")
+		and points_forward_first.atlas == Arianna.ARIANNA_POINTS_FORWARD_SUPER_SHEET
+		and points_forward_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+		and points_forward_last.region == Rect2(0.0, 3072.0, 512.0, 512.0),
+		"l'introduzione points forward usa i primi 43 frame a 24 FPS"
+	)
 	var whistle_first := (
 		frames.get_frame_texture(&"arianna_whistle_special", 0) as AtlasTexture
 	)
@@ -1354,6 +1371,34 @@ func _test_arianna_idle() -> void:
 	arianna.opponent = whistle_target
 	whistle_target.opponent = arianna
 	whistle_target.controls_enabled = true
+	whistle_target.change_state(Mangler.State.WALKING)
+	arianna.input_buffer.clear()
+	arianna.input_buffer.record_input_snapshot(1, 0, [], true)
+	arianna.input_buffer.record_input_snapshot(1, 1, [], true)
+	arianna.input_buffer.record_input_snapshot(0, 1, [], true)
+	arianna.input_buffer.record_input_snapshot(-1, 1, [], true)
+	arianna.input_buffer.record_input_snapshot(
+		-1, 0, [&"light_punch", &"medium_punch"], true
+	)
+	var points_forward_started := arianna._try_start_points_forward_super()
+	_expect(
+		points_forward_started
+		and arianna.points_forward_super_active
+		and arianna.animated_sprite.animation == &"arianna_points_forward_super"
+		and whistle_target.current_state == Mangler.State.IDLE
+		and not whistle_target.controls_enabled
+		and not whistle_target.can_move,
+		"mezzaluna indietro più LP+MP avvia points forward e mantiene il rivale in idle"
+	)
+	arianna._finish_points_forward_super()
+	_expect(
+		not arianna.points_forward_super_active
+		and arianna.current_state == Mangler.State.IDLE
+		and whistle_target.current_state == Mangler.State.IDLE
+		and whistle_target.controls_enabled
+		and whistle_target.can_move,
+		"finita l'introduzione points forward entrambi vengono rilasciati in idle"
+	)
 	whistle_target.change_state(Mangler.State.WALKING)
 	arianna.input_buffer.clear()
 	arianna.input_buffer.record_input_snapshot(-1, 0, [], true)
@@ -4971,8 +5016,18 @@ func _test_combat_flow() -> void:
 	arena.call("start_round")
 	_expect(player1.combat.current_health == player1.combat.max_health, "reset vita Player 1")
 	_expect(player2.combat.current_health == player2.combat.max_health, "reset vita Player 2")
-	_expect(player1.current_state == Mangler.State.IDLE, "reset stato Player 1")
-	_expect(player2.current_state == Mangler.State.IDLE, "reset stato Player 2")
+	_expect(
+		player1.current_state == Mangler.State.IDLE
+		and player1.animated_sprite.animation == &"idle"
+		and player1.can_move,
+		"reset stato, animazione e movimento Player 1"
+	)
+	_expect(
+		player2.current_state == Mangler.State.IDLE
+		and player2.animated_sprite.animation == &"idle"
+		and player2.can_move,
+		"reset stato, animazione e movimento Player 2"
+	)
 	_expect(player1_bar.value == 100.0 and player2_bar.value == 100.0, "reset barre UI")
 	_expect(not player1.controls_enabled and not player2.controls_enabled, "controlli bloccati durante il countdown")
 	await create_timer(2.1).timeout

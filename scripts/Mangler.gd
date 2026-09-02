@@ -1017,10 +1017,15 @@ func begin_jump_ascent() -> void:
 	change_state(State.JUMPING)
 
 
-func change_state(next_state: int) -> void:
+func change_state(next_state: int, force_victory_exit := false) -> void:
 	"""Centralizza gli effetti collaterali di ogni transizione di stato."""
-	# Non permettere di uscire dallo stato VICTORY.
-	if current_state == State.VICTORY and next_state != State.VICTORY:
+	# La posa di vittoria resta bloccata durante il round concluso, ma il reset
+	# deve poterla abbandonare esplicitamente.
+	if (
+		current_state == State.VICTORY
+		and next_state != State.VICTORY
+		and not force_victory_exit
+	):
 		return
 	
 	if current_state == next_state:
@@ -1636,7 +1641,7 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	pending_jump_direction = 0.0
 	pending_jump_horizontal_multiplier = 1.0
 	combat.reset()
-	change_state(State.IDLE)
+	change_state(State.IDLE, true)
 	can_move = true
 	if input_buffer != null:
 		input_buffer.clear()

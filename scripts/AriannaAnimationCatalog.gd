@@ -42,6 +42,7 @@ func configure_all() -> void:
 	configure_jump_medium_kick_frames()
 	configure_jump_strong_kick_frames()
 	configure_baseball_special_frames()
+	configure_points_forward_super_frames()
 	configure_whistle_special_frames()
 	configure_hurt_medium_frames()
 	configure_hurt_high_frames()
@@ -775,6 +776,16 @@ func configure_baseball_special_frames() -> void:
 			fighter.ARIANNA_BASEBALL_SPECIAL_CELL_SIZE
 		)
 		frames.add_frame(&"arianna_baseball_special", atlas_frame)
+
+
+func configure_points_forward_super_frames() -> void:
+	configure_full_atlas_animation(
+		&"arianna_points_forward_super",
+		fighter.ARIANNA_POINTS_FORWARD_SUPER_SHEET,
+		fighter.ARIANNA_POINTS_FORWARD_SUPER_FRAME_COUNT,
+		fighter.ARIANNA_POINTS_FORWARD_SUPER_COLUMNS,
+		fighter.ARIANNA_POINTS_FORWARD_SUPER_CELL_SIZE
+	)
 
 
 func configure_whistle_special_frames() -> void:
