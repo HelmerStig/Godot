@@ -778,13 +778,33 @@ func configure_baseball_special_frames() -> void:
 
 
 func configure_whistle_special_frames() -> void:
-	configure_full_atlas_animation(
-		&"arianna_whistle_special",
-		fighter.ARIANNA_WHISTLE_SPECIAL_SHEET,
-		fighter.ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT,
-		fighter.ARIANNA_WHISTLE_SPECIAL_COLUMNS,
-		fighter.ARIANNA_WHISTLE_SPECIAL_CELL_SIZE
-	)
+	var frames := animated_sprite.sprite_frames
+	var animation_name := &"arianna_whistle_special"
+	if frames.has_animation(animation_name):
+		frames.remove_animation(animation_name)
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, 24.0)
+	frames.set_animation_loop(animation_name, false)
+	var source_sequence: Array[int] = []
+	for source_index in range(fighter.ARIANNA_WHISTLE_SPECIAL_SOURCE_FRAME_COUNT):
+		source_sequence.append(source_index)
+	for source_index in range(
+		fighter.ARIANNA_WHISTLE_SPECIAL_SOURCE_FRAME_COUNT - 2,
+		-1,
+		-1
+	):
+		source_sequence.append(source_index)
+	for source_index in source_sequence:
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = fighter.ARIANNA_WHISTLE_SPECIAL_SHEET
+		atlas_frame.region = Rect2(
+			Vector2(
+				float(source_index % fighter.ARIANNA_WHISTLE_SPECIAL_COLUMNS),
+				float(source_index / fighter.ARIANNA_WHISTLE_SPECIAL_COLUMNS)
+			) * fighter.ARIANNA_WHISTLE_SPECIAL_CELL_SIZE,
+			fighter.ARIANNA_WHISTLE_SPECIAL_CELL_SIZE
+		)
+		frames.add_frame(animation_name, atlas_frame)
 
 
 func configure_hurt_medium_frames() -> void:

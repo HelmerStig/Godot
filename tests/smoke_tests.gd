@@ -770,19 +770,23 @@ func _test_arianna_idle() -> void:
 	var whistle_first := (
 		frames.get_frame_texture(&"arianna_whistle_special", 0) as AtlasTexture
 	)
+	var whistle_peak := (
+		frames.get_frame_texture(&"arianna_whistle_special", 24) as AtlasTexture
+	)
 	var whistle_last := (
-		frames.get_frame_texture(&"arianna_whistle_special", 23) as AtlasTexture
+		frames.get_frame_texture(&"arianna_whistle_special", 48) as AtlasTexture
 	)
 	_expect(
-		frames.get_frame_count(&"arianna_whistle_special") == 24
+		frames.get_frame_count(&"arianna_whistle_special") == 49
 		and is_equal_approx(
 			frames.get_animation_speed(&"arianna_whistle_special"), 24.0
 		)
 		and not frames.get_animation_loop(&"arianna_whistle_special")
 		and whistle_first.atlas == Arianna.ARIANNA_WHISTLE_SPECIAL_SHEET
 		and whistle_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
-		and whistle_last.region == Rect2(1536.0, 2048.0, 512.0, 512.0),
-		"la speciale fischio usa i 24 frame validi di whistles.png a 24 FPS"
+		and whistle_peak.region == Rect2(2048.0, 2048.0, 512.0, 512.0)
+		and whistle_last.region == whistle_first.region,
+		"la speciale fischio usa la sequenza 1-25-1 di whishtles2.png a 24 FPS"
 	)
 	var arianna_hurt_mid_first := frames.get_frame_texture(&"hurt_mid", 0) as AtlasTexture
 	var arianna_hurt_mid_peak := frames.get_frame_texture(&"hurt_mid", 7) as AtlasTexture
@@ -1414,7 +1418,7 @@ func _test_arianna_idle() -> void:
 		and arianna.animated_sprite.animation == &"idle"
 		and whistle_target.current_state == Mangler.State.IDLE
 		and whistle_target.controls_enabled,
-		"terminati i 24 frame Arianna e l'avversario vengono rilasciati in idle"
+		"terminata la sequenza 1-25-1 Arianna e l'avversario vengono rilasciati in idle"
 	)
 	var bateau := get_first_node_in_group(
 		"arianna_bateau_projectile"

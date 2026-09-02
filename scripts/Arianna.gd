@@ -164,12 +164,13 @@ const ARIANNA_BASEBALL_SPECIAL_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_BASEBALL_TORNADO_SPAWN_FRAME := 23
 const ARIANNA_BASEBALL_TORNADO_SPAWN_OFFSET := Vector2(175.0, -80.0)
 const ARIANNA_WHISTLE_SPECIAL_SHEET := preload(
-	"res://assets/sprites/characters/arianna/special/whistles.png"
+	"res://assets/sprites/characters/arianna/special/whishtles2.png"
 )
 const ARIANNA_WHISTLE_SOUND := preload(
 	"res://assets/sprites/characters/arianna/sound/fischio.wav"
 )
-const ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT := 24
+const ARIANNA_WHISTLE_SPECIAL_SOURCE_FRAME_COUNT := 25
+const ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT := 49
 const ARIANNA_WHISTLE_SPECIAL_COLUMNS := 5
 const ARIANNA_WHISTLE_SPECIAL_CELL_SIZE := Vector2(512.0, 512.0)
 const ARIANNA_WHISTLE_MOTION_WINDOW_FRAMES := 72
