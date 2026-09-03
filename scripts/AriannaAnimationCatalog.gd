@@ -304,6 +304,8 @@ func configure_lp_mp_combo_frames() -> void:
 		&"arianna_combo_lp_recovery",
 		&"arianna_combo_mp",
 		&"arianna_combo_mp_recovery",
+		&"arianna_combo_mk",
+		&"arianna_combo_mk_recovery",
 	]
 	for animation_name in animation_names:
 		if frames.has_animation(animation_name):
@@ -319,6 +321,10 @@ func configure_lp_mp_combo_frames() -> void:
 		frames.add_frame(&"arianna_combo_mp", _make_medium_punch_frame(source_index))
 	for source_index in range(23, 16, -1):
 		frames.add_frame(&"arianna_combo_mp_recovery", _make_medium_punch_frame(source_index))
+	for source_index in range(15, 29):
+		frames.add_frame(&"arianna_combo_mk", _make_medium_kick_frame(source_index))
+	for source_index in range(27, -1, -1):
+		frames.add_frame(&"arianna_combo_mk_recovery", _make_medium_kick_frame(source_index))
 
 
 func configure_low_light_punch_frames() -> void:

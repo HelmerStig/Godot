@@ -78,8 +78,12 @@ const ARIANNA_LIGHT_PUNCH_HITBOX_SIZE := Vector2(160.0, 50.0)
 const ARIANNA_LIGHT_PUNCH_HITBOX_POSITION := Vector2(85.0, -170.0)
 const ARIANNA_LP_MP_COMBO_LP_ACTIVE_START_FRAME := 6
 const ARIANNA_LP_MP_COMBO_LP_ACTIVE_END_FRAME := 7
+const ARIANNA_LP_MP_COMBO_LP_RECOVERY_INPUT_END_FRAME := 4
 const ARIANNA_LP_MP_COMBO_MP_ACTIVE_START_FRAME := 3
 const ARIANNA_LP_MP_COMBO_MP_ACTIVE_END_FRAME := 7
+const ARIANNA_LP_MP_MK_COMBO_MP_RECOVERY_INPUT_END_FRAME := 6
+const ARIANNA_LP_MP_MK_COMBO_MK_ACTIVE_START_FRAME := 12
+const ARIANNA_LP_MP_MK_COMBO_MK_ACTIVE_END_FRAME := 13
 const ARIANNA_JUMP_LIGHT_PUNCH_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/light-punch/jump_light_punch.png"
 )
@@ -373,6 +377,7 @@ const ARIANNA_SPRITE_POSITION := Vector2(0.0, -120.0)
 
 var light_punch_active := false
 var lp_mp_combo_active := false
+var lp_mp_mk_combo_queued := false
 var jump_light_punch_active := false
 var jump_medium_punch_active := false
 var jump_strong_punch_active := false
@@ -556,7 +561,9 @@ func _physics_process(_delta: float) -> void:
 		or medium_kick_active
 		or strong_kick_active
 	):
-		if light_punch_active and not low_light_punch_active:
+		if lp_mp_combo_active and medium_punch_active:
+			_try_queue_lp_mp_mk_combo()
+		elif light_punch_active and not low_light_punch_active:
 			_try_queue_lp_mp_combo()
 		velocity = Vector2.ZERO
 		current_state = State.ATTACKING
@@ -880,6 +887,7 @@ func reset_fighter(spawn_position: Vector2) -> void:
 			tullio.cancel_for_round_reset()
 	light_punch_active = false
 	lp_mp_combo_active = false
+	lp_mp_mk_combo_queued = false
 	jump_light_punch_active = false
 	jump_medium_punch_active = false
 	jump_strong_punch_active = false
@@ -1603,12 +1611,19 @@ func _start_light_punch() -> void:
 
 
 func _try_queue_lp_mp_combo() -> bool:
+	var is_valid_lp_forward := (
+		animated_sprite.animation == &"arianna_light_punch"
+		and animated_sprite.frame <= 7
+	)
+	var is_valid_lp_recovery := (
+		animated_sprite.animation == &"arianna_light_punch_recovery"
+		and animated_sprite.frame <= ARIANNA_LP_MP_COMBO_LP_RECOVERY_INPUT_END_FRAME
+	)
 	if (
 		lp_mp_combo_active
 		or not light_punch_active
 		or low_light_punch_active
-		or animated_sprite.animation != &"arianna_light_punch"
-		or animated_sprite.frame > 7
+		or not (is_valid_lp_forward or is_valid_lp_recovery)
 		or input_buffer == null
 	):
 		return false
@@ -1616,9 +1631,15 @@ func _try_queue_lp_mp_combo() -> bool:
 	if medium_direction == FighterInputBuffer.NO_DIRECTION:
 		return false
 	lp_mp_combo_active = true
-	var current_lp_frame := mini(animated_sprite.frame, 7)
-	animated_sprite.play(&"arianna_combo_lp")
-	animated_sprite.frame = current_lp_frame
+	lp_mp_mk_combo_queued = false
+	if is_valid_lp_forward:
+		var current_lp_frame := mini(animated_sprite.frame, 7)
+		animated_sprite.play(&"arianna_combo_lp")
+		animated_sprite.frame = current_lp_frame
+	else:
+		var combo_recovery_frame := clampi(animated_sprite.frame - 2, 0, 2)
+		animated_sprite.play(&"arianna_combo_lp_recovery")
+		animated_sprite.frame = combo_recovery_frame
 	return true
 
 
@@ -1644,6 +1665,52 @@ func _start_lp_mp_combo_medium() -> void:
 	animated_sprite.play(&"arianna_combo_mp")
 
 
+func _try_queue_lp_mp_mk_combo() -> bool:
+	var is_valid_mp_forward := (
+		animated_sprite.animation == &"arianna_combo_mp"
+		and animated_sprite.frame <= 7
+	)
+	var is_valid_mp_recovery := (
+		animated_sprite.animation == &"arianna_combo_mp_recovery"
+		and animated_sprite.frame <= ARIANNA_LP_MP_MK_COMBO_MP_RECOVERY_INPUT_END_FRAME
+	)
+	if (
+		lp_mp_mk_combo_queued
+		or not lp_mp_combo_active
+		or not medium_punch_active
+		or not (is_valid_mp_forward or is_valid_mp_recovery)
+		or input_buffer == null
+	):
+		return false
+	var medium_kick_direction := input_buffer.consume_attack(&"medium_kick")
+	if medium_kick_direction == FighterInputBuffer.NO_DIRECTION:
+		return false
+	lp_mp_mk_combo_queued = true
+	return true
+
+
+func _start_lp_mp_mk_combo_kick() -> void:
+	combat.disable_hitbox()
+	combat.is_attacking = false
+	combat.current_attack = null
+	combat.current_variant = null
+	combat.hit_targets.clear()
+	medium_punch_active = false
+	var attack := character_data.get_attack(&"medium_kick")
+	if attack == null:
+		_finish_lp_mp_combo()
+		return
+	medium_kick_active = true
+	combat.action_generation += 1
+	combat.is_attacking = true
+	combat.current_attack = attack
+	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
+	attack_shape.size = ARIANNA_MEDIUM_KICK_HITBOX_SIZE
+	combat.hitbox_shape.position = ARIANNA_MEDIUM_KICK_HITBOX_POSITION
+	combat.hitbox_shape.rotation = 0.0
+	animated_sprite.play(&"arianna_combo_mk")
+
+
 func _finish_lp_mp_combo() -> void:
 	combat.disable_hitbox()
 	combat.is_attacking = false
@@ -1653,7 +1720,9 @@ func _finish_lp_mp_combo() -> void:
 	restore_default_render_order()
 	light_punch_active = false
 	medium_punch_active = false
+	medium_kick_active = false
 	lp_mp_combo_active = false
+	lp_mp_mk_combo_queued = false
 	change_state(State.IDLE)
 
 
@@ -2378,6 +2447,14 @@ func _on_animation_finished() -> void:
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_combo_mp_recovery")
 	elif animated_sprite.animation == &"arianna_combo_mp_recovery":
+		if lp_mp_mk_combo_queued:
+			_start_lp_mp_mk_combo_kick()
+		else:
+			_finish_lp_mp_combo()
+	elif animated_sprite.animation == &"arianna_combo_mk":
+		combat.disable_hitbox()
+		animated_sprite.play(&"arianna_combo_mk_recovery")
+	elif animated_sprite.animation == &"arianna_combo_mk_recovery":
 		_finish_lp_mp_combo()
 	elif animated_sprite.animation == &"arianna_points_forward_super":
 		_finish_points_forward_super()
@@ -2626,6 +2703,13 @@ func _on_animation_frame_changed() -> void:
 			combat.enable_hitbox()
 			_resolve_medium_punch_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_LP_MP_COMBO_MP_ACTIVE_END_FRAME:
+			combat.disable_hitbox()
+		return
+	if animated_sprite.animation == &"arianna_combo_mk":
+		if animated_sprite.frame == ARIANNA_LP_MP_MK_COMBO_MK_ACTIVE_START_FRAME:
+			combat.enable_hitbox()
+			_resolve_medium_kick_overlap(combat.action_generation)
+		elif animated_sprite.frame > ARIANNA_LP_MP_MK_COMBO_MK_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if animated_sprite.animation == &"arianna_jump_light_punch":
