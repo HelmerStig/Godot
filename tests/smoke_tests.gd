@@ -1390,6 +1390,8 @@ func _test_arianna_idle() -> void:
 		and not whistle_target.can_move,
 		"mezzaluna indietro più LP+MP avvia points forward e mantiene il rivale in idle"
 	)
+	var cat_test_target_position := whistle_target.global_position
+	whistle_target.global_position.x = 10000.0 if arianna.is_facing_right else -10000.0
 	var cat_wave_generation_before := arianna.cat_wave_generation
 	arianna.animated_sprite.frame = Arianna.ARIANNA_POINTS_FORWARD_CAT_WAVE_START_FRAME
 	arianna._on_animation_frame_changed()
@@ -1401,9 +1403,21 @@ func _test_arianna_idle() -> void:
 		"l'ondata dei gatti parte un secondo prima della fine della posa a 24 FPS"
 	)
 	arianna._finish_points_forward_super()
-	var cat_test_target_position := whistle_target.global_position
-	whistle_target.global_position.x = 10000.0 if arianna.is_facing_right else -10000.0
-	await create_timer(2.15).timeout
+	var cat_spawn_wait := 0.0
+	while cat_spawn_wait < 3.0:
+		var spawned_cats := get_nodes_in_group("arianna_tullio_projectile")
+		for spawned_cat in spawned_cats:
+			if spawned_cat is AriannaTullioProjectile and spawned_cat.source_fighter == arianna:
+				spawned_cat.set_physics_process(false)
+		var recorded_spawn_count := (
+			int(arianna.cat_wave_spawn_counts[&"tullio"])
+			+ int(arianna.cat_wave_spawn_counts[&"tilda"])
+			+ int(arianna.cat_wave_spawn_counts[&"telma"])
+		)
+		if recorded_spawn_count >= 12:
+			break
+		await create_timer(0.05).timeout
+		cat_spawn_wait += 0.05
 	var tullio_nodes := get_nodes_in_group("arianna_tullio_projectile")
 	var cats_by_id := {&"tullio": [], &"tilda": [], &"telma": []}
 	for cat_node in tullio_nodes:
@@ -1419,9 +1433,9 @@ func _test_arianna_idle() -> void:
 		and arianna.current_state == Mangler.State.IDLE
 		and not whistle_target.controls_enabled
 		and not whistle_target.can_move
-		and cats_by_id[&"tullio"].size() == 4
-		and cats_by_id[&"tilda"].size() == 4
-		and cats_by_id[&"telma"].size() == 4
+		and arianna.cat_wave_spawn_counts[&"tullio"] == 4
+		and arianna.cat_wave_spawn_counts[&"tilda"] == 4
+		and arianna.cat_wave_spawn_counts[&"telma"] == 4
 		and tullio != null,
 		"finita points forward entrano dodici gatti: quattro Tullio, Tilda e Telma"
 	)
@@ -1458,6 +1472,59 @@ func _test_arianna_idle() -> void:
 		_expect(
 			whistle_target.combat.current_health == health_before_tullio - 3,
 			"i tre attacchi di ogni gatto infliggono 1 danno ciascuno"
+		)
+		var health_before_face_jump := whistle_target.combat.current_health
+		tullio.current_state = AriannaTullioProjectile.State.APPROACHING
+		tullio.uses_face_jump_attack = true
+		tullio.global_position.x = (
+			whistle_target.global_position.x
+			- tullio.travel_direction * (AriannaTullioProjectile.FACE_JUMP_TRIGGER_DISTANCE - 1.0)
+		)
+		tullio._physics_process(0.0)
+		_expect(
+			tullio.current_state == AriannaTullioProjectile.State.FACE_JUMP
+			and tullio.animated_sprite.animation == &"jump"
+			and is_equal_approx(AriannaTullioProjectile.FACE_JUMP_CHANCE, 0.30),
+			"il 30% dei gatti sostituisce attack con il salto al volto"
+		)
+		var face_jump_start_x := tullio.global_position.x
+		tullio._physics_process(0.1)
+		var expected_face_jump_distance := (
+			tullio.move_speed
+			* AriannaTullioProjectile.FACE_JUMP_HORIZONTAL_SPEED_MULTIPLIER
+			* 0.1
+		)
+		tullio.animated_sprite.frame = 3
+		tullio._on_frame_changed()
+		_expect(
+			tullio.face_jump_particles != null
+			and tullio.face_jump_particles.emitting
+			and tullio.face_jump_afterimage_spawn_count > 0
+			and tullio.get_tree().get_first_node_in_group("arianna_cat_jump_afterimage") != null,
+			"il salto al volto lascia una scia azzurra e leggere immagini residue"
+		)
+		tullio.animated_sprite.frame = AriannaTullioProjectile.FACE_JUMP_HIT_FRAME
+		tullio._on_frame_changed()
+		var face_jump_kept_moving := is_equal_approx(
+			absf(tullio.global_position.x - face_jump_start_x),
+			expected_face_jump_distance
+		)
+		var face_jump_reached_head := is_equal_approx(
+			tullio.global_position.y,
+			whistle_target.head_hurtbox.global_position.y
+				+ AriannaTullioProjectile.FACE_JUMP_FACE_OFFSET_Y
+		)
+		tullio._on_animation_looped()
+		_expect(
+			whistle_target.combat.current_health
+				== health_before_face_jump - AriannaTullioProjectile.FACE_JUMP_DAMAGE
+			and whistle_target.animated_sprite.animation == &"hurt_high"
+			and face_jump_kept_moving
+			and face_jump_reached_head
+			and is_equal_approx(tullio.global_position.y, tullio.face_jump_ground_y)
+			and tullio.current_state == AriannaTullioProjectile.State.EXITING
+			and tullio.animated_sprite.animation == &"run",
+			"il salto lungo infligge 2 danni high senza fermarsi e prosegue verso l'uscita"
 		)
 		var all_cats: Array = []
 		for cat_id in [&"tullio", &"tilda", &"telma"]:

@@ -386,6 +386,7 @@ var cat_wave_frozen_target: Fighter
 var cat_wave_target_controls_enabled := true
 var cat_wave_target_can_move := true
 var cat_wave_remaining := 0
+var cat_wave_spawn_counts := {&"tullio": 0, &"tilda": 0, &"telma": 0}
 var cat_wave_generation := 0
 var cat_wave_random := RandomNumberGenerator.new()
 var whistle_special_active := false
@@ -1263,6 +1264,7 @@ func _start_cat_wave(
 	cat_wave_target_controls_enabled = target_controls_enabled
 	cat_wave_target_can_move = target_can_move
 	cat_wave_remaining = 12
+	cat_wave_spawn_counts = {&"tullio": 0, &"tilda": 0, &"telma": 0}
 	var generation := cat_wave_generation
 	cat_wave_random.randomize()
 	var cat_ids: Array[StringName] = []
@@ -1301,8 +1303,13 @@ func _spawn_cat_projectile(
 	if not is_instance_valid(opponent):
 		_on_cat_projectile_completed(null)
 		return null
+	if is_instance_valid(cat_wave_frozen_target):
+		cat_wave_frozen_target.controls_enabled = false
+		cat_wave_frozen_target.can_move = false
+		cat_wave_frozen_target.velocity = Vector2.ZERO
 	var tullio := TullioProjectile.new() as AriannaTullioProjectile
 	tullio.setup(self, opponent, cat_id, speed_multiplier)
+	cat_wave_spawn_counts[cat_id] = int(cat_wave_spawn_counts.get(cat_id, 0)) + 1
 	tullio.completed.connect(_on_cat_projectile_completed)
 	var projectile_parent: Node = get_tree().current_scene
 	if projectile_parent == null:

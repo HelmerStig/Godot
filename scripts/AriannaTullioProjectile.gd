@@ -6,7 +6,7 @@ class_name AriannaTullioProjectile
 
 signal completed(cat: AriannaTullioProjectile)
 
-enum State { APPROACHING, ATTACKING, EXITING }
+enum State { APPROACHING, ATTACKING, FACE_JUMP, EXITING }
 
 const RUN_SHEET := preload(
 	"res://assets/sprites/characters/arianna/special/cats/Tullio-run.png"
@@ -49,6 +49,14 @@ const ATTACK_CONTACT_DISTANCE := 62.0
 const ATTACK_HIT_FRAME := 8 # Zero-based: fotogramma visibile 9.
 const ATTACK_LOOPS := 3
 const DAMAGE_PER_HIT := 1
+const FACE_JUMP_CHANCE := 0.30
+const FACE_JUMP_TRIGGER_DISTANCE := 300.0
+const FACE_JUMP_HIT_FRAME := 7 # Zero-based: fotogramma visibile 8.
+const FACE_JUMP_DAMAGE := 2
+const FACE_JUMP_FACE_OFFSET_Y := 0.0
+const FACE_JUMP_HORIZONTAL_SPEED_MULTIPLIER := 1
+const FACE_JUMP_AFTERIMAGE_INTERVAL := 2
+const FACE_JUMP_AFTERIMAGE_LIFETIME := 0.16
 const OFFSCREEN_MARGIN := 85.0
 const SPRITE_SCALE := Vector2(0.41, 0.41)
 const SPRITE_POSITION := Vector2(0.0, -22.0)
@@ -82,10 +90,15 @@ var visible_right := 1152.0
 var current_state := State.APPROACHING
 var attack_loops_completed := 0
 var hit_applied_in_current_loop := false
+var uses_face_jump_attack := false
+var face_jump_hit_applied := false
+var face_jump_ground_y := 0.0
 var animated_sprite: AnimatedSprite2D
 var random := RandomNumberGenerator.new()
 var completion_emitted := false
 var movement_particles: CPUParticles2D
+var face_jump_particles: CPUParticles2D
+var face_jump_afterimage_spawn_count := 0
 
 
 func setup(
@@ -103,6 +116,8 @@ func setup(
 	attack_sheet = profile["attack"]
 	run_frame_count = profile["run_frames"]
 	move_speed = float(profile["speed"]) * speed_multiplier
+	random.randomize()
+	uses_face_jump_attack = random.randf() < FACE_JUMP_CHANCE
 	travel_direction = 1.0 if owner_fighter.is_facing_right else -1.0
 	visible_left = owner_fighter.stage_left_limit
 	visible_right = owner_fighter.stage_right_limit
@@ -143,6 +158,39 @@ func _create_movement_particles() -> void:
 	movement_particles.color = Color(1.0, 0.82, 0.36, 0.20)
 	movement_particles.position = Vector2(-travel_direction * 32.0, -28.0)
 	add_child(movement_particles)
+	_create_face_jump_particles()
+
+
+func _create_face_jump_particles() -> void:
+	face_jump_particles = CPUParticles2D.new()
+	face_jump_particles.name = "FaceJumpTrail"
+	face_jump_particles.emitting = false
+	face_jump_particles.amount = 18
+	face_jump_particles.lifetime = 0.22
+	face_jump_particles.randomness = 0.5
+	face_jump_particles.local_coords = false
+	face_jump_particles.direction = Vector2(-travel_direction, 0.15)
+	face_jump_particles.spread = 24.0
+	face_jump_particles.gravity = Vector2(0.0, 45.0)
+	face_jump_particles.initial_velocity_min = 55.0
+	face_jump_particles.initial_velocity_max = 110.0
+	face_jump_particles.scale_amount_min = 0.22
+	face_jump_particles.scale_amount_max = 0.48
+	face_jump_particles.position = Vector2(-travel_direction * 28.0, -28.0)
+	var particle_gradient := Gradient.new()
+	particle_gradient.colors = PackedColorArray([
+		Color(0.45, 0.88, 1.0, 0.72),
+		Color(1.0, 0.82, 0.30, 0.0),
+	])
+	var particle_texture := GradientTexture2D.new()
+	particle_texture.width = 12
+	particle_texture.height = 12
+	particle_texture.fill = GradientTexture2D.FILL_RADIAL
+	particle_texture.fill_from = Vector2(0.5, 0.5)
+	particle_texture.fill_to = Vector2(1.0, 0.5)
+	particle_texture.gradient = particle_gradient
+	face_jump_particles.texture = particle_texture
+	add_child(face_jump_particles)
 
 
 func _physics_process(delta: float) -> void:
@@ -152,12 +200,24 @@ func _physics_process(delta: float) -> void:
 				var distance_to_target := (
 					(target_fighter.global_position.x - global_position.x) * travel_direction
 				)
-				if distance_to_target <= ATTACK_TRIGGER_DISTANCE:
-					_start_attack()
+				var trigger_distance := (
+					FACE_JUMP_TRIGGER_DISTANCE if uses_face_jump_attack else ATTACK_TRIGGER_DISTANCE
+				)
+				if distance_to_target <= trigger_distance:
+					if uses_face_jump_attack:
+						_start_face_jump_attack()
+					else:
+						_start_attack()
 					return
 			_move_forward(delta)
 		State.ATTACKING:
 			_move_to_attack_contact(delta)
+		State.FACE_JUMP:
+			_move_forward(delta, FACE_JUMP_HORIZONTAL_SPEED_MULTIPLIER)
+			_update_face_jump_height()
+			if _is_fully_outside_opposite_side():
+				_emit_completion()
+				queue_free()
 		State.EXITING:
 			_move_forward(delta)
 			if _is_fully_outside_opposite_side():
@@ -165,8 +225,8 @@ func _physics_process(delta: float) -> void:
 				queue_free()
 
 
-func _move_forward(delta: float) -> void:
-	position.x += travel_direction * move_speed * delta
+func _move_forward(delta: float, speed_multiplier: float = 1.0) -> void:
+	position.x += travel_direction * move_speed * speed_multiplier * delta
 
 
 func _move_to_attack_contact(delta: float) -> void:
@@ -193,6 +253,18 @@ func _start_attack() -> void:
 	animated_sprite.play(&"attack")
 
 
+func _start_face_jump_attack() -> void:
+	if current_state != State.APPROACHING:
+		return
+	current_state = State.FACE_JUMP
+	face_jump_hit_applied = false
+	face_jump_ground_y = global_position.y
+	face_jump_particles.emitting = true
+	animated_sprite.play(&"jump")
+	animated_sprite.frame = 0
+	_update_face_jump_height()
+
+
 func _on_animation_looped() -> void:
 	match current_state:
 		State.APPROACHING:
@@ -205,15 +277,97 @@ func _on_animation_looped() -> void:
 				animated_sprite.play(&"run")
 			else:
 				hit_applied_in_current_loop = false
+		State.FACE_JUMP:
+			global_position.y = face_jump_ground_y
+			face_jump_particles.emitting = false
+			current_state = State.EXITING
+			animated_sprite.play(&"run")
 
 
 func _on_frame_changed() -> void:
+	if current_state == State.FACE_JUMP:
+		_update_face_jump_height()
+		if animated_sprite.frame % FACE_JUMP_AFTERIMAGE_INTERVAL == 1:
+			_spawn_face_jump_afterimage()
+	if (
+		current_state == State.FACE_JUMP
+		and animated_sprite.frame >= FACE_JUMP_HIT_FRAME
+		and not face_jump_hit_applied
+	):
+		_apply_face_jump_hit()
 	if (
 		current_state == State.ATTACKING
 		and animated_sprite.frame >= ATTACK_HIT_FRAME
 		and not hit_applied_in_current_loop
 	):
 		_apply_cat_hit()
+
+
+func _spawn_face_jump_afterimage() -> void:
+	var current_texture := animated_sprite.sprite_frames.get_frame_texture(
+		animated_sprite.animation,
+		animated_sprite.frame
+	)
+	var scene_parent := get_parent()
+	if current_texture == null or scene_parent == null:
+		return
+	var afterimage := Sprite2D.new()
+	afterimage.name = "CatJumpAfterimage"
+	afterimage.add_to_group("arianna_cat_jump_afterimage")
+	afterimage.texture = current_texture
+	afterimage.scale = animated_sprite.scale
+	afterimage.flip_h = animated_sprite.flip_h
+	afterimage.z_index = z_index - 1
+	afterimage.modulate = Color(0.48, 0.86, 1.0, 0.24)
+	scene_parent.add_child(afterimage)
+	afterimage.global_position = animated_sprite.global_position - Vector2(travel_direction * 12.0, 0.0)
+	face_jump_afterimage_spawn_count += 1
+	var fade_tween := afterimage.create_tween()
+	fade_tween.set_parallel(true)
+	fade_tween.tween_property(afterimage, "modulate:a", 0.0, FACE_JUMP_AFTERIMAGE_LIFETIME)
+	fade_tween.tween_property(
+		afterimage,
+		"global_position:x",
+		afterimage.global_position.x - travel_direction * 16.0,
+		FACE_JUMP_AFTERIMAGE_LIFETIME
+	)
+	fade_tween.chain().tween_callback(afterimage.queue_free)
+
+
+func _update_face_jump_height() -> void:
+	if current_state != State.FACE_JUMP or not is_instance_valid(target_fighter):
+		return
+	var face_y := (
+		target_fighter.head_hurtbox.global_position.y + FACE_JUMP_FACE_OFFSET_Y
+		if is_instance_valid(target_fighter.head_hurtbox)
+		else target_fighter.global_position.y - 150.0
+	)
+	var frame := animated_sprite.frame
+	if frame <= FACE_JUMP_HIT_FRAME:
+		var rise_progress := float(frame) / float(maxi(1, FACE_JUMP_HIT_FRAME))
+		global_position.y = lerpf(face_jump_ground_y, face_y, smoothstep(0.0, 1.0, rise_progress))
+	else:
+		var descent_frames := maxi(1, JUMP_FRAME_COUNT - 1 - FACE_JUMP_HIT_FRAME)
+		var descent_progress := float(frame - FACE_JUMP_HIT_FRAME) / float(descent_frames)
+		global_position.y = lerpf(face_y, face_jump_ground_y, smoothstep(0.0, 1.0, descent_progress))
+
+
+func _apply_face_jump_hit() -> void:
+	face_jump_hit_applied = true
+	if not is_instance_valid(target_fighter) or not is_instance_valid(source_fighter):
+		return
+	target_fighter.combat.take_damage(
+		FACE_JUMP_DAMAGE,
+		source_fighter,
+		0.28,
+		0.16,
+		AttackData.HitHeight.HIGH,
+		false,
+		0,
+		0,
+		false,
+		true
+	)
 
 
 func _apply_cat_hit() -> void:
