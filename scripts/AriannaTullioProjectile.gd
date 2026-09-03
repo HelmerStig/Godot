@@ -101,6 +101,7 @@ var animated_sprite: AnimatedSprite2D
 var random := RandomNumberGenerator.new()
 var completion_emitted := false
 var movement_particles: CPUParticles2D
+var running_dust: CPUParticles2D
 var face_jump_particles: CPUParticles2D
 var face_jump_afterimage_spawn_count := 0
 
@@ -162,7 +163,40 @@ func _create_movement_particles() -> void:
 	movement_particles.color = Color(1.0, 0.82, 0.36, 0.20)
 	movement_particles.position = Vector2(-travel_direction * 32.0, -28.0)
 	add_child(movement_particles)
+	_create_running_dust()
 	_create_face_jump_particles()
+
+
+func _create_running_dust() -> void:
+	running_dust = CPUParticles2D.new()
+	running_dust.name = "RunningDust"
+	running_dust.emitting = false
+	running_dust.amount = 24
+	running_dust.lifetime = 0.32
+	running_dust.randomness = 0.65
+	running_dust.local_coords = false
+	running_dust.direction = Vector2(-travel_direction, -0.18)
+	running_dust.spread = 28.0
+	running_dust.gravity = Vector2(0.0, 120.0)
+	running_dust.initial_velocity_min = 45.0
+	running_dust.initial_velocity_max = 95.0
+	running_dust.scale_amount_min = 0.18
+	running_dust.scale_amount_max = 0.42
+	running_dust.position = Vector2(-travel_direction * 24.0, -4.0)
+	var dust_gradient := Gradient.new()
+	dust_gradient.colors = PackedColorArray([
+		Color(1.0, 0.94, 0.80, 0.88),
+		Color(0.82, 0.76, 0.66, 0.0),
+	])
+	var dust_texture := GradientTexture2D.new()
+	dust_texture.width = 10
+	dust_texture.height = 10
+	dust_texture.fill = GradientTexture2D.FILL_RADIAL
+	dust_texture.fill_from = Vector2(0.5, 0.5)
+	dust_texture.fill_to = Vector2(1.0, 0.5)
+	dust_texture.gradient = dust_gradient
+	running_dust.texture = dust_texture
+	add_child(running_dust)
 
 
 func _create_face_jump_particles() -> void:
@@ -244,7 +278,9 @@ func _move_to_attack_contact(delta: float) -> void:
 func _play_random_approach_animation() -> void:
 	if current_state != State.APPROACHING:
 		return
-	animated_sprite.play(&"jump" if random.randf() < 0.5 else &"run")
+	var approach_animation: StringName = &"jump" if random.randf() < 0.5 else &"run"
+	running_dust.emitting = approach_animation == &"run"
+	animated_sprite.play(approach_animation)
 
 
 func _start_attack() -> void:
@@ -254,6 +290,7 @@ func _start_attack() -> void:
 	attack_loops_completed = 0
 	hit_applied_in_current_loop = false
 	movement_particles.emitting = false
+	running_dust.emitting = false
 	animated_sprite.play(&"attack")
 
 
@@ -263,6 +300,7 @@ func _start_face_jump_attack() -> void:
 	current_state = State.FACE_JUMP
 	face_jump_hit_applied = false
 	face_jump_ground_y = global_position.y
+	running_dust.emitting = false
 	face_jump_particles.emitting = true
 	animated_sprite.play(&"jump")
 	animated_sprite.frame = 0
@@ -278,6 +316,7 @@ func _on_animation_looped() -> void:
 			if attack_loops_completed >= ATTACK_LOOPS:
 				current_state = State.EXITING
 				movement_particles.emitting = true
+				running_dust.emitting = true
 				animated_sprite.play(&"run")
 			else:
 				hit_applied_in_current_loop = false
@@ -285,6 +324,7 @@ func _on_animation_looped() -> void:
 			global_position.y = face_jump_ground_y
 			face_jump_particles.emitting = false
 			current_state = State.EXITING
+			running_dust.emitting = true
 			animated_sprite.play(&"run")
 
 

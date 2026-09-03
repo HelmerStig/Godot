@@ -1488,12 +1488,16 @@ func _test_arianna_idle() -> void:
 					and cat_frames.get_frame_count(&"attack") == 12
 					and is_equal_approx(cat_frames.get_animation_speed(&"run"), 24.0)
 					and cat.movement_particles != null
+					and cat.running_dust != null
+					and cat.running_dust.amount == 24
+					and is_equal_approx(cat.running_dust.scale_amount_max, 0.42)
+					and cat.running_dust.emitting == (cat.animated_sprite.animation == &"run")
 					and cat.animated_sprite.scale == Vector2(0.41, 0.41)
 				)
 		_expect(
 			cat_profiles_valid
 			and AriannaTullioProjectile.OFFSCREEN_MARGIN == 85.0,
-			"ogni clone mantiene atlas, 24 FPS, scala ed effetto movimento del proprio gatto"
+			"ogni clone mantiene atlas, 24 FPS, scala, scia e polvere di corsa"
 		)
 		var health_before_tullio := whistle_target.combat.current_health
 		tullio.current_state = AriannaTullioProjectile.State.ATTACKING
