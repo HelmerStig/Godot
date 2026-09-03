@@ -20,6 +20,7 @@ const FIGHTER_SPAWN_DISTANCE := 276.0
 const FIGHTER_SCREEN_MARGIN := 70.0
 const FLOOR_Y := 600.0
 const ROUND_DURATION := 99.0
+const SCREEN_SHAKE_DECAY_POWER := 1.6
 
 var round_time := ROUND_DURATION
 var current_round := 1
@@ -30,9 +31,14 @@ var round_active := false
 var match_over := false
 var round_generation := 0
 var displayed_round_seconds := -1
+var screen_shake_strength := 0.0
+var screen_shake_duration := 0.0
+var screen_shake_time_left := 0.0
+var screen_shake_random := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	screen_shake_random.randomize()
 	player1.player_number = 1
 	player2.player_number = 2
 	player1.is_player_controlled = true
@@ -59,6 +65,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	update_camera_position()
 	update_fighter_visible_limits()
+	_update_screen_shake(delta)
 
 	if round_active and not match_over:
 		round_time = maxf(round_time - delta, 0.0)
@@ -86,6 +93,8 @@ func start_round() -> void:
 	player1.reset_fighter(Vector2(stage_center - FIGHTER_SPAWN_DISTANCE, FLOOR_Y))
 	player2.reset_fighter(Vector2(stage_center + FIGHTER_SPAWN_DISTANCE, FLOOR_Y))
 	camera.position.x = stage_center
+	camera.offset = Vector2.ZERO
+	screen_shake_time_left = 0.0
 	camera.reset_smoothing()
 	if not player1.is_facing_right:
 		player1.flip_character()
@@ -162,6 +171,32 @@ func update_fighter_visible_limits() -> void:
 	player1.stage_right_limit = visible_right
 	player2.stage_left_limit = visible_left
 	player2.stage_right_limit = visible_right
+
+
+func request_screen_shake(strength: float, duration: float) -> void:
+	"""Accoda un impulso senza interrompere eventuali shake già in corso."""
+	if strength <= 0.0 or duration <= 0.0:
+		return
+	screen_shake_strength = maxf(screen_shake_strength, strength)
+	screen_shake_duration = maxf(screen_shake_duration, duration)
+	screen_shake_time_left = maxf(screen_shake_time_left, duration)
+
+
+func _update_screen_shake(delta: float) -> void:
+	if screen_shake_time_left <= 0.0:
+		camera.offset = Vector2.ZERO
+		return
+	screen_shake_time_left = maxf(screen_shake_time_left - delta, 0.0)
+	var progress := screen_shake_time_left / maxf(screen_shake_duration, 0.001)
+	var current_strength := screen_shake_strength * pow(progress, SCREEN_SHAKE_DECAY_POWER)
+	camera.offset = Vector2(
+		screen_shake_random.randf_range(-current_strength, current_strength),
+		screen_shake_random.randf_range(-current_strength * 0.65, current_strength * 0.65)
+	)
+	if screen_shake_time_left <= 0.0:
+		camera.offset = Vector2.ZERO
+		screen_shake_strength = 0.0
+		screen_shake_duration = 0.0
 
 
 func end_match(_winner: int) -> void:

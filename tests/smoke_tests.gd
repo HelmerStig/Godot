@@ -61,6 +61,12 @@ func _test_arena_contract() -> void:
 		not arena.player1.controls_enabled and not arena.player2.controls_enabled,
 		"l'arena blocca i controlli durante il countdown"
 	)
+	arena.request_screen_shake(7.0, 0.18)
+	arena._update_screen_shake(0.01)
+	_expect(
+		arena.screen_shake_time_left > 0.0 and arena.camera.offset != Vector2.ZERO,
+		"la camera applica e smorza gli impulsi di screen shake"
+	)
 	arena.queue_free()
 	await process_frame
 

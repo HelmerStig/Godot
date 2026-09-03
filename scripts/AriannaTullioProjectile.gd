@@ -57,6 +57,10 @@ const FACE_JUMP_FACE_OFFSET_Y := 0.0
 const FACE_JUMP_HORIZONTAL_SPEED_MULTIPLIER := 1
 const FACE_JUMP_AFTERIMAGE_INTERVAL := 2
 const FACE_JUMP_AFTERIMAGE_LIFETIME := 0.16
+const NORMAL_HIT_SHAKE_STRENGTH := 2.5
+const NORMAL_HIT_SHAKE_DURATION := 0.08
+const FACE_JUMP_SHAKE_STRENGTH := 7.0
+const FACE_JUMP_SHAKE_DURATION := 0.18
 const OFFSCREEN_MARGIN := 85.0
 const SPRITE_SCALE := Vector2(0.41, 0.41)
 const SPRITE_POSITION := Vector2(0.0, -22.0)
@@ -368,6 +372,7 @@ func _apply_face_jump_hit() -> void:
 		false,
 		true
 	)
+	_request_screen_shake(FACE_JUMP_SHAKE_STRENGTH, FACE_JUMP_SHAKE_DURATION)
 
 
 func _apply_cat_hit() -> void:
@@ -389,6 +394,16 @@ func _apply_cat_hit() -> void:
 		false,
 		true
 	)
+	_request_screen_shake(NORMAL_HIT_SHAKE_STRENGTH, NORMAL_HIT_SHAKE_DURATION)
+
+
+func _request_screen_shake(strength: float, duration: float) -> void:
+	var active_camera := get_viewport().get_camera_2d()
+	if active_camera == null:
+		return
+	var arena := active_camera.get_parent()
+	if arena != null and arena.has_method("request_screen_shake"):
+		arena.request_screen_shake(strength, duration)
 
 
 func _exit_tree() -> void:

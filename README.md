@@ -86,9 +86,9 @@ godot --headless --path . --script res://tests/test_input.gd
 
 Gli altri entry point sono `test_arianna.gd`, `test_mangler.gd`, `test_combat.gd` e `test_arena.gd`. Il file `smoke_tests.gd` resta eseguibile come suite completa di compatibilità.
 
-Le cinque suite verificano 531 condizioni relative ad animazioni, `AttackData`, `AttackVariantData`, input buffer, combattimento, UI, KO e reset. Ogni processo pubblica il proprio risultato e il runner aggregato termina con `SMOKE_TESTS_OK`.
+Le cinque suite verificano 532 condizioni relative ad animazioni, `AttackData`, `AttackVariantData`, input buffer, combattimento, UI, KO e reset. Ogni processo pubblica il proprio risultato e il runner aggregato termina con `SMOKE_TESTS_OK`.
 
-> Baseline del 3 settembre 2026: 531 asserzioni superate in cinque suite, nessun fallimento e risultato aggregato `SMOKE_TESTS_OK` con Godot 4.7.
+> Baseline del 3 settembre 2026: 532 asserzioni superate in cinque suite, nessun fallimento e risultato aggregato `SMOKE_TESTS_OK` con Godot 4.7.
 
 ## Architettura
 
