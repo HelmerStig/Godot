@@ -415,6 +415,27 @@ func _test_arianna_idle() -> void:
 		and light_punch_recovery_last.region == light_punch_first.region,
 		"Arianna light punch esegue 1-9 e 9-1 a 48 FPS"
 	)
+	var combo_lp_last := frames.get_frame_texture(&"arianna_combo_lp", 7) as AtlasTexture
+	var combo_lp_recovery_last := (
+		frames.get_frame_texture(&"arianna_combo_lp_recovery", 2) as AtlasTexture
+	)
+	var combo_mp_first := frames.get_frame_texture(&"arianna_combo_mp", 0) as AtlasTexture
+	var combo_mp_last := frames.get_frame_texture(&"arianna_combo_mp", 7) as AtlasTexture
+	var combo_mp_recovery_last := (
+		frames.get_frame_texture(&"arianna_combo_mp_recovery", 6) as AtlasTexture
+	)
+	_expect(
+		frames.get_frame_count(&"arianna_combo_lp") == 8
+		and frames.get_frame_count(&"arianna_combo_lp_recovery") == 3
+		and frames.get_frame_count(&"arianna_combo_mp") == 8
+		and frames.get_frame_count(&"arianna_combo_mp_recovery") == 7
+		and combo_lp_last.region == Rect2(0.0, 512.0, 512.0, 512.0)
+		and combo_lp_recovery_last.region == Rect2(2048.0, 0.0, 512.0, 512.0)
+		and combo_mp_first.region == Rect2(1024.0, 1536.0, 512.0, 512.0)
+		and combo_mp_last.region == Rect2(2048.0, 2048.0, 512.0, 512.0)
+		and combo_mp_recovery_last.region == combo_mp_first.region,
+		"la combo LP-MP usa esattamente LP 1-8-5 e MP 18-25-18 a 48 FPS"
+	)
 	var low_light_first := frames.get_frame_texture(&"arianna_low_light_punch", 0) as AtlasTexture
 	var low_light_last := frames.get_frame_texture(&"arianna_low_light_punch", 14) as AtlasTexture
 	var low_light_recovery_first := (
@@ -1867,6 +1888,31 @@ func _test_arianna_idle() -> void:
 	_expect(
 		arianna.z_index == arianna_default_z,
 		"Arianna ripristina lo z-index al termine dell'attacco"
+	)
+	arianna._start_light_punch()
+	arianna.animated_sprite.frame = 4
+	arianna.input_buffer.record_input_snapshot(
+		0, 0, [&"medium_punch"], arianna.is_facing_right
+	)
+	var combo_queued := arianna._try_queue_lp_mp_combo()
+	arianna._on_animation_finished()
+	var combo_lp_reversed := arianna.animated_sprite.animation == &"arianna_combo_lp_recovery"
+	arianna._on_animation_finished()
+	var combo_mp_started := (
+		arianna.medium_punch_active
+		and arianna.animated_sprite.animation == &"arianna_combo_mp"
+	)
+	arianna._on_animation_finished()
+	var combo_mp_reversed := arianna.animated_sprite.animation == &"arianna_combo_mp_recovery"
+	arianna._on_animation_finished()
+	_expect(
+		combo_queued
+		and combo_lp_reversed
+		and combo_mp_started
+		and combo_mp_reversed
+		and not arianna.lp_mp_combo_active
+		and arianna.current_state == Mangler.State.IDLE,
+		"premendo LP poi MP Arianna concatena le due sequenze e torna in idle"
 	)
 	arianna._start_low_light_punch()
 	arianna.animated_sprite.frame = Arianna.ARIANNA_LOW_LIGHT_PUNCH_ACTIVE_START_FRAME

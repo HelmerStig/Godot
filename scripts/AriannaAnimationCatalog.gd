@@ -23,6 +23,7 @@ func configure_all() -> void:
 	configure_block_mid_frames()
 	configure_block_low_frames()
 	configure_light_punch_frames()
+	configure_lp_mp_combo_frames()
 	configure_low_light_punch_frames()
 	configure_medium_punch_frames()
 	configure_low_medium_punch_frames()
@@ -294,6 +295,30 @@ func _make_light_punch_frame(source_index: int) -> AtlasTexture:
 		fighter.ARIANNA_LIGHT_PUNCH_CELL_SIZE
 	)
 	return atlas_frame
+
+
+func configure_lp_mp_combo_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	var animation_names := [
+		&"arianna_combo_lp",
+		&"arianna_combo_lp_recovery",
+		&"arianna_combo_mp",
+		&"arianna_combo_mp_recovery",
+	]
+	for animation_name in animation_names:
+		if frames.has_animation(animation_name):
+			frames.remove_animation(animation_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 48.0)
+		frames.set_animation_loop(animation_name, false)
+	for source_index in range(0, 8):
+		frames.add_frame(&"arianna_combo_lp", _make_light_punch_frame(source_index))
+	for source_index in range(6, 3, -1):
+		frames.add_frame(&"arianna_combo_lp_recovery", _make_light_punch_frame(source_index))
+	for source_index in range(17, 25):
+		frames.add_frame(&"arianna_combo_mp", _make_medium_punch_frame(source_index))
+	for source_index in range(23, 16, -1):
+		frames.add_frame(&"arianna_combo_mp_recovery", _make_medium_punch_frame(source_index))
 
 
 func configure_low_light_punch_frames() -> void:
