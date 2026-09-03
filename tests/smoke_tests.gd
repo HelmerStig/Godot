@@ -1391,14 +1391,81 @@ func _test_arianna_idle() -> void:
 		"mezzaluna indietro più LP+MP avvia points forward e mantiene il rivale in idle"
 	)
 	arianna._finish_points_forward_super()
+	var cat_test_target_position := whistle_target.global_position
+	whistle_target.global_position.x = 10000.0 if arianna.is_facing_right else -10000.0
+	await create_timer(1.95).timeout
+	var tullio_nodes := get_nodes_in_group("arianna_tullio_projectile")
+	var cats_by_id := {&"tullio": [], &"tilda": [], &"telma": []}
+	for cat_node in tullio_nodes:
+		if cat_node is AriannaTullioProjectile and cat_node.source_fighter == arianna:
+			cat_node.set_physics_process(false)
+			cats_by_id[cat_node.cat_id].append(cat_node)
+	whistle_target.global_position = cat_test_target_position
+	var tullio: AriannaTullioProjectile = (
+		cats_by_id[&"tullio"][0] if not cats_by_id[&"tullio"].is_empty() else null
+	)
 	_expect(
 		not arianna.points_forward_super_active
 		and arianna.current_state == Mangler.State.IDLE
-		and whistle_target.current_state == Mangler.State.IDLE
-		and whistle_target.controls_enabled
-		and whistle_target.can_move,
-		"finita l'introduzione points forward entrambi vengono rilasciati in idle"
+		and not whistle_target.controls_enabled
+		and not whistle_target.can_move
+		and cats_by_id[&"tullio"].size() == 4
+		and cats_by_id[&"tilda"].size() == 4
+		and cats_by_id[&"telma"].size() == 4
+		and tullio != null,
+		"finita points forward entrano dodici gatti: quattro Tullio, Tilda e Telma"
 	)
+	if tullio != null:
+		var cat_profiles_valid := true
+		for cat_id in [&"tullio", &"tilda", &"telma"]:
+			for cat: AriannaTullioProjectile in cats_by_id[cat_id]:
+				var cat_frames := cat.animated_sprite.sprite_frames
+				var expected_run_frames := 49 if cat_id == &"telma" else 42
+				cat_profiles_valid = cat_profiles_valid and (
+					cat_frames.get_frame_count(&"run") == expected_run_frames
+					and cat_frames.get_frame_count(&"jump") == 15
+					and cat_frames.get_frame_count(&"attack") == 12
+					and is_equal_approx(cat_frames.get_animation_speed(&"run"), 24.0)
+					and cat.movement_particles != null
+					and cat.animated_sprite.scale == Vector2(0.41, 0.41)
+				)
+		_expect(
+			cat_profiles_valid
+			and AriannaTullioProjectile.OFFSCREEN_MARGIN == 85.0,
+			"ogni clone mantiene atlas, 24 FPS, scala ed effetto movimento del proprio gatto"
+		)
+		var health_before_tullio := whistle_target.combat.current_health
+		tullio.current_state = AriannaTullioProjectile.State.ATTACKING
+		for hit_index in range(AriannaTullioProjectile.ATTACK_LOOPS):
+			tullio.hit_applied_in_current_loop = false
+			tullio._apply_cat_hit()
+			_expect(
+				whistle_target.combat.current_health
+				== health_before_tullio - AriannaTullioProjectile.DAMAGE_PER_HIT * (hit_index + 1)
+				and whistle_target.animated_sprite.animation == &"hurt_low",
+				"il colpo %d di Tullio infligge 2 danni e genera hurt_low" % (hit_index + 1)
+			)
+		_expect(
+			whistle_target.combat.current_health == health_before_tullio - 6,
+			"i tre attacchi di ogni gatto infliggono 2 danni ciascuno"
+		)
+		var all_cats: Array = []
+		for cat_id in [&"tullio", &"tilda", &"telma"]:
+			all_cats.append_array(cats_by_id[cat_id])
+		for cat_index in range(all_cats.size() - 1):
+			all_cats[cat_index]._emit_completion()
+		_expect(
+			not whistle_target.controls_enabled and not whistle_target.can_move,
+			"il rivale resta fermo finche non sono usciti tutti i gatti"
+		)
+		all_cats.back()._emit_completion()
+		_expect(
+			whistle_target.controls_enabled and whistle_target.can_move,
+			"l'ultimo gatto libera l'avversario dopo l'uscita"
+		)
+		for cat in all_cats:
+			cat.queue_free()
+	whistle_target.combat.reset()
 	whistle_target.change_state(Mangler.State.WALKING)
 	arianna.input_buffer.clear()
 	arianna.input_buffer.record_input_snapshot(-1, 0, [], true)

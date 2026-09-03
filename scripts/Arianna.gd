@@ -7,6 +7,7 @@ class_name Arianna
 
 const AnimationCatalog := preload("res://scripts/AriannaAnimationCatalog.gd")
 const BateauProjectile := preload("res://scripts/AriannaBateauProjectile.gd")
+const TullioProjectile := preload("res://scripts/AriannaTullioProjectile.gd")
 
 const ARIANNA_IDLE_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/idle.png"
@@ -379,6 +380,12 @@ var points_forward_super_active := false
 var points_forward_frozen_target: Fighter
 var points_forward_target_controls_enabled := true
 var points_forward_target_can_move := true
+var cat_wave_frozen_target: Fighter
+var cat_wave_target_controls_enabled := true
+var cat_wave_target_can_move := true
+var cat_wave_remaining := 0
+var cat_wave_generation := 0
+var cat_wave_random := RandomNumberGenerator.new()
 var whistle_special_active := false
 var whistle_frozen_target: Fighter
 var whistle_target_controls_enabled := true
@@ -853,6 +860,10 @@ func _on_round_ended(winner: int) -> void:
 func reset_fighter(spawn_position: Vector2) -> void:
 	# Le mosse di Arianna sono gestite da flag dedicati: se il round termina
 	# durante una di esse, devono essere azzerati prima del reset condiviso.
+	cat_wave_generation += 1
+	for tullio in get_tree().get_nodes_in_group("arianna_cat_projectile"):
+		if tullio is AriannaTullioProjectile and tullio.source_fighter == self:
+			tullio.cancel_for_round_reset()
 	light_punch_active = false
 	jump_light_punch_active = false
 	jump_medium_punch_active = false
@@ -864,6 +875,8 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	baseball_tornado_spawned = false
 	points_forward_super_active = false
 	points_forward_frozen_target = null
+	cat_wave_frozen_target = null
+	cat_wave_remaining = 0
 	whistle_special_active = false
 	whistle_frozen_target = null
 	low_light_punch_active = false
@@ -1204,6 +1217,9 @@ func _hold_points_forward_opponent_idle() -> void:
 
 
 func _finish_points_forward_super() -> void:
+	var target_to_release := points_forward_frozen_target
+	var target_controls_enabled := points_forward_target_controls_enabled
+	var target_can_move := points_forward_target_can_move
 	combat.disable_hitbox()
 	combat.is_attacking = false
 	combat.current_attack = null
@@ -1212,12 +1228,84 @@ func _finish_points_forward_super() -> void:
 	restore_default_render_order()
 	points_forward_super_active = false
 	velocity = Vector2.ZERO
-	if is_instance_valid(points_forward_frozen_target):
-		points_forward_frozen_target.change_state(State.IDLE)
-		points_forward_frozen_target.controls_enabled = points_forward_target_controls_enabled
-		points_forward_frozen_target.can_move = points_forward_target_can_move
 	points_forward_frozen_target = null
+	_start_cat_wave(target_to_release, target_controls_enabled, target_can_move)
 	change_state(State.IDLE)
+
+
+func _start_cat_wave(
+	target_kept_frozen: Fighter,
+	target_controls_enabled: bool,
+	target_can_move: bool
+) -> void:
+	cat_wave_generation += 1
+	cat_wave_frozen_target = target_kept_frozen
+	cat_wave_target_controls_enabled = target_controls_enabled
+	cat_wave_target_can_move = target_can_move
+	cat_wave_remaining = 12
+	var generation := cat_wave_generation
+	cat_wave_random.randomize()
+	var cat_ids: Array[StringName] = []
+	for repeat_index in range(4):
+		cat_ids.append_array([&"tullio", &"tilda", &"telma"])
+	# L'ordine, gli intervalli e la velocita cambiano a ogni attivazione.
+	for index in range(cat_ids.size() - 1, 0, -1):
+		var swap_index := cat_wave_random.randi_range(0, index)
+		var temporary := cat_ids[index]
+		cat_ids[index] = cat_ids[swap_index]
+		cat_ids[swap_index] = temporary
+	var accumulated_delay := cat_wave_random.randf_range(0.0, 0.05)
+	for index in range(cat_ids.size()):
+		if index > 0:
+			accumulated_delay += cat_wave_random.randf_range(0.07, 0.17)
+		var speed_multiplier := cat_wave_random.randf_range(0.82, 1.22)
+		_spawn_delayed_cat(cat_ids[index], accumulated_delay, speed_multiplier, generation)
+
+
+func _spawn_delayed_cat(
+	cat_id: StringName,
+	delay: float,
+	speed_multiplier: float,
+	generation: int
+) -> void:
+	await get_tree().create_timer(delay).timeout
+	if generation != cat_wave_generation or cat_wave_remaining <= 0:
+		return
+	_spawn_cat_projectile(cat_id, speed_multiplier)
+
+
+func _spawn_cat_projectile(
+	cat_id: StringName,
+	speed_multiplier: float = 1.0
+) -> AriannaTullioProjectile:
+	if not is_instance_valid(opponent):
+		_on_cat_projectile_completed(null)
+		return null
+	var tullio := TullioProjectile.new() as AriannaTullioProjectile
+	tullio.setup(self, opponent, cat_id, speed_multiplier)
+	tullio.completed.connect(_on_cat_projectile_completed)
+	var projectile_parent: Node = get_tree().current_scene
+	if projectile_parent == null:
+		projectile_parent = get_tree().root
+	projectile_parent.add_child(tullio)
+	var spawn_x := (
+		stage_left_limit - AriannaTullioProjectile.OFFSCREEN_MARGIN
+		if tullio.travel_direction > 0.0
+		else stage_right_limit + AriannaTullioProjectile.OFFSCREEN_MARGIN
+	)
+	tullio.global_position = Vector2(spawn_x, global_position.y)
+	return tullio
+
+
+func _on_cat_projectile_completed(_cat: AriannaTullioProjectile) -> void:
+	cat_wave_remaining = maxi(0, cat_wave_remaining - 1)
+	if cat_wave_remaining > 0:
+		return
+	if is_instance_valid(cat_wave_frozen_target) and cat_wave_frozen_target.combat.current_health > 0:
+		cat_wave_frozen_target.change_state(State.IDLE)
+		cat_wave_frozen_target.controls_enabled = cat_wave_target_controls_enabled
+		cat_wave_frozen_target.can_move = cat_wave_target_can_move
+	cat_wave_frozen_target = null
 
 
 func _try_start_whistle_special() -> bool:
