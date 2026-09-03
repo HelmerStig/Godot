@@ -1390,10 +1390,20 @@ func _test_arianna_idle() -> void:
 		and not whistle_target.can_move,
 		"mezzaluna indietro più LP+MP avvia points forward e mantiene il rivale in idle"
 	)
+	var cat_wave_generation_before := arianna.cat_wave_generation
+	arianna.animated_sprite.frame = Arianna.ARIANNA_POINTS_FORWARD_CAT_WAVE_START_FRAME
+	arianna._on_animation_frame_changed()
+	_expect(
+		arianna.points_forward_cat_wave_started
+		and arianna.cat_wave_generation == cat_wave_generation_before + 1
+		and Arianna.ARIANNA_POINTS_FORWARD_CAT_WAVE_START_FRAME
+			== Arianna.ARIANNA_POINTS_FORWARD_SUPER_FRAME_COUNT - 24,
+		"l'ondata dei gatti parte un secondo prima della fine della posa a 24 FPS"
+	)
 	arianna._finish_points_forward_super()
 	var cat_test_target_position := whistle_target.global_position
 	whistle_target.global_position.x = 10000.0 if arianna.is_facing_right else -10000.0
-	await create_timer(1.95).timeout
+	await create_timer(2.15).timeout
 	var tullio_nodes := get_nodes_in_group("arianna_tullio_projectile")
 	var cats_by_id := {&"tullio": [], &"tilda": [], &"telma": []}
 	for cat_node in tullio_nodes:
@@ -1443,11 +1453,11 @@ func _test_arianna_idle() -> void:
 				whistle_target.combat.current_health
 				== health_before_tullio - AriannaTullioProjectile.DAMAGE_PER_HIT * (hit_index + 1)
 				and whistle_target.animated_sprite.animation == &"hurt_low",
-				"il colpo %d di Tullio infligge 2 danni e genera hurt_low" % (hit_index + 1)
+				"il colpo %d di Tullio infligge 1 danno e genera hurt_low" % (hit_index + 1)
 			)
 		_expect(
-			whistle_target.combat.current_health == health_before_tullio - 6,
-			"i tre attacchi di ogni gatto infliggono 2 danni ciascuno"
+			whistle_target.combat.current_health == health_before_tullio - 3,
+			"i tre attacchi di ogni gatto infliggono 1 danno ciascuno"
 		)
 		var all_cats: Array = []
 		for cat_id in [&"tullio", &"tilda", &"telma"]:

@@ -172,6 +172,7 @@ const ARIANNA_POINTS_FORWARD_SUPER_SOURCE_END := 42 # Zero-based: fotogramma vis
 const ARIANNA_POINTS_FORWARD_SUPER_FRAME_COUNT := 34 # Sequenza 10-43, una sola volta.
 const ARIANNA_POINTS_FORWARD_SUPER_COLUMNS := 7
 const ARIANNA_POINTS_FORWARD_SUPER_CELL_SIZE := Vector2(512.0, 512.0)
+const ARIANNA_POINTS_FORWARD_CAT_WAVE_START_FRAME := 10 # Un secondo prima della fine a 24 FPS.
 const ARIANNA_POINTS_FORWARD_SUPER_MOTION_WINDOW_FRAMES := 72
 const ARIANNA_POINTS_FORWARD_SUPER_CHORD_WINDOW_FRAMES := 6
 const ARIANNA_WHISTLE_SPECIAL_SHEET := preload(
@@ -380,6 +381,7 @@ var points_forward_super_active := false
 var points_forward_frozen_target: Fighter
 var points_forward_target_controls_enabled := true
 var points_forward_target_can_move := true
+var points_forward_cat_wave_started := false
 var cat_wave_frozen_target: Fighter
 var cat_wave_target_controls_enabled := true
 var cat_wave_target_can_move := true
@@ -428,7 +430,11 @@ func _ready() -> void:
 	whistle_audio_player.volume_db = -2.0
 	add_child(whistle_audio_player)
 	var arena: Node = owner
-	if arena != null and arena.has_signal(&"round_ended"):
+	if (
+		arena != null
+		and arena.has_signal(&"round_ended")
+		and not arena.is_connected(&"round_ended", _on_round_ended)
+	):
 		arena.connect(&"round_ended", _on_round_ended)
 	_activate_idle()
 	call_deferred("_activate_idle")
@@ -874,6 +880,7 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	baseball_special_active = false
 	baseball_tornado_spawned = false
 	points_forward_super_active = false
+	points_forward_cat_wave_started = false
 	points_forward_frozen_target = null
 	cat_wave_frozen_target = null
 	cat_wave_remaining = 0
@@ -1183,6 +1190,7 @@ func _try_start_points_forward_super() -> bool:
 
 func _start_points_forward_super() -> void:
 	points_forward_super_active = true
+	points_forward_cat_wave_started = false
 	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
 	combat.action_generation += 1
@@ -1229,8 +1237,20 @@ func _finish_points_forward_super() -> void:
 	points_forward_super_active = false
 	velocity = Vector2.ZERO
 	points_forward_frozen_target = null
-	_start_cat_wave(target_to_release, target_controls_enabled, target_can_move)
+	if not points_forward_cat_wave_started:
+		_start_cat_wave(target_to_release, target_controls_enabled, target_can_move)
 	change_state(State.IDLE)
+
+
+func _start_points_forward_cat_wave_once() -> void:
+	if points_forward_cat_wave_started:
+		return
+	points_forward_cat_wave_started = true
+	_start_cat_wave(
+		points_forward_frozen_target,
+		points_forward_target_controls_enabled,
+		points_forward_target_can_move
+	)
 
 
 func _start_cat_wave(
@@ -2484,6 +2504,11 @@ func _on_animation_finished() -> void:
 
 
 func _on_animation_frame_changed() -> void:
+	if (
+		animated_sprite.animation == &"arianna_points_forward_super"
+		and animated_sprite.frame >= ARIANNA_POINTS_FORWARD_CAT_WAVE_START_FRAME
+	):
+		_start_points_forward_cat_wave_once()
 	if animated_sprite.animation == &"arianna_whistle_special":
 		if animated_sprite.frame == ARIANNA_WHISTLE_SOUND_FRAME and not whistle_sound_played:
 			whistle_sound_played = true
