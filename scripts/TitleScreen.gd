@@ -10,10 +10,20 @@ func _ready() -> void:
 
 
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color(0.04, 0.04, 0.09, 1)
-	add_child(bg)
+	var bg_texture := load("res://assets/backgrounds/default_stage/ponte-pixel-v1.png") as Texture2D
+	if bg_texture != null:
+		var bg := TextureRect.new()
+		bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		bg.texture = bg_texture
+		bg.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(bg)
+	else:
+		var bg := ColorRect.new()
+		bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		bg.color = Color(0.04, 0.04, 0.09, 1)
+		add_child(bg)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
