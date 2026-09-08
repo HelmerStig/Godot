@@ -11,6 +11,7 @@ signal knocked_out
 signal state_changed(previous_state: int, current_state: int)
 signal attack_started(attack_name: StringName)
 signal attack_finished
+signal attack_cancelled
 
 const GROUND_COLLISION_LAYER := 1
 const FIGHTER_COLLISION_LAYER := 8
@@ -109,6 +110,7 @@ func _ready() -> void:
 	combat.knocked_out.connect(_on_combat_knocked_out)
 	combat.attack_started.connect(_on_combat_attack_started)
 	combat.attack_finished.connect(_on_combat_attack_finished)
+	combat.attack_cancelled.connect(_on_combat_attack_cancelled)
 	animated_sprite.animation_finished.connect(_on_animation_finished)
 	animated_sprite.frame_changed.connect(_on_animation_frame_changed)
 	animated_sprite.animation_changed.connect(update_sprite_scale)
@@ -129,15 +131,19 @@ func change_state(next_state: int, force_victory_exit := false) -> void:
 		return
 	var previous_state := current_state
 	current_state = next_state
+	_apply_state_movement()
+	update_animation()
+	update_collision_profile()
+	state_changed.emit(previous_state, current_state)
+
+
+func _apply_state_movement() -> void:
 	match current_state:
 		State.IDLE, State.WALKING, State.RUNNING, State.JUMPING, State.CROUCHING:
 			can_move = true
 		_:
 			can_move = false
 			velocity.x = 0.0
-	update_animation()
-	update_collision_profile()
-	state_changed.emit(previous_state, current_state)
 
 
 func get_input_action(action_name: String) -> StringName:
@@ -245,9 +251,10 @@ func spawn_hurt_blue_explosion(hit_height: AttackData.HitHeight) -> Node2D:
 	flash.material = material
 	explosion.add_child(flash)
 	var tween := flash.create_tween()
+	var sparks := CPUParticles2D.new()
+	_configure_hurt_effect(tween, sparks)
 	tween.tween_property(flash, "scale", Vector2(1.2, 1.2), 0.14)
 	tween.parallel().tween_property(flash, "modulate:a", 0.0, 0.28)
-	var sparks := CPUParticles2D.new()
 	sparks.name = "BlueSparks"
 	sparks.amount = 64
 	sparks.one_shot = true
@@ -264,6 +271,10 @@ func spawn_hurt_blue_explosion(hit_height: AttackData.HitHeight) -> Node2D:
 	sparks.emitting = true
 	get_tree().create_timer(0.52).timeout.connect(explosion.queue_free)
 	return explosion
+
+
+func _configure_hurt_effect(_flash_tween: Tween, _sparks: CPUParticles2D) -> void:
+	pass
 
 
 func create_hurt_blue_glow_texture() -> GradientTexture2D:
@@ -579,29 +590,42 @@ func emit_attack_motion_effect() -> void:
 
 
 func spawn_attack_motion_afterimage(profile: Dictionary) -> void:
-	var texture := animated_sprite.sprite_frames.get_frame_texture(animated_sprite.animation, animated_sprite.frame)
+	if _create_attack_afterimage(animated_sprite, profile) != null:
+		attack_afterimage_spawn_count += 1
+
+
+func _create_attack_afterimage(
+	source_sprite: AnimatedSprite2D,
+	profile: Dictionary,
+	ghost_name: StringName = &"AttackAfterimage"
+) -> Sprite2D:
+	var texture := source_sprite.sprite_frames.get_frame_texture(source_sprite.animation, source_sprite.frame)
 	if texture == null:
-		return
+		return null
 	var ghost := Sprite2D.new()
-	ghost.name = "AttackAfterimage"
+	ghost.name = ghost_name
 	ghost.add_to_group("attack_afterimage")
 	ghost.texture = texture
-	ghost.position = animated_sprite.position
-	ghost.rotation = animated_sprite.rotation
-	ghost.scale = animated_sprite.scale
+	ghost.centered = source_sprite.centered
+	ghost.offset = source_sprite.offset
+	ghost.position = source_sprite.position
+	ghost.rotation = source_sprite.rotation
+	ghost.scale = source_sprite.scale
 	ghost.scale.x *= float(profile["stretch"])
-	ghost.flip_h = animated_sprite.flip_h
-	ghost.z_index = animated_sprite.z_index - 1
+	ghost.flip_h = source_sprite.flip_h
+	ghost.flip_v = source_sprite.flip_v
+	ghost.texture_filter = source_sprite.texture_filter
+	ghost.z_index = source_sprite.z_index - 1
 	var tint: Color = profile["tint"]
 	ghost.modulate = Color(tint.r, tint.g, tint.b, float(profile["alpha"]))
 	add_child(ghost)
-	attack_afterimage_spawn_count += 1
 	var direction := 1.0 if is_facing_right else -1.0
 	var lifetime := float(profile["lifetime"])
 	var tween := ghost.create_tween()
 	tween.tween_property(ghost, "modulate:a", 0.0, lifetime)
 	tween.parallel().tween_property(ghost, "position:x", ghost.position.x - direction * float(profile["offset"]), lifetime)
 	tween.tween_callback(ghost.queue_free)
+	return ghost
 
 
 func _on_combat_health_changed(current_health: int, max_health: int) -> void:
@@ -612,8 +636,13 @@ func _on_combat_knocked_out() -> void:
 	knocked_out.emit()
 
 
-func _on_combat_attack_started(_attack_name: StringName) -> void:
+func _on_combat_attack_started(attack_name: StringName) -> void:
 	update_collision_profile()
+	attack_started.emit(attack_name)
+
+
+func _on_combat_attack_cancelled() -> void:
+	attack_cancelled.emit()
 
 
 func _on_combat_attack_finished() -> void:

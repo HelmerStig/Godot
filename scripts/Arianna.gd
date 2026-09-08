@@ -563,7 +563,6 @@ func _physics_process(_delta: float) -> void:
 		elif light_punch_active and not low_light_punch_active:
 			_try_queue_lp_mp_combo()
 		velocity = Vector2.ZERO
-		current_state = State.ATTACKING
 		move_and_slide()
 		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
 		update_facing_direction()
@@ -876,12 +875,53 @@ func _on_round_ended(winner: int) -> void:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	combat.cancel_current_action()
+	_clear_attack_flags()
 	# Le mosse di Arianna sono gestite da flag dedicati: se il round termina
 	# durante una di esse, devono essere azzerati prima del reset condiviso.
 	cat_wave_generation += 1
 	for tullio in get_tree().get_nodes_in_group("arianna_cat_projectile"):
 		if tullio is AriannaTullioProjectile and tullio.source_fighter == self:
 			tullio.cancel_for_round_reset()
+	points_forward_frozen_target = null
+	cat_wave_frozen_target = null
+	cat_wave_remaining = 0
+	whistle_frozen_target = null
+	jump_facing_locked = false
+	jump_rotation_finished = false
+	jump_takeoff_armed = false
+	back_jump_active = false
+	back_jump_elapsed = 0.0
+	_stop_whistle_air_effect(true)
+	if is_instance_valid(whistle_audio_player):
+		whistle_audio_player.stop()
+	super.reset_fighter(spawn_position)
+	animated_sprite.position = ARIANNA_SPRITE_POSITION
+	animated_sprite.scale = ARIANNA_SPRITE_SCALE
+	animated_sprite.play(&"idle")
+
+
+func _on_combat_attack_cancelled() -> void:
+	# Le evocazioni già partite completano il proprio ciclo; una cancellazione
+	# prima del lancio deve invece liberare subito il bersaglio congelato.
+	if is_instance_valid(points_forward_frozen_target) and not points_forward_cat_wave_started:
+		if points_forward_frozen_target.combat.current_health > 0:
+			points_forward_frozen_target.controls_enabled = points_forward_target_controls_enabled
+			points_forward_frozen_target.can_move = points_forward_target_can_move
+	if is_instance_valid(whistle_frozen_target) and whistle_frozen_target.combat.current_health > 0:
+		whistle_frozen_target.controls_enabled = whistle_target_controls_enabled
+		whistle_frozen_target.can_move = whistle_target_can_move
+	points_forward_frozen_target = null
+	whistle_frozen_target = null
+	_clear_attack_flags()
+	_stop_whistle_air_effect(true)
+	if is_instance_valid(whistle_audio_player):
+		whistle_audio_player.stop()
+	animated_sprite.scale = ARIANNA_SPRITE_SCALE
+	super._on_combat_attack_cancelled()
+
+
+func _clear_attack_flags() -> void:
 	light_punch_active = false
 	lp_mp_combo_active = false
 	lp_mp_mk_combo_queued = false
@@ -895,11 +935,7 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	baseball_tornado_spawned = false
 	points_forward_super_active = false
 	points_forward_cat_wave_started = false
-	points_forward_frozen_target = null
-	cat_wave_frozen_target = null
-	cat_wave_remaining = 0
 	whistle_special_active = false
-	whistle_frozen_target = null
 	low_light_punch_active = false
 	medium_punch_active = false
 	low_medium_punch_active = false
@@ -911,18 +947,6 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	low_medium_kick_active = false
 	strong_kick_active = false
 	low_strong_kick_active = false
-	jump_facing_locked = false
-	jump_rotation_finished = false
-	jump_takeoff_armed = false
-	back_jump_active = false
-	back_jump_elapsed = 0.0
-	_stop_whistle_air_effect(true)
-	if is_instance_valid(whistle_audio_player):
-		whistle_audio_player.stop()
-	super.reset_fighter(spawn_position)
-	animated_sprite.position = ARIANNA_SPRITE_POSITION
-	animated_sprite.scale = ARIANNA_SPRITE_SCALE
-	animated_sprite.play(&"idle")
 
 
 func update_sprite_scale() -> void:
@@ -1161,16 +1185,8 @@ func _start_baseball_special(strength: StringName = &"light") -> void:
 	baseball_special_active = true
 	baseball_tornado_spawned = false
 	baseball_special_strength = strength
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.disable_hitbox()
-	combat.is_attacking = true
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_baseball_special")
+	combat.begin_animation_attack(&"arianna_baseball_special", null, null, false)
 
 
 func _try_start_points_forward_super() -> bool:
@@ -1211,17 +1227,9 @@ func _try_start_points_forward_super() -> bool:
 func _start_points_forward_super() -> void:
 	points_forward_super_active = true
 	points_forward_cat_wave_started = false
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.disable_hitbox()
-	combat.is_attacking = true
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	bring_attacker_to_foreground()
 	_hold_points_forward_opponent_idle()
-	animated_sprite.play(&"arianna_points_forward_super")
+	combat.begin_animation_attack(&"arianna_points_forward_super", null, null, false)
 
 
 func _hold_points_forward_opponent_idle() -> void:
@@ -1248,12 +1256,7 @@ func _finish_points_forward_super() -> void:
 	var target_to_release := points_forward_frozen_target
 	var target_controls_enabled := points_forward_target_controls_enabled
 	var target_can_move := points_forward_target_can_move
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack()
 	points_forward_super_active = false
 	velocity = Vector2.ZERO
 	points_forward_frozen_target = null
@@ -1395,17 +1398,9 @@ func _start_whistle_special() -> void:
 	if is_instance_valid(whistle_audio_player):
 		whistle_audio_player.stop()
 	whistle_special_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.disable_hitbox()
-	combat.is_attacking = true
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	bring_attacker_to_foreground()
 	_hold_whistle_opponent_idle()
-	animated_sprite.play(&"arianna_whistle_special")
+	combat.begin_animation_attack(&"arianna_whistle_special", null, null, false)
 
 
 func _hold_whistle_opponent_idle() -> void:
@@ -1434,12 +1429,7 @@ func _finish_whistle_special() -> void:
 		and animated_sprite.frame >= ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT - 1
 	)
 	_stop_whistle_air_effect()
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack()
 	whistle_special_active = false
 	velocity = Vector2.ZERO
 	if is_instance_valid(whistle_frozen_target):
@@ -1564,12 +1554,7 @@ func _try_start_baseball_special() -> bool:
 
 
 func _finish_baseball_special() -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack()
 	baseball_special_active = false
 	baseball_tornado_spawned = false
 	baseball_special_strength = &"light"
@@ -1598,19 +1583,12 @@ func _start_light_punch() -> void:
 	if attack == null:
 		return
 	light_punch_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
-	combat.current_variant = null
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_LIGHT_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_LIGHT_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_light_punch")
+	combat.begin_animation_attack(&"arianna_light_punch", attack, null, false)
 
 
 func _try_queue_lp_mp_combo() -> bool:
@@ -1647,25 +1625,18 @@ func _try_queue_lp_mp_combo() -> bool:
 
 
 func _start_lp_mp_combo_medium() -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
+	combat.finish_animation_attack(State.ATTACKING)
 	light_punch_active = false
 	var attack := character_data.get_attack(&"medium_punch")
 	if attack == null:
 		_finish_lp_mp_combo()
 		return
 	medium_punch_active = true
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_MEDIUM_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_MEDIUM_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	animated_sprite.play(&"arianna_combo_mp")
+	combat.begin_animation_attack(&"arianna_combo_mp", attack, null, false)
 
 
 func _try_queue_lp_mp_mk_combo() -> bool:
@@ -1693,34 +1664,22 @@ func _try_queue_lp_mp_mk_combo() -> bool:
 
 
 func _start_lp_mp_mk_combo_kick() -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
+	combat.finish_animation_attack(State.ATTACKING)
 	medium_punch_active = false
 	var attack := character_data.get_attack(&"medium_kick")
 	if attack == null:
 		_finish_lp_mp_combo()
 		return
 	medium_kick_active = true
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_MEDIUM_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_MEDIUM_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	animated_sprite.play(&"arianna_combo_mk")
+	combat.begin_animation_attack(&"arianna_combo_mk", attack, null, false)
 
 
 func _finish_lp_mp_combo() -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack()
 	light_punch_active = false
 	medium_punch_active = false
 	medium_kick_active = false
@@ -1734,43 +1693,16 @@ func _start_jump_light_punch() -> void:
 	if attack == null:
 		return
 	jump_light_punch_active = true
-	aerial_attack_used = true
-	current_state = State.ATTACKING
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.is_airborne_light_punch = true
-	combat.current_attack = attack
-	combat.current_variant = null
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_JUMP_LIGHT_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_JUMP_LIGHT_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_jump_light_punch")
+	combat.begin_animation_attack(&"arianna_jump_light_punch", attack, null, true)
 	animated_sprite.scale = ARIANNA_JUMP_LIGHT_PUNCH_SPRITE_SCALE
 
 
-func _resolve_jump_light_punch_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not jump_light_punch_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
-
-
 func _finish_jump_light_punch(landed: bool) -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.is_airborne_light_punch = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack(State.IDLE if landed or is_on_floor() else State.JUMPING)
 	jump_light_punch_active = false
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	if landed or is_on_floor():
@@ -1787,43 +1719,16 @@ func _start_jump_medium_punch() -> void:
 	if attack == null:
 		return
 	jump_medium_punch_active = true
-	aerial_attack_used = true
-	current_state = State.ATTACKING
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.is_airborne_medium_punch = true
-	combat.current_attack = attack
-	combat.current_variant = null
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_JUMP_MEDIUM_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_JUMP_MEDIUM_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
 	animated_sprite.scale = ARIANNA_JUMP_MEDIUM_PUNCH_SPRITE_SCALE
-	animated_sprite.play(&"arianna_jump_medium_punch")
-
-
-func _resolve_jump_medium_punch_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not jump_medium_punch_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_jump_medium_punch", attack, null, true)
 
 
 func _finish_jump_medium_punch(landed: bool) -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.is_airborne_medium_punch = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack(State.IDLE if landed or is_on_floor() else State.JUMPING)
 	jump_medium_punch_active = false
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	if landed or is_on_floor():
@@ -1840,42 +1745,15 @@ func _start_jump_strong_punch() -> void:
 	if attack == null:
 		return
 	jump_strong_punch_active = true
-	aerial_attack_used = true
-	current_state = State.ATTACKING
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.is_airborne_heavy_punch = true
-	combat.current_attack = attack
-	combat.current_variant = null
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_JUMP_STRONG_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_JUMP_STRONG_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = ARIANNA_JUMP_STRONG_PUNCH_HITBOX_ROTATION
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_jump_strong_punch")
-
-
-func _resolve_jump_strong_punch_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not jump_strong_punch_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_jump_strong_punch", attack, null, true)
 
 
 func _finish_jump_strong_punch(landed: bool) -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.is_airborne_heavy_punch = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack(State.IDLE if landed or is_on_floor() else State.JUMPING)
 	jump_strong_punch_active = false
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	combat.hitbox_shape.rotation = 0.0
@@ -1893,46 +1771,19 @@ func _start_jump_light_kick() -> void:
 	if attack == null:
 		return
 	jump_light_kick_active = true
-	aerial_attack_used = true
-	current_state = State.ATTACKING
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.is_airborne_light_kick = true
-	combat.current_attack = attack
 	var middle_variant := AttackVariantData.new()
 	middle_variant.variant_id = &"arianna_airborne"
 	middle_variant.animation_name = &"arianna_jump_light_kick"
 	middle_variant.hit_height = AttackData.HitHeight.MID
-	combat.current_variant = middle_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_JUMP_LIGHT_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_JUMP_LIGHT_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = ARIANNA_JUMP_LIGHT_KICK_HITBOX_ROTATION
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_jump_light_kick")
-
-
-func _resolve_jump_light_kick_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not jump_light_kick_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_jump_light_kick", attack, middle_variant, true)
 
 
 func _finish_jump_light_kick(landed: bool) -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.is_airborne_light_kick = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack(State.IDLE if landed or is_on_floor() else State.JUMPING)
 	jump_light_kick_active = false
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	combat.hitbox_shape.rotation = 0.0
@@ -1950,47 +1801,20 @@ func _start_jump_medium_kick() -> void:
 	if attack == null:
 		return
 	jump_medium_kick_active = true
-	aerial_attack_used = true
-	current_state = State.ATTACKING
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.is_airborne_medium_kick = true
-	combat.current_attack = attack
 	var high_variant := AttackVariantData.new()
 	high_variant.variant_id = &"arianna_airborne"
 	high_variant.animation_name = &"arianna_jump_medium_kick"
 	high_variant.hit_height = AttackData.HitHeight.HIGH
-	combat.current_variant = high_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_JUMP_MEDIUM_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_JUMP_MEDIUM_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = ARIANNA_JUMP_MEDIUM_KICK_HITBOX_ROTATION
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_jump_medium_kick")
+	combat.begin_animation_attack(&"arianna_jump_medium_kick", attack, high_variant, true)
 	animated_sprite.scale = ARIANNA_JUMP_MEDIUM_KICK_SPRITE_SCALE
 
 
-func _resolve_jump_medium_kick_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not jump_medium_kick_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
-
-
 func _finish_jump_medium_kick(landed: bool) -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.is_airborne_medium_kick = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack(State.IDLE if landed or is_on_floor() else State.JUMPING)
 	jump_medium_kick_active = false
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	combat.hitbox_shape.rotation = 0.0
@@ -2008,47 +1832,20 @@ func _start_jump_strong_kick() -> void:
 	if attack == null:
 		return
 	jump_strong_kick_active = true
-	aerial_attack_used = true
-	current_state = State.ATTACKING
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.is_airborne_heavy_kick = true
-	combat.current_attack = attack
 	var high_variant := AttackVariantData.new()
 	high_variant.variant_id = &"arianna_airborne"
 	high_variant.animation_name = &"arianna_jump_strong_kick"
 	high_variant.hit_height = AttackData.HitHeight.HIGH
-	combat.current_variant = high_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_JUMP_STRONG_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_JUMP_STRONG_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = ARIANNA_JUMP_STRONG_KICK_HITBOX_ROTATION
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_jump_strong_kick")
+	combat.begin_animation_attack(&"arianna_jump_strong_kick", attack, high_variant, true)
 	animated_sprite.scale = ARIANNA_JUMP_STRONG_KICK_SPRITE_SCALE
 
 
-func _resolve_jump_strong_kick_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not jump_strong_kick_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
-
-
 func _finish_jump_strong_kick(landed: bool) -> void:
-	combat.disable_hitbox()
-	combat.is_attacking = false
-	combat.is_airborne_heavy_kick = false
-	combat.current_attack = null
-	combat.current_variant = null
-	combat.hit_targets.clear()
-	restore_default_render_order()
+	combat.finish_animation_attack(State.IDLE if landed or is_on_floor() else State.JUMPING)
 	jump_strong_kick_active = false
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	combat.hitbox_shape.rotation = 0.0
@@ -2067,36 +1864,16 @@ func _start_low_light_punch() -> void:
 		return
 	light_punch_active = true
 	low_light_punch_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.is_crouched_light_punch = false
-	combat.current_attack = attack
 	var middle_variant := AttackVariantData.new()
 	middle_variant.variant_id = &"arianna_low"
 	middle_variant.animation_name = &"arianna_low_light_punch"
 	middle_variant.hit_height = AttackData.HitHeight.MID
-	combat.current_variant = middle_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_LOW_LIGHT_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_LOW_LIGHT_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_low_light_punch")
-
-
-func _resolve_low_light_punch_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not low_light_punch_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_low_light_punch", attack, middle_variant, false)
 
 
 func _start_medium_punch() -> void:
@@ -2104,31 +1881,12 @@ func _start_medium_punch() -> void:
 	if attack == null:
 		return
 	medium_punch_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
-	combat.current_variant = null
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_MEDIUM_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_MEDIUM_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_medium_punch")
-
-
-func _resolve_medium_punch_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not medium_punch_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_medium_punch", attack, null, false)
 
 
 func _start_low_medium_punch() -> void:
@@ -2136,35 +1894,16 @@ func _start_low_medium_punch() -> void:
 	if attack == null:
 		return
 	low_medium_punch_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var middle_variant := AttackVariantData.new()
 	middle_variant.variant_id = &"arianna_low"
 	middle_variant.animation_name = &"arianna_low_medium_punch"
 	middle_variant.hit_height = AttackData.HitHeight.MID
-	combat.current_variant = middle_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_LOW_MEDIUM_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_LOW_MEDIUM_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_low_medium_punch")
-
-
-func _resolve_low_medium_punch_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not low_medium_punch_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_low_medium_punch", attack, middle_variant, false)
 
 
 func _start_strong_punch() -> void:
@@ -2172,35 +1911,16 @@ func _start_strong_punch() -> void:
 	if attack == null:
 		return
 	strong_punch_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var high_variant := AttackVariantData.new()
 	high_variant.variant_id = &"arianna_standing"
 	high_variant.animation_name = &"arianna_strong_punch"
 	high_variant.hit_height = AttackData.HitHeight.HIGH
-	combat.current_variant = high_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_STRONG_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_STRONG_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_strong_punch")
-
-
-func _resolve_strong_punch_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not strong_punch_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_strong_punch", attack, high_variant, false)
 
 
 func _start_crouched_strong_punch() -> void:
@@ -2208,23 +1928,16 @@ func _start_crouched_strong_punch() -> void:
 	if attack == null:
 		return
 	crouched_strong_punch_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var high_variant := AttackVariantData.new()
 	high_variant.variant_id = &"arianna_crouched"
 	high_variant.animation_name = &"arianna_crouched_strong_punch"
 	high_variant.hit_height = AttackData.HitHeight.HIGH
-	combat.current_variant = high_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_CROUCHED_STRONG_PUNCH_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_CROUCHED_STRONG_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_crouched_strong_punch")
+	combat.begin_animation_attack(&"arianna_crouched_strong_punch", attack, high_variant, false)
 
 
 func _start_light_kick() -> void:
@@ -2232,35 +1945,16 @@ func _start_light_kick() -> void:
 	if attack == null:
 		return
 	light_kick_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var middle_variant := AttackVariantData.new()
 	middle_variant.variant_id = &"arianna_standing"
 	middle_variant.animation_name = &"arianna_light_kick"
 	middle_variant.hit_height = AttackData.HitHeight.MID
-	combat.current_variant = middle_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_LIGHT_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_LIGHT_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_light_kick")
-
-
-func _resolve_light_kick_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not light_kick_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_light_kick", attack, middle_variant, false)
 
 
 func _start_low_light_kick() -> void:
@@ -2269,35 +1963,16 @@ func _start_low_light_kick() -> void:
 		return
 	light_kick_active = true
 	low_light_kick_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var low_variant := AttackVariantData.new()
 	low_variant.variant_id = &"arianna_low"
 	low_variant.animation_name = &"arianna_low_light_kick"
 	low_variant.hit_height = AttackData.HitHeight.LOW
-	combat.current_variant = low_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_LOW_LIGHT_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_LOW_LIGHT_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_low_light_kick")
-
-
-func _resolve_low_light_kick_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not low_light_kick_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_low_light_kick", attack, low_variant, false)
 
 
 func _start_medium_kick() -> void:
@@ -2305,35 +1980,16 @@ func _start_medium_kick() -> void:
 	if attack == null:
 		return
 	medium_kick_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var middle_variant := AttackVariantData.new()
 	middle_variant.variant_id = &"arianna_standing"
 	middle_variant.animation_name = &"arianna_medium_kick"
 	middle_variant.hit_height = AttackData.HitHeight.MID
-	combat.current_variant = middle_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_MEDIUM_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_MEDIUM_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_medium_kick")
-
-
-func _resolve_medium_kick_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not medium_kick_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_medium_kick", attack, middle_variant, false)
 
 
 func _start_low_medium_kick() -> void:
@@ -2342,31 +1998,16 @@ func _start_low_medium_kick() -> void:
 		return
 	medium_kick_active = true
 	low_medium_kick_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var low_variant := AttackVariantData.new()
 	low_variant.variant_id = &"arianna_low"
 	low_variant.animation_name = &"arianna_low_medium_kick"
 	low_variant.hit_height = AttackData.HitHeight.LOW
-	combat.current_variant = low_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_LOW_MEDIUM_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_LOW_MEDIUM_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_low_medium_kick")
-
-
-func _resolve_low_medium_kick_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if attack_generation != combat.action_generation or not low_medium_kick_active or not combat.is_attacking:
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+	combat.begin_animation_attack(&"arianna_low_medium_kick", attack, low_variant, false)
 
 
 func _start_strong_kick() -> void:
@@ -2375,23 +2016,16 @@ func _start_strong_kick() -> void:
 		return
 	strong_kick_active = true
 	low_strong_kick_active = false
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var middle_variant := AttackVariantData.new()
 	middle_variant.variant_id = &"arianna_standing"
 	middle_variant.animation_name = &"arianna_strong_kick"
 	middle_variant.hit_height = AttackData.HitHeight.HIGH
-	combat.current_variant = middle_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_STRONG_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_STRONG_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_strong_kick")
+	combat.begin_animation_attack(&"arianna_strong_kick", attack, middle_variant, false)
 
 
 func _start_low_strong_kick() -> void:
@@ -2400,47 +2034,30 @@ func _start_low_strong_kick() -> void:
 		return
 	strong_kick_active = true
 	low_strong_kick_active = true
-	current_state = State.ATTACKING
 	velocity = Vector2.ZERO
-	combat.action_generation += 1
-	combat.is_attacking = true
-	combat.current_attack = attack
 	var low_variant := AttackVariantData.new()
 	low_variant.variant_id = &"arianna_low"
 	low_variant.animation_name = &"arianna_low_strong_kick"
 	low_variant.hit_height = AttackData.HitHeight.LOW
 	low_variant.causes_knockdown = true
-	combat.current_variant = low_variant
-	combat.hit_targets.clear()
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_LOW_STRONG_KICK_HITBOX_SIZE
 	combat.hitbox_shape.position = ARIANNA_LOW_STRONG_KICK_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
-	bring_attacker_to_foreground()
-	animated_sprite.play(&"arianna_low_strong_kick")
+	combat.begin_animation_attack(&"arianna_low_strong_kick", attack, low_variant, false)
 
 
-func _resolve_strong_kick_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if attack_generation != combat.action_generation or not strong_kick_active or not combat.is_attacking:
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
-
-
-func _resolve_crouched_strong_punch_overlap(attack_generation: int) -> void:
-	await get_tree().physics_frame
-	if (
-		attack_generation != combat.action_generation
-		or not crouched_strong_punch_active
-		or not combat.is_attacking
-	):
-		return
-	for area in combat.hitbox.get_overlapping_areas():
-		combat._apply_hit_to_area(area)
+func _is_inactive_attack_animation() -> bool:
+	return (
+		not combat.is_attacking
+		and animated_sprite.animation.begins_with("arianna_")
+		and animated_sprite.animation not in [&"arianna_back_jump", &"arianna_crouch_recovery"]
+	)
 
 
 func _on_animation_finished() -> void:
+	if _is_inactive_attack_animation():
+		return
 	if animated_sprite.animation == &"arianna_combo_lp":
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_combo_lp_recovery")
@@ -2481,25 +2098,15 @@ func _on_animation_finished() -> void:
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_light_punch_recovery")
 	elif animated_sprite.animation == &"arianna_light_punch_recovery":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack()
 		light_punch_active = false
-		current_state = State.IDLE
+		change_state(State.IDLE)
 		animated_sprite.play(&"idle")
 	elif animated_sprite.animation == &"arianna_low_light_punch":
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_low_light_punch_recovery")
 	elif animated_sprite.animation == &"arianna_low_light_punch_recovery":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack(State.CROUCHING if input_buffer != null and input_buffer.is_down_held() else State.IDLE)
 		light_punch_active = false
 		low_light_punch_active = false
 		if input_buffer != null and input_buffer.is_down_held():
@@ -2512,24 +2119,14 @@ func _on_animation_finished() -> void:
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_medium_punch_recovery")
 	elif animated_sprite.animation == &"arianna_medium_punch_recovery":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack()
 		medium_punch_active = false
 		change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_low_medium_punch":
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_low_medium_punch_recovery")
 	elif animated_sprite.animation == &"arianna_low_medium_punch_recovery":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack(State.CROUCHING if input_buffer != null and input_buffer.is_down_held() else State.IDLE)
 		low_medium_punch_active = false
 		if input_buffer != null and input_buffer.is_down_held():
 			change_state(State.CROUCHING)
@@ -2538,21 +2135,11 @@ func _on_animation_finished() -> void:
 		else:
 			change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_strong_punch":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack()
 		strong_punch_active = false
 		change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_crouched_strong_punch":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack(State.CROUCHING if input_buffer != null and input_buffer.is_down_held() else State.IDLE)
 		crouched_strong_punch_active = false
 		if input_buffer != null and input_buffer.is_down_held():
 			change_state(State.CROUCHING)
@@ -2564,24 +2151,14 @@ func _on_animation_finished() -> void:
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_light_kick_recovery")
 	elif animated_sprite.animation == &"arianna_light_kick_recovery":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack()
 		light_kick_active = false
 		change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_low_light_kick":
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_low_light_kick_recovery")
 	elif animated_sprite.animation == &"arianna_low_light_kick_recovery":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack(State.CROUCHING if input_buffer != null and input_buffer.is_down_held() else State.IDLE)
 		light_kick_active = false
 		low_light_kick_active = false
 		if input_buffer != null and input_buffer.is_down_held():
@@ -2594,24 +2171,14 @@ func _on_animation_finished() -> void:
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_medium_kick_recovery")
 	elif animated_sprite.animation == &"arianna_medium_kick_recovery":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack()
 		medium_kick_active = false
 		change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_low_medium_kick":
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_low_medium_kick_recovery")
 	elif animated_sprite.animation == &"arianna_low_medium_kick_recovery":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack(State.CROUCHING if input_buffer != null and input_buffer.is_down_held() else State.IDLE)
 		medium_kick_active = false
 		low_medium_kick_active = false
 		if input_buffer != null and input_buffer.is_down_held():
@@ -2621,22 +2188,12 @@ func _on_animation_finished() -> void:
 		else:
 			change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_strong_kick":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack()
 		strong_kick_active = false
 		low_strong_kick_active = false
 		change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_low_strong_kick":
-		combat.disable_hitbox()
-		combat.is_attacking = false
-		combat.current_attack = null
-		combat.current_variant = null
-		combat.hit_targets.clear()
-		restore_default_render_order()
+		combat.finish_animation_attack(State.CROUCHING if input_buffer != null and input_buffer.is_down_held() else State.IDLE)
 		strong_kick_active = false
 		low_strong_kick_active = false
 		if input_buffer != null and input_buffer.is_down_held():
@@ -2664,6 +2221,8 @@ func _on_animation_finished() -> void:
 
 
 func _on_animation_frame_changed() -> void:
+	if _is_inactive_attack_animation():
+		return
 	if (
 		animated_sprite.animation == &"arianna_points_forward_super"
 		and animated_sprite.frame >= ARIANNA_POINTS_FORWARD_CAT_WAVE_START_FRAME
@@ -2704,56 +2263,56 @@ func _on_animation_frame_changed() -> void:
 	if animated_sprite.animation == &"arianna_combo_mp":
 		if animated_sprite.frame == ARIANNA_LP_MP_COMBO_MP_ACTIVE_START_FRAME:
 			combat.enable_hitbox()
-			_resolve_medium_punch_overlap(combat.action_generation)
+			combat.resolve_attack_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_LP_MP_COMBO_MP_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if animated_sprite.animation == &"arianna_combo_mk":
 		if animated_sprite.frame == ARIANNA_LP_MP_MK_COMBO_MK_ACTIVE_START_FRAME:
 			combat.enable_hitbox()
-			_resolve_medium_kick_overlap(combat.action_generation)
+			combat.resolve_attack_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_LP_MP_MK_COMBO_MK_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if animated_sprite.animation == &"arianna_jump_light_punch":
 		if animated_sprite.frame == ARIANNA_JUMP_LIGHT_PUNCH_ACTIVE_START_FRAME:
 			combat.enable_hitbox()
-			_resolve_jump_light_punch_overlap(combat.action_generation)
+			combat.resolve_attack_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_JUMP_LIGHT_PUNCH_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if animated_sprite.animation == &"arianna_jump_medium_punch":
 		if animated_sprite.frame == ARIANNA_JUMP_MEDIUM_PUNCH_ACTIVE_START_FRAME:
 			combat.enable_hitbox()
-			_resolve_jump_medium_punch_overlap(combat.action_generation)
+			combat.resolve_attack_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_JUMP_MEDIUM_PUNCH_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if animated_sprite.animation == &"arianna_jump_strong_punch":
 		if animated_sprite.frame == ARIANNA_JUMP_STRONG_PUNCH_ACTIVE_START_FRAME:
 			combat.enable_hitbox()
-			_resolve_jump_strong_punch_overlap(combat.action_generation)
+			combat.resolve_attack_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_JUMP_STRONG_PUNCH_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if animated_sprite.animation == &"arianna_jump_light_kick":
 		if animated_sprite.frame == ARIANNA_JUMP_LIGHT_KICK_ACTIVE_START_FRAME:
 			combat.enable_hitbox()
-			_resolve_jump_light_kick_overlap(combat.action_generation)
+			combat.resolve_attack_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_JUMP_LIGHT_KICK_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if animated_sprite.animation == &"arianna_jump_medium_kick":
 		if animated_sprite.frame == ARIANNA_JUMP_MEDIUM_KICK_ACTIVE_START_FRAME:
 			combat.enable_hitbox()
-			_resolve_jump_medium_kick_overlap(combat.action_generation)
+			combat.resolve_attack_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_JUMP_MEDIUM_KICK_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
 	if animated_sprite.animation == &"arianna_jump_strong_kick":
 		if animated_sprite.frame == ARIANNA_JUMP_STRONG_KICK_ACTIVE_START_FRAME:
 			combat.enable_hitbox()
-			_resolve_jump_strong_kick_overlap(combat.action_generation)
+			combat.resolve_attack_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_JUMP_STRONG_KICK_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return
@@ -2767,70 +2326,70 @@ func _on_animation_frame_changed() -> void:
 		if animated_sprite.animation == &"arianna_low_strong_kick":
 			if animated_sprite.frame == ARIANNA_LOW_STRONG_KICK_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_strong_kick_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_LOW_STRONG_KICK_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
 		if animated_sprite.animation == &"arianna_strong_kick":
 			if animated_sprite.frame == ARIANNA_STRONG_KICK_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_strong_kick_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_STRONG_KICK_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
 		if animated_sprite.animation == &"arianna_low_medium_kick":
 			if animated_sprite.frame == ARIANNA_LOW_MEDIUM_KICK_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_low_medium_kick_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_LOW_MEDIUM_KICK_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
 		if animated_sprite.animation == &"arianna_medium_kick":
 			if animated_sprite.frame == ARIANNA_MEDIUM_KICK_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_medium_kick_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_MEDIUM_KICK_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
 		if animated_sprite.animation == &"arianna_low_light_kick":
 			if animated_sprite.frame == ARIANNA_LOW_LIGHT_KICK_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_low_light_kick_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_LOW_LIGHT_KICK_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
 		if animated_sprite.animation == &"arianna_light_kick":
 			if animated_sprite.frame == ARIANNA_LIGHT_KICK_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_light_kick_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_LIGHT_KICK_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
 		if animated_sprite.animation == &"arianna_crouched_strong_punch":
 			if animated_sprite.frame == ARIANNA_CROUCHED_STRONG_PUNCH_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_crouched_strong_punch_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_CROUCHED_STRONG_PUNCH_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
 		if animated_sprite.animation == &"arianna_strong_punch":
 			if animated_sprite.frame == ARIANNA_STRONG_PUNCH_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_strong_punch_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_STRONG_PUNCH_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
 		if animated_sprite.animation == &"arianna_low_medium_punch":
 			if animated_sprite.frame == ARIANNA_LOW_MEDIUM_PUNCH_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_low_medium_punch_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_LOW_MEDIUM_PUNCH_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
 		if animated_sprite.animation == &"arianna_medium_punch":
 			if animated_sprite.frame == ARIANNA_MEDIUM_PUNCH_ACTIVE_START_FRAME:
 				combat.enable_hitbox()
-				_resolve_medium_punch_overlap(combat.action_generation)
+				combat.resolve_attack_overlap(combat.action_generation)
 			elif animated_sprite.frame > ARIANNA_MEDIUM_PUNCH_ACTIVE_END_FRAME:
 				combat.disable_hitbox()
 			return
@@ -2838,7 +2397,7 @@ func _on_animation_frame_changed() -> void:
 			return
 		if animated_sprite.frame == ARIANNA_LOW_LIGHT_PUNCH_ACTIVE_START_FRAME:
 			combat.enable_hitbox()
-			_resolve_low_light_punch_overlap(combat.action_generation)
+			combat.resolve_attack_overlap(combat.action_generation)
 		elif animated_sprite.frame > ARIANNA_LOW_LIGHT_PUNCH_ACTIVE_END_FRAME:
 			combat.disable_hitbox()
 		return

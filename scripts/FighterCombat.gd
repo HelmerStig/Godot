@@ -7,6 +7,7 @@ signal health_changed(current_health: int, max_health: int)
 signal knocked_out
 signal attack_started(attack_name: StringName)
 signal attack_finished
+signal attack_cancelled
 
 enum DamageResult {
 	IGNORED,
@@ -581,7 +582,57 @@ func reset() -> void:
 	health_changed.emit(current_health, max_health)
 
 
+## Per mosse i cui frame attivi e recovery sono guidati dal controller animazioni.
+func begin_animation_attack(
+	animation_name: StringName,
+	attack: AttackData = null,
+	variant: Resource = null,
+	airborne: bool = false
+) -> void:
+	_clear_current_action(false)
+	is_attacking = true
+	current_attack = attack
+	current_variant = variant
+	if airborne and attack != null:
+		fighter.aerial_attack_used = true
+		is_airborne_light_punch = attack.attack_id == &"light_punch"
+		is_airborne_medium_punch = attack.attack_id == &"medium_punch"
+		is_airborne_heavy_punch = attack.attack_id == &"heavy_punch"
+		is_airborne_light_kick = attack.attack_id == &"light_kick"
+		is_airborne_medium_kick = attack.attack_id == &"medium_kick"
+		is_airborne_heavy_kick = attack.attack_id == &"heavy_kick"
+	var preserved_velocity := fighter.velocity
+	fighter.change_state(Fighter.State.ATTACKING)
+	fighter.velocity = preserved_velocity if airborne else Vector2.ZERO
+	fighter.bring_attacker_to_foreground()
+	fighter.animated_sprite.play(animation_name)
+	attack_started.emit(attack.attack_id if attack != null else animation_name)
+
+
+func resolve_attack_overlap(attack_generation: int) -> void:
+	await get_tree().physics_frame
+	if attack_generation != action_generation or not is_attacking or hitbox_shape.disabled:
+		return
+	for area in hitbox.get_overlapping_areas():
+		_apply_hit_to_area(area)
+
+
+func finish_animation_attack(next_state: int = Fighter.State.IDLE) -> void:
+	if not is_attacking:
+		return
+	_clear_current_action(false)
+	fighter.change_state(next_state)
+	attack_finished.emit()
+
+
 func cancel_current_action() -> void:
+	var was_attacking := is_attacking
+	_clear_current_action(true)
+	if was_attacking:
+		attack_cancelled.emit()
+
+
+func _clear_current_action(deferred: bool) -> void:
 	action_generation += 1
 	if fighter != null:
 		fighter.restore_default_render_order()
@@ -607,8 +658,9 @@ func cancel_current_action() -> void:
 	is_airborne_light_punch = false
 	is_special_720_punch = false
 	is_special_sonic_boom = false
+	medium_kick_followup_done = false
 	hit_targets.clear()
-	disable_hitbox(true)
+	disable_hitbox(deferred)
 
 
 func get_health_percentage() -> float:

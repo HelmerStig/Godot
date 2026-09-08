@@ -18,6 +18,7 @@ func _run() -> void:
 	await _test_crouched_heavy_launch()
 	await _test_input_buffer()
 	await _test_arianna_idle()
+	await preload("res://tests/arianna_lifecycle_cases.gd").run(self, _expect)
 	await _test_combat_flow()
 	_release_test_actions()
 

@@ -110,11 +110,13 @@ ArenaUI
 - `scenes/Mangler.tscn`: corpo fisico, sprite, hitbox, hurtbox e componente combat.
 - `scenes/stages/DefaultStage.tscn`: sfondo ed effetti ambientali.
 - `scripts/Fighter.gd`: contratto neutrale condiviso per stato, segnali, collisioni e componenti dei fighter.
+- Mangler eredita dalla base inizializzazione, reset comune, guardie, reazioni standard, profili delle collisioni, ombra e segnali. Personalizza il movimento nelle transizioni tramite `_apply_state_movement()` e conserva nel proprio controller salto all'indietro, prese, speciali e configurazioni visive. La creazione delle scie e delle esplosioni di reazione è condivisa.
 - `scripts/Mangler.gd`: input, movimento, orientamento e transizioni di stato.
 - `scripts/AttackData.gd`: schema di danno, timing, stun e hitbox di un attacco.
 - `scripts/AttackVariantData.gd`: frame data, animazione e hitbox delle varianti contestuali.
 - `data/attacks/*.tres`: sei risorse di attacco modificabili dall'Inspector.
 - `scripts/FighterCombat.gd`: esecuzione degli attacchi, danno, guardia, reazioni e KO.
+- Le mosse animate di Arianna usano `FighterCombat.begin_animation_attack()` e `finish_animation_attack()`: il combat gestisce contesto, segnali e invalidazione delle attese; il personaggio mantiene hitbox, frame attivi, recovery e concatenazioni. `resolve_attack_overlap()` scarta i controlli fisici appartenenti a mosse terminate o annullate.
 - `scripts/ManglerAnimationSetup.gd`: punto di ingresso compatibile per inizializzare le animazioni di Mangler.
 - `scripts/ManglerAnimationCatalog.gd`: catalogo dedicato allo slicing degli atlas e ai frame runtime di Mangler.
 - `scripts/AriannaAnimationCatalog.gd`: catalogo dedicato allo slicing degli atlas e ai frame runtime di Arianna.
@@ -140,7 +142,7 @@ ArenaUI
 - `HIT`
 - `KNOCKED_DOWN`
 
-Le transizioni sono centralizzate in `Mangler.change_state()`. Le coroutine di attacco e reazione vengono invalidate durante hit, KO e reset per evitare completamenti tardivi.
+Le transizioni passano da `Fighter.change_state()` e dalle specializzazioni dei personaggi. Le coroutine di attacco e reazione vengono invalidate durante hit, KO e reset per evitare completamenti tardivi. Le mosse emettono `attack_started` all'avvio, `attack_finished` alla conclusione e `attack_cancelled` in caso di interruzione. Ogni colpo concatenato di Arianna ha un proprio avvio e una propria conclusione; l'annullamento azzera anche i flag locali e libera i bersagli congelati dalle speciali non ancora lanciate.
 
 ## Collisioni
 
