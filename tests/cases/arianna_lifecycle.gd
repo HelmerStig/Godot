@@ -1,7 +1,7 @@
 extends RefCounted
 
 ## Verifica il contratto pubblico delle mosse, oltre agli atlas della suite storica.
-static func run(tree: SceneTree, expect: Callable) -> void:
+static func run(tree: SceneTree, expect: Callable) -> bool:
 	print("-- Ciclo delle mosse di Arianna")
 	var arena := (load("res://scenes/MainArena.tscn") as PackedScene).instantiate() as MainArena
 	tree.root.add_child(arena)
@@ -140,3 +140,4 @@ static func run(tree: SceneTree, expect: Callable) -> void:
 	opponent.combat.cancel_current_action()
 	arena.queue_free()
 	await tree.process_frame
+	return true

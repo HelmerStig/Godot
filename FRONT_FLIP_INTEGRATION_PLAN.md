@@ -1,5 +1,7 @@
 # Piano di Integrazione: Front-Flip Animation per Mangler
 
+> Proposta storica del 16 luglio 2026, non una descrizione del salto attuale. Non costituisce autorizzazione a generare nuovi asset. Per il comportamento implementato consultare `scripts/Mangler.gd`, il catalogo animazioni e [FRAME_DATA.md](FRAME_DATA.md).
+
 **Data creazione:** 2026-07-16  
 **Target personaggio:** Mangler  
 **Tipo animazione:** Forward Jump Somersault (one-shot, non-looping)  

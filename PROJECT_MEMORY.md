@@ -1,192 +1,42 @@
 # Memoria del progetto
 
-Ultimo aggiornamento: 10 agosto 2026
+Ultimo aggiornamento: 8 settembre 2026.
 
-## Obiettivo attuale
+## Obiettivo e baseline
 
-Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La priorità corrente è mantenere stabile il combattimento locale in modalità training prima di introdurre animazioni complete, IA, combo, menu o round competitivi.
+Sanmo è un picchiaduro 2D in Godot 4.7, concentrato sul training locale. Arianna è Player 1, Mangler Player 2. Entrambi hanno animazioni e moveset articolati; combo, speciali, evocazioni e alcuni suoni sono già presenti. Timer a 99 secondi, timeout e best-of-three disabilitati. IA, menu, selezione personaggio e online restano da sviluppare.
 
-## Baseline funzionante
+La baseline headless è di **677 asserzioni superate, zero fallimenti**, in cinque suite. Comandi e organizzazione sono in [tests/README.md](tests/README.md). I precedenti conteggi con fallimenti risalgono a versioni storiche.
 
-- Due fighter controllabili contemporaneamente.
-- Player 1 usa tastiera o gamepad 0; Player 2 usa tastierino numerico o gamepad 1.
-- Movimento, salto, accovacciamento e guardia direzionale.
-- Sei attacchi a terra: pugni e calci leggeri, medi e pesanti.
-- Sei risorse `AttackData` con timing, stun e hitbox espliciti.
-- Hitbox diversa per ogni attacco e tre hurtbox per fighter.
-- La guardia riuscita annulla completamente il danno.
-- Hit-stun, reazione di blocco, KO e reset con `R`.
-- Timer da 99 secondi visibile, con timeout intenzionalmente disabilitato.
-- Camera condivisa, limiti visibili dello stage e attraversamento dei fighter in aria.
-- Overlay collisioni con `F3` e slow motion con `F4`.
-- Stage con sfondo ed effetti ambientali.
-- Sprite personaggi ridotti a PNG RGBA 512×512; scala della scena condivisa impostata a `0.7`.
-- Mangler dispone di animazioni per locomozione, attacchi, guardia, reazioni e KO.
-- Le varianti delle mosse sono risorse `AttackVariantData` embedded nei sei attacchi `.tres`.
+## Architettura da preservare
 
-## Architettura corrente
+- `Arianna` e `Mangler` derivano direttamente da `Fighter`, anche nelle scene; Arianna non dipende dal controller o dai nodi delle prese di Mangler.
+- `Fighter` gestisce inizializzazione, segnali, stato, collisioni, ombra, reazioni standard e reset comune. Mangler estende le parti specifiche con `super` e `_apply_state_movement()`.
+- `FighterCombat` gestisce vita, danni, guardie, hitbox e ciclo delle azioni. `action_generation` invalida coroutine e controlli di sovrapposizione tardivi.
+- Arianna usa `begin_animation_attack()`, `finish_animation_attack()` e `resolve_attack_overlap()`. Frame attivi, animazioni e concatenazioni restano nel suo controller.
+- `attack_started`, `attack_finished` e `attack_cancelled` distinguono avvio, conclusione naturale e interruzione. Le interruzioni ripuliscono i flag locali e liberano i bersagli delle speciali non ancora lanciate.
+- Il flusso pubblico è `FighterCombat → Fighter → MainArena → ArenaUI`; la UI osserva i segnali dell'arena.
+- `AttackData` contiene identità, danno e stun; `AttackVariantData` descrive timing, animazione e geometria. Ci sono otto risorse in `data/attacks/`. Il profilo `CharacterData` predefinito è ancora creato a runtime.
+- I cataloghi animazioni costruiscono gli atlas dei due personaggi separatamente. Non assumere dimensione dell'intero foglio o scala comune: usare celle, sequenze e scale del catalogo/controller.
 
-- `scenes/MainArena.tscn`: composizione di arena, stage, fighter, camera e UI.
-- `scenes/Mangler.tscn`: scena condivisa del fighter.
-- `scenes/stages/DefaultStage.tscn`: stage predefinito.
-- `scripts/Mangler.gd`: coordinatore del fighter; gestisce input, movimento, orientamento e stato.
-- `scripts/AttackData.gd`: schema dati di un attacco.
-- `scripts/AttackVariantData.gd`: frame data e geometria delle varianti contestuali.
-- `data/attacks/*.tres`: risorse dei sei attacchi base.
-- `scripts/FighterCombat.gd`: ciclo degli attacchi, vita, danno, guardia, reazioni e KO.
-- `scripts/FighterInputBuffer.gd`: snapshot input, direzioni relative, consumo attacchi e sequenze recenti.
-- `scripts/CharacterData.gd`: statistiche del fighter e parametri base degli attacchi.
-- `scripts/MainArena.gd`: ciclo del training, countdown, reset, camera e fine per KO.
-- `scripts/ArenaUI.gd`: unico componente che modifica barre vita, timer e messaggi.
-- `scripts/FighterDebugOverlay.gd`: disegno diagnostico delle collisioni.
-- `scripts/StageAmbientEffects.gd`: movimento degli effetti ambientali.
-- `scripts/ManglerAnimationSetup.gd`: registro centrale delle animazioni runtime.
-- `scripts/ManglerVisualConfig.gd`: profili degli effetti di movimento.
-- `tests/smoke_tests.gd`: suite headless permanente.
+## Regole di combattimento
 
-Il flusso degli eventi è:
+- LOW richiede giù + indietro; HIGH e MID si parano con indietro, anche da accovacciati. Si para solo a terra e con l'attaccante davanti. Danno parato: zero.
+- `take_damage()` restituisce `IGNORED`, `BLOCKED`, `HIT` o `KNOCKOUT`. Il pugno forte accovacciato di Mangler lancia soltanto sul risultato `HIT`.
+- Le hitbox devono infliggere un solo impatto per bersaglio, salvo mosse esplicitamente multi-hit. Le forme vengono duplicate per istanza.
+- Input dei giocatori separati; direzioni relative al facing; `record_input_snapshot()` permette di testare il buffer senza dipendere dal dispositivo fisico.
+- Il blocco dei controlli dell'arena è distinto da quello imposto dallo stato del fighter.
+- Le pose di KO/vittoria non vanno riavviate ogni frame; il reset deve poterle abbandonare.
 
-```text
-FighterCombat → Mangler → MainArena → ArenaUI
-```
+## Test e manutenzione
 
-`Mangler` riemette vita, KO, cambi di stato e ciclo degli attacchi. `MainArena` pubblica vita per giocatore, timer, messaggi, inizio e fine training. `ArenaUI` osserva questi segnali e non viene modificata direttamente dal gameplay.
+`tests/suite_catalog.gd` è l'unica lista dei casi, usata dai cinque entry point e dalla suite completa. I casi ricevono `SceneTree` e callback di asserzione; `tests/support/suite_runner.gd` azzera input e scala temporale tra i moduli. Gli scenari storici di Arianna e Mangler restano sequenziali per preservare setup e attese; i nuovi comportamenti indipendenti vanno in file dedicati.
 
-## Decisioni progettuali attive
+Usare le risorse e gli SpriteFrames per le attese di comportamento. I valori esatti degli atlas vanno verificati nei test di slicing. Dopo una modifica al comportamento condiviso eseguire tutte le cinque suite; quando cambia l'orchestrazione verificare anche `smoke_tests.gd` nello stesso processo.
 
-- Mantenere per ora una modalità training semplice; timeout e best-of-three restano segnaposto.
-- Separare il blocco dei controlli imposto dall'arena da quello imposto dallo stato del fighter.
-- Conservare `Mangler` come autorità sulle transizioni tramite `change_state()`.
-- Isolare il combattimento in `FighterCombat`, evitando per ora una classe separata per ogni stato.
-- Usare `CharacterData` come fonte di movimento, vita e lista degli attacchi disponibili.
-- Usare `AttackData` per identità/danno/stun e `AttackVariantData` per animazione, frame attivi, timing, hitbox, altezza e knockdown.
-- Proteggere coroutine di attacco, hit-stun e block-stun con un contatore di generazione.
-- Usare segnali tra combattimento, fighter, arena e UI.
-- Mantenere input separati per i due giocatori.
-- Esporre `record_input_snapshot()` per rendere input buffer, replay e test indipendenti dal backend fisico.
-- Mantenere gli sprite a 512×512 e compensare con scala `0.7` nella scena del fighter.
+## Riferimenti
 
-## Smoke test
-
-Esecuzione Windows:
-
-```powershell
-.\tests\run_smoke_tests.cmd
-```
-
-Esecuzione diretta:
-
-```text
-godot --headless --path . --script res://tests/smoke_tests.gd
-```
-
-La suite corrente esegue oltre 200 verifiche e copre:
-
-- configurazione, autoplay e orientamento dell'animazione idle;
-- caricamento, lookup e validazione delle sei risorse `AttackData`;
-- selezione della risorsa e completamento del ciclo startup/active/recovery;
-- conversione delle direzioni in base all'orientamento;
-- memorizzazione e consumo singolo degli attacchi;
-- riconoscimento di sequenze direzionali;
-- danno normale e hit-stun;
-- guardia senza danno e block-stun;
-- propagazione della vita alla UI;
-- KO, blocco dei controlli e messaggio del vincitore;
-- reset di vita, stato, UI e training.
-
-Ultimo risultato noto (10 agosto 2026): caricamento senza errori di parsing e `SMOKE_TESTS_FAILED` con 25 asserzioni, contro le 26 della baseline precedente al refactoring.
-
-## Controlli attuali
-
-### Player 1
-
-- Movimento: `A`/`D` oppure frecce sinistra/destra.
-- Salto: `W`, freccia su o `Spazio`.
-- Accovacciamento: `S` o freccia giù.
-- Pugni leggero/medio/pesante: `J`/`H`/`U`.
-- Calci leggero/medio/pesante: `K`/`L`/`I`.
-- Gamepad: device 0.
-
-### Player 2
-
-- Movimento: tastierino `4`/`6`.
-- Salto: tastierino `8`.
-- Accovacciamento: tastierino `5`.
-- Pugni leggero/medio/pesante: tastierino `1`/`2`/`3`.
-- Calci leggero/medio/pesante: tastierino `7`/`9`/`0`.
-- Gamepad: device 1.
-
-### Comuni
-
-- Guardia: tenere la direzione opposta all'avversario.
-- Presa di Mangler: pugno leggero + calcio leggero a terra; `grab_tentative` è saltato e la portata viene verificata immediatamente.
-- Se l'avversario è in portata parte `Mangler2-headbut_mangler_mangler.png`: foglio combinato 7×7, usa solo i frame sorgente 1–29 a 48 FPS, spostato di 80 px in avanti e non ciclico, con la stessa esplosione rossa del light punch al frame 19. Durante la sequenza vittima e ombra sono nascoste; dopo il frame 29 entrambi avanzano di 15 px nella direzione della testata e tornano visibili in `IDLE`.
-- Supermossa: mezzaluna in avanti `BACK, DOWN_BACK, DOWN, DOWN_FORWARD, FORWARD` + calcio leggero e medio. Tutte le quattro fasi sono a 48 FPS. `super_start.png` usa 25 frame e al frame 19 genera l'aura gialla; `rotate-super_run.png` usa 25 frame e dal frame 20 avanza, poi `run_only.png` usa 24 frame in loop. L'avvicinamento è a 480 px/s, lascia afterimage giallo-arancioni e termina alla distanza di contatto di 130 px. All'avvio del rullo la super applica una sola volta danno pari al 25% della vita massima. `drum_roll_only.png` usa 24 frame per due esecuzioni con quattro esplosioni rosse per ciclo, ancorate alla posizione globale della `HeadHurtbox`; durante entrambe il bersaglio è in `State.HIT` e ripete i frame sorgente 4–13 di `hurt-high.png` tramite `super_drum_hurt` a 48 FPS e scala legacy `0.7`. Dopo il secondo rullo, se non è KO, il bersaglio esegue `super_drum_knockdown` con i frame sorgente 11–25 di `ko.png` a 24 FPS, poi la normale `knockdown_recovery` e infine `IDLE`. Durante la sequenza l'attaccante ha z-index superiore; prima del rullo l'avversario resta senza controlli ma continua `idle`, salvo la posa congelata di `block_high` se stava già parando.
-- Tolleranza motion input: cronologia 60 frame, buffer pulsante 10 frame, quarti di luna 36 frame e mezzaluna della super 48 frame. Il buffer ricostruisce i passaggi bassi e diagonali saltati dallo stick rapido.
-- Ordine grafico attacchi: ogni fighter che avvia un attacco passa a `opponent.z_index + 1`, sia come Player 1 sia come Player 2. Lo z-index predefinito viene ripristinato alla conclusione, alla cancellazione o al reset dell'attacco.
-- Pulizia asset Mangler: rimossi 20 PNG senza riferimenti runtime/documentali e i relativi 20 `.import` (circa 40,2 MB). Gli sprite ancora pre-caricati da `Mangler.gd`, comprese implementazioni storiche, restano conservati finché il relativo codice non viene rimosso. `original_images` è esclusa dalla pulizia.
-- Arianna: `scenes/Arianna.tscn` eredita temporaneamente l'infrastruttura di `Mangler.tscn`, con `SpriteFrames` duplicato per istanza. `idle.png` usa 24 frame a 24 FPS in loop; `01-walk.png` misura 3584×3584 e usa 48 frame da 512×512 a 24 FPS. `walk` li riproduce 1→48 per avanzare, `backwalk` 48→1 per arretrare mantenendo il facing; entrambi usano la `walk_speed` e tornano in idle al rilascio. Il pugno leggero riproduce a 48 FPS i frame sorgente 1→9 e il recupero 9→1 prima dell'idle. La hitbox high misura 160×50 px, è centrata a `(85, -170)`, resta attiva sui frame animazione 7–9 e usa i 5 danni del light punch. Scala `0.85`, posizione sprite `(0, -120)`. `MainArena` usa Arianna come Player 1 e Mangler come Player 2.
-- Salto Arianna: `basic-moves/custom_jump.png` misura 3584×3584, griglia 7×7 da 512 px e 49 frame non ciclici. `ARIANNA_JUMP_FPS` e `ARIANNA_JUMP_TAKEOFF_FRAME` in `Arianna.gd` sono parametri dedicati modificabili senza cambiare Mangler o i test; il frame di stacco è zero-based. L'override di `begin_jump_ascent()` e l'armamento dopo il reset al frame 1 impediscono al callback ereditato o a un frame residuo di anticipare lo stacco. Usa `character_data.jump_velocity`, gravità Arianna `1800 px/s²` e torna in idle esclusivamente al contatto col suolo.
-- Light punch aereo Arianna: `basic-moves/light-punch/jump_light_punch.png` misura 3584×1536, griglia 7×3 da 512 px con 19 celle utili. `arianna_jump_light_punch` è una sequenza unica di 17 frame a 48 FPS: sorgenti 14→19, sei duplicati aggiuntivi del 19 (sette intervalli totali), poi 18→14. Il soggetto misura fino a 296×326 px contro 265×302 px al frame 32 del salto, quindi usa scala dedicata `0.78` e ripristina `0.85` alla conclusione. Hitbox 170×55 px a `(90, -125)`, attiva sulle posizioni animazione 6–12. In aria riprende `jump` dal frame 32; al suolo passa direttamente in idle.
-- Medium punch aereo Arianna: `basic-moves/medium-punch/jump_medium_punch.png` misura 2560×2560, griglia 5×5 da 512 px. `arianna_jump_medium_punch` esegue a 48 FPS i fotogrammi sorgente 5→25, poi torna 23→21→19→…→7 saltando un fotogramma ogni due. Usa scala dedicata `0.78`, ripristinando `0.85` alla conclusione. La hitbox high 200×48 px a `(105, -145)` è attiva sui sorgenti 20→25. Se Arianna è ancora in aria riprende `custom_jump` dal fotogramma visibile 29; se è già al suolo torna direttamente in idle.
-- Strong punch aereo Arianna: `basic-moves/strong-punch/strong_jump_punch.png` misura 3584×2048, griglia 7×4 da 512 px con 27 celle utili. `arianna_jump_strong_punch` esegue tutti i 27 fotogrammi a 48 FPS, scala dedicata `0.78`. La hitbox high 210×70 px a `(105, -105)`, inclinata di 18°, segue il doppio pugno ed è attiva sui frame animazione 15→21. Se Arianna è ancora in aria riprende `custom_jump` dal fotogramma visibile 40; al suolo torna direttamente in idle.
-- Light kick aereo Arianna: `basic-moves/light-kick/light_kick_jump.png` misura 3584×1536, griglia 7×3 da 512 px con 15 celle utili. `arianna_jump_light_kick` esegue 1→15 e poi 14→1 a 48 FPS, per 29 frame runtime, usando scala `0.78`. La hitbox MID 170×55 px a `(95, -55)`, inclinata di 12°, è attiva dai fotogrammi visibili 9→15 e genera `hurt_mid` oppure `block_mid`. Se Arianna è ancora in aria riprende `custom_jump` dal fotogramma visibile 40; al suolo torna direttamente in idle.
-- Medium kick aereo Arianna: `basic-moves/medium-kick/medium_kick_jump.png` misura 3584×2560, griglia 7×5 da 512 px con 35 celle utili. `arianna_jump_medium_kick` esegue 1→35 e poi 34→22 a 60 FPS, per 48 frame runtime, usando scala `0.78`. Conserva la variante airborne HIGH del calcio medio, con hitbox 170×55 px a `(125, -145)` inclinata di 12°: è spostata in alto e in avanti sulla gamba estesa ed è attiva dal fotogramma runtime visibile 28 fino alla conclusione della recovery. A segno genera `hurt_high`, mentre se parato genera `block_high`. Se Arianna è ancora in aria riprende `custom_jump` dal fotogramma visibile 30; al suolo torna direttamente in idle.
-- Strong kick aereo Arianna: `basic-moves/strong-kick/strong_kick_jump_2.png` misura 3584×2560, griglia 7×5 da 512 px con 30 celle utili. `arianna_jump_strong_kick` esegue tutti i fotogrammi 1→30 a 48 FPS, senza ritorno inverso, usando scala `0.78`. Riusa il profilo airborne HIGH dello strong kick con hitbox 220×65 px a `(125, -60)` inclinata di 10°. Se Arianna è ancora in aria riprende `custom_jump` dal fotogramma visibile 35; al suolo torna direttamente in idle.
-- Speciale baseball Arianna: `special/baseball_special.png` misura 3584×3584, griglia 7×7 con 49 celle utili. Il comando `DOWN, DOWN_FORWARD, FORWARD + punch` accetta pugno debole, medio o forte e ha priorità sugli attacchi normali. Il pugno può essere registrato sia sulla diagonale `DOWN_FORWARD` sia sull'ultimo `FORWARD`, purché il buffer contenga la partenza da `DOWN`. `arianna_baseball_special` riproduce tutti i 49 frame a 48 FPS e al frame visibile 24 genera davanti alla mazza `special/tornado-spritesheet.png`, animato in loop a 48 FPS. Le varianti sono: light 420 px/s, 10 danni e luce 1×; medium 560 px/s, 14 danni e luce/particelle 1,35×; heavy 700 px/s, 18 danni e luce/particelle 1,70×. Tutte crescono da scala 0,08 a 0,48 in 0,50 secondi, mantengono la punta sul terreno, colpiscono MID una volta generando `hurt_medium`, esplodono in azzurro sulla pancia e scompaiono.
-- Hurt medium Arianna: `basic-moves/hurt_medium.png` misura 2560×1024, griglia 5×2 da 512 px. Usa soltanto i primi 8 fotogrammi richiesti e costruisce `hurt_mid` come sorgenti 1→8 e 7→1, per 15 frame runtime a 48 FPS non ciclici. La reazione MID di Arianna parte dal primo fotogramma, applica soltanto il 45% del normale rinculo orizzontale Godot e al termine torna in idle tramite il normale flusso di hitstun.
-- Hurt high Arianna: `basic-moves/hurt_high.png` misura 2560×1024, griglia 5×2 da 512 px. `hurt_high` usa i primi 7 fotogrammi, sorgenti 1→7 a 24 FPS senza loop, quindi il normale flusso della reazione torna in idle. `hurt_low` resta provvisoriamente sulla posa singola `basic-moves/hurt_low-pose.png`; entrambe impediscono che l'ereditarietà da `Mangler.tscn` mostri Mangler quando Player 1 viene colpita.
-- Durante `State.HIT`, `_physics_process()` di Arianna gestisce soltanto rinculo, gravità e collisione e termina subito il tick: la logica di camminata non può più sovrascrivere `hurt_mid` con `IDLE`, compresi gli impatti dei pugni abbassati di Player 2.
-- Effetto globale `hurt_mid`/`hurt_low`: `Mangler.start_hit_reaction()` genera per qualsiasi fighter un'esplosione additiva azzurra con lampo radiale e 64 scintille, una sola volta per reazione. Per `hurt_mid` usa l'offset `(0, -150)` all'altezza dello stomaco; per `hurt_low` usa `(0, -72)` sulle gambe. L'effetto dura circa mezzo secondo.
-- Collisioni salto Arianna: esclusivamente in `JUMPING` la pushbox è 120×90 px a `(0, -45)` e la maschera fisica conserva soltanto il layer del terreno. Il bordo inferiore resta a y=0 come per la collisione standing, impedendo che l'origine dello sprite scenda allo stacco o all'atterraggio quando cambia il profilo. In aria Arianna attraversa la pushbox avversaria e non può atterrarvi sopra; al suolo vengono ripristinati layer e profilo standard.
-- Facing salto Arianna: `start_jump()` memorizza il lato iniziale rispetto all'avversario e blocca il flip durante la sequenza del salto. Il facing può aggiornarsi soltanto dopo l'ultimo frame di `jump` (oppure all'atterraggio che chiude fisicamente il salto) e solo se la posizione globale ha attraversato il centro dell'avversario.
-- Corsa Arianna: doppio tap avanti nella finestra comune di 15 frame; `basic-moves/run.png` è 3584×3584, griglia 7×7 da 512 px, primi 48 frame in loop a 24 FPS. La direzione viene fissata all'avvio e la corsa prosegue a `character_data.run_speed × 2` fino a una collisione orizzontale con un fighter/ostacolo o al limite dello stage, quindi passa a idle.
-- Back jump Arianna: doppio tap indietro nella finestra comune di 15 frame. `basic-moves/back-jump.png` è una griglia 7×7 da 512 px e `arianna_back_jump` usa i 22 frame sorgente 28→49 a 48 FPS, senza loop. Non applica impulso né gravità verticale: la quota iniziale viene mantenuta per tutta la sequenza. Un timer fisico interpola la posizione iniziale verso il target di 50 px in 1 s (`50 px/s`), limitato ai bordi dello stage. Concluso il frame 49, passa immediatamente a `idle` senza mantenere la posa finale; il timer completa in background l'eventuale movimento residuo e poi chiude il back jump.
-- Crouch Arianna: `basic-moves/crouched.png` è 2560×2048, griglia 5×4 da 512 px con 19 celle. `crouch` usa 1→19 a 48 FPS e mantiene il frame 19 finché giù resta premuto; al rilascio `arianna_crouch_recovery` usa sorgente 18→1 a 48 FPS e conclude in idle. Il profilo collisioni interpola anche durante la recovery invece di tornare subito all'altezza standing.
-- Guardia alta Arianna: `basic-moves/guard_high.png` è 2048×2048, griglia 4×4 da 512 px con 16 frame. Tenere indietro senza un attacco avversario conserva la normale `backwalk`; quando `opponent.combat.is_attacking` diventa vero, `block_high` esegue 1→16 a 48 FPS e mantiene la posa finale. Al rilascio oppure quando l'attacco termina, `block_high_recovery` usa sorgente 15→1 a 48 FPS, poi idle. La predisposizione logica alla parata resta legata all'input indietro, così il primo impatto può essere bloccato. Il secondo tap indietro durante guardia/recovery conserva la priorità e avvia il back jump.
-- Guardia media Arianna: `basic-moves/guard_middle.png` è 2048×2048, griglia 4×4 da 512 px con 13 celle occupate. Quando l'attacco attivo dell'avversario ha `HitHeight.MID`, `block_mid` usa sorgente 1→13 a 48 FPS e mantiene il frame 13; al rilascio o a fine attacco, `block_mid_recovery` usa 12→1 a 48 FPS e conclude in idle. `_start_guard_for_incoming_attack()` legge l'altezza effettiva dall'`AttackData`/variante corrente e lascia gli attacchi `HIGH` sulla guardia alta.
-- Guardia bassa Arianna: `basic-moves/guard_low.png` è 2048×2048, griglia 4×4 da 512 px con 16 frame. Con giù + indietro mentre l'avversario esegue un attacco `LOW`, `block_low_crouched` usa 1→16 a 48 FPS e mantiene il frame 16; al rilascio o a fine attacco `block_low_recovery` usa 15→1 a 48 FPS. La verifica low precede il normale ramo crouch; senza attacco basso attivo, giù conserva il comportamento di accovacciamento.
-- Pugno leggero basso Arianna: `basic-moves/light-punch/ligth-punch-low.png` è 2560×2560, griglia 5×5 da 512 px; vengono usati soltanto i frame 1→15 e la recovery 14→1, entrambe a 48 FPS. Hitbox 165×45 a `(87.5, -115)`, attiva sui frame visibili 12–15. All'attivazione `_resolve_low_light_punch_overlap()` attende un physics frame e passa le aree sovrapposte a `_apply_hit_to_area()`; `hit_targets` mantiene il colpo singolo. Una variante runtime forza `HitHeight.MID`, ottenendo `hurt_mid` sul colpo e `block_mid` in parata; danno invariato del light punch. A fine recovery, se giù resta premuto, passa direttamente al frame finale di `crouch` e lo mantiene; altrimenti idle.
-- Pugno medio Arianna: `basic-moves/medium-punch/medium-punch.png` è 2560×2560, griglia 5×5 da 512 px con 25 frame. `arianna_medium_punch` usa 1→25 e la recovery 24→1 a 48 FPS. Hitbox high 190×45 a `(100, -195)`, attiva sui frame visibili 21–25; `_resolve_medium_punch_overlap()` garantisce il controllo al physics tick e `hit_targets` limita a un impatto. Usa i 10 danni e `HitHeight.HIGH` del medium punch, quindi `hurt_high` o `block_high`.
-- Pugno medio basso Arianna: `basic-moves/medium-punch/medium-punch-low.png` è 2560×1536, griglia 5×3 da 512 px con 12 frame. `arianna_low_medium_punch` usa 1→12 e la recovery 11→4 a 24 FPS. Hitbox MID 200×48 a `(105, -120)`, attiva sui frame visibili 10–12, con controllo overlap al physics tick e profilo afterimage delle strong move. Genera `hurt_mid` o `block_mid`; a fine recovery mantiene la posa finale di crouch se giù è ancora premuto, altrimenti torna in idle.
-- Pugno forte Arianna: `basic-moves/strong-punch/strong-punch.png` è 3584×3584, griglia 7×7 da 512 px con 49 frame tutti utilizzati. `arianna_strong_punch` riproduce 1→49 a 48 FPS senza loop e conclude direttamente in idle. Hitbox HIGH 110×65 a `(100, -180)`, attiva sui frame visibili 23–28; una variante runtime forza `HitHeight.HIGH`, producendo `hurt_high` o `block_high`. La sequenza usa il profilo afterimage HEAVY delle mosse forti di Mangler.
-- Pugno forte basso Arianna: `basic-moves/strong-punch/strong-punch-crouched.png` è 3584×3584, griglia 7×7 da 512 px. `arianna_crouched_strong_punch` omette i sorgente 22–35 e contiene quindi 35 frame (1–21, 36–49) a 48 FPS. Hitbox HIGH 190×100 a `(100, -165)`, attiva nelle posizioni animazione 8–21 durante il doppio pugno; il profilo afterimage dedicato usa gli stessi parametri HEAVY e la stessa finestra. Produce `hurt_high` o `block_high`; se giù resta premuto conclude sulla crouch pose, altrimenti idle.
-- Calcio leggero Arianna: `basic-moves/light-kick/light_kick.png` è 2560×2560, griglia 5×5 da 512 px. Riproduce i sorgente 11→23 e recupera 22→11 a 48 FPS, poi torna in idle. Hitbox MID 165×55 a `(110, -105)`, attiva sui quattro frame finali della fase in avanti; produce `hurt_mid` o `block_mid` e usa gli 8 danni del light kick.
-- Calcio leggero basso Arianna: il nuovo `basic-moves/light-kick/light_kick_low.png` è 3584×3584, griglia 7×7 da 512 px. Riproduce 1→21 e recupera 20→1 a 60 FPS. Hitbox LOW 210×45 a `(110, -80)`, attiva sui frame visibili 18–21; produce `hurt_low` o `block_low`. Se il basso resta premuto conclude direttamente sulla crouch pose, altrimenti torna in idle.
-- Calcio medio Arianna: `basic-moves/medium-kick/medium_kick.png` è 3584×3584, griglia 7×7 da 512 px. Riproduce i sorgente 8→28 e recupera 27→8 a 48 FPS. Hitbox MID 210×55 a `(110, -155)`, attiva sulle posizioni animazione 18–21 (sorgente 25–28); produce `hurt_mid` o `block_mid`, quindi torna in idle.
-- Calcio medio basso Arianna: `basic-moves/medium-kick/medium_kick_low.png` è 3584×3584, griglia 7×7. Riproduce 8→21 e recupera 20→8 a 48 FPS. Hitbox LOW 140×45 a `(115, -80)`, attiva sui sorgente 18–21; produce sempre `hurt_low` o `block_low` e, mantenendo giù, conclude nella crouch pose. La variante `arianna_low` è esclusa dalla logica legacy a due impatti del medium kick di Mangler.
-- Calcio forte Arianna: `basic-moves/strong-kick/strong_kick.png` è 4096×4096, griglia 8×8 con 64 sorgenti. `arianna_strong_kick` usa 43 frame a 48 FPS, saltando 13–24 e 44–52. Hitbox 220×70 a `(115, -150)`, attiva sui sorgente 37–43; usa danno e reazione dello strong kick base, il profilo afterimage HEAVY delle mosse potenti e torna in idle.
-- Effetto rosso d'impatto: `_apply_hit_to_area()` genera `spawn_hit_effect()` per il light punch in piedi soltanto se `_target_will_block(target)` è falso. Una parata riuscita non crea particelle rosse; l'effetto resta riservato ai colpi realmente subiti.
-- La testata separata resta configurata ma il suo avvio automatico è temporaneamente disattivato per controllare le posizioni della presa.
-- Follow-up presa: `testata-rear.png` e `testata-front.png`, 25 frame sincronizzati a 25 FPS, impatto high non parabile al frame 17 per 15 danni; la vittima resta immobilizzata fino alla fine.
-- Effetto testata: scia dorata rear/front attiva circa dai frame 11–19, con intensità da mossa potente.
-- Impatto testata: flash additivo e 34 scintille giallo-arancio sul volto della vittima al frame 17.
-- Reazione vittima presa: `grabbed.png`, sequenza sorgente 10–25–10 a 24 FPS; un impatto interrompe la sequenza e avvia `hurt_high`.
-- Reazione colpo aereo: `assets/sprites/characters/mangler/11-hurted_in_jump.png`, 25 frame a 24 FPS; frame 25 a terra per 1 secondo, poi `knockdown_recovery`.
-- Reset training: `R`.
-- Overlay collisioni: `F3`.
-- Slow motion: `F4`.
-
-## Debito tecnico noto
-
-- `CharacterData` viene creato in memoria e non esistono profili `.tres` per i personaggi.
-- Le funzioni di slicing degli atlas sono ancora fisicamente in `Mangler.gd`, anche se registrazione e profili effetti sono stati estratti.
-- Venticinque aspettative della suite non sono allineate agli atlas e timing correnti.
-- Arianna è collegata come Player 1 con il solo idle; Bue, Mileto, Peirolo e Torpe non sono ancora collegati a fighter giocabili.
-- `end_round_timeout()`, `next_round()` ed `end_match()` sono segnaposto.
-- Il timer continua a essere visualizzato in training, ma non termina il round.
-- Combo e mosse speciali non usano ancora le sequenze riconosciute dall'input buffer.
-- Non sono presenti IA, audio, menu, selezione personaggio, salvataggi o multiplayer online.
-- `original_images/` contiene materiale sorgente non usato a runtime e viene conservato intenzionalmente.
-
-## Priorità successive
-
-1. Riallineare atlas, frame attivi e smoke test fino a `SMOKE_TESTS_OK`.
-2. Migrare per gruppi le funzioni di slicing da `Mangler.gd` al componente animazioni.
-3. Creare risorse `CharacterData` dedicate ai personaggi.
-4. Implementare round, timeout, punteggio e best-of-three.
-5. Collegare combo e mosse speciali all'input buffer.
-
-## Nota per la prossima sessione
-
-Prima di nuove modifiche eseguire `tests/run_smoke_tests.cmd`. Il prossimo intervento è risolvere le 25 discrepanze della baseline e proseguire l'estrazione dello slicing da `Mangler.gd`.
+- [README](README.md): avvio, controlli e mappa dei file.
+- [Frame data](FRAME_DATA.md): dati dichiarati e comportamento runtime.
+- [Triage storico](SMOKE_TEST_TRIAGE.md): cause dei fallimenti del settembre 2026 già risolti.
+- [Memoria precedente](docs/archive/PROJECT_MEMORY.md): note dettagliate e scelte storiche, da verificare contro il codice corrente prima di riutilizzarle.

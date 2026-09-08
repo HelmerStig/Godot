@@ -1,5 +1,7 @@
 # Smoke test triage — risolto
 
+> Resoconto storico del riallineamento del 1 settembre 2026. I numeri di riga e i conteggi sotto descrivono quella versione. La baseline dell'8 settembre è di 677 asserzioni superate; struttura e comandi correnti sono in [tests/README.md](tests/README.md).
+
 Baseline precedente al riallineamento, verificata il 1 settembre 2026 con Godot 4.7:
 
 - 469 asserzioni superate;
@@ -9,7 +11,7 @@ Baseline precedente al riallineamento, verificata il 1 settembre 2026 con Godot 
 
 ## Esito
 
-Il riallineamento è concluso: la baseline corrente contiene 496 asserzioni superate,
+Il riallineamento di allora si è concluso con 496 asserzioni superate,
 zero fallimenti e termina con `SMOKE_TESTS_OK`. Dei 27 fallimenti iniziali, 17 erano
 aspettative non più allineate, 8 erano problemi di orchestrazione o a cascata e 2
 hanno evidenziato incoerenze runtime:

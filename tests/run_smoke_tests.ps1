@@ -30,9 +30,14 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path -LiteralPath $G
 
 $suites = @("input", "arianna", "mangler", "combat", "arena")
 $failedSuites = @()
+$totalPassed = 0
+$totalFailed = 0
 
 foreach ($suite in $suites) {
 	$logPath = Join-Path $ProjectRoot ".godot\test-$suite.log"
+	if (Test-Path -LiteralPath $logPath) {
+		Remove-Item -LiteralPath $logPath
+	}
 	$arguments = @(
 		"--headless",
 		"--path", "`"$ProjectRoot`"",
@@ -47,14 +52,26 @@ foreach ($suite in $suites) {
 		-Wait `
 		-PassThru
 
+	$suiteLog = @()
 	if (Test-Path -LiteralPath $logPath) {
-		Get-Content -Encoding UTF8 -LiteralPath $logPath
+		$suiteLog = @(Get-Content -Encoding UTF8 -LiteralPath $logPath)
+		$suiteLog
 	}
-	if ($process.ExitCode -ne 0) {
+	$expectedResult = "{0}_TESTS_OK" -f $suite.ToUpperInvariant()
+	$summary = @($suiteLog | Select-String '^TEST_TOTAL: passed=(\d+) failed=(\d+)$')
+	$scriptErrors = @($suiteLog | Select-String '^SCRIPT ERROR:')
+	$reportedFailures = 0
+	if ($summary.Count -eq 1) {
+		$totalPassed += [int]$summary[0].Matches[0].Groups[1].Value
+		$reportedFailures = [int]$summary[0].Matches[0].Groups[2].Value
+		$totalFailed += $reportedFailures
+	}
+	if ($process.ExitCode -ne 0 -or $suiteLog -notcontains $expectedResult -or $summary.Count -ne 1 -or $scriptErrors.Count -gt 0 -or $reportedFailures -gt 0) {
 		$failedSuites += $suite
 	}
 }
 
+Write-Output "SMOKE_TEST_TOTAL: passed=$totalPassed failed=$totalFailed"
 if ($failedSuites.Count -gt 0) {
 	Write-Error "Suite fallite: $($failedSuites -join ', ')"
 	exit 1
