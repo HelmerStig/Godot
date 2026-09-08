@@ -1,0 +1,8 @@
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+SCRIPT ERROR: Parse Error: Function "add_child()" not found in base self.
+   at: GDScript::reload (res://tests/smoke_tests.gd:1517)
+SCRIPT ERROR: Parse Error: Function "get_tree()" not found in base self.
+   at: GDScript::reload (res://tests/smoke_tests.gd:1522)
+ERROR: Failed to load script "res://tests/smoke_tests.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
