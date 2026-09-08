@@ -53,5 +53,8 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_accept"):
+	var is_start := event.is_action_pressed("ui_accept")
+	if not is_start and event is InputEventJoypadButton:
+		is_start = (event as InputEventJoypadButton).button_index == 6 and event.pressed
+	if is_start:
 		get_tree().change_scene_to_file("res://scenes/CharacterSelect.tscn")

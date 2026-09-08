@@ -12,6 +12,9 @@ var p1_name_label: Label
 var p2_name_label: Label
 var roster_grid: GridContainer
 var hint_label: Label
+var p1_nav_cooldown := 0.0
+var p2_nav_cooldown := 0.0
+const NAV_COOLDOWN := 0.22
 
 
 func _ready() -> void:
@@ -202,23 +205,27 @@ func _unhandled_input(event: InputEvent) -> void:
 	if OS.has_feature("headless"):
 		return
 	if not p1_confirmed:
-		if event.is_action_pressed("ui_left"):
+		if p1_nav_cooldown <= 0.0 and event.is_action_pressed("ui_left"):
 			p1_index = wrapi(p1_index - 1, 0, roster.size())
+			p1_nav_cooldown = NAV_COOLDOWN
 			_refresh_ui()
-		elif event.is_action_pressed("ui_right"):
+		elif p1_nav_cooldown <= 0.0 and event.is_action_pressed("ui_right"):
 			p1_index = wrapi(p1_index + 1, 0, roster.size())
+			p1_nav_cooldown = NAV_COOLDOWN
 			_refresh_ui()
-		elif event.is_action_pressed("ui_accept"):
+		elif event.is_action_pressed("ui_accept") or event.is_action_pressed("p1_light_kick"):
 			p1_confirmed = true
 			CharacterSelection.player1_id = roster[p1_index]["id"]
 			_refresh_ui()
 			_check_start()
 	if not p2_confirmed:
-		if event.is_action_pressed("p2_move_left"):
+		if p2_nav_cooldown <= 0.0 and event.is_action_pressed("p2_move_left"):
 			p2_index = wrapi(p2_index - 1, 0, roster.size())
+			p2_nav_cooldown = NAV_COOLDOWN
 			_refresh_ui()
-		elif event.is_action_pressed("p2_move_right"):
+		elif p2_nav_cooldown <= 0.0 and event.is_action_pressed("p2_move_right"):
 			p2_index = wrapi(p2_index + 1, 0, roster.size())
+			p2_nav_cooldown = NAV_COOLDOWN
 			_refresh_ui()
 		elif event.is_action_pressed("p2_light_kick"):
 			p2_confirmed = true
@@ -229,10 +236,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _check_start() -> void:
 	if p1_confirmed and p2_confirmed:
-		get_tree().change_scene_to_file("res://scenes/MainArena.tscn")
+		get_tree().change_scene_to_file("res://scenes/LoadingScreen.tscn")
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	p1_nav_cooldown = maxf(p1_nav_cooldown - delta, 0.0)
+	p2_nav_cooldown = maxf(p2_nav_cooldown - delta, 0.0)
 	_update_cursors()
 
 
