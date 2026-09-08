@@ -8,4 +8,5 @@ func _run() -> void:
 	print("=== SANMO COMBAT TESTS ===")
 	_test_attack_data()
 	await _test_guard_heights()
+	await _test_crouched_heavy_launch()
 	_finish_suite("COMBAT")

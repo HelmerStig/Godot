@@ -28,6 +28,8 @@ La guardia non usa un pulsante dedicato: bisogna tenere la direzione opposta all
 
 I colpi `LOW` richiedono giù + indietro: tenere solo indietro non li para. I colpi `HIGH` e `MID` si parano con indietro, anche da accovacciati. La parata funziona soltanto a terra e contro un attaccante davanti al fighter.
 
+Il pugno forte accovacciato di Mangler lancia l'avversario solo su un colpo entrato e non letale. Parata, rialzata invulnerabile e KO impediscono il lancio.
+
 ### Player 1 — tastiera
 
 | Azione | Tasto |

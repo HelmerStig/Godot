@@ -8,6 +8,13 @@ signal knocked_out
 signal attack_started(attack_name: StringName)
 signal attack_finished
 
+enum DamageResult {
+	IGNORED,
+	BLOCKED,
+	HIT,
+	KNOCKOUT,
+}
+
 const DEFAULT_HITSTUN := 0.3
 const DEFAULT_BLOCKSTUN := 0.15
 const SWEEP_GROUNDED_HOLD := 0.35
@@ -428,9 +435,9 @@ func take_damage(
 	ko_start_frame: int = 0,
 	apply_pushback: bool = true,
 	force_grounded_reaction: bool = false
-) -> void:
+) -> DamageResult:
 	if fighter.current_state in [Fighter.State.KNOCKDOWN_RECOVERY, Fighter.State.KNOCKED_DOWN]:
-		return
+		return DamageResult.IGNORED
 	var was_airborne := not fighter.is_on_floor() and not force_grounded_reaction
 
 	var attack_was_blocked := can_block_attack(attacker, hit_height)
@@ -444,8 +451,10 @@ func take_damage(
 
 	if current_health <= 0:
 		die(ko_start_frame)
+		return DamageResult.KNOCKOUT
 	elif attack_was_blocked:
 		block_reaction(blockstun, hit_height, attacker)
+		return DamageResult.BLOCKED
 	elif causes_knockdown:
 		sweep_knockdown_reaction(attacker)
 	elif was_airborne:
@@ -454,6 +463,7 @@ func take_damage(
 		if hit_height == AttackData.HitHeight.MID:
 			hit_reaction_start_frame = 4
 		hit_reaction(hitstun, hit_height, attacker, hit_reaction_start_frame, apply_pushback)
+	return DamageResult.HIT
 
 
 func block_reaction(
@@ -862,7 +872,8 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		)
 		effective_reaction_frame = 4 if medium_kick_followup_done else 0
 		effective_knockdown = false
-	target.combat.take_damage(
+	var should_launch := current_attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch
+	var damage_result := target.combat.take_damage(
 		effective_damage,
 		fighter,
 		current_attack.hitstun,
@@ -873,8 +884,8 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		0,
 		not is_special_720_punch
 	)
-	if current_attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch:
-		# Launch: l'avversario vola in alto 100px e indietro 50px.
+	if should_launch and damage_result == DamageResult.HIT:
+		# Il lancio accompagna solo un colpo entrato e non letale.
 		var launch_dir := 1.0 if fighter.is_facing_right else -1.0
 		target.velocity.y = -CROUCHED_HEAVY_LAUNCH_VERTICAL
 		target.velocity.x = launch_dir * CROUCHED_HEAVY_LAUNCH_HORIZONTAL
