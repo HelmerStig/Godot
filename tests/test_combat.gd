@@ -7,4 +7,5 @@ func _run() -> void:
 	Engine.time_scale = 1.0
 	print("=== SANMO COMBAT TESTS ===")
 	_test_attack_data()
+	await _test_guard_heights()
 	_finish_suite("COMBAT")

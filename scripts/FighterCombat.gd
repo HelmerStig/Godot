@@ -433,12 +433,7 @@ func take_damage(
 		return
 	var was_airborne := not fighter.is_on_floor() and not force_grounded_reaction
 
-	var attack_was_blocked := (
-		(is_blocking or fighter.current_state == Fighter.State.BLOCKING)
-		and fighter.is_holding_back()
-		and fighter.is_attack_in_front(attacker)
-		and fighter.is_on_floor()
-	)
+	var attack_was_blocked := can_block_attack(attacker, hit_height)
 	if attack_was_blocked:
 		damage = 0
 		print("Attacco bloccato! Nessun danno subito.")
@@ -789,12 +784,14 @@ func get_current_variant_id() -> StringName:
 	return &"standing"
 
 
-func _target_will_block(target: Fighter) -> bool:
+## LOW richiede giù + indietro; HIGH e MID accettano entrambe le guardie.
+func can_block_attack(attacker: Fighter, hit_height: AttackData.HitHeight) -> bool:
 	return (
-		(target.combat.is_blocking or target.current_state == Fighter.State.BLOCKING)
-		and target.is_holding_back()
-		and target.is_attack_in_front(fighter)
-		and target.is_on_floor()
+		(is_blocking or fighter.current_state == Fighter.State.BLOCKING)
+		and fighter.is_holding_back()
+		and fighter.is_attack_in_front(attacker)
+		and fighter.is_on_floor()
+		and (hit_height != AttackData.HitHeight.LOW or fighter.is_holding_low_guard())
 	)
 
 
@@ -834,13 +831,13 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	if target == null or target == fighter or hit_targets.has(target) or current_attack == null:
 		return
 	hit_targets.append(target)
+	var effective_hit_height := get_effective_hit_height(current_attack)
 	if (
 		current_attack.attack_id == &"light_punch"
 		and not is_crouched_light_punch
-		and not _target_will_block(target)
+		and not target.combat.can_block_attack(fighter, effective_hit_height)
 	):
 		fighter.spawn_hit_effect(target.global_position + Vector2(0.0, -220.0), fighter.is_facing_right)
-	var effective_hit_height := get_effective_hit_height(current_attack)
 	var effective_reaction_frame := get_hit_reaction_start_frame(current_attack)
 	var effective_damage := current_attack.damage
 	var effective_knockdown: bool = (
