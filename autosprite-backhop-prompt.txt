@@ -1,0 +1,3 @@
+
+
+Side-scrolling animation facing right (east). Camera locked, character centered with full body visible. Character performs the following action in place: character throwing a cross punch charged from ovest facing image-right (east), camera elevation 0 degrees. Plain grey background. No camera movement, no parallax, no extra characters or props. Keep scale, lighting, and proportions consistent throughout. One punch only, the punch must be very powerful and exaggerated

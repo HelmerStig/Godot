@@ -1,0 +1,23 @@
+360° forward somersault - continuous clockwise rotation (NOT back-and-forth). Reference: Yun SF3.
+
+25 frames rotation (15° per frame):
+Frame 1 (0°): Upright, feet down, head up, facing RIGHT
+Frame 2-6 (15°-75°): Tucking, rotating forward
+Frame 7 (90°): Horizontal - head forward-down, legs back-up
+Frame 8-12 (105°-165°): Continue rotation downward
+Frame 13 (180°): UPSIDE DOWN - feet up, head down ← CRITICAL CHECKPOINT
+Frame 14-18 (195°-255°): CONTINUE FORWARD (head rises, don't reverse!)
+Frame 19 (270°): Horizontal - head forward-up, legs back-down
+Frame 20-24 (285°-345°): Opening from tuck, returning to stance
+Frame 25 (360°): Same as Frame 1
+
+Requirements:
+- Hip pivot fixed at X:256, Y:256 (no translation)
+- Side-view, face RIGHT
+- 512×512 per cell, 5×5 grid (2560×2560 total)
+- Transparent background, 50px padding
+- Frame order: left→right, top→bottom
+
+Negative: oscillating motion, reversing after 180°, vertical jump, horizontal drift
+
+Style: Street Fighter III quality, 24 FPS

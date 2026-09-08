@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AttackData.gd" id="1_attack"]
+[ext_resource type="Script" path="res://scripts/AttackVariantData.gd" id="2_variant"]
+
+[sub_resource type="Resource" id="Variant_standing"]
+script = ExtResource("2_variant")
+variant_id = &"standing"
+animation_name = &"special_720_punch"
+animation_fps = 48.0
+startup_frames = 9
+active_frames = 34
+recovery_frames = 6
+active_animation_frame = 9
+hitbox_size = Vector2(340, 60)
+hitbox_position = Vector2(0, -165)
+hit_height = 0
+
+[resource]
+script = ExtResource("1_attack")
+attack_id = &"special_720_punch"
+damage = 6
+startup = 0.1875
+active = 0.708333
+recovery = 0.125
+hitstun = 0.4
+blockstun = 0.22
+hit_height = 0
+hit_reaction_start_frame = 3
+hitbox_size = Vector2(340, 60)
+hitbox_position = Vector2(0, -165)
+variants = Array[ExtResource("2_variant")]([SubResource("Variant_standing")])

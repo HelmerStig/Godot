@@ -1,0 +1,55 @@
+idle <--ok
+crouch <--ok
+walk <--ok
+walk-back <--ok
+run <--ok
+strafe-back <--ok
+jump <--ok
+
+block_high <--ok
+block_mid <--ok
+block_low <--ok
+
+hurted_high
+hurted_mid
+hurted_low
+hurted_sweep_knockdown <--ok
+knockdown_recovery <--ok
+knockdown <--ok
+
+hurted_air <-- ok
+
+
+light-punch <--ok
+medium-punch <--ok
+strong-punch <--ok
+light-kick <--ok
+medium-kick <--ok
+strong-kick <--ok
+
+crouched-light-punch <--ok
+crouched-medium-punch <--ok
+crouched-strong-punch <--ok
+crouched-light-kick <--ok
+crouched-medium-kick <--ok
+crouched-strong-kick <--ok
+
+jump-light-punch <--ok
+jump-medium-punch <--ok
+jump-strong-punch <--ok
+jump-light-kick <--ok
+jump-medium-kick <--ok
+jump-strong-kick <--ok
+
+super<--ok
+presa<--ok
+special 1 <--ok
+special 2 <--ok
+
+running-light-punch
+running-medium-punch
+running-strong-punch
+running-light-kick
+running-medium-kick
+running-strong-kick
+

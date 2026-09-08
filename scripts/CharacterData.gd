@@ -4,6 +4,17 @@ class_name CharacterData
 ## Risorsa per configurare i dati di un personaggio
 ## Facilita la creazione di un roster multiplo
 
+const DEFAULT_ATTACKS := [
+	preload("res://data/attacks/light_punch.tres"),
+	preload("res://data/attacks/medium_punch.tres"),
+	preload("res://data/attacks/heavy_punch.tres"),
+	preload("res://data/attacks/light_kick.tres"),
+	preload("res://data/attacks/medium_kick.tres"),
+	preload("res://data/attacks/heavy_kick.tres"),
+	preload("res://data/attacks/special_720_punch.tres"),
+	preload("res://data/attacks/special_sonic_boom.tres"),
+]
+
 # === INFORMAZIONI GENERALI ===
 @export var character_name: String = "Fighter"
 @export var display_name: String = "Fighter"
@@ -13,27 +24,13 @@ class_name CharacterData
 @export_group("Stats")
 @export var max_health: int = 100
 @export var walk_speed: float = 200.0
+@export var run_speed: float = 320.0
 @export var air_speed: float = 280.0
 @export var jump_velocity: float = -850.0
 
 # === ATTACCHI ===
-@export_group("Light Attacks")
-@export var light_punch_damage: int = 5
-@export var light_punch_duration: float = 0.3
-@export var light_kick_damage: int = 8
-@export var light_kick_duration: float = 0.4
-
-@export_group("Medium Attacks")
-@export var medium_punch_damage: int = 10
-@export var medium_punch_duration: float = 0.45
-@export var medium_kick_damage: int = 12
-@export var medium_kick_duration: float = 0.5
-
-@export_group("Heavy Attacks")
-@export var heavy_punch_damage: int = 15
-@export var heavy_punch_duration: float = 0.6
-@export var heavy_kick_damage: int = 20
-@export var heavy_kick_duration: float = 0.7
+@export_group("Attacks")
+@export var attacks: Array[AttackData] = []
 
 # === SPRITE E ANIMAZIONI ===
 @export_group("Visuals")
@@ -62,4 +59,12 @@ static func create_default() -> CharacterData:
 	data.character_name = "Mangler"
 	data.display_name = "Mangler"
 	data.description = "Un potente combattente con mosse devastanti"
+	data.attacks.assign(DEFAULT_ATTACKS)
 	return data
+
+
+func get_attack(attack_id: StringName) -> AttackData:
+	for attack in attacks:
+		if attack != null and attack.attack_id == attack_id:
+			return attack
+	return null

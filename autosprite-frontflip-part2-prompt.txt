@@ -1,0 +1,30 @@
+FRONT FLIP PART 2: Second half rotation (180° → 360° landing)
+
+360° somersault SECOND HALF - continuous forward rotation from upside-down to landing. Reference: Yun SF3.
+
+12 frames rotation (15° per frame):
+Frame 1 (180°): START UPSIDE DOWN - feet pointing UP, head pointing DOWN (same as Part 1 end)
+Frame 2 (195°): CONTINUE FORWARD - head starts rising, legs start descending
+Frame 3 (210°): Head rotating upward, legs rotating downward
+Frame 4 (225°): Past inverted point, head coming up
+Frame 5 (240°): Head above hip again, legs below hip again
+Frame 6 (255°): Continuing upward rotation
+Frame 7 (270°): HORIZONTAL - head forward-up, legs back-down
+Frame 8 (285°): Head almost upright, legs extending down
+Frame 9 (300°): Body nearly vertical, opening from tuck
+Frame 10 (315°): Legs extending downward for landing
+Frame 11 (330°): Almost back to stance
+Frame 12 (360°/0°): Landing stance - SAME as Part 1 Frame 1 ← END POSE
+
+Requirements:
+- Hip pivot fixed at X:256, Y:256 (no translation)
+- Side-view, face RIGHT
+- 512×512 per cell, 4×3 grid (first 12 cells used)
+- Transparent background, 50px padding
+- Frame order: left→right, top→bottom
+- START at frame 1: character MUST be upside-down (feet up, head down)
+- END at frame 12: character back to upright stance
+
+Negative: reversing direction, returning to upside-down, oscillating motion, vertical jump, horizontal drift
+
+Style: Street Fighter III quality, 24 FPS

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AttackData.gd" id="1_attack"]
+[ext_resource type="Script" path="res://scripts/AttackVariantData.gd" id="2_variant"]
+
+[sub_resource type="Resource" id="Variant_standing"]
+script = ExtResource("2_variant")
+variant_id = &"standing"
+animation_name = &"special_sonic_boom"
+animation_fps = 48.0
+startup_frames = 24
+active_frames = 1
+recovery_frames = 24
+active_animation_frame = 24
+hitbox_size = Vector2(1, 1)
+hitbox_position = Vector2(0, -160)
+hit_height = 0
+
+[resource]
+script = ExtResource("1_attack")
+attack_id = &"special_sonic_boom"
+damage = 0
+startup = 0.5
+active = 0.0208333
+recovery = 0.5
+hit_height = 0
+hitbox_size = Vector2(1, 1)
+hitbox_position = Vector2(0, -160)
+variants = Array[ExtResource("2_variant")]([SubResource("Variant_standing")])

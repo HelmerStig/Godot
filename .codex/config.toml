@@ -1,0 +1,3 @@
+[mcp_servers.autosprite]
+url = "https://www.autosprite.io/api/mcp"
+bearer_token_env_var = "AUTOSPRITE_API_KEY"

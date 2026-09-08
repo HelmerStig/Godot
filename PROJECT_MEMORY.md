@@ -1,93 +1,159 @@
 # Memoria del progetto
 
-Ultimo aggiornamento: 14 luglio 2026
+Ultimo aggiornamento: 10 agosto 2026
 
 ## Obiettivo attuale
 
-Il repository contiene un prototipo didattico di picchiaduro 2D sviluppato con Godot 4.7. In questa fase la priorità è consolidare il combattimento di base in modalità training prima di introdurre animazioni complete, IA, combo, menu o multiplayer.
+Sanmo è un prototipo didattico di picchiaduro 2D realizzato con Godot 4.7. La priorità corrente è mantenere stabile il combattimento locale in modalità training prima di introdurre animazioni complete, IA, combo, menu o round competitivi.
 
-## Struttura principale
+## Baseline funzionante
 
-- `scenes/MainArena.tscn`: arena, terreno, camera, interfaccia e fighter.
-- `scenes/Mangler.tscn`: scena del personaggio con corpo, sprite, hitbox e hurtbox.
-- `scripts/MainArena.gd`: ciclo del training, timer, UI, camera, KO e reset.
-- `scripts/Mangler.gd`: input, movimento, stati, attacchi, danni e collisioni.
-- `scripts/CharacterData.gd`: statistiche e configurazione del personaggio.
-- `FRAME_DATA.md`: specifiche teoriche del sistema di combattimento.
-- `TUTORIAL_ANIMAZIONI.md`: guida futura per integrare le animazioni.
+- Due fighter controllabili contemporaneamente.
+- Player 1 usa tastiera o gamepad 0; Player 2 usa tastierino numerico o gamepad 1.
+- Movimento, salto, accovacciamento e guardia direzionale.
+- Sei attacchi a terra: pugni e calci leggeri, medi e pesanti.
+- Sei risorse `AttackData` con timing, stun e hitbox espliciti.
+- Hitbox diversa per ogni attacco e tre hurtbox per fighter.
+- La guardia riuscita annulla completamente il danno.
+- Hit-stun, reazione di blocco, KO e reset con `R`.
+- Timer da 99 secondi visibile, con timeout intenzionalmente disabilitato.
+- Camera condivisa, limiti visibili dello stage e attraversamento dei fighter in aria.
+- Overlay collisioni con `F3` e slow motion con `F4`.
+- Stage con sfondo ed effetti ambientali.
+- Sprite personaggi ridotti a PNG RGBA 512×512; scala della scena condivisa impostata a `0.7`.
+- Mangler dispone di animazioni per locomozione, attacchi, guardia, reazioni e KO.
+- Le varianti delle mosse sono risorse `AttackVariantData` embedded nei sei attacchi `.tres`.
 
-## Lavoro completato
+## Architettura corrente
 
-### Arena e training
+- `scenes/MainArena.tscn`: composizione di arena, stage, fighter, camera e UI.
+- `scenes/Mangler.tscn`: scena condivisa del fighter.
+- `scenes/stages/DefaultStage.tscn`: stage predefinito.
+- `scripts/Mangler.gd`: coordinatore del fighter; gestisce input, movimento, orientamento e stato.
+- `scripts/AttackData.gd`: schema dati di un attacco.
+- `scripts/AttackVariantData.gd`: frame data e geometria delle varianti contestuali.
+- `data/attacks/*.tres`: risorse dei sei attacchi base.
+- `scripts/FighterCombat.gd`: ciclo degli attacchi, vita, danno, guardia, reazioni e KO.
+- `scripts/FighterInputBuffer.gd`: snapshot input, direzioni relative, consumo attacchi e sequenze recenti.
+- `scripts/CharacterData.gd`: statistiche del fighter e parametri base degli attacchi.
+- `scripts/MainArena.gd`: ciclo del training, countdown, reset, camera e fine per KO.
+- `scripts/ArenaUI.gd`: unico componente che modifica barre vita, timer e messaggi.
+- `scripts/FighterDebugOverlay.gd`: disegno diagnostico delle collisioni.
+- `scripts/StageAmbientEffects.gd`: movimento degli effetti ambientali.
+- `scripts/ManglerAnimationSetup.gd`: registro centrale delle animazioni runtime.
+- `scripts/ManglerVisualConfig.gd`: profili degli effetti di movimento.
+- `tests/smoke_tests.gd`: suite headless permanente.
 
-- Aggiunto `Player2` come bersaglio statico non controllato.
-- Attivata la seconda barra della vita.
-- Il KO interrompe il training e mostra il vincitore.
-- Aggiunta l'azione `reset_training`, associata al tasto `R`.
-- Il reset ripristina entrambi i fighter e avvia un nuovo countdown.
-- Il timer non può più scendere sotto zero.
-- La camera si centra tra i due fighter.
-- Corretto il caso in cui lo stage sia più stretto della viewport e gli estremi del clamp risultino invertiti.
+Il flusso degli eventi è:
 
-### Fighter e combattimento
+```text
+FighterCombat → Mangler → MainArena → ArenaUI
+```
 
-- Corretto lo stato `BLOCKING`: rilasciando il tasto il fighter torna a `IDLE`.
-- Ogni attacco utilizza ora il proprio danno e la propria durata.
-- Eliminato il danno fisso di 10 HP applicato a tutti gli attacchi.
-- Movimento, salto, danni e durate vengono letti da `CharacterData`.
-- Aggiunto il danno dell'attacco corrente per il passaggio tra hitbox e avversario.
-- Aggiunto `reset_fighter()` per ripristinare posizione, velocità, vita e stato.
-- Le azioni asincrone pendenti vengono invalidate durante hit, KO e reset.
-- Una coroutine di attacco o hit-stun precedente non può più ripristinare erroneamente un fighter KO o appena resettato.
-- La hitbox viene disabilitata quando un'azione viene annullata.
-- Al reset i fighter vengono orientati uno verso l'altro.
+`Mangler` riemette vita, KO, cambi di stato e ciclo degli attacchi. `MainArena` pubblica vita per giocatore, timer, messaggi, inizio e fine training. `ArenaUI` osserva questi segnali e non viene modificata direttamente dal gameplay.
 
-## Controlli
+## Decisioni progettuali attive
 
-- `git diff --check` completato senza errori.
-- Non è stato possibile eseguire una validazione headless perché l'eseguibile Godot non era disponibile nel `PATH` della sessione Codex.
-- È necessario verificare manualmente nell'editor: movimento, salto, blocco, quattro attacchi, variazione della vita, KO e reset con `R`.
+- Mantenere per ora una modalità training semplice; timeout e best-of-three restano segnaposto.
+- Separare il blocco dei controlli imposto dall'arena da quello imposto dallo stato del fighter.
+- Conservare `Mangler` come autorità sulle transizioni tramite `change_state()`.
+- Isolare il combattimento in `FighterCombat`, evitando per ora una classe separata per ogni stato.
+- Usare `CharacterData` come fonte di movimento, vita e lista degli attacchi disponibili.
+- Usare `AttackData` per identità/danno/stun e `AttackVariantData` per animazione, frame attivi, timing, hitbox, altezza e knockdown.
+- Proteggere coroutine di attacco, hit-stun e block-stun con un contatore di generazione.
+- Usare segnali tra combattimento, fighter, arena e UI.
+- Mantenere input separati per i due giocatori.
+- Esporre `record_input_snapshot()` per rendere input buffer, replay e test indipendenti dal backend fisico.
+- Mantenere gli sprite a 512×512 e compensare con scala `0.7` nella scena del fighter.
 
-## Decisioni progettuali
+## Smoke test
 
-- Mantenere per ora una modalità training semplice, senza implementare prematuramente il best-of-three.
-- Usare `CharacterData` come fonte dei parametri del fighter, riducendo i valori duplicati nel controller.
-- Usare un bersaglio statico prima di introdurre un secondo controller o l'IA.
-- Stabilizzare stati, frame data e hitbox prima di aggiungere combo e mosse speciali.
-- Le coroutine sono protette tramite un contatore di generazione che invalida le azioni precedenti.
+Esecuzione Windows:
 
-## Priorità successive
+```powershell
+.\tests\run_smoke_tests.cmd
+```
 
-1. Collegare gli stati e gli attacchi a `AnimatedSprite2D` e aggiungere feedback visivo dei colpi.
-2. Creare una risorsa `AttackData` con danno, startup, active, recovery, hitstun e forma della hitbox.
-3. Centralizzare le transizioni in una state machine più formale.
-4. Creare hitbox diverse per pugni e calci.
-5. Aggiungere un secondo controller oppure una IA basilare.
-6. Implementare round, timeout, punteggio e best-of-three.
-7. Implementare input buffer, combo e mosse speciali.
+Esecuzione diretta:
 
-## Debito tecnico noto
+```text
+godot --headless --path . --script res://tests/smoke_tests.gd
+```
 
-- `Mangler.gd` gestisce ancora troppe responsabilità: input, fisica, stati, combattimento e danni.
-- Le costanti di movimento originali sono ancora dichiarate nello script, anche se i valori effettivi arrivano da `CharacterData`.
-- Tutti gli attacchi condividono la stessa hitbox.
-- Il flip usa una scala negativa sull'intero `CharacterBody2D`; in futuro è preferibile separare un nodo visuale e un contenitore per le hitbox orientabili.
-- Le funzioni di round completo (`end_round_timeout`, `next_round`, `end_match`) sono ancora segnaposto.
-- `CharacterData` viene creato con valori di default in memoria; non esistono ancora risorse `.tres` dedicate ai personaggi.
-- `node_2d.tscn` sembra una scena iniziale non utilizzata e potrà essere rimossa dopo verifica.
+La suite corrente esegue oltre 200 verifiche e copre:
+
+- configurazione, autoplay e orientamento dell'animazione idle;
+- caricamento, lookup e validazione delle sei risorse `AttackData`;
+- selezione della risorsa e completamento del ciclo startup/active/recovery;
+- conversione delle direzioni in base all'orientamento;
+- memorizzazione e consumo singolo degli attacchi;
+- riconoscimento di sequenze direzionali;
+- danno normale e hit-stun;
+- guardia senza danno e block-stun;
+- propagazione della vita alla UI;
+- KO, blocco dei controlli e messaggio del vincitore;
+- reset di vita, stato, UI e training.
+
+Ultimo risultato noto (10 agosto 2026): caricamento senza errori di parsing e `SMOKE_TESTS_FAILED` con 25 asserzioni, contro le 26 della baseline precedente al refactoring.
 
 ## Controlli attuali
 
+### Player 1
+
 - Movimento: `A`/`D` oppure frecce sinistra/destra.
-- Salto: `W`, freccia su o spazio.
+- Salto: `W`, freccia su o `Spazio`.
 - Accovacciamento: `S` o freccia giù.
-- Pugno leggero: `J`.
-- Pugno pesante: `U`.
-- Calcio leggero: `K`.
-- Calcio pesante: `I`.
-- Blocco: `L`.
+- Pugni leggero/medio/pesante: `J`/`H`/`U`.
+- Calci leggero/medio/pesante: `K`/`L`/`I`.
+- Gamepad: device 0.
+
+### Player 2
+
+- Movimento: tastierino `4`/`6`.
+- Salto: tastierino `8`.
+- Accovacciamento: tastierino `5`.
+- Pugni leggero/medio/pesante: tastierino `1`/`2`/`3`.
+- Calci leggero/medio/pesante: tastierino `7`/`9`/`0`.
+- Gamepad: device 1.
+
+### Comuni
+
+- Guardia: tenere la direzione opposta all'avversario.
+- Presa di Mangler: pugno leggero + calcio leggero a terra; `grab_tentative` è saltato e la portata viene verificata immediatamente.
+- Se l'avversario è in portata parte `Mangler2-headbut_mangler_mangler.png`: foglio combinato 7×7, usa solo i frame sorgente 1–29 a 48 FPS, spostato di 80 px in avanti e non ciclico, con la stessa esplosione rossa del light punch al frame 19. Durante la sequenza vittima e ombra sono nascoste; dopo il frame 29 entrambi avanzano di 15 px nella direzione della testata e tornano visibili in `IDLE`.
+- Supermossa: mezzaluna in avanti `BACK, DOWN_BACK, DOWN, DOWN_FORWARD, FORWARD` + calcio leggero e medio. Tutte le quattro fasi sono a 48 FPS. `super_start.png` usa 25 frame e al frame 19 genera l'aura gialla; `rotate-super_run.png` usa 25 frame e dal frame 20 avanza, poi `run_only.png` usa 24 frame in loop. L'avvicinamento è a 480 px/s, lascia afterimage giallo-arancioni e termina alla distanza di contatto di 130 px. All'avvio del rullo la super applica una sola volta danno pari al 25% della vita massima. `drum_roll_only.png` usa 24 frame per due esecuzioni con quattro esplosioni rosse per ciclo, ancorate alla posizione globale della `HeadHurtbox`; durante entrambe il bersaglio è in `State.HIT` e ripete i frame sorgente 4–13 di `hurt-high.png` tramite `super_drum_hurt` a 48 FPS e scala legacy `0.7`. Dopo il secondo rullo, se non è KO, il bersaglio esegue `super_drum_knockdown` con i frame sorgente 11–25 di `ko.png` a 24 FPS, poi la normale `knockdown_recovery` e infine `IDLE`. Durante la sequenza l'attaccante ha z-index superiore; prima del rullo l'avversario resta senza controlli ma continua `idle`, salvo la posa congelata di `block_high` se stava già parando.
+- Tolleranza motion input: cronologia 60 frame, buffer pulsante 10 frame, quarti di luna 36 frame e mezzaluna della super 48 frame. Il buffer ricostruisce i passaggi bassi e diagonali saltati dallo stick rapido.
+- Pulizia asset Mangler: rimossi 20 PNG senza riferimenti runtime/documentali e i relativi 20 `.import` (circa 40,2 MB). Gli sprite ancora pre-caricati da `Mangler.gd`, comprese implementazioni storiche, restano conservati finché il relativo codice non viene rimosso. `original_images` è esclusa dalla pulizia.
+- La testata separata resta configurata ma il suo avvio automatico è temporaneamente disattivato per controllare le posizioni della presa.
+- Follow-up presa: `testata-rear.png` e `testata-front.png`, 25 frame sincronizzati a 25 FPS, impatto high non parabile al frame 17 per 15 danni; la vittima resta immobilizzata fino alla fine.
+- Effetto testata: scia dorata rear/front attiva circa dai frame 11–19, con intensità da mossa potente.
+- Impatto testata: flash additivo e 34 scintille giallo-arancio sul volto della vittima al frame 17.
+- Reazione vittima presa: `grabbed.png`, sequenza sorgente 10–25–10 a 24 FPS; un impatto interrompe la sequenza e avvia `hurt_high`.
+- Reazione colpo aereo: `assets/sprites/characters/mangler/11-hurted_in_jump.png`, 25 frame a 24 FPS; frame 25 a terra per 1 secondo, poi `knockdown_recovery`.
 - Reset training: `R`.
+- Overlay collisioni: `F3`.
+- Slow motion: `F4`.
+
+## Debito tecnico noto
+
+- `CharacterData` viene creato in memoria e non esistono profili `.tres` per i personaggi.
+- Le funzioni di slicing degli atlas sono ancora fisicamente in `Mangler.gd`, anche se registrazione e profili effetti sono stati estratti.
+- Venticinque aspettative della suite non sono allineate agli atlas e timing correnti.
+- Gli asset di Arianna, Bue, Mileto, Peirolo e Torpe non sono ancora collegati a fighter giocabili.
+- `end_round_timeout()`, `next_round()` ed `end_match()` sono segnaposto.
+- Il timer continua a essere visualizzato in training, ma non termina il round.
+- Combo e mosse speciali non usano ancora le sequenze riconosciute dall'input buffer.
+- Non sono presenti IA, audio, menu, selezione personaggio, salvataggi o multiplayer online.
+- `original_images/` contiene materiale sorgente non usato a runtime e viene conservato intenzionalmente.
+
+## Priorità successive
+
+1. Riallineare atlas, frame attivi e smoke test fino a `SMOKE_TESTS_OK`.
+2. Migrare per gruppi le funzioni di slicing da `Mangler.gd` al componente animazioni.
+3. Creare risorse `CharacterData` dedicate ai personaggi.
+4. Implementare round, timeout, punteggio e best-of-three.
+5. Collegare combo e mosse speciali all'input buffer.
 
 ## Nota per la prossima sessione
 
-Prima di sviluppare nuove funzionalità, avviare `scenes/MainArena.tscn` nell'editor Godot e verificare il comportamento delle modifiche elencate sopra. Se emergono errori di parsing o runtime, correggerli prima di procedere con animazioni o `AttackData`.
+Prima di nuove modifiche eseguire `tests/run_smoke_tests.cmd`. Il prossimo intervento è risolvere le 25 discrepanze della baseline e proseguire l'estrazione dello slicing da `Mangler.gd`.
