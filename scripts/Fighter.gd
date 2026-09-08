@@ -92,6 +92,7 @@ var pending_jump_horizontal_multiplier := 1.0
 var attack_afterimage_spawn_count := 0
 var grabbed_by: Fighter
 var grabbed_target: Fighter
+var _super_hurt_looping := false
 
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -249,10 +250,15 @@ func start_super_drum_hurt_reaction() -> void:
 	controls_enabled = false
 	can_move = false
 	velocity = Vector2.ZERO
+	received_hit_height = AttackData.HitHeight.HIGH
+	_super_hurt_looping = true
 	change_state(State.HIT)
+	if animated_sprite.sprite_frames.has_animation(&"hurt_high"):
+		animated_sprite.play(&"hurt_high")
 
 
 func start_super_drum_knockdown() -> void:
+	_super_hurt_looping = false
 	if combat.current_health <= 0:
 		return
 	combat.cancel_current_action()
@@ -722,6 +728,9 @@ func _on_combat_attack_finished() -> void:
 
 
 func _on_animation_finished() -> void:
+	if _super_hurt_looping and animated_sprite.sprite_frames.has_animation(&"hurt_high"):
+		animated_sprite.play(&"hurt_high")
+		return
 	if animated_sprite.animation == &"sweep_knockdown":
 		start_knockdown_recovery()
 	elif animated_sprite.animation == &"knockdown_recovery":
