@@ -12,7 +12,7 @@ La baseline headless è di **677 asserzioni superate, zero fallimenti**, in cinq
 
 - `Arianna` e `Mangler` derivano direttamente da `Fighter`, anche nelle scene; Arianna non dipende dal controller o dai nodi delle prese di Mangler.
 - `Fighter` gestisce inizializzazione, segnali, stato, collisioni, ombra, reazioni standard e reset comune. Mangler estende le parti specifiche con `super` e `_apply_state_movement()`.
-- `FighterCombat` gestisce vita, danni, guardie, hitbox e ciclo delle azioni. `action_generation` invalida coroutine e controlli di sovrapposizione tardivi.
+- `FighterCombat` gestisce vita, guardie, hitbox e ciclo delle azioni; `FighterCombatReactions` contiene danno, parata, hitstun, knockdown e KO. `action_generation` invalida coroutine e controlli di sovrapposizione tardivi; le reazioni verificano anche che fighter e componente siano ancora validi dopo ogni attesa.
 - Arianna usa `begin_animation_attack()`, `finish_animation_attack()` e `resolve_attack_overlap()`. Frame attivi, animazioni e concatenazioni restano nel suo controller.
 - `attack_started`, `attack_finished` e `attack_cancelled` distinguono avvio, conclusione naturale e interruzione. Le interruzioni ripuliscono i flag locali e liberano i bersagli delle speciali non ancora lanciate.
 - Il flusso pubblico è `FighterCombat → Fighter → MainArena → ArenaUI`; la UI osserva i segnali dell'arena.

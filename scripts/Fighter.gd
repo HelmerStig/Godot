@@ -90,6 +90,9 @@ var last_back_tap_frame := -BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES - 1
 var pending_jump_direction := 0.0
 var pending_jump_horizontal_multiplier := 1.0
 var attack_afterimage_spawn_count := 0
+var grabbed_by: Fighter
+var grabbed_target: Fighter
+
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -225,6 +228,74 @@ func start_hit_reaction(
 	else:
 		velocity.x = 0.0
 	return get_animation_duration(animation_name, start_frame)
+
+
+func freeze_for_super_start() -> void:
+	controls_enabled = false
+	can_move = false
+	velocity = Vector2.ZERO
+	if current_state != State.HIT:
+		change_state(State.IDLE)
+
+
+func release_super_freeze() -> void:
+	controls_enabled = true
+	can_move = true
+	if current_state != State.HIT:
+		change_state(State.IDLE)
+
+
+func start_super_drum_hurt_reaction() -> void:
+	controls_enabled = false
+	can_move = false
+	velocity = Vector2.ZERO
+	change_state(State.HIT)
+
+
+func start_super_drum_knockdown() -> void:
+	if combat.current_health <= 0:
+		return
+	combat.cancel_current_action()
+	velocity = Vector2.ZERO
+	can_move = false
+	controls_enabled = true
+	change_state(State.SWEEP_KNOCKDOWN)
+	if animated_sprite.sprite_frames.has_animation(&"sweep_knockdown"):
+		animated_sprite.play(&"sweep_knockdown")
+
+
+func get_grabbed_by() -> Fighter:
+	return grabbed_by
+
+
+func set_grabbed_by(attacker: Fighter) -> void:
+	grabbed_by = attacker
+
+
+func become_grabbed(attacker: Fighter) -> void:
+	grabbed_by = attacker
+	controls_enabled = false
+	can_move = false
+	velocity = Vector2.ZERO
+
+
+func freeze_for_grab_preview(attacker: Fighter) -> void:
+	grabbed_by = attacker
+	controls_enabled = false
+	can_move = false
+	velocity = Vector2.ZERO
+
+
+func set_combined_grab_hidden(hidden: bool) -> void:
+	animated_sprite.visible = not hidden
+	ground_shadow.visible = not hidden
+
+
+func release_grab() -> void:
+	grabbed_by = null
+	grabbed_target = null
+	controls_enabled = true
+	can_move = true
 
 
 func spawn_hurt_blue_explosion(hit_height: AttackData.HitHeight) -> Node2D:
@@ -651,7 +722,12 @@ func _on_combat_attack_finished() -> void:
 
 
 func _on_animation_finished() -> void:
-	pass
+	if animated_sprite.animation == &"sweep_knockdown":
+		start_knockdown_recovery()
+	elif animated_sprite.animation == &"knockdown_recovery":
+		controls_enabled = true
+		can_move = true
+		change_state(State.IDLE)
 
 
 func _on_animation_frame_changed() -> void:

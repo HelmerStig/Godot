@@ -3,6 +3,8 @@ class_name FighterCombat
 
 ## Gestisce il ciclo degli attacchi, le hitbox, i danni e le reazioni ai colpi.
 
+const Reactions := preload("res://scripts/FighterCombatReactions.gd")
+
 signal health_changed(current_health: int, max_health: int)
 signal knocked_out
 signal attack_started(attack_name: StringName)
@@ -437,34 +439,19 @@ func take_damage(
 	apply_pushback: bool = true,
 	force_grounded_reaction: bool = false
 ) -> DamageResult:
-	if fighter.current_state in [Fighter.State.KNOCKDOWN_RECOVERY, Fighter.State.KNOCKED_DOWN]:
-		return DamageResult.IGNORED
-	var was_airborne := not fighter.is_on_floor() and not force_grounded_reaction
-
-	var attack_was_blocked := can_block_attack(attacker, hit_height)
-	if attack_was_blocked:
-		damage = 0
-		print("Attacco bloccato! Nessun danno subito.")
-
-	current_health = clampi(current_health - damage, 0, max_health)
-	health_changed.emit(current_health, max_health)
-	print("Vita rimanente: %d/%d" % [current_health, max_health])
-
-	if current_health <= 0:
-		die(ko_start_frame)
-		return DamageResult.KNOCKOUT
-	elif attack_was_blocked:
-		block_reaction(blockstun, hit_height, attacker)
-		return DamageResult.BLOCKED
-	elif causes_knockdown:
-		sweep_knockdown_reaction(attacker)
-	elif was_airborne:
-		airborne_knockdown_reaction(attacker)
-	else:
-		if hit_height == AttackData.HitHeight.MID:
-			hit_reaction_start_frame = 4
-		hit_reaction(hitstun, hit_height, attacker, hit_reaction_start_frame, apply_pushback)
-	return DamageResult.HIT
+	return Reactions.take_damage(
+		self,
+		damage,
+		attacker,
+		hitstun,
+		blockstun,
+		hit_height,
+		causes_knockdown,
+		hit_reaction_start_frame,
+		ko_start_frame,
+		apply_pushback,
+		force_grounded_reaction
+	)
 
 
 func block_reaction(
@@ -472,38 +459,7 @@ func block_reaction(
 	hit_height: AttackData.HitHeight,
 	attacker: Fighter = null
 ) -> void:
-	var started_crouched := fighter.current_state == Fighter.State.CROUCHING
-	cancel_current_action()
-	var block_generation := action_generation
-	var animation_duration := fighter.start_block_reaction(hit_height, started_crouched)
-	var reaction_duration := maxf(duration, animation_duration)
-
-	await get_tree().create_timer(reaction_duration).timeout
-	if block_generation != action_generation or current_health <= 0:
-		return
-	while (
-		attacker != null
-		and is_instance_valid(attacker)
-		and attacker.combat != null
-		and attacker.combat.is_attacking
-	):
-		var frame_count := fighter.animated_sprite.sprite_frames.get_frame_count(
-			fighter.animated_sprite.animation
-		)
-		if frame_count > 0:
-			fighter.animated_sprite.frame = frame_count - 1
-			fighter.animated_sprite.pause()
-		await get_tree().process_frame
-		if block_generation != action_generation or current_health <= 0:
-			return
-	if hit_height == AttackData.HitHeight.LOW and fighter.is_holding_low_guard():
-		fighter.return_to_crouch_after_low_block()
-		return
-	var recovery_duration := fighter.start_block_recovery()
-	await get_tree().create_timer(recovery_duration).timeout
-	if block_generation != action_generation or current_health <= 0:
-		return
-	fighter.change_state(Fighter.State.IDLE)
+	Reactions.block_reaction(self, duration, hit_height, attacker)
 
 
 func hit_reaction(
@@ -513,67 +469,19 @@ func hit_reaction(
 	hit_reaction_start_frame: int = 0,
 	apply_pushback: bool = true
 ) -> void:
-	cancel_current_action()
-	var hit_generation := action_generation
-	var animation_duration := fighter.start_hit_reaction(
-		hit_height,
-		attacker,
-		hit_reaction_start_frame,
-		apply_pushback
-	)
-	var reaction_duration := maxf(duration, animation_duration)
-
-	await get_tree().create_timer(reaction_duration).timeout
-	if hit_generation != action_generation or current_health <= 0:
-		return
-	fighter.velocity.x = 0.0
-	fighter.change_state(Fighter.State.IDLE)
+	Reactions.hit_reaction(self, duration, hit_height, attacker, hit_reaction_start_frame, apply_pushback)
 
 
 func airborne_knockdown_reaction(attacker: Fighter) -> void:
-	cancel_current_action()
-	var knockdown_generation := action_generation
-	fighter.start_airborne_hit_knockdown(attacker)
-	while not fighter.is_on_floor():
-		await get_tree().physics_frame
-		if knockdown_generation != action_generation or current_health <= 0:
-			return
-	fighter.hold_airborne_hit_landing_pose()
-	await get_tree().create_timer(1.0).timeout
-	if knockdown_generation != action_generation or current_health <= 0:
-		return
-	var recovery_duration := fighter.start_knockdown_recovery()
-	await get_tree().create_timer(recovery_duration).timeout
-	if knockdown_generation != action_generation or current_health <= 0:
-		return
-	fighter.change_state(Fighter.State.IDLE)
+	Reactions.airborne_knockdown_reaction(self, attacker)
 
 
 func sweep_knockdown_reaction(attacker: Fighter) -> void:
-	cancel_current_action()
-	var knockdown_generation := action_generation
-	var animation_duration := fighter.start_sweep_knockdown(attacker)
-
-	var grounded_hold := fighter.get_sweep_grounded_hold_duration()
-	await get_tree().create_timer(animation_duration + grounded_hold).timeout
-	if knockdown_generation != action_generation or current_health <= 0:
-		return
-	var recovery_duration := fighter.start_knockdown_recovery()
-	await get_tree().create_timer(recovery_duration).timeout
-	if knockdown_generation != action_generation or current_health <= 0:
-		return
-	fighter.change_state(Fighter.State.IDLE)
+	Reactions.sweep_knockdown_reaction(self, attacker)
 
 
 func die(start_frame: int = 0) -> void:
-	cancel_current_action()
-	fighter.change_state(Fighter.State.KNOCKED_DOWN)
-	if fighter.animated_sprite.sprite_frames.has_animation(&"ko"):
-		fighter.animated_sprite.play(&"ko")
-		var final_frame := fighter.animated_sprite.sprite_frames.get_frame_count(&"ko") - 1
-		fighter.animated_sprite.frame = clampi(start_frame, 0, final_frame)
-	knocked_out.emit()
-	print("KO!")
+	Reactions.die(self, start_frame)
 
 
 func reset() -> void:

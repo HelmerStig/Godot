@@ -55,7 +55,7 @@ FighterCombat → Fighter (Arianna / Mangler) → MainArena → ArenaUI
 | `scenes/Fighter.tscn`, `scripts/Fighter.gd` | Corpo, componenti, stato, segnali, collisioni e reazioni comuni |
 | `scenes/Arianna.tscn`, `scripts/Arianna.gd` | Scena e controller di Arianna, derivati direttamente da Fighter |
 | `scenes/Mangler.tscn`, `scripts/Mangler.gd` | Scena e controller di Mangler, prese e speciali |
-| `scripts/FighterCombat.gd` | Attacchi, danni, parate, hitbox, reazioni e invalidazione delle attese |
+| `scripts/FighterCombat.gd`, `scripts/FighterCombatReactions.gd` | Ciclo degli attacchi, danni, parate, hitbox e reazioni asincrone con invalidazione delle attese |
 | `scripts/FighterInputBuffer.gd` | Input relativi all'avversario, buffer e riconoscimento delle sequenze |
 | `scripts/CharacterData.gd` | Statistiche e profilo predefinito creato a runtime |
 | `scripts/AttackData.gd`, `scripts/AttackVariantData.gd` | Identità, danno, stun, timing e geometria delle varianti |

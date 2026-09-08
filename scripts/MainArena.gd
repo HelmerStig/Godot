@@ -39,6 +39,7 @@ var screen_shake_random := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	screen_shake_random.randomize()
+	_apply_selected_fighters()
 	player1.player_number = 1
 	player2.player_number = 2
 	player1.is_player_controlled = true
@@ -229,6 +230,38 @@ func _on_fighter_health_changed(
 
 func _on_fighter_knocked_out(winner: int) -> void:
 	end_round_ko(winner)
+
+
+func _apply_selected_fighters() -> void:
+	var cs := get_node_or_null("/root/CharacterSelection")
+	if cs == null:
+		return
+	_swap_fighter("Player1", cs.get_scene_for(cs.player1_id), Vector2(876.0, FLOOR_Y))
+	_swap_fighter("Player2", cs.get_scene_for(cs.player2_id), Vector2(1428.0, FLOOR_Y))
+
+
+func _swap_fighter(node_name: String, scene_path: String, spawn_pos: Vector2) -> void:
+	var old_node := get_node_or_null(node_name) as Fighter
+	if old_node != null and old_node.scene_file_path == scene_path:
+		old_node.position = spawn_pos
+		return
+	var packed := load(scene_path) as PackedScene
+	if packed == null:
+		return
+	var replacement := packed.instantiate() as Fighter
+	if replacement == null:
+		return
+	replacement.name = node_name
+	replacement.position = spawn_pos
+	replacement.player_number = 1 if node_name == "Player1" else 2
+	if old_node != null:
+		remove_child(old_node)
+		old_node.queue_free()
+	add_child(replacement)
+	if node_name == "Player1":
+		player1 = replacement
+	else:
+		player2 = replacement
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -231,7 +231,8 @@ const SUPER_DRUM_ROLL_CELL_SIZE := Vector2(512.0, 512.0)
 const SUPER_DRUM_ROLL_TOTAL_LOOPS := 2
 const SUPER_DRUM_ROLL_IMPACT_FRAMES := [4, 10, 16, 22]
 const SUPER_DAMAGE_RATIO := 0.25
-const SUPER_MOTION_WINDOW_FRAMES := 48
+const SUPER_MOTION_WINDOW_FRAMES := 72
+const SUPER_CHORD_WINDOW_FRAMES := 6
 const SUPER_DRUM_HURT_SOURCE_START_FRAME := 3
 const SUPER_DRUM_HURT_SOURCE_END_FRAME := 12
 const SUPER_DRUM_HURT_FRAME_COUNT := 10
@@ -343,8 +344,6 @@ var sweep_afterimage_spawn_count := 0
 var crouched_heavy_punch_has_jumped := false
 var sonic_charge_effect: Node2D
 var grab_succeeded := false
-var grabbed_target: Fighter
-var grabbed_by: Fighter
 var grab_headbutt_hit_landed := false
 var grab_headbow_explosion_spawned := false
 var super_frozen_target: Fighter
@@ -554,23 +553,17 @@ func is_grab_chord_pressed() -> bool:
 
 
 func is_super_start_command_pressed() -> bool:
-	var light_kick_action := get_input_action("light_kick")
-	var medium_kick_action := get_input_action("medium_kick")
-	var chord_pressed := (
-		Input.is_action_pressed(light_kick_action)
-		and Input.is_action_pressed(medium_kick_action)
-		and (
-			Input.is_action_just_pressed(light_kick_action)
-			or Input.is_action_just_pressed(medium_kick_action)
-		)
-	)
-	return chord_pressed and input_buffer.matches_recent_sequence([
+	if not input_buffer.matches_recent_sequence([
 		FighterInputBuffer.Direction.BACK,
-		FighterInputBuffer.Direction.DOWN_BACK,
 		FighterInputBuffer.Direction.DOWN,
-		FighterInputBuffer.Direction.DOWN_FORWARD,
 		FighterInputBuffer.Direction.FORWARD,
-	], SUPER_MOTION_WINDOW_FRAMES)
+	], SUPER_MOTION_WINDOW_FRAMES):
+		return false
+	return input_buffer.consume_attack_chord(
+		[&"light_kick", &"medium_kick"],
+		FighterInputBuffer.DEFAULT_ATTACK_BUFFER_FRAMES,
+		SUPER_CHORD_WINDOW_FRAMES
+	) != FighterInputBuffer.NO_DIRECTION
 
 
 func start_super_start() -> void:

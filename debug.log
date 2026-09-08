@@ -4,3 +4,5 @@
 [0901/101551.937:ERROR:third_party\crashpad\crashpad\util\win\registration_protocol_win.cc:108] CreateFile: Accesso negato. (0x5)
 [0901/101633.781:ERROR:third_party\crashpad\crashpad\util\win\registration_protocol_win.cc:108] CreateFile: Accesso negato. (0x5)
 [0901/102403.886:ERROR:third_party\crashpad\crashpad\util\win\registration_protocol_win.cc:108] CreateFile: Accesso negato. (0x5)
+[0908/110930.991:ERROR:third_party\crashpad\crashpad\util\win\registration_protocol_win.cc:108] CreateFile: Accesso negato. (0x5)
+[0908/110933.962:ERROR:third_party\crashpad\crashpad\util\win\registration_protocol_win.cc:108] CreateFile: Accesso negato. (0x5)
