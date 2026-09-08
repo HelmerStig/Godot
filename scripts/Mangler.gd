@@ -18,26 +18,12 @@ const REWORK_SPRITE_POSITION := Vector2(0.0, -115.0)
 const GRAB_HEADBOW_FORWARD_OFFSET := 80.0
 const JUMP_LIGHT_KICK_SPRITE_SCALE := Vector2(0.8, 0.8)
 const GRAVITY := BASE_GRAVITY * JUMP_SPEED_MULTIPLIER * JUMP_SPEED_MULTIPLIER
-const GROUND_COLLISION_LAYER := 1
-const FIGHTER_COLLISION_LAYER := 8
-const SHADOW_MAX_HEIGHT := 800.0
-const SHADOW_GROUND_ALPHA := 0.3
-const SHADOW_AIR_ALPHA := 0.12
-const SHADOW_AIR_SCALE := 0.58
-const SHADOW_FLOOR_OFFSET_Y := 20.0
-const RUN_DOUBLE_TAP_WINDOW_FRAMES := 15
 const RUN_JUMP_HORIZONTAL_MULTIPLIER := 1.35
-const BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES := 15
 const BACK_HOP_HORIZONTAL_SPEED := 360.0
 const BACK_HOP_VERTICAL_SPEED := -260.0
 const BACK_HOP_TAKEOFF_FRAME := 12
 const JUMP_TAKEOFF_FRAME := 5 # Indice zero-based: sesto frame visibile.
-const HIT_PUSHBACK_SPEED := 180.0
 const HIT_PUSHBACK_DECELERATION := 720.0
-const HURT_HIGH_EFFECT_OFFSET := Vector2(0.0, -220.0)
-const HURT_MID_EFFECT_OFFSET := Vector2(0.0, -150.0)
-const HURT_LOW_EFFECT_OFFSET := Vector2(0.0, -72.0)
-const ATTACK_FOREGROUND_Z_OFFSET := 1
 const SPECIAL_720_MOVE_SPEED := 75.0
 const IDLE_SHEET := preload("res://assets/sprites/characters/mangler/01-mangler-idle.png")
 const IDLE_FRAME_COUNT := 49
@@ -343,23 +329,6 @@ const MEDIUM_KICK_STANDING_SHEET := preload(
 const MEDIUM_KICK_STANDING_FRAME_COUNT := 42
 const MEDIUM_KICK_STANDING_COLUMNS := 6
 const MEDIUM_KICK_STANDING_CELL_SIZE := Vector2(512.0, 512.0)
-const SWEEP_PUSHBACK_SPEED := 240.0
-const STANDING_COLLISION_SIZE := Vector2(120.0, 240.0)
-const STANDING_COLLISION_POSITION := Vector2(0.0, -120.0)
-const CROUCH_COLLISION_SIZE := Vector2(130.0, 175.0)
-const CROUCH_COLLISION_POSITION := Vector2(0.0, -87.5)
-const STANDING_HEAD_SIZE := Vector2(55.0, 55.0)
-const STANDING_HEAD_POSITION := Vector2(0.0, -252.5)
-const CROUCH_HEAD_SIZE := Vector2(55.0, 50.0)
-const CROUCH_HEAD_POSITION := Vector2(0.0, -190.0)
-const STANDING_TORSO_SIZE := Vector2(115.0, 155.0)
-const STANDING_TORSO_POSITION := Vector2(0.0, -166.0)
-const CROUCH_TORSO_SIZE := Vector2(115.0, 105.0)
-const CROUCH_TORSO_POSITION := Vector2(0.0, -126.0)
-const STANDING_LEGS_SIZE := Vector2(100.0, 135.0)
-const STANDING_LEGS_POSITION := Vector2(0.0, -67.5)
-const CROUCH_LEGS_SIZE := Vector2(100.0, 100.0)
-const CROUCH_LEGS_POSITION := Vector2(0.0, -50.0)
 const ATTACK_PRIORITY := [
 	&"light_punch",
 	&"medium_punch",
@@ -369,13 +338,8 @@ const ATTACK_PRIORITY := [
 	&"heavy_kick",
 ]
 
-var last_forward_tap_frame := -RUN_DOUBLE_TAP_WINDOW_FRAMES - 1
-var last_back_tap_frame := -BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES - 1
-var pending_jump_direction := 0.0
-var pending_jump_horizontal_multiplier := 1.0
 var pending_sonic_projectile_speed_multiplier := 1.0
 var sweep_afterimage_spawn_count := 0
-var attack_afterimage_spawn_count := 0
 var crouched_heavy_punch_has_jumped := false
 var sonic_charge_effect: Node2D
 var grab_succeeded := false

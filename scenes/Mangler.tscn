@@ -1,107 +1,38 @@
-[gd_scene load_steps=11 format=3 uid="uid://cemh2xowvxf8g"]
+[gd_scene load_steps=7 format=3 uid="uid://cemh2xowvxf8g"]
 
-[ext_resource type="Script" path="res://scripts/Mangler.gd" id="1_mangler"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/characters/mangler/idle_frames.tres" id="2_frames"]
-[ext_resource type="Script" path="res://scripts/FighterDebugOverlay.gd" id="3_debug"]
-[ext_resource type="Script" path="res://scripts/FighterCombat.gd" id="4_combat"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(120, 240)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
-size = Vector2(70, 35)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_grab_box"]
+[ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/Mangler.gd" id="2_mangler"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/characters/mangler/idle_frames.tres" id="3_frames"]
+[sub_resource type="RectangleShape2D" id="GrabShape"]
 size = Vector2(115, 155)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_grab_headbutt"]
+[sub_resource type="RectangleShape2D" id="HeadbuttShape"]
 size = Vector2(95, 70)
+[sub_resource type="SpriteFrames" id="GrabFrames"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox_head"]
-size = Vector2(55, 55)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox_torso"]
-size = Vector2(115, 155)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox_legs"]
-size = Vector2(100, 135)
-
-[node name="Mangler" type="CharacterBody2D"]
-collision_layer = 8
-collision_mask = 9
-script = ExtResource("1_mangler")
-
-[node name="GroundShadow" type="Polygon2D" parent="."]
-top_level = true
-z_index = -1
-z_as_relative = false
-color = Color(0.075, 0.055, 0.045, 1)
-polygon = PackedVector2Array(-68, 0, -63, -5, -48, -9, -25, -12, 0, -13, 25, -12, 48, -9, 63, -5, 68, 0, 63, 5, 48, 9, 25, 12, 0, 13, -25, 12, -48, 9, -63, 5)
-
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -115)
-scale = Vector2(0.85, 0.85)
-sprite_frames = ExtResource("2_frames")
+[node name="Mangler" instance=ExtResource("1_base")]
+script = ExtResource("2_mangler")
+[node name="AnimatedSprite2D" parent="." index="1"]
+sprite_frames = ExtResource("3_frames")
 animation = &"idle"
 autoplay = "idle"
-
 [node name="GrabFrontSprite" type="AnimatedSprite2D" parent="."]
 z_index = 50
 z_as_relative = false
 position = Vector2(0, -115)
 scale = Vector2(0.85, 0.85)
+sprite_frames = SubResource("GrabFrames")
 visible = false
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -120)
-shape = SubResource("RectangleShape2D_1")
-
-[node name="Hitbox" type="Area2D" parent="."]
-collision_layer = 2
-collision_mask = 4
-
-[node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
-position = Vector2(35, -110)
-shape = SubResource("RectangleShape2D_hitbox")
-disabled = true
-
 [node name="GrabBox" type="Area2D" parent="."]
 collision_layer = 2
 collision_mask = 4
-
 [node name="GrabBoxShape" type="CollisionShape2D" parent="GrabBox"]
 position = Vector2(92, -145)
-shape = SubResource("RectangleShape2D_grab_box")
+shape = SubResource("GrabShape")
 disabled = true
-
 [node name="GrabHeadbuttHitbox" type="Area2D" parent="."]
 collision_layer = 2
 collision_mask = 4
-
 [node name="GrabHeadbuttHitboxShape" type="CollisionShape2D" parent="GrabHeadbuttHitbox"]
 position = Vector2(76, -230)
-shape = SubResource("RectangleShape2D_grab_headbutt")
+shape = SubResource("HeadbuttShape")
 disabled = true
-
-[node name="Hurtbox" type="Area2D" parent="." groups=["hurtbox"]]
-collision_layer = 4
-collision_mask = 2
-
-[node name="HeadHurtbox" type="CollisionShape2D" parent="Hurtbox"]
-position = Vector2(0, -252.5)
-shape = SubResource("RectangleShape2D_hurtbox_head")
-
-[node name="TorsoHurtbox" type="CollisionShape2D" parent="Hurtbox"]
-position = Vector2(0, -166)
-shape = SubResource("RectangleShape2D_hurtbox_torso")
-
-[node name="LegsHurtbox" type="CollisionShape2D" parent="Hurtbox"]
-position = Vector2(0, -67.5)
-shape = SubResource("RectangleShape2D_hurtbox_legs")
-
-[node name="Combat" type="Node" parent="."]
-script = ExtResource("4_combat")
-
-[node name="DebugOverlay" type="Node2D" parent="."]
-z_index = 10
-script = ExtResource("3_debug")

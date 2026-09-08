@@ -1,9 +1,7 @@
-extends Mangler
+extends Fighter
 class_name Arianna
 
-## Arianna rispetta il contratto Fighter e riusa temporaneamente da Mangler
-## l'implementazione di movimento e reazioni, personalizzando moveset e atlas.
-## finché non verranno integrate le sue mosse.
+## Fighter specializzato di Arianna, indipendente dal controller e dalla scena di Mangler.
 
 const AnimationCatalog := preload("res://scripts/AriannaAnimationCatalog.gd")
 const BateauProjectile := preload("res://scripts/AriannaBateauProjectile.gd")
@@ -430,8 +428,7 @@ var back_jump_elapsed := 0.0
 
 
 func _ready() -> void:
-	# La scena ereditata punta allo SpriteFrames di Mangler: duplicarlo evita che
-	# Player 2 sovrascriva l'atlante idle di Arianna durante il proprio _ready().
+	# Ogni istanza mantiene una libreria di frame indipendente.
 	animated_sprite.sprite_frames = animated_sprite.sprite_frames.duplicate(true)
 	super._ready()
 	AnimationCatalog.new(self).configure_all()
@@ -955,8 +952,14 @@ func update_sprite_scale() -> void:
 		)
 	)
 	animated_sprite.position = ARIANNA_SPRITE_POSITION
-	grab_front_sprite.scale = ARIANNA_SPRITE_SCALE
-	grab_front_sprite.position = ARIANNA_SPRITE_POSITION
+
+
+func get_attack_motion_profile(animation_name: StringName) -> Dictionary:
+	if animation_name == &"arianna_crouched_strong_punch":
+		return {"start_ratio": 0.20, "end_ratio": 0.59, "tint": Color(1.0, 0.78, 0.55), "alpha": 0.24, "lifetime": 0.13, "offset": 7.0, "stretch": 1.035}
+	if animation_name in [&"arianna_low_medium_punch", &"arianna_strong_punch", &"arianna_strong_kick", &"arianna_low_strong_kick"]:
+		return {"start_ratio": 0.28, "end_ratio": 0.78, "tint": Color(1.0, 0.78, 0.55), "alpha": 0.24, "lifetime": 0.13, "offset": 7.0, "stretch": 1.035}
+	return {}
 
 
 ## Lo slicing degli atlas è gestito da AriannaAnimationCatalog.

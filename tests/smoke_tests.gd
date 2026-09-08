@@ -235,6 +235,14 @@ func _test_arianna_idle() -> void:
 	arianna.set_physics_process(false)
 	root.add_child(arianna)
 	await process_frame
+	_expect(
+		arianna is Fighter
+		and arianna.get_script().get_base_script() == load("res://scripts/Fighter.gd")
+		and not arianna.has_node("GrabFrontSprite")
+		and not arianna.has_node("GrabBox")
+		and not arianna.has_node("GrabHeadbuttHitbox"),
+		"Arianna eredita direttamente da Fighter e non contiene nodi specifici di Mangler"
+	)
 	var frames := arianna.animated_sprite.sprite_frames
 	var last_frame := frames.get_frame_texture(&"idle", 23) as AtlasTexture
 	_expect(frames.get_frame_count(&"idle") == 24, "Arianna idle usa esattamente 24 frame")
