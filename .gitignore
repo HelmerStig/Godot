@@ -1,4 +1,46 @@
-# Godot 4+ specific ignores
+# Godot 4+
 .godot/
+/.godot-test-appdata/
 /android/
+
+# Editor e sistema operativo
 .vscode/settings.json
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Variabili d'ambiente e segreti locali
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Python: ambienti virtuali, bytecode e cache
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Cache generiche
+.cache/
+.tox/
+.nox/
+
+# Output temporanei e log locali
+/tmp/
+/temp/
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+*.log

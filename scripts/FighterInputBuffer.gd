@@ -177,6 +177,46 @@ func consume_attack(
 	return NO_DIRECTION
 
 
+func consume_attack_chord(
+	attack_actions: Array[StringName],
+	max_age_frames: int = DEFAULT_ATTACK_BUFFER_FRAMES,
+	chord_window_frames: int = 0
+) -> int:
+	"""Consuma più attacchi simultanei o premuti entro una breve finestra."""
+	if attack_actions.is_empty():
+		return NO_DIRECTION
+	var current_frame := Engine.get_physics_frames()
+	var matched_frames: Dictionary = {}
+	var newest_frame := -1
+	var newest_direction := NO_DIRECTION
+	for entry in _history:
+		var entry_frame := int(entry["frame"])
+		if current_frame - entry_frame > max_age_frames:
+			break
+		var attacks: Array = entry["attacks"]
+		for attack_action in attack_actions:
+			if (
+				matched_frames.has(attack_action)
+				or not attacks.has(attack_action)
+				or entry_frame <= int(_consumed_attack_frames.get(attack_action, -1))
+			):
+				continue
+			matched_frames[attack_action] = entry_frame
+			if entry_frame > newest_frame:
+				newest_frame = entry_frame
+				newest_direction = int(entry["direction"])
+	if matched_frames.size() != attack_actions.size():
+		return NO_DIRECTION
+	var oldest_frame := newest_frame
+	for matched_frame in matched_frames.values():
+		oldest_frame = mini(oldest_frame, int(matched_frame))
+	if newest_frame - oldest_frame > chord_window_frames:
+		return NO_DIRECTION
+	for attack_action in attack_actions:
+		_consumed_attack_frames[attack_action] = int(matched_frames[attack_action])
+	return newest_direction
+
+
 func matches_recent_sequence(
 	sequence: Array[int], within_frames: int = DEFAULT_MOTION_WINDOW_FRAMES
 ) -> bool:

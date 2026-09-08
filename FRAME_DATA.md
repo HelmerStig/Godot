@@ -35,6 +35,38 @@ I valori seguenti provengono da `data/attacks/*.tres`. I frame sono misurati agl
 | Supermossa (rullo) | standing super | `super_drum_roll` | 48 | 5, 11, 17, 23 (esplosioni rosse) | 25% vita massima, una volta al contatto | 2 esecuzioni, poi idle | 24 | 0 | super | no |
 | Reazione al rullo | frozen hit | `super_drum_hurt` | 48 | — | — | loop per tutta la durata del rullo | 4-13 di `hurt-high.png` | 0 | super | sì |
 | Caduta dopo il rullo | knockdown | `super_drum_knockdown` | 24 | — | — | poi `knockdown_recovery` | 11-25 di `ko.png` | 0 | super | no |
+| Arianna idle | standing idle | `idle` | 24 | — | — | loop | 1-24 | 0 | base | sì |
+| Arianna camminata avanti | standing walk | `walk` | 24 | — | — | loop finché si tiene avanti | 1-48 | 0 | base | sì |
+| Arianna camminata indietro | standing backwalk | `backwalk` | 24 | — | — | loop finché si tiene indietro | 48-1 di `01-walk.png` | 0 | base | sì |
+| Arianna corsa | double-tap forward | `run` | 24 | — | — | loop fino a collisione | 1-48 | 0 | movement | sì |
+| Arianna salto indietro | double-tap back | `arianna_back_jump` | 48 | — | — | idle subito dopo frame 49 | 28-49 di `back-jump.png`; 50 px orizzontali in 1 s | 0 | movement | no |
+| Arianna accovacciata | hold down | `crouch` → `arianna_crouch_recovery` | 48 | — | — | hold frame 19 | 1-19; rilascio 18-1 | 0 | stance | no |
+| Arianna guardia alta | hold back durante attacco avversario | `block_high` → `block_high_recovery` | 48 | — | — | hold frame 16 finché l'attacco resta attivo | 1-16; fine attacco/rilascio 15-1 | 0 | high guard | no |
+| Arianna guardia media | hold back durante attacco MID avversario | `block_mid` → `block_mid_recovery` | 48 | — | — | hold frame 13 finché l'attacco resta attivo | 1-13; fine attacco/rilascio 12-1 | 0 | mid guard | no |
+| Arianna guardia bassa | hold down+back durante attacco LOW avversario | `block_low_crouched` → `block_low_recovery` | 48 | — | — | hold frame 16 finché l'attacco resta attivo | 1-16; fine attacco/rilascio 15-1 | 0 | low guard | no |
+| Arianna salto | jump | `jump` | configurabile (`ARIANNA_JUMP_FPS`) | stacco configurabile (`ARIANNA_JUMP_TAKEOFF_FRAME`, zero-based) | — | sequenza continua; idle solo al suolo | 49 | 0 | movement | no |
+| Arianna pugno leggero in salto | airborne light punch | `arianna_jump_light_punch` | 48 | sorgenti 14-18 | frame 19 × 7 intervalli | 18-14, poi `jump` dal frame 32; idle se al suolo | 17 runtime | 5 | high | no |
+| Arianna pugno medio in salto | airborne medium punch | `arianna_jump_medium_punch` | 48 | sorgenti 5-19 | 20-25 | recovery 23→7 a passi di 2, poi `jump` dal frame 29; idle se al suolo | 30 runtime | 10 | high | no |
+| Arianna pugno forte in salto | airborne strong punch | `arianna_jump_strong_punch` | 48 | sorgenti 1-14 | 15-21 | 22-27, poi `jump` dal frame 40; idle se al suolo | 27 | 15 | high | no |
+| Arianna calcio leggero in salto | airborne light kick | `arianna_jump_light_kick` | 48 | sorgenti 1-8 | sorgenti 9-15 | recovery 14→1, poi `jump` dal frame 40; idle se al suolo | 29 runtime | 8 | mid | no |
+| Arianna calcio medio in salto | airborne medium kick | `arianna_jump_medium_kick` | 60 | sorgenti 1-27 | dal frame runtime 28 fino alla fine | completa 1→35, recovery 34→22, poi `jump` dal frame 30; idle se al suolo | 48 runtime | 12 | high | no |
+| Arianna calcio potente in salto | airborne strong kick | `arianna_jump_strong_kick` | 48 | sorgenti 1-14 | sorgenti 15-19 | completa 1→30, poi `jump` dal frame 35; idle se al suolo | 30 | 20 | high | no |
+| Arianna speciale baseball | QCF + light/medium/heavy punch | `arianna_baseball_special` | 48 | tornado al frame visibile 24 | 175 px avanti, punta inferiore sulla linea del terreno | tutti i 49 frame, poi idle | 49 | light 420 px/s e luce 1×; medium 560 px/s e luce 1,35×; heavy 700 px/s e luce 1,70× | danni 10/14/18, mid (`hurt_medium`), esplosione azzurra sulla pancia e scomparsa | no |
+| Arianna hurt medium | colpo MID ricevuto | `hurt_mid` | 48 | — | — | sorgenti 1→8, poi 7→1 | 15 runtime | rinculo Godot al 45% | — | no |
+| Arianna hurt high | colpo HIGH ricevuto | `hurt_high` | 24 | — | — | sorgenti 1→7, poi idle | 7 | — | — | no |
+| Arianna hurt low | colpo LOW ricevuto | `hurt_low` | 24 | — | — | posa Arianna mantenuta durante hitstun | 1 | esplosione azzurra sullo stomaco | — | no |
+| Tutti i fighter hurt mid/low | colpo MID o LOW ricevuto | `hurt_mid` / `hurt_low` | dipende dal fighter | — | MID `(0, -150)`; LOW `(0, -72)` | invariata | invariata | 64 particelle azzurre: stomaco per MID, gambe per LOW | — | no |
+| Arianna pugno leggero | standing light punch | `arianna_light_punch` → `arianna_light_punch_recovery` | 48 | 6 | 3 | 9 | 18 (1-9, poi 9-1) | 5 | high | no |
+| Arianna pugno leggero basso | down + light punch | `arianna_low_light_punch` → `arianna_low_light_punch_recovery` | 48 | 11 | 4 | 14 | 29 (1-15, poi 14-1) | 5 | mid | no |
+| Arianna pugno medio | standing medium punch | `arianna_medium_punch` → `arianna_medium_punch_recovery` | 48 | 20 | 5 | 24 | 49 (1-25, poi 24-1) | 10 | high | no |
+| Arianna pugno medio basso | down + medium punch | `arianna_low_medium_punch` → `arianna_low_medium_punch_recovery` | 24 | 9 | 3 | 11 | 20 (1-12, poi 11-4) | 10 | mid | no |
+| Arianna pugno forte | standing strong punch | `arianna_strong_punch` | 48 | 22 | 6 | 27 | 49 (1-49) | 15 | high | no |
+| Arianna pugno forte basso | down + strong punch | `arianna_crouched_strong_punch` | 48 | 7 | 14 | 20 | 35 (1-21, poi 36-49) | 15 | high | no |
+| Arianna calcio leggero | standing light kick | `arianna_light_kick` → `arianna_light_kick_recovery` | 48 | 9 | 4 | 12 | 25 (11-23, poi 22-11) | 8 | mid | no |
+| Arianna calcio leggero basso | down + light kick | `arianna_low_light_kick` → `arianna_low_light_kick_recovery` | 60 | 17 | 4 | 20 | 41 (1-21, poi 20-1) | 8 | low | no |
+| Arianna calcio medio | standing medium kick | `arianna_medium_kick` → `arianna_medium_kick_recovery` | 48 | 17 | 4 | 20 | 41 (8-28, poi 27-8) | 12 | mid | no |
+| Arianna calcio medio basso | down + medium kick | `arianna_low_medium_kick` → `arianna_low_medium_kick_recovery` | 48 | 10 | 4 | 13 | 27 (8-21, poi 20-8) | 12 | low | no |
+| Arianna calcio forte | standing strong kick | `arianna_strong_kick` | 48 | 24 | 7 | 30 | 43 (1-64, esclusi 13-24 e 44-52) | 20 | mid | no |
 | Testata da presa | grab follow-up | `grab_headbutt` | 25 | 16 | 1 | 8 | 25 | 15 | high/unblockable | no |
 | Vittima afferrata | reaction | `grabbed` | 24 | — | — | — | 32 (sorgente 10–25–10) | 0 | reaction | no |
 | Colpito in salto | airborne reaction | `hurted_in_jump` | 24 | — | — | — | 25 + 1 s hold | 0 | knockdown | sì |

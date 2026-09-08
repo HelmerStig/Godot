@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b3k8rmv2xqwfp"]
 
 [ext_resource type="PackedScene" uid="uid://cemh2xowvxf8g" path="res://scenes/Mangler.tscn" id="1_mangler"]
+[ext_resource type="PackedScene" path="res://scenes/Arianna.tscn" id="1_arianna"]
 [ext_resource type="Script" uid="uid://cqoa56rikots8" path="res://scripts/MainArena.gd" id="2_arena"]
 [ext_resource type="PackedScene" path="res://scenes/stages/DefaultStage.tscn" id="3_stage"]
 [ext_resource type="Script" uid="uid://bpl1g2vp1evh5" path="res://scripts/ArenaUI.gd" id="4_ui"]
@@ -21,7 +22,7 @@ position = Vector2(0, 600)
 position = Vector2(1152, 25)
 shape = SubResource("RectangleShape2D_ground")
 
-[node name="Player1" parent="." unique_id=630232954 instance=ExtResource("1_mangler")]
+[node name="Player1" parent="." unique_id=630232954 instance=ExtResource("1_arianna")]
 position = Vector2(876, 600)
 
 [node name="Player2" parent="." unique_id=297068697 instance=ExtResource("1_mangler")]
