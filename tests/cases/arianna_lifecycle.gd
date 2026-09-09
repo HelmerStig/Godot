@@ -108,9 +108,20 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	expect.call(
 		events.finished == completed_before + 1 and not arianna.jump_light_punch_active
 		and not arianna.combat.is_airborne_light_punch and arianna.velocity == Vector2.ZERO
-		and arianna.current_state == Fighter.State.IDLE,
+		and arianna.current_state == Fighter.State.IDLE and not arianna.aerial_attack_used,
 		"l'atterraggio conclude l'attacco aereo e ne azzera il contesto"
 	)
+	arianna.input_buffer.clear()
+	arianna.is_player_controlled = false
+	arianna.current_state = Fighter.State.JUMPING
+	arianna.input_buffer.record_input_snapshot(0, 0, [&"medium_punch"], arianna.is_facing_right)
+	arianna._physics_process(0.0)
+	expect.call(
+		arianna.jump_medium_punch_active and arianna.combat.is_attacking
+		and arianna.current_state == Fighter.State.ATTACKING,
+		"dopo l'atterraggio un nuovo salto accetta un altro attacco aereo"
+	)
+	arianna.combat.cancel_current_action()
 
 	arianna.reset_fighter(Vector2(800.0, MainArena.FLOOR_Y))
 	arianna.velocity = Vector2(0.0, 1.0)

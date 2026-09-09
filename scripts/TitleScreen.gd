@@ -1,6 +1,7 @@
 extends Control
 
 const TITLE_BACKGROUND_FILTER := preload("res://shaders/title_background_filter.gdshader")
+const TITLE_WATER_EFFECT := preload("res://shaders/title_water_effect.gdshader")
 
 var press_start_label: Label
 var blink_accum := 0.0
@@ -11,19 +12,30 @@ const BACKGROUND_LAYERS := [
 	"res://assets/backgrounds/default_stage/main-image/nuvole/nuvole-02.png",
 	"res://assets/backgrounds/default_stage/main-image/nuvole/nuvole-03.png",
 	"res://assets/backgrounds/default_stage/main-image/livello-03.png",
+	"res://assets/backgrounds/default_stage/main-image/water-level-03_5.png",
+	"res://assets/backgrounds/default_stage/main-image/riflessi/riflesso-1.png",
+	"res://assets/backgrounds/default_stage/main-image/riflessi/riflesso-2.png",
+	"res://assets/backgrounds/default_stage/main-image/riflessi/riflesso-3.png",
 	"res://assets/backgrounds/default_stage/main-image/livello-04.png",
 ]
 const BACKGROUND_Z_INDEX := -40
-const SCROLLING_LAYER_INDEXES := [1, 2, 3]
+const WATER_LAYER_INDEX := 5
+const SCROLLING_LAYER_INDEXES := [1, 2, 3, 6, 7, 8]
 const SCROLLING_LAYER_SPEEDS := {
 	1: 2.5, # nuvole-01, livello lontano
 	2: 4.5, # nuvole-02, livello intermedio
 	3: 7.0, # nuvole-03, livello vicino
+	6: 2.5, # riflesso-1: stessa parallasse di nuvole-01
+	7: 4.5, # riflesso-2: stessa parallasse di nuvole-02
+	8: 7.0, # riflesso-3: stessa parallasse di nuvole-03
 }
 const SCROLLING_LAYER_SEGMENTS := {
 	1: 1.0,
 	2: 1.0,
 	3: 1.0,
+	6: 1.0,
+	7: 1.0,
+	8: 1.0,
 }
 
 var cloud_textures: Dictionary = {}
@@ -107,6 +119,10 @@ func _add_layered_background() -> bool:
 		layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		layer.z_index = BACKGROUND_Z_INDEX + layer_index
+		if layer_index == WATER_LAYER_INDEX:
+			var water_material := ShaderMaterial.new()
+			water_material.shader = TITLE_WATER_EFFECT
+			layer.material = water_material
 		add_child(layer)
 	return true
 

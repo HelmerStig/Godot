@@ -1706,6 +1706,7 @@ func _finish_jump_light_punch(landed: bool) -> void:
 	jump_light_punch_active = false
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	if landed or is_on_floor():
+		reset_airborne_combat_state()
 		velocity = Vector2.ZERO
 		change_state(State.IDLE)
 		return
@@ -1732,6 +1733,7 @@ func _finish_jump_medium_punch(landed: bool) -> void:
 	jump_medium_punch_active = false
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	if landed or is_on_floor():
+		reset_airborne_combat_state()
 		velocity = Vector2.ZERO
 		change_state(State.IDLE)
 		return
@@ -1758,6 +1760,7 @@ func _finish_jump_strong_punch(landed: bool) -> void:
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	combat.hitbox_shape.rotation = 0.0
 	if landed or is_on_floor():
+		reset_airborne_combat_state()
 		velocity = Vector2.ZERO
 		change_state(State.IDLE)
 		return
@@ -1788,6 +1791,7 @@ func _finish_jump_light_kick(landed: bool) -> void:
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	combat.hitbox_shape.rotation = 0.0
 	if landed or is_on_floor():
+		reset_airborne_combat_state()
 		velocity = Vector2.ZERO
 		change_state(State.IDLE)
 		return
@@ -1819,6 +1823,7 @@ func _finish_jump_medium_kick(landed: bool) -> void:
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	combat.hitbox_shape.rotation = 0.0
 	if landed or is_on_floor():
+		reset_airborne_combat_state()
 		velocity = Vector2.ZERO
 		change_state(State.IDLE)
 		return
@@ -1850,6 +1855,7 @@ func _finish_jump_strong_kick(landed: bool) -> void:
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	combat.hitbox_shape.rotation = 0.0
 	if landed or is_on_floor():
+		reset_airborne_combat_state()
 		velocity = Vector2.ZERO
 		change_state(State.IDLE)
 		return

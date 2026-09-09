@@ -485,10 +485,17 @@ func update_sprite_scale() -> void:
 
 
 func start_jump(horizontal_direction: float) -> void:
+	reset_airborne_combat_state()
 	pending_jump_direction = horizontal_direction
 	pending_jump_horizontal_multiplier = 1.0
 	velocity = Vector2.ZERO
 	change_state(State.JUMP_STARTUP)
+
+
+func reset_airborne_combat_state() -> void:
+	"""Riabilita le azioni disponibili all'inizio o alla fine di un salto."""
+	aerial_attack_used = false
+	force_idle_until_landing = false
 
 
 func begin_jump_ascent() -> void:
@@ -556,6 +563,7 @@ func update_state() -> void:
 	if not is_on_floor():
 		change_state(State.JUMPING)
 	elif current_state == State.JUMPING and velocity.y >= 0.0:
+		reset_airborne_combat_state()
 		velocity.x = 0.0
 		change_state(State.IDLE)
 	elif is_zero_approx(velocity.x) and current_state in [State.WALKING, State.RUNNING]:
@@ -625,8 +633,7 @@ func flip_character() -> void:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
-	aerial_attack_used = false
-	force_idle_until_landing = false
+	reset_airborne_combat_state()
 	position = spawn_position
 	velocity = Vector2.ZERO
 	shadow_ground_y = spawn_position.y

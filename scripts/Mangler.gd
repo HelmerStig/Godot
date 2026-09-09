@@ -383,7 +383,7 @@ func _physics_process(delta: float) -> void:
 	):
 		clear_sonic_charge_effect()
 	if force_idle_until_landing and is_on_floor():
-		force_idle_until_landing = false
+		reset_airborne_combat_state()
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
 	if current_state in [State.HIT, State.SWEEP_KNOCKDOWN]:
@@ -932,8 +932,7 @@ func begin_back_hop() -> void:
 
 func start_jump(horizontal_direction: float) -> void:
 	"""Riproduce la preparazione e memorizza la direzione scelta allo stacco."""
-	aerial_attack_used = false
-	force_idle_until_landing = false
+	reset_airborne_combat_state()
 	pending_jump_direction = signf(horizontal_direction)
 	pending_jump_horizontal_multiplier = (
 		RUN_JUMP_HORIZONTAL_MULTIPLIER if current_state == State.RUNNING else 1.0
