@@ -31,6 +31,36 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		arena.screen_shake_time_left > 0.0 and arena.camera.offset != Vector2.ZERO,
 		"la camera applica e smorza gli impulsi di screen shake"
 	)
+	var mangler := arena.player2 as Mangler
+	mangler.start_direct_grab()
+	expect.call(
+		mangler.current_state == Fighter.State.IDLE
+		and not mangler.grab_succeeded and mangler.grabbed_target == null
+		and not mangler.grab_front_sprite.visible,
+		"la presa di Mangler è disattivata"
+	)
 	arena.queue_free()
 	await tree.process_frame
+
+	var character_selection := tree.root.get_node_or_null("CharacterSelection")
+	var previous_player1_id: String = character_selection.player1_id
+	var previous_player2_id: String = character_selection.player2_id
+	character_selection.player1_id = "mangler"
+	character_selection.player2_id = "arianna"
+	var selected_arena := arena_scene.instantiate() as MainArena
+	tree.root.add_child(selected_arena)
+	await tree.process_frame
+	var selected_mangler := selected_arena.player1 as Mangler
+	selected_arena.round_ended.emit(1)
+	expect.call(
+		selected_mangler != null
+		and selected_mangler.current_state == Fighter.State.VICTORY
+		and selected_mangler.animated_sprite.animation == &"victory"
+		and selected_mangler.animated_sprite.is_playing(),
+		"Mangler scelto come Player 1 riceve il round vinto e avvia victory"
+	)
+	selected_arena.queue_free()
+	await tree.process_frame
+	character_selection.player1_id = previous_player1_id
+	character_selection.player2_id = previous_player2_id
 	return true

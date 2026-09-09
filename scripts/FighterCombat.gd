@@ -10,6 +10,7 @@ signal knocked_out
 signal attack_started(attack_name: StringName)
 signal attack_finished
 signal attack_cancelled
+signal attack_connected(attack_name: StringName, result: DamageResult)
 
 enum DamageResult {
 	IGNORED,
@@ -844,6 +845,7 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		0,
 		not is_special_720_punch
 	)
+	attack_connected.emit(current_attack.attack_id, damage_result)
 	if should_launch and damage_result == DamageResult.HIT:
 		# Il lancio accompagna solo un colpo entrato e non letale.
 		var launch_dir := 1.0 if fighter.is_facing_right else -1.0

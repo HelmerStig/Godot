@@ -102,7 +102,6 @@ const ATTACK_EFFECT_ANIMATIONS := [
 	&"jump_heavy_kick",
 	&"special_720_punch",
 	&"special_sonic_boom",
-	&"grab_headbutt",
 ]
 const CROUCHED_MEDIUM_KICK_SHEET := preload(
 	"res://assets/sprites/characters/mangler/basic-moves/medium-kick/crouched_medium_kick.png"
@@ -362,7 +361,7 @@ var super_drum_roll_completed_loops := 0
 func _ready() -> void:
 	AnimationSetup.configure_all(self)
 	super._ready()
-	var arena: Node = owner
+	var arena: Node = get_parent()
 	if arena != null and arena.has_signal(&"round_ended"):
 		arena.connect(&"round_ended", _on_round_ended)
 
@@ -461,10 +460,6 @@ func handle_input() -> void:
 			input_buffer.clear()
 			start_super_start()
 			return
-		if is_grab_chord_pressed():
-			input_buffer.clear()
-			start_direct_grab()
-			return
 		if is_special_720_punch_chord_pressed():
 			input_buffer.clear()
 			combat.try_attack(&"special_720_punch")
@@ -535,19 +530,6 @@ func is_special_720_punch_chord_pressed() -> bool:
 		and (
 			Input.is_action_just_pressed(light_action)
 			or Input.is_action_just_pressed(medium_action)
-		)
-	)
-
-
-func is_grab_chord_pressed() -> bool:
-	var light_punch_action := get_input_action("light_punch")
-	var light_kick_action := get_input_action("light_kick")
-	return (
-		Input.is_action_pressed(light_punch_action)
-		and Input.is_action_pressed(light_kick_action)
-		and (
-			Input.is_action_just_pressed(light_punch_action)
-			or Input.is_action_just_pressed(light_kick_action)
 		)
 	)
 
@@ -733,23 +715,9 @@ func spawn_super_start_aura_explosion() -> Node2D:
 
 
 func start_direct_grab() -> void:
-	grab_succeeded = false
-	grab_headbow_explosion_spawned = false
-	grabbed_target = null
-	velocity = Vector2.ZERO
-	combat.set_guarding(false)
-	var target := get_direct_grab_target()
-	if target == null:
-		return
-	grab_succeeded = true
-	grabbed_target = target
-	z_index = target.z_index - 1
-	target.freeze_for_grab_preview(self)
-	target.set_combined_grab_hidden(true)
-	grab_box_shape.set_deferred("disabled", true)
-	grab_front_sprite.visible = false
-	change_state(State.ATTACKING)
-	animated_sprite.play(&"grab_headbow_combined")
+	# Le prese sono temporaneamente rimosse dal moveset.
+	# Il punto di ingresso resta neutro finché non verrà riprogettato.
+	return
 
 
 func get_direct_grab_target() -> Fighter:
