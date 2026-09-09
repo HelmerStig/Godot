@@ -189,6 +189,7 @@ const ARIANNA_WHISTLE_SOUND := preload(
 )
 const ARIANNA_MEDIUM_PUNCH_SWOSH_SOUND := preload("res://assets/sounds/sfx/swosh.wav")
 const ARIANNA_MEDIUM_PUNCH_HIT_SOUND := preload("res://assets/sounds/sfx/light-punch.wav")
+const ARIANNA_STRONG_PUNCH_HIT_SOUND := preload("res://assets/sounds/sfx/strong-punch.wav")
 const ARIANNA_WHISTLE_SPECIAL_SOURCE_FRAME_COUNT := 25
 const ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT := 49
 const ARIANNA_WHISTLE_SPECIAL_COLUMNS := 5
@@ -379,7 +380,12 @@ const ARIANNA_SPRITE_POSITION := Vector2(0.0, -120.0)
 ## Ritardo tra l'avvio della mossa e il suono di movimento.
 @export_range(0.0, 1.0, 0.01, "suffix:s") var medium_punch_swosh_delay_sec := 0.2
 @export_range(-80.0, 12.0, 0.5) var medium_punch_swosh_volume_db := -4.0
-@export_range(-80.0, 12.0, 0.5) var medium_punch_hit_volume_db := -3.0
+@export_range(-80.0, 12.0, 0.5) var medium_punch_hit_volume_db := -7.0
+
+@export_group("Audio SP")
+@export_range(0.0, 1.0, 0.01, "suffix:s") var strong_punch_swosh_delay_sec := 0.5
+@export_range(-80.0, 12.0, 0.5) var strong_punch_swosh_volume_db := -4.0
+@export_range(-80.0, 12.0, 0.5) var strong_punch_hit_volume_db := -3.0
 
 var light_punch_active := false
 var lp_mp_combo_active := false
@@ -417,6 +423,13 @@ var medium_punch_hit_audio_player: AudioStreamPlayer
 var medium_punch_audio_active := false
 var medium_punch_hit_sound_played := false
 var medium_punch_audio_play_id := 0
+var light_punch_audio_active := false
+var light_punch_hit_sound_played := false
+var strong_punch_swosh_audio_player: AudioStreamPlayer
+var strong_punch_hit_audio_player: AudioStreamPlayer
+var strong_punch_audio_active := false
+var strong_punch_hit_sound_played := false
+var strong_punch_audio_play_id := 0
 var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
@@ -458,6 +471,14 @@ func _ready() -> void:
 	medium_punch_hit_audio_player.name = "MediumPunchHitAudio"
 	medium_punch_hit_audio_player.stream = ARIANNA_MEDIUM_PUNCH_HIT_SOUND
 	add_child(medium_punch_hit_audio_player)
+	strong_punch_swosh_audio_player = AudioStreamPlayer.new()
+	strong_punch_swosh_audio_player.name = "StrongPunchSwoshAudio"
+	strong_punch_swosh_audio_player.stream = ARIANNA_MEDIUM_PUNCH_SWOSH_SOUND
+	add_child(strong_punch_swosh_audio_player)
+	strong_punch_hit_audio_player = AudioStreamPlayer.new()
+	strong_punch_hit_audio_player.name = "StrongPunchHitAudio"
+	strong_punch_hit_audio_player.stream = ARIANNA_STRONG_PUNCH_HIT_SOUND
+	add_child(strong_punch_hit_audio_player)
 	combat.attack_connected.connect(_on_combat_attack_connected)
 	var arena: Node = get_parent()
 	if (
@@ -898,7 +919,8 @@ func _on_round_ended(winner: int) -> void:
 
 func reset_fighter(spawn_position: Vector2) -> void:
 	combat.cancel_current_action()
-	stop_medium_punch_audio()
+	stop_punch_audio()
+	stop_strong_punch_audio()
 	_clear_attack_flags()
 	# Le mosse di Arianna sono gestite da flag dedicati: se il round termina
 	# durante una di esse, devono essere azzerati prima del reset condiviso.
@@ -940,7 +962,8 @@ func _on_combat_attack_cancelled() -> void:
 	_stop_whistle_air_effect(true)
 	if is_instance_valid(whistle_audio_player):
 		whistle_audio_player.stop()
-	stop_medium_punch_audio()
+	stop_punch_audio()
+	stop_strong_punch_audio()
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	super._on_combat_attack_cancelled()
 
@@ -981,19 +1004,65 @@ func _on_combat_attack_connected(attack_name: StringName, result: int) -> void:
 		and not medium_punch_hit_sound_played
 	):
 		medium_punch_hit_sound_played = true
-		medium_punch_hit_audio_player.stop()
-		medium_punch_hit_audio_player.volume_db = medium_punch_hit_volume_db
-		medium_punch_hit_audio_player.play()
+		play_punch_hit_sound()
+	if (
+		attack_name == &"light_punch"
+		and result != FighterCombat.DamageResult.IGNORED
+		and light_punch_audio_active
+		and not light_punch_hit_sound_played
+	):
+		light_punch_hit_sound_played = true
+		play_punch_hit_sound()
+	if (
+		attack_name == &"heavy_punch"
+		and result != FighterCombat.DamageResult.IGNORED
+		and strong_punch_audio_active
+		and not strong_punch_hit_sound_played
+	):
+		strong_punch_hit_sound_played = true
+		strong_punch_hit_audio_player.stop()
+		strong_punch_hit_audio_player.volume_db = strong_punch_hit_volume_db
+		strong_punch_hit_audio_player.play()
 
 
-func stop_medium_punch_audio() -> void:
+func play_punch_hit_sound() -> void:
+	medium_punch_hit_audio_player.stop()
+	medium_punch_hit_audio_player.volume_db = medium_punch_hit_volume_db
+	medium_punch_hit_audio_player.play()
+
+
+func stop_punch_audio() -> void:
 	medium_punch_audio_play_id += 1
 	medium_punch_audio_active = false
 	medium_punch_hit_sound_played = false
+	light_punch_audio_active = false
+	light_punch_hit_sound_played = false
 	if is_instance_valid(medium_punch_swosh_audio_player):
 		medium_punch_swosh_audio_player.stop()
 	if is_instance_valid(medium_punch_hit_audio_player):
 		medium_punch_hit_audio_player.stop()
+
+
+func play_strong_punch_swosh() -> void:
+	strong_punch_audio_play_id += 1
+	var play_id := strong_punch_audio_play_id
+	if strong_punch_swosh_delay_sec > 0.0:
+		await get_tree().create_timer(strong_punch_swosh_delay_sec).timeout
+	if play_id != strong_punch_audio_play_id or not strong_punch_audio_active:
+		return
+	strong_punch_swosh_audio_player.stop()
+	strong_punch_swosh_audio_player.volume_db = strong_punch_swosh_volume_db
+	strong_punch_swosh_audio_player.play()
+
+
+func stop_strong_punch_audio() -> void:
+	strong_punch_audio_play_id += 1
+	strong_punch_audio_active = false
+	strong_punch_hit_sound_played = false
+	if is_instance_valid(strong_punch_swosh_audio_player):
+		strong_punch_swosh_audio_player.stop()
+	if is_instance_valid(strong_punch_hit_audio_player):
+		strong_punch_hit_audio_player.stop()
 
 
 func play_medium_punch_swosh() -> void:
@@ -1641,6 +1710,8 @@ func _start_light_punch() -> void:
 	var attack := character_data.get_attack(&"light_punch")
 	if attack == null:
 		return
+	light_punch_audio_active = true
+	light_punch_hit_sound_played = false
 	light_punch_active = true
 	velocity = Vector2.ZERO
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
@@ -1978,6 +2049,9 @@ func _start_strong_punch() -> void:
 	var attack := character_data.get_attack(&"heavy_punch")
 	if attack == null:
 		return
+	strong_punch_audio_active = true
+	strong_punch_hit_sound_played = false
+	play_strong_punch_swosh()
 	strong_punch_active = true
 	velocity = Vector2.ZERO
 	var high_variant := AttackVariantData.new()
@@ -2166,6 +2240,7 @@ func _on_animation_finished() -> void:
 		combat.disable_hitbox()
 		animated_sprite.play(&"arianna_light_punch_recovery")
 	elif animated_sprite.animation == &"arianna_light_punch_recovery":
+		light_punch_audio_active = false
 		combat.finish_animation_attack()
 		light_punch_active = false
 		change_state(State.IDLE)
@@ -2204,6 +2279,7 @@ func _on_animation_finished() -> void:
 		else:
 			change_state(State.IDLE)
 	elif animated_sprite.animation == &"arianna_strong_punch":
+		strong_punch_audio_active = false
 		combat.finish_animation_attack()
 		strong_punch_active = false
 		change_state(State.IDLE)
