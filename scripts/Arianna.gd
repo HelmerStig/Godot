@@ -199,7 +199,7 @@ const ARIANNA_WHISTLE_CHORD_WINDOW_FRAMES := 6
 const ARIANNA_WHISTLE_AIR_START_FRAME := 5 # Zero-based: fotogramma visibile 6.
 const ARIANNA_WHISTLE_SOUND_FRAME := 5 # Zero-based: fotogramma visibile 6.
 const ARIANNA_WHISTLE_AIR_END_FRAME := 19 # Zero-based: fotogramma visibile 20.
-const ARIANNA_WHISTLE_BATEAU_SPAWN_FRAME := 24 # MetÃ  della sequenza visibile 1-25-1.
+const ARIANNA_WHISTLE_BATEAU_SPAWN_FRAME := 12 # Primo quarto della sequenza visibile 1-25-1.
 const ARIANNA_WHISTLE_AIR_MOUTH_OFFSET := Vector2(64.0, -220.0)
 const ARIANNA_HURT_MEDIUM_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/hurt_medium.png"

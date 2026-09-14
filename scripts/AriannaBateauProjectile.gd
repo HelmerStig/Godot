@@ -38,7 +38,7 @@ const MOVE_SPEED := 800.0
 const ATTACK_TRIGGER_DISTANCE := 620.0
 const ATTACK_CONTACT_DISTANCE := 70.0
 const ATTACK_HIT_FRAME := 17
-const DAMAGE_RATIO := 0.30
+const DAMAGE_RATIO := 0.20
 const HIT_STOP_DURATION := 0.07
 const SCREEN_SHAKE_DISTANCE := 4.0
 const OFFSCREEN_MARGIN := 190.0
@@ -56,6 +56,7 @@ var has_hit := false
 var run_dust: CPUParticles2D
 var speed_trail: CPUParticles2D
 var blue_magic_trail: CPUParticles2D
+var flame_trail: CPUParticles2D
 var run_audio_player: AudioStreamPlayer
 var attack_audio_player: AudioStreamPlayer
 var attack_sound_played := false
@@ -127,6 +128,8 @@ func _start_attack() -> void:
 	if current_state != State.RUNNING:
 		return
 	current_state = State.ATTACKING
+	if is_instance_valid(flame_trail):
+		flame_trail.emitting = false
 	attack_sound_played = false
 	animated_sprite.play(&"attack")
 	_play_attack_sound_on_configured_frame()
@@ -240,6 +243,34 @@ func _create_movement_effects() -> void:
 	blue_magic_trail.z_index = -3
 	add_child(blue_magic_trail)
 
+	flame_trail = CPUParticles2D.new()
+	flame_trail.name = "FlameTrail"
+	flame_trail.amount = 110
+	flame_trail.lifetime = 0.42
+	flame_trail.preprocess = 0.4
+	flame_trail.position = Vector2(-travel_direction * 64.0, -40.0)
+	flame_trail.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	flame_trail.emission_rect_extents = Vector2(16.0, 34.0)
+	flame_trail.direction = Vector2(-travel_direction, -0.42).normalized()
+	flame_trail.spread = 26.0
+	flame_trail.initial_velocity_min = 95.0
+	flame_trail.initial_velocity_max = 190.0
+	flame_trail.gravity = Vector2(0.0, -48.0)
+	flame_trail.scale_amount_min = 0.22
+	flame_trail.scale_amount_max = 0.7
+	var flame_fade := Gradient.new()
+	flame_fade.colors = PackedColorArray([
+		Color(1.0, 0.98, 0.70, 0.95),
+		Color(1.0, 0.46, 0.08, 0.78),
+		Color(0.84, 0.08, 0.02, 0.0),
+	])
+	flame_fade.offsets = PackedFloat32Array([0.0, 0.34, 1.0])
+	flame_trail.color_ramp = flame_fade
+	flame_trail.texture = _create_flame_particle_texture()
+	flame_trail.material = additive
+	flame_trail.z_index = -4
+	add_child(flame_trail)
+
 	run_dust = CPUParticles2D.new()
 	run_dust.name = "RunDust"
 	run_dust.amount = 14
@@ -273,6 +304,24 @@ func _create_blue_particle_texture() -> GradientTexture2D:
 	texture.fill = GradientTexture2D.FILL_RADIAL
 	texture.fill_from = Vector2(0.5, 0.5)
 	texture.fill_to = Vector2(1.0, 0.5)
+	return texture
+
+
+func _create_flame_particle_texture() -> GradientTexture2D:
+	var gradient := Gradient.new()
+	gradient.colors = PackedColorArray([
+		Color(1.0, 0.96, 0.72, 1.0),
+		Color(1.0, 0.36, 0.04, 0.9),
+		Color(0.72, 0.03, 0.01, 0.0),
+	])
+	gradient.offsets = PackedFloat32Array([0.0, 0.34, 1.0])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.width = 14
+	texture.height = 20
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.78)
+	texture.fill_to = Vector2(0.5, 0.0)
 	return texture
 
 
@@ -370,6 +419,8 @@ func _on_animation_finished() -> void:
 			animated_sprite.play(&"back_to_run")
 		State.BACK_TO_RUN:
 			current_state = State.EXITING
+			if is_instance_valid(flame_trail):
+				flame_trail.emitting = true
 			animated_sprite.play(&"run")
 
 
