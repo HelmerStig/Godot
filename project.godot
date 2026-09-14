@@ -28,6 +28,7 @@ window/stretch/aspect="expand"
 [gui]
 
 theme/default_font="res://assets/fonts/Oswald-Variable.ttf"
+theme/custom="res://assets/ui/SanmoTheme.tres"
 
 [input]
 
