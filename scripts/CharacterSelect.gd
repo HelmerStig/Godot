@@ -21,6 +21,8 @@ const MANGLER_PORTRAIT := preload("res://assets/ui/portraits/mangler-portrait-v1
 
 var p1_portrait: TextureRect
 var p2_portrait: TextureRect
+var rising_particles: GPUParticles2D
+var rising_particle_material: ParticleProcessMaterial
 
 
 func _ready() -> void:
@@ -28,11 +30,14 @@ func _ready() -> void:
 	p1_index = _find_index(CharacterSelection.player1_id)
 	p2_index = _find_index(CharacterSelection.player2_id)
 	_build_ui()
+	resized.connect(_layout_rising_particles)
+	call_deferred("_layout_rising_particles")
 	_refresh_ui()
 
 
 func _build_ui() -> void:
 	_add_background()
+	_add_rising_particles()
 	_add_title()
 	_add_roster_area()
 	_add_p1_preview()
@@ -51,6 +56,57 @@ func _add_background() -> void:
 	bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+
+
+func _add_rising_particles() -> void:
+	var particle_gradient := Gradient.new()
+	particle_gradient.offsets = PackedFloat32Array([0.0, 0.28, 1.0])
+	particle_gradient.colors = PackedColorArray([
+		Color(1.0, 0.82, 0.42, 0.0),
+		Color(1.0, 0.88, 0.58, 0.82),
+		Color(1.0, 0.88, 0.58, 0.0),
+	])
+	var particle_texture := GradientTexture2D.new()
+	particle_texture.gradient = particle_gradient
+	particle_texture.fill = GradientTexture2D.FILL_RADIAL
+	particle_texture.fill_from = Vector2(0.5, 0.5)
+	particle_texture.fill_to = Vector2(1.0, 0.5)
+	particle_texture.width = 16
+	particle_texture.height = 16
+
+	rising_particle_material = ParticleProcessMaterial.new()
+	rising_particle_material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	rising_particle_material.direction = Vector3(0.0, -1.0, 0.0)
+	rising_particle_material.spread = 12.0
+	rising_particle_material.initial_velocity_min = 24.0
+	rising_particle_material.initial_velocity_max = 46.0
+	rising_particle_material.gravity = Vector3(0.0, -3.0, 0.0)
+	rising_particle_material.scale_min = 0.45
+	rising_particle_material.scale_max = 1.1
+	rising_particle_material.color = Color(1.0, 0.86, 0.58, 0.72)
+
+	rising_particles = GPUParticles2D.new()
+	rising_particles.name = "RisingBackgroundParticles"
+	rising_particles.amount = 72
+	rising_particles.lifetime = 8.0
+	rising_particles.preprocess = 8.0
+	rising_particles.texture = particle_texture
+	rising_particles.process_material = rising_particle_material
+	add_child(rising_particles)
+
+
+func _layout_rising_particles() -> void:
+	if rising_particles == null or rising_particle_material == null:
+		return
+	var viewport_size := get_viewport_rect().size
+	rising_particles.position = Vector2(viewport_size.x * 0.5, viewport_size.y + 12.0)
+	rising_particle_material.emission_box_extents = Vector3(viewport_size.x * 0.5, 6.0, 0.0)
+	rising_particles.visibility_rect = Rect2(
+		-viewport_size.x * 0.5 - 32.0,
+		-viewport_size.y - 96.0,
+		viewport_size.x + 64.0,
+		viewport_size.y + 128.0
+	)
 
 
 func _add_title() -> void:

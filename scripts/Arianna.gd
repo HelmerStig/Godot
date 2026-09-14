@@ -199,6 +199,7 @@ const ARIANNA_WHISTLE_CHORD_WINDOW_FRAMES := 6
 const ARIANNA_WHISTLE_AIR_START_FRAME := 5 # Zero-based: fotogramma visibile 6.
 const ARIANNA_WHISTLE_SOUND_FRAME := 5 # Zero-based: fotogramma visibile 6.
 const ARIANNA_WHISTLE_AIR_END_FRAME := 19 # Zero-based: fotogramma visibile 20.
+const ARIANNA_WHISTLE_BATEAU_SPAWN_FRAME := 24 # MetÃ  della sequenza visibile 1-25-1.
 const ARIANNA_WHISTLE_AIR_MOUTH_OFFSET := Vector2(64.0, -220.0)
 const ARIANNA_HURT_MEDIUM_SHEET := preload(
 	"res://assets/sprites/characters/arianna/basic-moves/hurt_medium.png"
@@ -412,9 +413,7 @@ var cat_wave_spawn_counts := {&"tullio": 0, &"tilda": 0, &"telma": 0}
 var cat_wave_generation := 0
 var cat_wave_random := RandomNumberGenerator.new()
 var whistle_special_active := false
-var whistle_frozen_target: Fighter
-var whistle_target_controls_enabled := true
-var whistle_target_can_move := true
+var whistle_bateau_spawned := false
 var whistle_air_effect: CPUParticles2D
 var whistle_audio_player: AudioStreamPlayer
 var whistle_sound_played := false
@@ -931,7 +930,6 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	points_forward_frozen_target = null
 	cat_wave_frozen_target = null
 	cat_wave_remaining = 0
-	whistle_frozen_target = null
 	jump_facing_locked = false
 	jump_rotation_finished = false
 	jump_takeoff_armed = false
@@ -953,11 +951,7 @@ func _on_combat_attack_cancelled() -> void:
 		if points_forward_frozen_target.combat.current_health > 0:
 			points_forward_frozen_target.controls_enabled = points_forward_target_controls_enabled
 			points_forward_frozen_target.can_move = points_forward_target_can_move
-	if is_instance_valid(whistle_frozen_target) and whistle_frozen_target.combat.current_health > 0:
-		whistle_frozen_target.controls_enabled = whistle_target_controls_enabled
-		whistle_frozen_target.can_move = whistle_target_can_move
 	points_forward_frozen_target = null
-	whistle_frozen_target = null
 	_clear_attack_flags()
 	_stop_whistle_air_effect(true)
 	if is_instance_valid(whistle_audio_player):
@@ -983,6 +977,7 @@ func _clear_attack_flags() -> void:
 	points_forward_super_active = false
 	points_forward_cat_wave_started = false
 	whistle_special_active = false
+	whistle_bateau_spawned = false
 	low_light_punch_active = false
 	medium_punch_active = false
 	low_medium_punch_active = false
@@ -1526,47 +1521,16 @@ func _start_whistle_special() -> void:
 	if is_instance_valid(whistle_audio_player):
 		whistle_audio_player.stop()
 	whistle_special_active = true
+	whistle_bateau_spawned = false
 	velocity = Vector2.ZERO
-	_hold_whistle_opponent_idle()
 	combat.begin_animation_attack(&"arianna_whistle_special", null, null, false)
 
 
-func _hold_whistle_opponent_idle() -> void:
-	whistle_frozen_target = null
-	if not is_instance_valid(opponent) or opponent.combat == null:
-		return
-	var opponent_is_guarding := (
-		opponent.combat.is_blocking
-		or opponent.current_state in [State.BLOCKING, State.BLOCK_RECOVERY]
-	)
-	if opponent_is_guarding:
-		return
-	whistle_frozen_target = opponent
-	whistle_target_controls_enabled = opponent.controls_enabled
-	whistle_target_can_move = opponent.can_move
-	opponent.combat.cancel_current_action()
-	opponent.controls_enabled = false
-	opponent.change_state(State.IDLE)
-	opponent.can_move = false
-	opponent.velocity = Vector2.ZERO
-
-
 func _finish_whistle_special() -> void:
-	var whistle_completed := (
-		animated_sprite.animation == &"arianna_whistle_special"
-		and animated_sprite.frame >= ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT - 1
-	)
 	_stop_whistle_air_effect()
 	combat.finish_animation_attack()
 	whistle_special_active = false
 	velocity = Vector2.ZERO
-	if is_instance_valid(whistle_frozen_target):
-		whistle_frozen_target.change_state(State.IDLE)
-		whistle_frozen_target.controls_enabled = whistle_target_controls_enabled
-		whistle_frozen_target.can_move = whistle_target_can_move
-	whistle_frozen_target = null
-	if whistle_completed:
-		_spawn_bateau_projectile()
 	change_state(State.IDLE)
 
 
@@ -2384,6 +2348,12 @@ func _on_animation_frame_changed() -> void:
 			_start_whistle_air_effect()
 		else:
 			_stop_whistle_air_effect()
+		if (
+			animated_sprite.frame >= ARIANNA_WHISTLE_BATEAU_SPAWN_FRAME
+			and not whistle_bateau_spawned
+		):
+			whistle_bateau_spawned = true
+			_spawn_bateau_projectile()
 	if animated_sprite.animation == &"arianna_baseball_special":
 		if (
 			animated_sprite.frame == ARIANNA_BASEBALL_TORNADO_SPAWN_FRAME

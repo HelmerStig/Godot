@@ -1381,10 +1381,9 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		whistle_command_started
 		and arianna.whistle_special_active
 		and arianna.animated_sprite.animation == &"arianna_whistle_special"
-		and whistle_target.current_state == Mangler.State.IDLE
-		and not whistle_target.controls_enabled
-		and not whistle_target.can_move,
-		"la mezzaluna tollera 3 frame tra i due calci e mantiene il rivale in idle"
+		and whistle_target.controls_enabled
+		and whistle_target.can_move,
+		"la mezzaluna tollera 3 frame tra i due calci e lascia libero il rivale"
 	)
 	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_AIR_START_FRAME - 1
 	arianna._on_animation_frame_changed()
@@ -1421,15 +1420,24 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		and arianna.whistle_air_effect == null,
 		"dopo il fotogramma 20 l'aria smette di essere emessa e si dissolve"
 	)
+	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_BATEAU_SPAWN_FRAME
+	arianna._on_animation_frame_changed()
+	var bateau_spawned_mid_whistle := tree.get_first_node_in_group(
+		"arianna_bateau_projectile"
+	) as AriannaBateauProjectile
+	expect.call(
+		arianna.whistle_bateau_spawned and is_instance_valid(bateau_spawned_mid_whistle),
+		"Bateau entra a metÃ  del fischio di Arianna"
+	)
 	arianna.animated_sprite.frame = Arianna.ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT - 1
 	arianna._on_animation_finished()
 	expect.call(
 		not arianna.whistle_special_active
 		and arianna.current_state == Mangler.State.IDLE
 		and arianna.animated_sprite.animation == &"idle"
-		and whistle_target.current_state == Mangler.State.IDLE
-		and whistle_target.controls_enabled,
-		"terminata la sequenza 1-25-1 Arianna e l'avversario vengono rilasciati in idle"
+		and whistle_target.controls_enabled
+		and whistle_target.can_move,
+		"terminata la sequenza 1-25-1 Arianna torna in idle senza alterare il rivale"
 	)
 	var bateau := tree.get_first_node_in_group(
 		"arianna_bateau_projectile"
@@ -1589,8 +1597,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		guarded_whistle_started
 		and whistle_target.current_state == Mangler.State.BLOCKING
 		and whistle_target.combat.is_blocking
-		and whistle_target.controls_enabled
-		and arianna.whistle_frozen_target == null,
+		and whistle_target.controls_enabled,
 		"la speciale fischio non forza in idle un avversario già in parata"
 	)
 	arianna._finish_whistle_special()
