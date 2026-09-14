@@ -25,6 +25,10 @@ window/size/mode=2
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[gui]
+
+theme/default_font="res://assets/fonts/Oswald-Variable.ttf"
+
 [input]
 
 p1_move_left={

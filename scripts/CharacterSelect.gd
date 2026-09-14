@@ -15,6 +15,12 @@ var hint_label: Label
 var p1_nav_cooldown := 0.0
 var p2_nav_cooldown := 0.0
 const NAV_COOLDOWN := 0.22
+const CHARACTER_SELECT_BACKGROUND := preload("res://assets/backgrounds/character-selection.png")
+const ARIANNA_PORTRAIT := preload("res://assets/ui/portraits/arianna-portrait-v2.png")
+const MANGLER_PORTRAIT := preload("res://assets/ui/portraits/mangler-portrait-v1.png")
+
+var p1_portrait: TextureRect
+var p2_portrait: TextureRect
 
 
 func _ready() -> void:
@@ -37,9 +43,13 @@ func _build_ui() -> void:
 
 
 func _add_background() -> void:
-	var bg := ColorRect.new()
+	var bg := TextureRect.new()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color(0.05, 0.05, 0.12, 1)
+	bg.texture = CHARACTER_SELECT_BACKGROUND
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 
 
@@ -74,11 +84,38 @@ func _add_roster_area() -> void:
 	for entry in roster:
 		var slot := Panel.new()
 		slot.custom_minimum_size = Vector2(156, 192)
+		var portrait_texture := _get_portrait(entry["id"])
+		if portrait_texture != null:
+			var portrait := TextureRect.new()
+			portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+			portrait.texture = portrait_texture
+			portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+			portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			slot.add_child(portrait)
+
+			var name_backdrop := ColorRect.new()
+			name_backdrop.color = Color(0.015, 0.02, 0.05, 0.78)
+			name_backdrop.set_anchor(SIDE_LEFT, 0.0)
+			name_backdrop.set_anchor(SIDE_RIGHT, 1.0)
+			name_backdrop.set_anchor(SIDE_TOP, 0.78)
+			name_backdrop.set_anchor(SIDE_BOTTOM, 1.0)
+			name_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			slot.add_child(name_backdrop)
+
 		var lbl := Label.new()
 		lbl.text = entry["label"]
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		if portrait_texture != null:
+			lbl.set_anchor(SIDE_LEFT, 0.0)
+			lbl.set_anchor(SIDE_RIGHT, 1.0)
+			lbl.set_anchor(SIDE_TOP, 0.78)
+			lbl.set_anchor(SIDE_BOTTOM, 1.0)
+			lbl.add_theme_font_size_override("font_size", 22)
+		else:
+			lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 		slot.add_child(lbl)
 		roster_grid.add_child(slot)
 		slots.append(slot)
@@ -104,12 +141,8 @@ func _add_p1_preview() -> void:
 	var portrait := Panel.new()
 	portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-	var portrait_lbl := Label.new()
-	portrait_lbl.text = "[PORTRAIT P1]"
-	portrait_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	portrait_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	portrait_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	portrait.add_child(portrait_lbl)
+	p1_portrait = _make_portrait()
+	portrait.add_child(p1_portrait)
 	preview.add_child(portrait)
 
 	p1_name_label = Label.new()
@@ -153,12 +186,8 @@ func _add_p2_preview() -> void:
 	var portrait := Panel.new()
 	portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-	var portrait_lbl := Label.new()
-	portrait_lbl.text = "[PORTRAIT P2]"
-	portrait_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	portrait_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	portrait_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	portrait.add_child(portrait_lbl)
+	p2_portrait = _make_portrait()
+	portrait.add_child(p2_portrait)
 	preview.add_child(portrait)
 
 	p2_name_label = Label.new()
@@ -199,6 +228,23 @@ func _make_cursor(color: Color) -> Panel:
 	style.border_color = color
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
+
+
+func _make_portrait() -> TextureRect:
+	var portrait := TextureRect.new()
+	portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	return portrait
+
+
+func _get_portrait(character_id: String) -> Texture2D:
+	if character_id == "arianna":
+		return ARIANNA_PORTRAIT
+	if character_id == "mangler":
+		return MANGLER_PORTRAIT
+	return null
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -248,8 +294,12 @@ func _process(delta: float) -> void:
 func _refresh_ui() -> void:
 	if p1_name_label != null:
 		p1_name_label.text = roster[p1_index]["label"]
+	if p1_portrait != null:
+		p1_portrait.texture = _get_portrait(roster[p1_index]["id"])
 	if p2_name_label != null:
 		p2_name_label.text = roster[p2_index]["label"]
+	if p2_portrait != null:
+		p2_portrait.texture = _get_portrait(roster[p2_index]["id"])
 	if hint_label == null:
 		return
 	if p1_confirmed and not p2_confirmed:
