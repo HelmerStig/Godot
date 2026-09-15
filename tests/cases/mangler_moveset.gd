@@ -18,16 +18,12 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		"entrambi i personaggi rispettano il contratto Fighter"
 	)
 	# La suite storica sottostante collauda il moveset completo di Mangler.
-	# Sostituisce solo nel fixture Player 1, senza modificare la scena di gioco.
-	var player1_index := configured_player1.get_index()
-	var player1_position: Vector2 = configured_player1.position
-	arena.remove_child(configured_player1)
-	configured_player1.free()
-	var mangler_fixture := (load("res://scenes/Mangler.tscn") as PackedScene).instantiate()
-	mangler_fixture.name = "Player1"
-	mangler_fixture.position = player1_position
-	arena.add_child(mangler_fixture)
-	arena.move_child(mangler_fixture, player1_index)
+	# Allinea il fixture alla stessa selezione globale applicata da MainArena._ready().
+	var character_selection := tree.root.get_node("CharacterSelection")
+	var previous_player1_id: String = character_selection.player1_id
+	var previous_player2_id: String = character_selection.player2_id
+	character_selection.player1_id = "mangler"
+	character_selection.player2_id = "mangler"
 	tree.root.add_child(arena)
 
 	var player1 := arena.get_node("Player1") as Mangler
@@ -36,6 +32,10 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	var player2_bar := arena.get_node("CanvasLayer/UI/Player2Health") as ProgressBar
 	var round_label := arena.get_node("CanvasLayer/UI/RoundLabel") as Label
 
+	expect.call(
+		player1 != null and player2 != null,
+		"il fixture Mangler rispetta la selezione globale per entrambi i giocatori"
+	)
 	expect.call(player1.animated_sprite != null, "Mangler usa AnimatedSprite2D")
 	var initial_body_collision := player1.collision_shape.shape as RectangleShape2D
 	expect.call(
@@ -2757,16 +2757,18 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	await tree.create_timer(2.1).timeout
 	expect.call(bool(arena.get("round_active")), "training riattivato dopo il reset")
 	expect.call(player1.controls_enabled and player2.controls_enabled, "controlli riattivati dopo il reset")
-	var arianna_reset_start_x := player1.position.x
+	var mangler_reset_start_x := player1.position.x
 	Input.action_press(&"p1_move_right")
 	await tree.physics_frame
 	await tree.physics_frame
 	Input.action_release(&"p1_move_right")
 	expect.call(
-		player1.position.x > arianna_reset_start_x,
+		player1.position.x > mangler_reset_start_x,
 		"il Player 1 può muoversi realmente dopo il restart del round"
 	)
 
 	arena.queue_free()
 	await tree.process_frame
+	character_selection.player1_id = previous_player1_id
+	character_selection.player2_id = previous_player2_id
 	return true
