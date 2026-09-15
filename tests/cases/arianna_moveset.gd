@@ -983,6 +983,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		and arianna.current_state == Mangler.State.ATTACKING
 		and arianna.animated_sprite.animation == &"arianna_jump_strong_punch"
 		and arianna.animated_sprite.scale == Arianna.ARIANNA_JUMP_STRONG_PUNCH_SPRITE_SCALE
+		and Arianna.ARIANNA_JUMP_STRONG_PUNCH_SPRITE_SCALE == Vector2(0.78, 0.78)
 		and arianna.combat.is_airborne_heavy_punch,
 		"lo strong punch durante il salto avvia la variante aerea dedicata"
 	)

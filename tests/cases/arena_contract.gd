@@ -79,7 +79,10 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		arianna.victory_pending_until_landing
 		and arianna.current_state != Fighter.State.VICTORY
 	)
-	await tree.create_timer(0.75).timeout
+	for _physics_step in 60:
+		arianna._physics_process(1.0 / 60.0)
+		if arianna.current_state == Fighter.State.VICTORY:
+			break
 	var arianna_victory_landing_ok := (
 		arianna_grounded_victory_started
 		and arianna_airborne_victory_was_deferred
