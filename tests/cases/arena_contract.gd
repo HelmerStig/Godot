@@ -17,6 +17,20 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	tree.root.add_child(arena)
 	await tree.process_frame
+	var arena_ui := arena.get_node("CanvasLayer/UI") as ArenaUI
+	arena_ui._play_damage_glow(arena_ui.player1_health_bar)
+	var first_glow_tween := arena_ui.health_glow_tweens.get(arena_ui.player1_health_bar) as Tween
+	arena_ui._play_damage_glow(arena_ui.player1_health_bar)
+	var replacement_glow_tween := arena_ui.health_glow_tweens.get(
+		arena_ui.player1_health_bar
+	) as Tween
+	expect.call(
+		first_glow_tween != null
+		and not first_glow_tween.is_valid()
+		and replacement_glow_tween != null
+		and replacement_glow_tween.is_valid(),
+		"il bagliore danno sostituisce il tween precedente senza riutilizzarlo"
+	)
 	expect.call(
 		arena.player1.opponent == arena.player2 and arena.player2.opponent == arena.player1,
 		"MainArena collega reciprocamente gli avversari"

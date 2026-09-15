@@ -22,6 +22,7 @@ var health_fill_clips: Dictionary = {}
 var health_fill_layers: Dictionary = {}
 var health_fill_mirrored: Dictionary = {}
 var health_tweens: Dictionary = {}
+var health_glow_tweens: Dictionary = {}
 var health_initialized: Dictionary = {}
 
 
@@ -157,9 +158,13 @@ func _play_damage_glow(health_bar: ProgressBar) -> void:
 	var glow := health_glows.get(health_bar) as TextureRect
 	if glow == null:
 		return
-	var tween := glow.create_tween()
-	tween.kill()
+	var active_tween := health_glow_tweens.get(health_bar) as Tween
+	if active_tween != null and active_tween.is_valid():
+		active_tween.kill()
+
 	glow.modulate.a = 0.0
+	var tween := glow.create_tween()
+	health_glow_tweens[health_bar] = tween
 	tween.tween_property(glow, "modulate:a", 1.0, 0.045)
 	tween.tween_property(glow, "modulate:a", 0.0, 0.22)
 
