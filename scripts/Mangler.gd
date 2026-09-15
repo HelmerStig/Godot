@@ -348,6 +348,7 @@ var grab_headbow_explosion_spawned := false
 var super_frozen_target: Fighter
 var super_start_aura_spawned := false
 var super_drum_roll_completed_loops := 0
+var victory_pending_until_landing := false
 
 @onready var grab_front_sprite: AnimatedSprite2D = $GrabFrontSprite
 @onready var grab_box: Area2D = $GrabBox
@@ -367,6 +368,16 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if victory_pending_until_landing:
+		velocity.x = 0.0
+		if not is_on_floor():
+			velocity.y += GRAVITY * delta
+		update_physical_collision()
+		move_and_slide()
+		if is_on_floor():
+			_start_victory_animation()
+		update_ground_shadow()
+		return
 	if current_state == State.VICTORY:
 		# Durante la vittoria non si fa nulla, l'animazione si blocca sull'ultimo frame.
 		velocity = Vector2.ZERO
@@ -1068,10 +1079,23 @@ func update_physical_collision() -> void:
 
 func _on_round_ended(winner: int) -> void:
 	"""Gestisce la vittoria quando Mangler vince il round."""
-	if winner == player_number:
-		change_state(State.VICTORY)
-		animated_sprite.play(&"victory")
-		# L'animazione si fermerà automaticamente sull'ultimo frame (loop = false)
+	if winner != player_number:
+		return
+	combat.cancel_current_action()
+	if is_on_floor():
+		_start_victory_animation()
+	else:
+		victory_pending_until_landing = true
+		can_move = false
+
+
+func _start_victory_animation() -> void:
+	victory_pending_until_landing = false
+	reset_airborne_combat_state()
+	velocity = Vector2.ZERO
+	change_state(State.VICTORY)
+	animated_sprite.play(&"victory")
+	# L'animazione si fermerà automaticamente sull'ultimo frame (loop = false).
 
 
 func flip_character() -> void:
@@ -1090,6 +1114,7 @@ func is_holding_back() -> bool:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	victory_pending_until_landing = false
 	release_super_freeze()
 	release_grab()
 	set_combined_grab_hidden(false)

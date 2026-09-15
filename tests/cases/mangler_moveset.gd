@@ -1,5 +1,7 @@
 extends RefCounted
 
+const UIConfig := preload("res://scripts/ArenaUIConfig.gd")
+
 
 static func run(tree: SceneTree, expect: Callable) -> bool:
 	print("-- Arena, combattimento e UI")
@@ -1748,44 +1750,19 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	player1.global_position.x = shift_helper_attacker_x
 	player2.global_position.x = shift_helper_victim_x
 	player1.grabbed_target = null
-	player2.animated_sprite.play(&"idle")
-	player2.animated_sprite.frame = 7
-	player2.animated_sprite.pause()
-	var combined_grab_impacts_before := player1.get_tree().get_node_count_in_group(
-		"light_punch_hit_effect"
-	)
 	player1.start_direct_grab()
-	await tree.create_timer(0.43).timeout
-	expect.call(
-		player1.grab_succeeded
-		and player1.animated_sprite.animation == &"grab_headbow_combined"
-		and player1.animated_sprite.is_playing()
-		and not player1.grab_front_sprite.visible
-		and is_equal_approx(
-			player1.animated_sprite.position.x,
-			Mangler.REWORK_SPRITE_POSITION.x
-			+ (Mangler.GRAB_HEADBOW_FORWARD_OFFSET if player1.is_facing_right else -Mangler.GRAB_HEADBOW_FORWARD_OFFSET)
-		)
-		and player2.grabbed_by == player1
-		and not player2.controls_enabled
-		and not player2.animated_sprite.visible
-		and not player2.ground_shadow.visible
-		and player1.grab_headbow_explosion_spawned
-		and player1.get_tree().get_node_count_in_group("light_punch_hit_effect")
-		> combined_grab_impacts_before,
-		"al frame 19 la presa usa l'esplosione rossa del light punch"
-	)
-	await tree.create_timer(0.70).timeout
+	await tree.process_frame
 	expect.call(
 		player1.current_state == Mangler.State.IDLE
 		and player1.animated_sprite.animation == &"idle"
-		and player2.current_state == Mangler.State.IDLE
-		and player2.animated_sprite.animation == &"idle"
+		and not player1.grab_succeeded
+		and player1.grabbed_target == null
+		and not player1.grab_front_sprite.visible
 		and player2.animated_sprite.visible
 		and player2.ground_shadow.visible
 		and player2.grabbed_by == null
 		and player2.controls_enabled,
-		"al termine della presa entrambi tornano visibili in IDLE"
+		"la presa diretta resta disattivata anche con l'avversario a portata"
 	)
 	player1.global_position = grab_attacker_original_position
 	player2.global_position = grab_target_original_position
@@ -2522,11 +2499,11 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		"un colpo medio riproduce hurt_mid"
 	)
 	expect.call(player2.animated_sprite.frame == 4, "hurt-medium parte sempre dal fotogramma 5")
+	await tree.create_timer(UIConfig.HEALTH_ANIMATION_DURATION + 0.01).timeout
 	expect.call(player2_bar.value == 80.0, "segnale di danno aggiorna la UI")
-	await tree.create_timer(0.35).timeout
 	expect.call(player2.current_state == Mangler.State.HIT, "HIT resta attivo fino alla fine dell'animazione")
 	expect.call(player2.position.x > position_before_hit, "il colpo spinge leggermente lontano dall'attaccante")
-	await tree.create_timer(0.75).timeout
+	await tree.create_timer(0.40).timeout
 	expect.call(player2.current_state == Mangler.State.IDLE, "l'animazione completa termina in IDLE")
 
 	player2.combat.take_damage(
@@ -2752,6 +2729,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		and player2.can_move,
 		"reset stato, animazione e movimento Player 2"
 	)
+	await tree.create_timer(UIConfig.HEALTH_ANIMATION_DURATION + 0.01).timeout
 	expect.call(player1_bar.value == 100.0 and player2_bar.value == 100.0, "reset barre UI")
 	expect.call(not player1.controls_enabled and not player2.controls_enabled, "controlli bloccati durante il countdown")
 	await tree.create_timer(2.1).timeout

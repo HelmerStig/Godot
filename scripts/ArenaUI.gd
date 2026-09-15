@@ -3,19 +3,14 @@ class_name ArenaUI
 
 ## Presenta lo stato dell'arena senza essere interrogata direttamente dal gameplay.
 
+const Config := preload("res://scripts/ArenaUIConfig.gd")
+
 @onready var player1_health_bar: ProgressBar = $Player1Health
 @onready var player2_health_bar: ProgressBar = $Player2Health
 @onready var player1_name_label: Label = $Player1Name
 @onready var player2_name_label: Label = $Player2Name
 @onready var round_timer_label: Label = $RoundTimer
 @onready var round_label: Label = $RoundLabel
-
-const HEALTH_BAR_SHADOW := preload("res://assets/ui/bar/bar-01-shadow.png")
-const HEALTH_BAR_GLOW := preload("res://assets/ui/bar/bar-02-glow.png")
-const HEALTH_BAR_FILL := preload("res://assets/ui/bar/bar-03-fill.png")
-const HEALTH_BAR_OUTLINE := preload("res://assets/ui/bar/bar-04-outline.png")
-const HEALTH_ANIMATION_DURATION := 0.34
-const HEALTH_BAR_SIZE := Vector2(350.0, 47.0)
 
 var health_glows: Dictionary = {}
 var health_fill_clips: Dictionary = {}
@@ -55,7 +50,7 @@ func _setup_health_bar(health_bar: ProgressBar) -> void:
 	health_bar.add_theme_stylebox_override("fill", StyleBoxEmpty.new())
 	var is_mirrored := health_bar == player2_health_bar
 
-	var shadow := _make_health_layer("Shadow", HEALTH_BAR_SHADOW, true)
+	var shadow := _make_health_layer("Shadow", Config.HEALTH_BAR_SHADOW, true)
 	shadow.flip_h = is_mirrored
 	health_bar.add_child(shadow)
 
@@ -64,19 +59,19 @@ func _setup_health_bar(health_bar: ProgressBar) -> void:
 	fill_clip.clip_contents = true
 	fill_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	health_bar.add_child(fill_clip)
-	var fill := _make_health_layer("Fill", HEALTH_BAR_FILL, false)
+	var fill := _make_health_layer("Fill", Config.HEALTH_BAR_FILL, false)
 	fill_clip.add_child(fill)
 	health_fill_clips[health_bar] = fill_clip
 	health_fill_layers[health_bar] = fill
 	health_fill_mirrored[health_bar] = is_mirrored
 
-	var glow := _make_health_layer("DamageGlow", HEALTH_BAR_GLOW, true)
+	var glow := _make_health_layer("DamageGlow", Config.HEALTH_BAR_GLOW, true)
 	glow.flip_h = is_mirrored
 	glow.modulate.a = 0.0
 	health_bar.add_child(glow)
 	health_glows[health_bar] = glow
 
-	var outline := _make_health_layer("Outline", HEALTH_BAR_OUTLINE, true)
+	var outline := _make_health_layer("Outline", Config.HEALTH_BAR_OUTLINE, true)
 	outline.flip_h = is_mirrored
 	health_bar.add_child(outline)
 	health_bar.value_changed.connect(_on_health_bar_value_changed.bind(health_bar))
@@ -95,7 +90,7 @@ func _make_health_layer(
 		layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	else:
 		layer.position = Vector2.ZERO
-		layer.size = HEALTH_BAR_SIZE
+		layer.size = Config.HEALTH_BAR_SIZE
 	layer.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	layer.stretch_mode = TextureRect.STRETCH_SCALE
 	layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -113,13 +108,13 @@ func _update_health_fill(health_bar: ProgressBar, percentage: float) -> void:
 	if fill_clip == null or fill == null:
 		return
 	var ratio := clampf(percentage / 100.0, 0.0, 1.0)
-	var filled_width := HEALTH_BAR_SIZE.x * ratio
+	var filled_width := Config.HEALTH_BAR_SIZE.x * ratio
 	fill_clip.position = Vector2(
-		HEALTH_BAR_SIZE.x - filled_width if health_fill_mirrored.get(health_bar, false) else 0.0,
+		Config.HEALTH_BAR_SIZE.x - filled_width if health_fill_mirrored.get(health_bar, false) else 0.0,
 		0.0
 	)
-	fill_clip.size = Vector2(filled_width, HEALTH_BAR_SIZE.y)
-	fill.size = HEALTH_BAR_SIZE
+	fill_clip.size = Vector2(filled_width, Config.HEALTH_BAR_SIZE.y)
+	fill.size = Config.HEALTH_BAR_SIZE
 	fill.flip_h = health_fill_mirrored.get(health_bar, false)
 	fill.position = Vector2(-fill_clip.position.x, 0.0) if fill.flip_h else Vector2.ZERO
 
@@ -147,9 +142,12 @@ func _on_fighter_health_changed(
 		active_tween.kill()
 	var tween := create_tween()
 	health_tweens[health_bar] = tween
-	tween.tween_property(health_bar, "value", target_percentage, HEALTH_ANIMATION_DURATION).set_trans(
-		Tween.TRANS_QUAD
-	).set_ease(Tween.EASE_OUT)
+	tween.tween_property(
+		health_bar,
+		"value",
+		target_percentage,
+		Config.HEALTH_ANIMATION_DURATION
+	).set_trans(Config.HEALTH_ANIMATION_TRANSITION).set_ease(Config.HEALTH_ANIMATION_EASE)
 	if target_percentage < previous_percentage:
 		_play_damage_glow(health_bar)
 
@@ -165,8 +163,8 @@ func _play_damage_glow(health_bar: ProgressBar) -> void:
 	glow.modulate.a = 0.0
 	var tween := glow.create_tween()
 	health_glow_tweens[health_bar] = tween
-	tween.tween_property(glow, "modulate:a", 1.0, 0.045)
-	tween.tween_property(glow, "modulate:a", 0.0, 0.22)
+	tween.tween_property(glow, "modulate:a", 1.0, Config.DAMAGE_GLOW_FADE_IN_DURATION)
+	tween.tween_property(glow, "modulate:a", 0.0, Config.DAMAGE_GLOW_FADE_OUT_DURATION)
 
 
 func _on_round_time_changed(seconds_remaining: int) -> void:

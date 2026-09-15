@@ -834,6 +834,9 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		effective_reaction_frame = 4 if medium_kick_followup_done else 0
 		effective_knockdown = false
 	var should_launch := current_attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch
+	# take_damage può terminare il round in modo sincrono. In quel caso il fighter
+	# vincitore cancella l'azione e current_attack viene azzerato prima del ritorno.
+	var connected_attack_id := current_attack.attack_id
 	var damage_result := target.combat.take_damage(
 		effective_damage,
 		fighter,
@@ -845,7 +848,7 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		0,
 		not is_special_720_punch
 	)
-	attack_connected.emit(current_attack.attack_id, damage_result)
+	attack_connected.emit(connected_attack_id, damage_result)
 	if should_launch and damage_result == DamageResult.HIT:
 		# Il lancio accompagna solo un colpo entrato e non letale.
 		var launch_dir := 1.0 if fighter.is_facing_right else -1.0

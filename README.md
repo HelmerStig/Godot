@@ -6,11 +6,11 @@ Prototipo didattico di picchiaduro 2D in Godot 4.7 e GDScript. L'arena propone t
 
 Entrambi i personaggi dispongono di locomozione, attacchi a terra, accovacciati e aerei, guardie, reazioni e KO. Sono presenti combo e speciali, proiettili, effetti visivi e alcuni suoni. Il training comprende countdown, barre vita, timer, reset, camera condivisa, debug delle collisioni e slow motion.
 
-Il timer scende da 99; timeout e best-of-three sono intenzionalmente disabilitati. IA, menu, selezione del personaggio e multiplayer online non sono implementati.
+Il timer scende da 99; timeout e best-of-three sono intenzionalmente disabilitati. Il flusso di avvio comprende title screen, selezione locale dei due personaggi e caricamento dell'arena. IA e multiplayer online non sono implementati.
 
 ## Avvio e controlli
 
-Aprire `project.godot` con Godot 4.7 e premere **F5**. La scena principale è `scenes/MainArena.tscn`.
+Aprire `project.godot` con Godot 4.7 e premere **F5**. La scena principale è `scenes/TitleScreen.tscn`; da lì si passa alla selezione dei personaggi e quindi all'arena.
 
 | Azione | Player 1 | Player 2 (tastierino) |
 |---|---|---|
@@ -39,7 +39,7 @@ godot --headless --path . --script res://tests/test_combat.gd
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
-Baseline dell'**8 settembre 2026: 677 asserzioni, zero fallimenti**, in cinque suite: input 14, Arianna 216, Mangler 359, combat 83, arena 5. La suite completa esegue gli stessi casi, inclusi i cinque controlli dell'arena.
+Baseline del **15 settembre 2026: 682 asserzioni, zero fallimenti**, in cinque suite: input 14, Arianna 218, Mangler 359, combat 83, arena 8. La suite completa esegue gli stessi otto moduli dei test separati.
 
 Gli scenari sono in `tests/cases/`, il catalogo comune è `tests/suite_catalog.gd` e il runner condiviso è `tests/support/suite_runner.gd`. I riepiloghi vengono calcolati dall'esecuzione, senza conteggi fissati nel codice. Comandi, struttura e criteri per aggiungere casi sono in [tests/README.md](tests/README.md).
 
@@ -51,6 +51,8 @@ FighterCombat → Fighter (Arianna / Mangler) → MainArena → ArenaUI
 
 | File o cartella | Responsabilità |
 |---|---|
+| `scenes/TitleScreen.tscn`, `scenes/CharacterSelect.tscn`, `scenes/LoadingScreen.tscn` | Avvio, selezione locale e passaggio all'arena |
+| `scripts/CharacterSelection.gd` | Roster e selezione globale dei fighter per Player 1 e Player 2 |
 | `scenes/MainArena.tscn`, `scripts/MainArena.gd` | Arena, countdown, camera, KO e reset |
 | `scenes/Fighter.tscn`, `scripts/Fighter.gd` | Corpo, componenti, stato, segnali, collisioni e reazioni comuni |
 | `scenes/Arianna.tscn`, `scripts/Arianna.gd` | Scena e controller di Arianna, derivati direttamente da Fighter |
@@ -62,7 +64,7 @@ FighterCombat → Fighter (Arianna / Mangler) → MainArena → ArenaUI
 | `data/attacks/` | Otto risorse: sei attacchi base, 720 Punch e Sonic Boom |
 | `scripts/*AnimationCatalog.gd` | Slicing degli atlas e costruzione degli SpriteFrames |
 | `scripts/*Projectile.gd` | Proiettili ed evocazioni dei personaggi |
-| `scripts/ArenaUI.gd` | UI aggiornata dai segnali dell'arena |
+| `scripts/ArenaUI.gd`, `scripts/ArenaUIConfig.gd` | UI aggiornata dai segnali dell'arena e configurazione visiva delle barre vita |
 | `scripts/FighterDebugOverlay.gd` | Visualizzazione delle collisioni |
 | `scenes/stages/`, `scripts/StageAmbientEffects.gd` | Stage ed effetti ambientali |
 
@@ -91,4 +93,4 @@ Gli atlas runtime sono in `assets/`; molti usano celle da 512×512, ma il foglio
 - [SMOKE_TEST_TRIAGE.md](SMOKE_TEST_TRIAGE.md): resoconto storico del riallineamento dei test.
 - [docs/archive/](docs/archive/): note precedenti, conservate come archivio e non come specifica corrente.
 
-Restano da sviluppare round competitivi, IA e selezione del personaggio. Sul piano tecnico, i due scenari storici dei moveset restano sequenze di integrazione lunghe; i nuovi casi indipendenti hanno moduli dedicati.
+Restano da sviluppare round competitivi, IA e multiplayer online. Sul piano tecnico, i due scenari storici dei moveset restano sequenze di integrazione lunghe; i nuovi casi indipendenti hanno moduli dedicati.

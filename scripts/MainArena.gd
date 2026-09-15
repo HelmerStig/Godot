@@ -128,8 +128,14 @@ func end_round_ko(winner: int) -> void:
 	round_active = false
 	player1.controls_enabled = false
 	player2.controls_enabled = false
-	player1.velocity = Vector2.ZERO
-	player2.velocity = Vector2.ZERO
+	var winning_fighter := player1 if winner == 1 else player2
+	var losing_fighter := player2 if winner == 1 else player1
+	losing_fighter.velocity = Vector2.ZERO
+	if winning_fighter.is_on_floor():
+		winning_fighter.velocity = Vector2.ZERO
+	else:
+		# Un vincitore in aria conserva la caduta; viene fermato soltanto in orizzontale.
+		winning_fighter.velocity.x = 0.0
 	round_message_changed.emit("PLAYER %d WINS - R TO RESET" % winner, true)
 	round_ended.emit(winner)
 

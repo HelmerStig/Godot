@@ -1,5 +1,7 @@
 extends RefCounted
 
+const UIConfig := preload("res://scripts/ArenaUIConfig.gd")
+
 
 static func run(tree: SceneTree, expect: Callable) -> bool:
 	print("-- Arena")
@@ -28,7 +30,9 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		first_glow_tween != null
 		and not first_glow_tween.is_valid()
 		and replacement_glow_tween != null
-		and replacement_glow_tween.is_valid(),
+		and replacement_glow_tween.is_valid()
+		and UIConfig.HEALTH_BAR_SIZE == Vector2(350.0, 47.0)
+		and is_equal_approx(UIConfig.HEALTH_ANIMATION_DURATION, 0.34),
 		"il bagliore danno sostituisce il tween precedente senza riutilizzarlo"
 	)
 	expect.call(
@@ -53,6 +57,37 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		and not mangler.grab_front_sprite.visible,
 		"la presa di Mangler è disattivata"
 	)
+	var arianna := arena.player1 as Arianna
+	await tree.physics_frame
+	await tree.physics_frame
+	arena.round_ended.emit(1)
+	var arianna_grounded_victory_started := (
+		arianna.current_state == Fighter.State.VICTORY
+		and arianna.animated_sprite.animation == &"victory"
+		and arianna.animated_sprite.is_playing()
+	)
+	arianna.change_state(Fighter.State.IDLE, true)
+	arianna.reset_airborne_combat_state()
+	arianna.position = Vector2(arianna.position.x, MainArena.FLOOR_Y - 300.0)
+	arianna.change_state(Fighter.State.JUMPING)
+	arianna.velocity = Vector2(0.0, 160.0)
+	await tree.physics_frame
+	await tree.physics_frame
+	arena.round_active = true
+	arena.end_round_ko(1)
+	var arianna_airborne_victory_was_deferred := (
+		arianna.victory_pending_until_landing
+		and arianna.current_state != Fighter.State.VICTORY
+	)
+	await tree.create_timer(0.75).timeout
+	var arianna_victory_landing_ok := (
+		arianna_grounded_victory_started
+		and arianna_airborne_victory_was_deferred
+		and arianna.is_on_floor()
+		and arianna.current_state == Fighter.State.VICTORY
+		and arianna.animated_sprite.animation == &"victory"
+		and arianna.animated_sprite.is_playing()
+	)
 	arena.queue_free()
 	await tree.process_frame
 
@@ -66,12 +101,35 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	await tree.process_frame
 	var selected_mangler := selected_arena.player1 as Mangler
 	selected_arena.round_ended.emit(1)
-	expect.call(
+	var grounded_victory_started := (
 		selected_mangler != null
 		and selected_mangler.current_state == Fighter.State.VICTORY
 		and selected_mangler.animated_sprite.animation == &"victory"
+		and selected_mangler.animated_sprite.is_playing()
+	)
+	selected_mangler.change_state(Fighter.State.IDLE, true)
+	selected_mangler.reset_airborne_combat_state()
+	selected_mangler.position = Vector2(selected_mangler.position.x, MainArena.FLOOR_Y - 300.0)
+	selected_mangler.change_state(Fighter.State.JUMPING)
+	selected_mangler.velocity = Vector2(0.0, 160.0)
+	await tree.physics_frame
+	await tree.physics_frame
+	selected_arena.round_active = true
+	selected_arena.end_round_ko(1)
+	var airborne_victory_was_deferred := (
+		selected_mangler.victory_pending_until_landing
+		and selected_mangler.current_state != Fighter.State.VICTORY
+	)
+	await tree.create_timer(0.7).timeout
+	expect.call(
+		arianna_victory_landing_ok
+		and grounded_victory_started
+		and airborne_victory_was_deferred
+		and selected_mangler.is_on_floor()
+		and selected_mangler.current_state == Fighter.State.VICTORY
+		and selected_mangler.animated_sprite.animation == &"victory"
 		and selected_mangler.animated_sprite.is_playing(),
-		"Mangler scelto come Player 1 riceve il round vinto e avvia victory"
+		"Arianna e Mangler avviano victory al suolo o dopo l'atterraggio"
 	)
 	selected_arena.queue_free()
 	await tree.process_frame

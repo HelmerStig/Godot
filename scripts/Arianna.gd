@@ -450,6 +450,7 @@ var back_jump_start_x := 0.0
 var back_jump_start_y := 0.0
 var back_jump_direction := -1.0
 var back_jump_elapsed := 0.0
+var victory_pending_until_landing := false
 
 
 func _ready() -> void:
@@ -493,6 +494,18 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if is_player_controlled:
 		input_buffer.update(is_facing_right)
+	if victory_pending_until_landing:
+		velocity.x = 0.0
+		if not is_on_floor():
+			velocity.y += ARIANNA_JUMP_GRAVITY * _delta
+		update_physical_collision()
+		update_collision_profile()
+		move_and_slide()
+		position.x = clampf(position.x, stage_left_limit, stage_right_limit)
+		if is_on_floor():
+			_start_victory_animation()
+		update_ground_shadow()
+		return
 	if current_state == State.VICTORY:
 		# Durante la vittoria non si fa nulla, l'animazione si blocca sull'ultimo frame.
 		velocity = Vector2.ZERO
@@ -908,15 +921,29 @@ func _activate_idle() -> void:
 
 func _on_round_ended(winner: int) -> void:
 	"""Gestisce la vittoria quando Arianna vince il round."""
-	if winner == player_number:
-		change_state(State.VICTORY)
-		animated_sprite.position = ARIANNA_SPRITE_POSITION
-		animated_sprite.scale = ARIANNA_SPRITE_SCALE
-		animated_sprite.play(&"victory")
-		# L'animazione si fermerà automaticamente sull'ultimo frame (loop = false)
+	if winner != player_number:
+		return
+	combat.cancel_current_action()
+	if is_on_floor():
+		_start_victory_animation()
+	else:
+		victory_pending_until_landing = true
+		can_move = false
+
+
+func _start_victory_animation() -> void:
+	victory_pending_until_landing = false
+	reset_airborne_combat_state()
+	velocity = Vector2.ZERO
+	change_state(State.VICTORY)
+	animated_sprite.position = ARIANNA_SPRITE_POSITION
+	animated_sprite.scale = ARIANNA_SPRITE_SCALE
+	animated_sprite.play(&"victory")
+	# L'animazione si fermerà automaticamente sull'ultimo frame (loop = false)
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	victory_pending_until_landing = false
 	combat.cancel_current_action()
 	stop_punch_audio()
 	stop_strong_punch_audio()

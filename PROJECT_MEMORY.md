@@ -1,12 +1,12 @@
 # Memoria del progetto
 
-Ultimo aggiornamento: 8 settembre 2026.
+Ultimo aggiornamento: 15 settembre 2026.
 
 ## Obiettivo e baseline
 
-Sanmo è un picchiaduro 2D in Godot 4.7, concentrato sul training locale. Arianna è Player 1, Mangler Player 2. Entrambi hanno animazioni e moveset articolati; combo, speciali, evocazioni e alcuni suoni sono già presenti. Timer a 99 secondi, timeout e best-of-three disabilitati. IA, menu, selezione personaggio e online restano da sviluppare.
+Sanmo è un picchiaduro 2D in Godot 4.7, concentrato sul training locale. Il flusso parte da `TitleScreen`, passa per `CharacterSelect` e `LoadingScreen`, quindi apre `MainArena`; `CharacterSelection` conserva la scelta globale dei due fighter. Il roster attuale comprende Arianna e Mangler, selezionabili per entrambi i giocatori. Entrambi hanno animazioni e moveset articolati; combo, speciali, evocazioni e alcuni suoni sono già presenti. Timer a 99 secondi, timeout e best-of-three disabilitati. IA e online restano da sviluppare.
 
-La baseline headless è di **677 asserzioni superate, zero fallimenti**, in cinque suite. Comandi e organizzazione sono in [tests/README.md](tests/README.md). I precedenti conteggi con fallimenti risalgono a versioni storiche.
+La baseline headless del 15 settembre 2026 è di **682 asserzioni superate, zero fallimenti**, in cinque suite: input 14, Arianna 218, Mangler 359, combat 83 e arena 8. Comandi e organizzazione sono in [tests/README.md](tests/README.md). I precedenti conteggi con fallimenti risalgono a versioni storiche.
 
 ## Architettura da preservare
 
@@ -16,6 +16,8 @@ La baseline headless è di **677 asserzioni superate, zero fallimenti**, in cinq
 - Arianna usa `begin_animation_attack()`, `finish_animation_attack()` e `resolve_attack_overlap()`. Frame attivi, animazioni e concatenazioni restano nel suo controller.
 - `attack_started`, `attack_finished` e `attack_cancelled` distinguono avvio, conclusione naturale e interruzione. Le interruzioni ripuliscono i flag locali e liberano i bersagli delle speciali non ancora lanciate.
 - Il flusso pubblico è `FighterCombat → Fighter → MainArena → ArenaUI`; la UI osserva i segnali dell'arena.
+- `MainArena._ready()` applica sempre `CharacterSelection`: fixture e scene di test devono impostare la selezione globale, non sostituire manualmente i nodi fighter prima dell'ingresso nello SceneTree.
+- Texture, dimensioni e timing delle barre vita sono in `ArenaUIConfig`; `ArenaUI` conserva soltanto costruzione, stato e reazione ai segnali. Le barre raggiungono il valore destinazione con un tween di 0,34 secondi, quindi i test non devono aspettarsi l'aggiornamento visivo nello stesso frame del segnale.
 - `AttackData` contiene identità, danno e stun; `AttackVariantData` descrive timing, animazione e geometria. Ci sono otto risorse in `data/attacks/`. Il profilo `CharacterData` predefinito è ancora creato a runtime.
 - I cataloghi animazioni costruiscono gli atlas dei due personaggi separatamente. Non assumere dimensione dell'intero foglio o scala comune: usare celle, sequenze e scale del catalogo/controller.
 

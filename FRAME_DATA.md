@@ -1,6 +1,6 @@
 # Sanmo — frame data
 
-Verifica delle risorse: 8 settembre 2026.
+Verifica delle risorse: 15 settembre 2026.
 
 ## Timing dichiarati nelle risorse
 
@@ -70,4 +70,4 @@ La tabella è un riferimento per le sequenze principali, non un elenco completo 
 
 ## Verifica
 
-Baseline corrente: 677 asserzioni superate nelle cinque suite headless; vedere [tests/README.md](tests/README.md). Le vecchie tabelle che mescolavano timing dichiarati, pose mantenute e dati non più aggiornati sono conservate in [archivio](docs/archive/FRAME_DATA.md).
+Baseline corrente: 682 asserzioni superate nelle cinque suite headless (input 14, Arianna 218, Mangler 359, combat 83, arena 8); vedere [tests/README.md](tests/README.md). Le vecchie tabelle che mescolavano timing dichiarati, pose mantenute e dati non più aggiornati sono conservate in [archivio](docs/archive/FRAME_DATA.md).
