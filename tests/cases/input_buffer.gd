@@ -78,7 +78,7 @@ static func run(_tree: SceneTree, expect: Callable) -> bool:
 		FighterInputBuffer.HISTORY_LIMIT == 60
 		and FighterInputBuffer.DEFAULT_ATTACK_BUFFER_FRAMES == 10
 		and FighterInputBuffer.DEFAULT_MOTION_WINDOW_FRAMES == 36
-		and Mangler.SUPER_MOTION_WINDOW_FRAMES == 48,
+		and Mangler.SUPER_MOTION_WINDOW_FRAMES == 72,
 		"quarti e mezze lune usano finestre temporali più tolleranti"
 	)
 	return true
