@@ -193,6 +193,9 @@ const ARIANNA_STRONG_PUNCH_HIT_SOUND := preload("res://assets/sounds/sfx/strong-
 const ARIANNA_LIGHT_KICK_WHOOSH_SOUND := preload("res://sound-libraries/kick_short_whoosh_12.wav")
 const ARIANNA_MEDIUM_KICK_WHOOSH_SOUND := preload("res://sound-libraries/kick_short_whoosh_23.wav")
 const ARIANNA_STRONG_KICK_WHOOSH_SOUND := preload("res://sound-libraries/kick_long_whoosh_19.wav")
+const ARIANNA_LIGHT_KICK_HIT_SOUND := preload("res://sound-libraries/body_hit_small_11.wav")
+const ARIANNA_MEDIUM_KICK_HIT_SOUND := preload("res://sound-libraries/body_hit_large_44.wav")
+const ARIANNA_STRONG_KICK_HIT_SOUND := preload("res://sound-libraries/body_hit_large_76.wav")
 const ARIANNA_WHISTLE_SPECIAL_SOURCE_FRAME_COUNT := 25
 const ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT := 49
 const ARIANNA_WHISTLE_SPECIAL_COLUMNS := 5
@@ -393,12 +396,15 @@ const ARIANNA_SPRITE_POSITION := Vector2(0.0, -120.0)
 
 @export_group("Audio LK")
 @export_range(-80.0, 12.0, 0.5) var light_kick_whoosh_volume_db := -4.0
+@export_range(-80.0, 12.0, 0.5) var light_kick_hit_volume_db := -7.0
 
 @export_group("Audio MK")
 @export_range(-80.0, 12.0, 0.5) var medium_kick_whoosh_volume_db := -4.0
+@export_range(-80.0, 12.0, 0.5) var medium_kick_hit_volume_db := -7.0
 
 @export_group("Audio SK")
 @export_range(-80.0, 12.0, 0.5) var strong_kick_whoosh_volume_db := -4.0
+@export_range(-80.0, 12.0, 0.5) var strong_kick_hit_volume_db := -5.0
 
 var light_punch_active := false
 var lp_mp_combo_active := false
@@ -444,6 +450,15 @@ var strong_punch_audio_play_id := 0
 var light_kick_whoosh_audio_player: AudioStreamPlayer
 var medium_kick_whoosh_audio_player: AudioStreamPlayer
 var strong_kick_whoosh_audio_player: AudioStreamPlayer
+var light_kick_hit_audio_player: AudioStreamPlayer
+var medium_kick_hit_audio_player: AudioStreamPlayer
+var strong_kick_hit_audio_player: AudioStreamPlayer
+var light_kick_audio_active := false
+var light_kick_hit_sound_played := false
+var medium_kick_audio_active := false
+var medium_kick_hit_sound_played := false
+var strong_kick_audio_active := false
+var strong_kick_hit_sound_played := false
 var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
@@ -506,6 +521,18 @@ func _ready() -> void:
 	strong_kick_whoosh_audio_player.name = "StrongKickWhooshAudio"
 	strong_kick_whoosh_audio_player.stream = ARIANNA_STRONG_KICK_WHOOSH_SOUND
 	add_child(strong_kick_whoosh_audio_player)
+	light_kick_hit_audio_player = AudioStreamPlayer.new()
+	light_kick_hit_audio_player.name = "LightKickHitAudio"
+	light_kick_hit_audio_player.stream = ARIANNA_LIGHT_KICK_HIT_SOUND
+	add_child(light_kick_hit_audio_player)
+	medium_kick_hit_audio_player = AudioStreamPlayer.new()
+	medium_kick_hit_audio_player.name = "MediumKickHitAudio"
+	medium_kick_hit_audio_player.stream = ARIANNA_MEDIUM_KICK_HIT_SOUND
+	add_child(medium_kick_hit_audio_player)
+	strong_kick_hit_audio_player = AudioStreamPlayer.new()
+	strong_kick_hit_audio_player.name = "StrongKickHitAudio"
+	strong_kick_hit_audio_player.stream = ARIANNA_STRONG_KICK_HIT_SOUND
+	add_child(strong_kick_hit_audio_player)
 	combat.attack_connected.connect(_on_combat_attack_connected)
 	var arena: Node = get_parent()
 	if (
@@ -974,12 +1001,7 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	combat.cancel_current_action()
 	stop_punch_audio()
 	stop_strong_punch_audio()
-	if is_instance_valid(light_kick_whoosh_audio_player):
-		light_kick_whoosh_audio_player.stop()
-	if is_instance_valid(medium_kick_whoosh_audio_player):
-		medium_kick_whoosh_audio_player.stop()
-	if is_instance_valid(strong_kick_whoosh_audio_player):
-		strong_kick_whoosh_audio_player.stop()
+	stop_kick_audio()
 	_clear_attack_flags()
 	# Le mosse di Arianna sono gestite da flag dedicati: se il round termina
 	# durante una di esse, devono essere azzerati prima del reset condiviso.
@@ -1018,12 +1040,7 @@ func _on_combat_attack_cancelled() -> void:
 		whistle_audio_player.stop()
 	stop_punch_audio()
 	stop_strong_punch_audio()
-	if is_instance_valid(light_kick_whoosh_audio_player):
-		light_kick_whoosh_audio_player.stop()
-	if is_instance_valid(medium_kick_whoosh_audio_player):
-		medium_kick_whoosh_audio_player.stop()
-	if is_instance_valid(strong_kick_whoosh_audio_player):
-		strong_kick_whoosh_audio_player.stop()
+	stop_kick_audio()
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	super._on_combat_attack_cancelled()
 
@@ -1084,6 +1101,36 @@ func _on_combat_attack_connected(attack_name: StringName, result: int) -> void:
 		strong_punch_hit_audio_player.stop()
 		strong_punch_hit_audio_player.volume_db = strong_punch_hit_volume_db
 		strong_punch_hit_audio_player.play()
+	if (
+		attack_name == &"light_kick"
+		and result != FighterCombat.DamageResult.IGNORED
+		and light_kick_audio_active
+		and not light_kick_hit_sound_played
+	):
+		light_kick_hit_sound_played = true
+		light_kick_hit_audio_player.stop()
+		light_kick_hit_audio_player.volume_db = light_kick_hit_volume_db
+		light_kick_hit_audio_player.play()
+	if (
+		attack_name == &"medium_kick"
+		and result != FighterCombat.DamageResult.IGNORED
+		and medium_kick_audio_active
+		and not medium_kick_hit_sound_played
+	):
+		medium_kick_hit_sound_played = true
+		medium_kick_hit_audio_player.stop()
+		medium_kick_hit_audio_player.volume_db = medium_kick_hit_volume_db
+		medium_kick_hit_audio_player.play()
+	if (
+		attack_name == &"heavy_kick"
+		and result != FighterCombat.DamageResult.IGNORED
+		and strong_kick_audio_active
+		and not strong_kick_hit_sound_played
+	):
+		strong_kick_hit_sound_played = true
+		strong_kick_hit_audio_player.stop()
+		strong_kick_hit_audio_player.volume_db = strong_kick_hit_volume_db
+		strong_kick_hit_audio_player.play()
 
 
 func play_punch_hit_sound() -> void:
@@ -1124,6 +1171,27 @@ func stop_strong_punch_audio() -> void:
 		strong_punch_swosh_audio_player.stop()
 	if is_instance_valid(strong_punch_hit_audio_player):
 		strong_punch_hit_audio_player.stop()
+
+
+func stop_kick_audio() -> void:
+	light_kick_audio_active = false
+	light_kick_hit_sound_played = false
+	medium_kick_audio_active = false
+	medium_kick_hit_sound_played = false
+	strong_kick_audio_active = false
+	strong_kick_hit_sound_played = false
+	if is_instance_valid(light_kick_whoosh_audio_player):
+		light_kick_whoosh_audio_player.stop()
+	if is_instance_valid(light_kick_hit_audio_player):
+		light_kick_hit_audio_player.stop()
+	if is_instance_valid(medium_kick_whoosh_audio_player):
+		medium_kick_whoosh_audio_player.stop()
+	if is_instance_valid(medium_kick_hit_audio_player):
+		medium_kick_hit_audio_player.stop()
+	if is_instance_valid(strong_kick_whoosh_audio_player):
+		strong_kick_whoosh_audio_player.stop()
+	if is_instance_valid(strong_kick_hit_audio_player):
+		strong_kick_hit_audio_player.stop()
 
 
 func play_medium_punch_swosh() -> void:
@@ -1830,10 +1898,13 @@ func _try_queue_lp_mp_mk_combo() -> bool:
 func _start_lp_mp_mk_combo_kick() -> void:
 	combat.finish_animation_attack(State.ATTACKING)
 	medium_punch_active = false
+	medium_punch_audio_active = false
 	var attack := character_data.get_attack(&"medium_kick")
 	if attack == null:
 		_finish_lp_mp_combo()
 		return
+	medium_kick_audio_active = true
+	medium_kick_hit_sound_played = false
 	medium_kick_active = true
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_MEDIUM_KICK_HITBOX_SIZE
@@ -1856,6 +1927,8 @@ func _start_jump_light_punch() -> void:
 	var attack := character_data.get_attack(&"light_punch")
 	if attack == null:
 		return
+	light_punch_audio_active = true
+	light_punch_hit_sound_played = false
 	jump_light_punch_active = true
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_JUMP_LIGHT_PUNCH_HITBOX_SIZE
@@ -1883,6 +1956,9 @@ func _start_jump_medium_punch() -> void:
 	var attack := character_data.get_attack(&"medium_punch")
 	if attack == null:
 		return
+	medium_punch_audio_active = true
+	medium_punch_hit_sound_played = false
+	play_medium_punch_swosh()
 	jump_medium_punch_active = true
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_JUMP_MEDIUM_PUNCH_HITBOX_SIZE
@@ -1910,6 +1986,9 @@ func _start_jump_strong_punch() -> void:
 	var attack := character_data.get_attack(&"heavy_punch")
 	if attack == null:
 		return
+	strong_punch_audio_active = true
+	strong_punch_hit_sound_played = false
+	play_strong_punch_swosh()
 	jump_strong_punch_active = true
 	var attack_shape := combat.hitbox_shape.shape as RectangleShape2D
 	attack_shape.size = ARIANNA_JUMP_STRONG_PUNCH_HITBOX_SIZE
@@ -1937,6 +2016,11 @@ func _start_jump_light_kick() -> void:
 	var attack := character_data.get_attack(&"light_kick")
 	if attack == null:
 		return
+	light_kick_whoosh_audio_player.stop()
+	light_kick_whoosh_audio_player.volume_db = light_kick_whoosh_volume_db
+	light_kick_whoosh_audio_player.play()
+	light_kick_audio_active = true
+	light_kick_hit_sound_played = false
 	jump_light_kick_active = true
 	var middle_variant := AttackVariantData.new()
 	middle_variant.variant_id = &"arianna_airborne"
@@ -1968,6 +2052,11 @@ func _start_jump_medium_kick() -> void:
 	var attack := character_data.get_attack(&"medium_kick")
 	if attack == null:
 		return
+	medium_kick_whoosh_audio_player.stop()
+	medium_kick_whoosh_audio_player.volume_db = medium_kick_whoosh_volume_db
+	medium_kick_whoosh_audio_player.play()
+	medium_kick_audio_active = true
+	medium_kick_hit_sound_played = false
 	jump_medium_kick_active = true
 	var high_variant := AttackVariantData.new()
 	high_variant.variant_id = &"arianna_airborne"
@@ -2000,6 +2089,11 @@ func _start_jump_strong_kick() -> void:
 	var attack := character_data.get_attack(&"heavy_kick")
 	if attack == null:
 		return
+	strong_kick_whoosh_audio_player.stop()
+	strong_kick_whoosh_audio_player.volume_db = strong_kick_whoosh_volume_db
+	strong_kick_whoosh_audio_player.play()
+	strong_kick_audio_active = true
+	strong_kick_hit_sound_played = false
 	jump_strong_kick_active = true
 	var high_variant := AttackVariantData.new()
 	high_variant.variant_id = &"arianna_airborne"
@@ -2123,6 +2217,8 @@ func _start_light_kick() -> void:
 	light_kick_whoosh_audio_player.stop()
 	light_kick_whoosh_audio_player.volume_db = light_kick_whoosh_volume_db
 	light_kick_whoosh_audio_player.play()
+	light_kick_audio_active = true
+	light_kick_hit_sound_played = false
 	light_kick_active = true
 	velocity = Vector2.ZERO
 	var middle_variant := AttackVariantData.new()
@@ -2143,6 +2239,8 @@ func _start_low_light_kick() -> void:
 	light_kick_whoosh_audio_player.stop()
 	light_kick_whoosh_audio_player.volume_db = light_kick_whoosh_volume_db
 	light_kick_whoosh_audio_player.play()
+	light_kick_audio_active = true
+	light_kick_hit_sound_played = false
 	light_kick_active = true
 	low_light_kick_active = true
 	velocity = Vector2.ZERO
@@ -2164,6 +2262,8 @@ func _start_medium_kick() -> void:
 	medium_kick_whoosh_audio_player.stop()
 	medium_kick_whoosh_audio_player.volume_db = medium_kick_whoosh_volume_db
 	medium_kick_whoosh_audio_player.play()
+	medium_kick_audio_active = true
+	medium_kick_hit_sound_played = false
 	medium_kick_active = true
 	velocity = Vector2.ZERO
 	var middle_variant := AttackVariantData.new()
@@ -2184,6 +2284,8 @@ func _start_low_medium_kick() -> void:
 	medium_kick_whoosh_audio_player.stop()
 	medium_kick_whoosh_audio_player.volume_db = medium_kick_whoosh_volume_db
 	medium_kick_whoosh_audio_player.play()
+	medium_kick_audio_active = true
+	medium_kick_hit_sound_played = false
 	medium_kick_active = true
 	low_medium_kick_active = true
 	velocity = Vector2.ZERO
@@ -2205,6 +2307,8 @@ func _start_strong_kick() -> void:
 	strong_kick_whoosh_audio_player.stop()
 	strong_kick_whoosh_audio_player.volume_db = strong_kick_whoosh_volume_db
 	strong_kick_whoosh_audio_player.play()
+	strong_kick_audio_active = true
+	strong_kick_hit_sound_played = false
 	strong_kick_active = true
 	low_strong_kick_active = false
 	velocity = Vector2.ZERO
@@ -2226,6 +2330,8 @@ func _start_low_strong_kick() -> void:
 	strong_kick_whoosh_audio_player.stop()
 	strong_kick_whoosh_audio_player.volume_db = strong_kick_whoosh_volume_db
 	strong_kick_whoosh_audio_player.play()
+	strong_kick_audio_active = true
+	strong_kick_hit_sound_played = false
 	strong_kick_active = true
 	low_strong_kick_active = true
 	velocity = Vector2.ZERO
