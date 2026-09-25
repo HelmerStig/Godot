@@ -4,6 +4,8 @@ class_name AriannaTornadoProjectile
 const TORNADO_SHEET := preload(
 	"res://assets/sprites/characters/arianna/special/tornado-spritesheet.png"
 )
+const TORNADO_SOUND := preload("res://assets/sprites/characters/arianna/sound/tornado.wav")
+const IMPACT_SOUND := preload("res://sound-libraries/face_hit_Large_78.wav")
 const FRAME_COUNT := 49
 const COLUMNS := 7
 const CELL_SIZE := Vector2(512.0, 512.0)
@@ -100,6 +102,10 @@ func _ready() -> void:
 	add_child(tornado_sprite)
 	_create_wind_effects()
 	tornado_sprite.play()
+	var audio := AudioStreamPlayer.new()
+	audio.stream = TORNADO_SOUND
+	add_child(audio)
+	audio.play()
 	var growth := tornado_sprite.create_tween()
 	growth.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	growth.tween_property(tornado_sprite, "scale", SPRITE_SCALE, GROWTH_DURATION)
@@ -130,6 +136,11 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	has_hit = true
 	set_deferred("monitoring", false)
+	var hit_audio := AudioStreamPlayer.new()
+	hit_audio.stream = IMPACT_SOUND
+	get_tree().current_scene.add_child(hit_audio)
+	hit_audio.play()
+	hit_audio.finished.connect(hit_audio.queue_free)
 	spawn_impact_explosion(target.global_position + IMPACT_OFFSET)
 	target.combat.take_damage(
 		impact_damage, source_fighter, 0.32, 0.18,

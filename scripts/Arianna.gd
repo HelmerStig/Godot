@@ -196,6 +196,8 @@ const ARIANNA_STRONG_KICK_WHOOSH_SOUND := preload("res://sound-libraries/kick_lo
 const ARIANNA_LIGHT_KICK_HIT_SOUND := preload("res://sound-libraries/body_hit_small_11.wav")
 const ARIANNA_MEDIUM_KICK_HIT_SOUND := preload("res://sound-libraries/body_hit_large_44.wav")
 const ARIANNA_STRONG_KICK_HIT_SOUND := preload("res://sound-libraries/body_hit_large_76.wav")
+const ARIANNA_BASEBALL_SPECIAL_WHOOSH_SOUND := preload("res://sound-libraries/punch_long_whoosh_21.wav")
+const ARIANNA_CAT_WAVE_SOUND := preload("res://assets/sprites/characters/arianna/sound/cats1.wav")
 const ARIANNA_WHISTLE_SPECIAL_SOURCE_FRAME_COUNT := 25
 const ARIANNA_WHISTLE_SPECIAL_FRAME_COUNT := 49
 const ARIANNA_WHISTLE_SPECIAL_COLUMNS := 5
@@ -406,6 +408,12 @@ const ARIANNA_SPRITE_POSITION := Vector2(0.0, -120.0)
 @export_range(-80.0, 12.0, 0.5) var strong_kick_whoosh_volume_db := -4.0
 @export_range(-80.0, 12.0, 0.5) var strong_kick_hit_volume_db := -5.0
 
+@export_group("Audio Baseball")
+@export_range(-80.0, 12.0, 0.5) var baseball_whoosh_volume_db := -4.0
+
+@export_group("Audio Cats")
+@export_range(-80.0, 12.0, 0.5) var cat_wave_volume_db := -3.0
+
 var light_punch_active := false
 var lp_mp_combo_active := false
 var lp_mp_mk_combo_queued := false
@@ -459,6 +467,9 @@ var medium_kick_audio_active := false
 var medium_kick_hit_sound_played := false
 var strong_kick_audio_active := false
 var strong_kick_hit_sound_played := false
+var baseball_whoosh_audio_player: AudioStreamPlayer
+var baseball_whoosh_audio_play_id := 0
+var cat_wave_audio_player: AudioStreamPlayer
 var low_light_punch_active := false
 var medium_punch_active := false
 var low_medium_punch_active := false
@@ -533,6 +544,14 @@ func _ready() -> void:
 	strong_kick_hit_audio_player.name = "StrongKickHitAudio"
 	strong_kick_hit_audio_player.stream = ARIANNA_STRONG_KICK_HIT_SOUND
 	add_child(strong_kick_hit_audio_player)
+	baseball_whoosh_audio_player = AudioStreamPlayer.new()
+	baseball_whoosh_audio_player.name = "BaseballWhooshAudio"
+	baseball_whoosh_audio_player.stream = ARIANNA_BASEBALL_SPECIAL_WHOOSH_SOUND
+	add_child(baseball_whoosh_audio_player)
+	cat_wave_audio_player = AudioStreamPlayer.new()
+	cat_wave_audio_player.name = "CatWaveAudio"
+	cat_wave_audio_player.stream = ARIANNA_CAT_WAVE_SOUND
+	add_child(cat_wave_audio_player)
 	combat.attack_connected.connect(_on_combat_attack_connected)
 	var arena: Node = get_parent()
 	if (
@@ -1002,6 +1021,11 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	stop_punch_audio()
 	stop_strong_punch_audio()
 	stop_kick_audio()
+	baseball_whoosh_audio_play_id += 1
+	if is_instance_valid(cat_wave_audio_player):
+		cat_wave_audio_player.stop()
+	if is_instance_valid(baseball_whoosh_audio_player):
+		baseball_whoosh_audio_player.stop()
 	_clear_attack_flags()
 	# Le mosse di Arianna sono gestite da flag dedicati: se il round termina
 	# durante una di esse, devono essere azzerati prima del reset condiviso.
@@ -1041,6 +1065,11 @@ func _on_combat_attack_cancelled() -> void:
 	stop_punch_audio()
 	stop_strong_punch_audio()
 	stop_kick_audio()
+	baseball_whoosh_audio_play_id += 1
+	if is_instance_valid(cat_wave_audio_player):
+		cat_wave_audio_player.stop()
+	if is_instance_valid(baseball_whoosh_audio_player):
+		baseball_whoosh_audio_player.stop()
 	animated_sprite.scale = ARIANNA_SPRITE_SCALE
 	super._on_combat_attack_cancelled()
 
@@ -1204,6 +1233,17 @@ func play_medium_punch_swosh() -> void:
 	medium_punch_swosh_audio_player.stop()
 	medium_punch_swosh_audio_player.volume_db = medium_punch_swosh_volume_db
 	medium_punch_swosh_audio_player.play()
+
+
+func play_baseball_whoosh() -> void:
+	baseball_whoosh_audio_play_id += 1
+	var play_id := baseball_whoosh_audio_play_id
+	await get_tree().create_timer(0.5).timeout
+	if play_id != baseball_whoosh_audio_play_id or not baseball_special_active:
+		return
+	baseball_whoosh_audio_player.stop()
+	baseball_whoosh_audio_player.volume_db = baseball_whoosh_volume_db
+	baseball_whoosh_audio_player.play()
 
 
 func update_sprite_scale() -> void:
@@ -1439,6 +1479,7 @@ func update_collision_profile() -> void:
 
 
 func _start_baseball_special(strength: StringName = &"light") -> void:
+	play_baseball_whoosh()
 	baseball_special_active = true
 	baseball_tornado_spawned = false
 	baseball_special_strength = strength
@@ -1538,6 +1579,9 @@ func _start_cat_wave(
 	target_controls_enabled: bool,
 	target_can_move: bool
 ) -> void:
+	cat_wave_audio_player.stop()
+	cat_wave_audio_player.volume_db = cat_wave_volume_db
+	cat_wave_audio_player.play()
 	cat_wave_generation += 1
 	cat_wave_frozen_target = target_kept_frozen
 	cat_wave_target_controls_enabled = target_controls_enabled
@@ -1607,6 +1651,8 @@ func _on_cat_projectile_completed(_cat: AriannaTullioProjectile) -> void:
 	cat_wave_remaining = maxi(0, cat_wave_remaining - 1)
 	if cat_wave_remaining > 0:
 		return
+	if is_instance_valid(cat_wave_audio_player):
+		cat_wave_audio_player.stop()
 	if is_instance_valid(cat_wave_frozen_target) and cat_wave_frozen_target.combat.current_health > 0:
 		cat_wave_frozen_target.change_state(State.IDLE)
 		cat_wave_frozen_target.controls_enabled = cat_wave_target_controls_enabled

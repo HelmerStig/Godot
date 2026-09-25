@@ -65,6 +65,12 @@ const OFFSCREEN_MARGIN := 85.0
 const SPRITE_SCALE := Vector2(0.41, 0.41)
 const SPRITE_POSITION := Vector2(0.0, -22.0)
 
+const HIT_SOUNDS: Array[String] = [
+	"res://sound-libraries/face_hit_small_01.wav",
+	"res://sound-libraries/face_hit_small_13.wav",
+	"res://sound-libraries/face_hit_small_13.wav",
+]
+
 const CAT_PROFILES := {
 	&"tullio": {
 		"run": RUN_SHEET, "jump": JUMP_SHEET, "attack": ATTACK_SHEET,
@@ -400,6 +406,7 @@ func _apply_face_jump_hit() -> void:
 	face_jump_hit_applied = true
 	if not is_instance_valid(target_fighter) or not is_instance_valid(source_fighter):
 		return
+	_play_random_hit_sound()
 	target_fighter.combat.take_damage(
 		FACE_JUMP_DAMAGE,
 		source_fighter,
@@ -419,6 +426,7 @@ func _apply_cat_hit() -> void:
 	hit_applied_in_current_loop = true
 	if not is_instance_valid(target_fighter) or not is_instance_valid(source_fighter):
 		return
+	_play_random_hit_sound()
 	global_position.x = (
 		target_fighter.global_position.x - travel_direction * ATTACK_CONTACT_DISTANCE
 	)
@@ -444,6 +452,21 @@ func _request_screen_shake(strength: float, duration: float) -> void:
 	var arena := active_camera.get_parent()
 	if arena != null and arena.has_method("request_screen_shake"):
 		arena.request_screen_shake(strength, duration)
+
+
+func _play_random_hit_sound() -> void:
+	var scene := get_tree().current_scene if get_tree() != null else null
+	if scene == null:
+		return
+	var path: String = HIT_SOUNDS[randi() % HIT_SOUNDS.size()]
+	var stream := load(path) as AudioStream
+	if stream == null:
+		return
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	scene.add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
 
 
 func _exit_tree() -> void:
