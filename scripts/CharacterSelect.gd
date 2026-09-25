@@ -18,6 +18,10 @@ const NAV_COOLDOWN := 0.22
 const CHARACTER_SELECT_BACKGROUND := preload("res://assets/backgrounds/character-selection.png")
 const ARIANNA_PORTRAIT := preload("res://assets/ui/portraits/arianna-portrait-v2.png")
 const MANGLER_PORTRAIT := preload("res://assets/ui/portraits/mangler-portrait-v1.png")
+const BUE_PORTRAIT := preload("res://assets/ui/portraits/bue-portrait-v1.png")
+const PEIRO_PORTRAIT := preload("res://assets/ui/portraits/peirolo-portrait-v1.png")
+const TORPE_PORTRAIT := preload("res://assets/ui/portraits/torpe-portrait-v1.png")
+const MILETO_PORTRAIT := preload("res://assets/ui/portraits/mileto-portrait-v1.png")
 # [0] LP  [1] MP  [2] HP — placeholder: i personaggi futuri sostituiranno questi path.
 const PUNCH_PREVIEW_SOUNDS: Dictionary = {
 	"arianna": [
@@ -215,6 +219,9 @@ func _add_roster_area() -> void:
 			lbl.set_anchor(SIDE_RIGHT, 1.0)
 			lbl.set_anchor(SIDE_TOP, 0.78)
 			lbl.set_anchor(SIDE_BOTTOM, 1.0)
+			lbl.offset_top = -5.0
+			lbl.offset_bottom = -5.0
+			lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			lbl.add_theme_font_size_override("font_size", 22)
 		else:
 			lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -346,6 +353,14 @@ func _get_portrait(character_id: String) -> Texture2D:
 		return ARIANNA_PORTRAIT
 	if character_id == "mangler":
 		return MANGLER_PORTRAIT
+	if character_id == "bue":
+		return BUE_PORTRAIT
+	if character_id == "peiro":
+		return PEIRO_PORTRAIT
+	if character_id == "torpe":
+		return TORPE_PORTRAIT
+	if character_id == "mileto":
+		return MILETO_PORTRAIT
 	return null
 
 
