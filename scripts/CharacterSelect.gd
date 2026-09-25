@@ -18,11 +18,54 @@ const NAV_COOLDOWN := 0.22
 const CHARACTER_SELECT_BACKGROUND := preload("res://assets/backgrounds/character-selection.png")
 const ARIANNA_PORTRAIT := preload("res://assets/ui/portraits/arianna-portrait-v2.png")
 const MANGLER_PORTRAIT := preload("res://assets/ui/portraits/mangler-portrait-v1.png")
+# [0] LP  [1] MP  [2] HP — placeholder: i personaggi futuri sostituiranno questi path.
+const PUNCH_PREVIEW_SOUNDS: Dictionary = {
+	"arianna": [
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/strong-punch.wav",
+	],
+	"mangler": [
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/strong-punch.wav",
+	],
+	"bue": [
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/strong-punch.wav",
+	],
+	"peiro": [
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/strong-punch.wav",
+	],
+	"oscare": [
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/strong-punch.wav",
+	],
+	"torpe": [
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/strong-punch.wav",
+	],
+	"mileto": [
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/light-punch.wav",
+		"res://assets/sounds/sfx/strong-punch.wav",
+	],
+}
 
 var p1_portrait: TextureRect
 var p2_portrait: TextureRect
 var rising_particles: GPUParticles2D
 var rising_particle_material: ParticleProcessMaterial
+var preview_audio_player: AudioStreamPlayer
+var p1_punch_panels: Array = []
+var p2_punch_panels: Array = []
+var p1_last_preview_index := -1
+var p2_last_preview_index := -1
 
 
 func _ready() -> void:
@@ -30,6 +73,9 @@ func _ready() -> void:
 	p1_index = _find_index(CharacterSelection.player1_id)
 	p2_index = _find_index(CharacterSelection.player2_id)
 	_build_ui()
+	preview_audio_player = AudioStreamPlayer.new()
+	preview_audio_player.name = "PunchPreviewAudio"
+	add_child(preview_audio_player)
 	resized.connect(_layout_rising_particles)
 	call_deferred("_layout_rising_particles")
 	_refresh_ui()
@@ -127,19 +173,19 @@ func _add_roster_area() -> void:
 	var area := CenterContainer.new()
 	area.set_anchor(SIDE_LEFT, 0.0)
 	area.set_anchor(SIDE_RIGHT, 1.0)
-	area.set_anchor(SIDE_TOP, 0.0)
-	area.set_anchor(SIDE_BOTTOM, 0.56)
+	area.set_anchor(SIDE_TOP, 0.08)
+	area.set_anchor(SIDE_BOTTOM, 0.58)
 	add_child(area)
 
 	roster_grid = GridContainer.new()
-	roster_grid.columns = 2
+	roster_grid.columns = 4
 	roster_grid.add_theme_constant_override("h_separation", 14)
 	roster_grid.add_theme_constant_override("v_separation", 14)
 	area.add_child(roster_grid)
 
 	for entry in roster:
 		var slot := Panel.new()
-		slot.custom_minimum_size = Vector2(156, 192)
+		slot.custom_minimum_size = Vector2(120, 148)
 		var portrait_texture := _get_portrait(entry["id"])
 		if portrait_texture != null:
 			var portrait := TextureRect.new()
@@ -181,7 +227,7 @@ func _add_p1_preview() -> void:
 	var preview := VBoxContainer.new()
 	preview.set_anchor(SIDE_LEFT, 0.0)
 	preview.set_anchor(SIDE_RIGHT, 0.0)
-	preview.set_anchor(SIDE_TOP, 0.56)
+	preview.set_anchor(SIDE_TOP, 0.60)
 	preview.set_anchor(SIDE_BOTTOM, 0.98)
 	preview.offset_left = 20.0
 	preview.offset_right = 270.0
@@ -215,7 +261,7 @@ func _add_vs_label() -> void:
 	lbl.add_theme_font_size_override("font_size", 52)
 	lbl.set_anchor(SIDE_LEFT, 0.5)
 	lbl.set_anchor(SIDE_RIGHT, 0.5)
-	lbl.set_anchor(SIDE_TOP, 0.64)
+	lbl.set_anchor(SIDE_TOP, 0.66)
 	lbl.set_anchor(SIDE_BOTTOM, 0.84)
 	lbl.offset_left = -52.0
 	lbl.offset_right = 52.0
@@ -226,7 +272,7 @@ func _add_p2_preview() -> void:
 	var preview := VBoxContainer.new()
 	preview.set_anchor(SIDE_LEFT, 1.0)
 	preview.set_anchor(SIDE_RIGHT, 1.0)
-	preview.set_anchor(SIDE_TOP, 0.56)
+	preview.set_anchor(SIDE_TOP, 0.60)
 	preview.set_anchor(SIDE_BOTTOM, 0.98)
 	preview.offset_left = -270.0
 	preview.offset_right = -20.0
@@ -306,6 +352,18 @@ func _get_portrait(character_id: String) -> Texture2D:
 func _unhandled_input(event: InputEvent) -> void:
 	if OS.has_feature("headless"):
 		return
+	if event.is_action_pressed("p1_light_punch"):
+		_play_and_flash(roster[p1_index]["id"], 0, p1_punch_panels)
+	elif event.is_action_pressed("p1_medium_punch"):
+		_play_and_flash(roster[p1_index]["id"], 1, p1_punch_panels)
+	elif event.is_action_pressed("p1_heavy_punch"):
+		_play_and_flash(roster[p1_index]["id"], 2, p1_punch_panels)
+	if event.is_action_pressed("p2_light_punch"):
+		_play_and_flash(roster[p2_index]["id"], 0, p2_punch_panels)
+	elif event.is_action_pressed("p2_medium_punch"):
+		_play_and_flash(roster[p2_index]["id"], 1, p2_punch_panels)
+	elif event.is_action_pressed("p2_heavy_punch"):
+		_play_and_flash(roster[p2_index]["id"], 2, p2_punch_panels)
 	if not p1_confirmed:
 		if p1_nav_cooldown <= 0.0 and event.is_action_pressed("ui_left"):
 			p1_index = wrapi(p1_index - 1, 0, roster.size())
@@ -337,8 +395,18 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _check_start() -> void:
-	if p1_confirmed and p2_confirmed:
-		get_tree().change_scene_to_file("res://scenes/LoadingScreen.tscn")
+	if not p1_confirmed or not p2_confirmed:
+		return
+	var p1_scene: String = roster[p1_index].get("scene", "")
+	var p2_scene: String = roster[p2_index].get("scene", "")
+	if p1_scene.is_empty() or p2_scene.is_empty():
+		if hint_label != null:
+			hint_label.text = "Personaggio non ancora disponibile — scegline un altro!"
+		p1_confirmed = false
+		p2_confirmed = false
+		_refresh_ui()
+		return
+	get_tree().change_scene_to_file("res://scenes/LoadingScreen.tscn")
 
 
 func _process(delta: float) -> void:
@@ -356,6 +424,14 @@ func _refresh_ui() -> void:
 		p2_name_label.text = roster[p2_index]["label"]
 	if p2_portrait != null:
 		p2_portrait.texture = _get_portrait(roster[p2_index]["id"])
+	if p1_index != p1_last_preview_index:
+		p1_last_preview_index = p1_index
+		if not p1_confirmed:
+			_play_and_flash(roster[p1_index]["id"], 0, p1_punch_panels)
+	if p2_index != p2_last_preview_index:
+		p2_last_preview_index = p2_index
+		if not p2_confirmed:
+			_play_and_flash(roster[p2_index]["id"], 0, p2_punch_panels)
 	if hint_label == null:
 		return
 	if p1_confirmed and not p2_confirmed:
@@ -385,3 +461,57 @@ func _find_index(id: String) -> int:
 		if roster[i]["id"] == id:
 			return i
 	return 0
+
+
+func _make_punch_row(panels_ref: Array) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 10)
+	for label_text in ["LP", "MP", "HP"]:
+		var btn := _make_punch_button(label_text)
+		row.add_child(btn)
+		panels_ref.append(btn)
+	return row
+
+
+func _make_punch_button(label_text: String) -> Panel:
+	var panel := Panel.new()
+	panel.custom_minimum_size = Vector2(48, 28)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.12, 0.22, 0.88)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.4, 0.45, 0.6, 0.6)
+	style.corner_radius_top_left = 3
+	style.corner_radius_top_right = 3
+	style.corner_radius_bottom_left = 3
+	style.corner_radius_bottom_right = 3
+	panel.add_theme_stylebox_override("panel", style)
+	var lbl := Label.new()
+	lbl.text = label_text
+	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(lbl)
+	return panel
+
+
+func _play_and_flash(character_id: String, punch_index: int, panels: Array) -> void:
+	if preview_audio_player == null or OS.has_feature("headless"):
+		return
+	var sounds: Array = PUNCH_PREVIEW_SOUNDS.get(character_id, [])
+	if punch_index < sounds.size():
+		var stream := load(sounds[punch_index]) as AudioStream
+		if stream != null:
+			preview_audio_player.stream = stream
+			preview_audio_player.play()
+	if punch_index < panels.size():
+		var panel: Panel = panels[punch_index]
+		panel.modulate = Color(0.35, 1.0, 0.55)
+		var tween := panel.create_tween()
+		tween.tween_property(panel, "modulate", Color.WHITE, 0.45)
