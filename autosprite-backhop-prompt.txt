@@ -1,8 +1,14 @@
-ora abbiamo gli sprites per idle position:
-- bue: assets\sprites\characters\bue\idle-spritesheet.png - 38 fotogrammi da mettere in loop
-- mileto: assets\sprites\characters\mileto\idle-spritesheet.png - 42 fotogrammi da mettere in loop
-- oscare: assets\sprites\characters\oscare\idle-spritesheet.png - 25 fotogrammi da mettere in loop
-- peirolo: assets\sprites\characters\peirolo\idle_spritesheet.png - 38 fotogrammi da mettere in loop
-- torpe: assets\sprites\characters\torpe\idle-spritesheet.png - 35 fotogrammi da mettere in loop
+ora abbiamo gli sprites per il salto, puoi inserirli?:
+- bue: assets\sprites\characters\bue\Bue-jump.png - 45 fotogrammi 
+- mileto: assets\sprites\characters\mileto\Mileto-jump.png - 45 fotogrammi
+- oscare: assets\sprites\characters\oscare\Oscare-jump.png - 45 fotogrammi
+- peirolo: assets\sprites\characters\peirolo\Peirolo-jump.png - 48 fotogrammi
+- torpe: assets\sprites\characters\torpe\torpe-spritesheet.png - 43 fotogrammi
 
-tutti a 24 fps, crea i personaggi e inseriscili anche nella scena di testing
+
+Correzioni
+- bue salto: l'animazione devbe partire da fotogramma 4, a fotogramma 13 si stacca da terra, a fotogramma 30 raggiunge terra, a fotogramma 41 deve passare in idle
+- mileto salto: l'animazione devbe partire da fotogramma 5, a fotogramma 16 si stacca da terra, a fotogramma 36 deve essere a terra, a fotogramma 44 passare in idle
+- oscare salto: l'animazione devbe partire da fotogramma 6, a fotogramma 14 si stacca da terra e a fotogramma 36 deve essere a terra, a fotogramma 44 passare in idle
+- peirolo salto: l'animazione devbe partire da fotogramma 5, a fotogramma 17 si stacca da terra e a fotogramma 35 deve essere a terra, a fotogramma 45 deve passare in idle
+- torpe salto: l'animazione devbe partire da fotogramma 5, a fotogramma 14 si stacca da terra e a fotogramma 30 deve essere a terra, a fotogramma 39 deve passare in idle

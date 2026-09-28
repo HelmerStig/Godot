@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/idle-spritesheet.png" id="3_idle"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/walk-spritesheet.png" id="4_walk"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/Torpe-jump.png" id="5_jump"]
 
 [node name="Torpe" instance=ExtResource("1_base")]
 script = ExtResource("2_script")
@@ -14,3 +15,9 @@ idle_frame_count = 61
 idle_columns = 8
 walk_sheet = ExtResource("4_walk")
 walk_frame_count = 49
+jump_sheet = ExtResource("5_jump")
+jump_start_frame = 5
+jump_takeoff_frame = 14
+jump_idle_frame = 39
+sprite_scale = Vector2(0.92, 0.92)
+sprite_position = Vector2(0.0, -122.0)
