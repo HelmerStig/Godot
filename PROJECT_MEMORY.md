@@ -4,13 +4,14 @@ Ultimo aggiornamento: 15 settembre 2026.
 
 ## Obiettivo e baseline
 
-Sanmo è un picchiaduro 2D in Godot 4.7, concentrato sul training locale. Il flusso parte da `TitleScreen`, passa per `CharacterSelect` e `LoadingScreen`, quindi apre `MainArena`; `CharacterSelection` conserva la scelta globale dei due fighter. Il roster attuale comprende Arianna e Mangler, selezionabili per entrambi i giocatori. Entrambi hanno animazioni e moveset articolati; combo, speciali, evocazioni e alcuni suoni sono già presenti. Timer a 99 secondi, timeout e best-of-three disabilitati. IA e online restano da sviluppare.
+Sanmo è un picchiaduro 2D in Godot 4.7, concentrato sul training locale. Il flusso parte da `TitleScreen`, passa per `CharacterSelect` e `LoadingScreen`, quindi apre `MainArena`; `CharacterSelection` conserva la scelta globale dei due fighter. Il roster comprende Arianna, Mangler, Bue, Peirò, Oscare, Torpe e Mileto. Arianna e Mangler hanno moveset articolati; gli altri cinque usano per ora `IdleRosterFighter` con idle e camminata, compatibile con arena e `MovementTest`. Timer a 99 secondi, timeout e best-of-three disabilitati. IA e online restano da sviluppare.
 
-La baseline headless del 15 settembre 2026 è di **682 asserzioni superate, zero fallimenti**, in cinque suite: input 14, Arianna 218, Mangler 359, combat 83 e arena 8. Comandi e organizzazione sono in [tests/README.md](tests/README.md). I precedenti conteggi con fallimenti risalgono a versioni storiche.
+La baseline headless del 25 settembre 2026 è di **709 asserzioni superate, zero fallimenti**, in cinque suite: input 14, Arianna 218, Mangler 359, combat 83 e arena 35. Comandi e organizzazione sono in [tests/README.md](tests/README.md). I precedenti conteggi con fallimenti risalgono a versioni storiche.
 
 ## Architettura da preservare
 
 - `Arianna` e `Mangler` derivano direttamente da `Fighter`, anche nelle scene; Arianna non dipende dal controller o dai nodi delle prese di Mangler.
+- Bue, Mileto, Oscare, Peirò e Torpe derivano da `IdleRosterFighter`: idle in loop a 18 FPS (Bue, Mileto, Oscare e Peirò 63 frame; Torpe 61), walk e backwalk a 24 FPS (49 frame dal foglio AutoSprite, invertiti per backwalk). Celle da 512×512; 8 colonne per idle e 7 per walk. I movimenti usano `CharacterData.walk_speed` e gli input di entrambi i giocatori.
 - `Fighter` gestisce inizializzazione, segnali, stato, collisioni, ombra, reazioni standard e reset comune. Mangler estende le parti specifiche con `super` e `_apply_state_movement()`.
 - `FighterCombat` gestisce vita, guardie, hitbox e ciclo delle azioni; `FighterCombatReactions` contiene danno, parata, hitstun, knockdown e KO. `action_generation` invalida coroutine e controlli di sovrapposizione tardivi; le reazioni verificano anche che fighter e componente siano ancora validi dopo ogni attesa.
 - Arianna usa `begin_animation_attack()`, `finish_animation_attack()` e `resolve_attack_overlap()`. Frame attivi, animazioni e concatenazioni restano nel suo controller.

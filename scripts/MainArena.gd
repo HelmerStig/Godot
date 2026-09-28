@@ -281,3 +281,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		player2.queue_redraw()
 	elif event.is_action_pressed("toggle_slow_motion"):
 		Engine.time_scale = 1.0 if Engine.time_scale < 1.0 else 0.15
+	elif event is InputEventKey and event.keycode == KEY_F2 and event.pressed and not event.echo:
+		Engine.time_scale = 1.0
+		get_tree().change_scene_to_file("res://scenes/MovementTest.tscn")

@@ -1,6 +1,6 @@
 # Sanmo
 
-Prototipo didattico di picchiaduro 2D in Godot 4.7 e GDScript. L'arena propone training locale con **Arianna (Player 1)** e **Mangler (Player 2)**.
+Prototipo didattico di picchiaduro 2D in Godot 4.7 e GDScript. Il roster selezionabile comprende **Arianna, Mangler, Bue, Peirò, Oscare, Torpe e Mileto**. Arianna e Mangler dispongono del moveset completo; gli altri cinque hanno idle e camminata mentre vengono costruite le mosse.
 
 ## Stato attuale
 
@@ -39,7 +39,7 @@ godot --headless --path . --script res://tests/test_combat.gd
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
-Baseline del **15 settembre 2026: 682 asserzioni, zero fallimenti**, in cinque suite: input 14, Arianna 218, Mangler 359, combat 83, arena 8. La suite completa esegue gli stessi otto moduli dei test separati.
+Baseline del **25 settembre 2026: 709 asserzioni, zero fallimenti**, in cinque suite: input 14, Arianna 218, Mangler 359, combat 83, arena 35. La suite completa esegue gli stessi nove moduli dei test separati.
 
 Gli scenari sono in `tests/cases/`, il catalogo comune è `tests/suite_catalog.gd` e il runner condiviso è `tests/support/suite_runner.gd`. I riepiloghi vengono calcolati dall'esecuzione, senza conteggi fissati nel codice. Comandi, struttura e criteri per aggiungere casi sono in [tests/README.md](tests/README.md).
 
@@ -57,6 +57,9 @@ FighterCombat → Fighter (Arianna / Mangler) → MainArena → ArenaUI
 | `scenes/Fighter.tscn`, `scripts/Fighter.gd` | Corpo, componenti, stato, segnali, collisioni e reazioni comuni |
 | `scenes/Arianna.tscn`, `scripts/Arianna.gd` | Scena e controller di Arianna, derivati direttamente da Fighter |
 | `scenes/Mangler.tscn`, `scripts/Mangler.gd` | Scena e controller di Mangler, prese e speciali |
+| `scenes/{Bue,Mileto,Oscare,Peirolo,Torpe}.tscn` | Fighter iniziali con idle a 18 FPS e camminata a 24 FPS |
+| `scripts/IdleRosterFighter.gd` | Controller condiviso dei fighter con idle, walk e backwalk |
+| `scenes/MovementTest.tscn` | Scena di confronto che istanzia automaticamente l'intero roster |
 | `scripts/FighterCombat.gd`, `scripts/FighterCombatReactions.gd` | Ciclo degli attacchi, danni, parate, hitbox e reazioni asincrone con invalidazione delle attese |
 | `scripts/FighterInputBuffer.gd` | Input relativi all'avversario, buffer e riconoscimento delle sequenze |
 | `scripts/CharacterData.gd` | Statistiche e profilo predefinito creato a runtime |

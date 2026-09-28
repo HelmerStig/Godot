@@ -64,10 +64,22 @@ Le sequenze sono costruite in `scripts/AriannaAnimationCatalog.gd`. I frame atti
 
 La tabella è un riferimento per le sequenze principali, non un elenco completo delle mosse. Il catalogo contiene anche gli attacchi bassi e aerei, LP-MP-MK, baseball/tornado, fischio/Bateau e la super con i gatti. I test in `tests/cases/arianna_moveset.gd` verificano gli atlas e il comportamento di queste sequenze.
 
+## Fighter con idle e camminata
+
+Questi personaggi usano temporaneamente `IdleRosterFighter`. Gli idle hanno celle da 512×512, 8 colonne e loop a 18 FPS. Ogni `walk-spritesheet.png` usa 49 frame in una griglia 7×7 da 512×512: `walk` avanza a 24 FPS e `backwalk` riproduce gli stessi frame al contrario a 24 FPS. La velocità di spostamento predefinita è 200 px/s.
+
+| Personaggio | Spritesheet idle | Frame idle | Frame walk |
+|---|---|---:|---:|
+| Bue | `bue/idle-spritesheet.png` | 63 | 49 |
+| Mileto | `mileto/idle-spritesheet.png` | 63 | 49 |
+| Oscare | `oscare/idle-spritesheet.png` | 63 | 49 |
+| Peirò | `peirolo/idle_spritesheet.png` | 63 | 49 |
+| Torpe | `torpe/idle-spritesheet.png` | 61 | 49 |
+
 ## Movimento
 
 `CharacterData` predefinito: 100 HP, camminata 200 px/s, corsa 320 px/s, velocità aerea 280 px/s e impulso salto -850 px/s. I controller applicano modificatori: Mangler moltiplica l'impulso del salto per 1,5 e usa gravità 3150 px/s²; Arianna usa gravità 1800 px/s² e corsa a `run_speed × 2`. Scala e offset degli sprite dipendono dall'animazione.
 
 ## Verifica
 
-Baseline corrente: 682 asserzioni superate nelle cinque suite headless (input 14, Arianna 218, Mangler 359, combat 83, arena 8); vedere [tests/README.md](tests/README.md). Le vecchie tabelle che mescolavano timing dichiarati, pose mantenute e dati non più aggiornati sono conservate in [archivio](docs/archive/FRAME_DATA.md).
+Baseline corrente: 709 asserzioni superate nelle cinque suite headless (input 14, Arianna 218, Mangler 359, combat 83, arena 35); vedere [tests/README.md](tests/README.md). Le vecchie tabelle che mescolavano timing dichiarati, pose mantenute e dati non più aggiornati sono conservate in [archivio](docs/archive/FRAME_DATA.md).

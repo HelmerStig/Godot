@@ -3,11 +3,11 @@ extends Node
 const ROSTER: Array = [
 	{"id": "arianna", "label": "Arianna", "scene": "res://scenes/Arianna.tscn"},
 	{"id": "mangler", "label": "Mangler", "scene": "res://scenes/Mangler.tscn"},
-	{"id": "bue", "label": "Bue", "scene": ""},
-	{"id": "peiro", "label": "Peirò", "scene": ""},
-	{"id": "oscare", "label": "Oscare", "scene": ""},
-	{"id": "torpe", "label": "Torpe", "scene": ""},
-	{"id": "mileto", "label": "Mileto", "scene": ""},
+	{"id": "bue", "label": "Bue", "scene": "res://scenes/Bue.tscn"},
+	{"id": "peiro", "label": "Peirò", "scene": "res://scenes/Peirolo.tscn"},
+	{"id": "oscare", "label": "Oscare", "scene": "res://scenes/Oscare.tscn"},
+	{"id": "torpe", "label": "Torpe", "scene": "res://scenes/Torpe.tscn"},
+	{"id": "mileto", "label": "Mileto", "scene": "res://scenes/Mileto.tscn"},
 ]
 
 var player1_id := "arianna"

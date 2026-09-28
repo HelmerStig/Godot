@@ -372,6 +372,9 @@ func _set_neon_lit(is_lit: bool) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.keycode == KEY_F2 and event.pressed and not event.echo:
+		get_tree().change_scene_to_file("res://scenes/MovementTest.tscn")
+		return
 	var is_start := event.is_action_pressed("ui_accept")
 	if not is_start and event is InputEventJoypadButton:
 		is_start = (event as InputEventJoypadButton).button_index == 6 and event.pressed
