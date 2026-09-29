@@ -1,4 +1,4 @@
-ora abbiamo gli sprites per il crouching, puoi inserirli?:
+ora abbiamo gli sprites per la parata alta, si esegue l'animazione, quando la parata è finita, si esegue l'animazione al contrario e si torna in idle:
 - bue: assets\sprites\characters\bue\crouch-spritesheet.png - 7 fotogrammi 
 - mileto: assets\sprites\characters\mileto\crouch-spritesheet.png - 13 fotogrammi
 - oscare: assets\sprites\characters\oscare\crouch-spritesheet.png - 9 fotogrammi
