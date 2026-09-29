@@ -1,11 +1,11 @@
 extends RefCounted
 
 const FIGHTERS := [
-	{"id": &"bue", "scene": "res://scenes/Bue.tscn", "sheet": "res://assets/sprites/characters/bue/idle-spritesheet.png", "walk": "res://assets/sprites/characters/bue/walk-spritesheet.png", "frames": 63, "columns": 8},
-	{"id": &"mileto", "scene": "res://scenes/Mileto.tscn", "sheet": "res://assets/sprites/characters/mileto/idle-spritesheet.png", "walk": "res://assets/sprites/characters/mileto/walk-spritesheet.png", "frames": 63, "columns": 8},
-	{"id": &"oscare", "scene": "res://scenes/Oscare.tscn", "sheet": "res://assets/sprites/characters/oscare/idle-spritesheet.png", "walk": "res://assets/sprites/characters/oscare/walk-spritesheet.png", "frames": 63, "columns": 8},
-	{"id": &"peiro", "scene": "res://scenes/Peirolo.tscn", "sheet": "res://assets/sprites/characters/peirolo/idle_spritesheet.png", "walk": "res://assets/sprites/characters/peirolo/walk-spritesheet.png", "frames": 63, "columns": 8},
-	{"id": &"torpe", "scene": "res://scenes/Torpe.tscn", "sheet": "res://assets/sprites/characters/torpe/idle-spritesheet.png", "walk": "res://assets/sprites/characters/torpe/walk-spritesheet.png", "frames": 61, "columns": 8},
+	{"id": &"bue", "scene": "res://scenes/Bue.tscn", "sheet": "res://assets/sprites/characters/bue/idle-spritesheet.png", "walk": "res://assets/sprites/characters/bue/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/bue/crouch-spritesheet.png", "crouch_frames": 7, "frames": 63, "columns": 8},
+	{"id": &"mileto", "scene": "res://scenes/Mileto.tscn", "sheet": "res://assets/sprites/characters/mileto/idle-spritesheet.png", "walk": "res://assets/sprites/characters/mileto/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/mileto/crouch-spritesheet.png", "crouch_frames": 13, "frames": 63, "columns": 8},
+	{"id": &"oscare", "scene": "res://scenes/Oscare.tscn", "sheet": "res://assets/sprites/characters/oscare/idle-spritesheet.png", "walk": "res://assets/sprites/characters/oscare/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/oscare/crouch-spritesheet.png", "crouch_frames": 9, "frames": 63, "columns": 8},
+	{"id": &"peiro", "scene": "res://scenes/Peirolo.tscn", "sheet": "res://assets/sprites/characters/peirolo/idle_spritesheet.png", "walk": "res://assets/sprites/characters/peirolo/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/peirolo/crouch-spritesheet.png", "crouch_frames": 11, "frames": 63, "columns": 8},
+	{"id": &"torpe", "scene": "res://scenes/Torpe.tscn", "sheet": "res://assets/sprites/characters/torpe/idle-spritesheet.png", "walk": "res://assets/sprites/characters/torpe/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/torpe/crouch-spritesheet.png", "crouch_frames": 7, "frames": 61, "columns": 8},
 ]
 
 
@@ -57,6 +57,22 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			and back_first.region == walk_last.region
 			and back_last.region == walk_first.region,
 			"%s usa 49 frame walk a 24 FPS e backwalk inverso" % entry["id"]
+		)
+		var crouch_count: int = entry["crouch_frames"]
+		var crouch_first := frames.get_frame_texture(&"crouch", 0) as AtlasTexture
+		var crouch_last := frames.get_frame_texture(&"crouch", crouch_count - 1) as AtlasTexture
+		expect.call(
+			frames.get_frame_count(&"crouch") == crouch_count
+			and is_equal_approx(frames.get_animation_speed(&"crouch"), 24.0)
+			and not frames.get_animation_loop(&"crouch")
+			and crouch_first.atlas.resource_path == entry["crouch"]
+			and crouch_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+			and crouch_last.region == Rect2(
+				float((crouch_count - 1) % 5) * 512.0,
+				float((crouch_count - 1) / 5) * 512.0,
+				512.0, 512.0
+			),
+			"%s usa %d frame crouch a 24 FPS senza loop" % [entry["id"], crouch_count]
 		)
 		fighter.queue_free()
 		await tree.process_frame
@@ -137,6 +153,42 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			and p2_fighter.animated_sprite.animation == &"walk",
 			"gli input Player 2 muovono il fighter idle-only"
 		)
+		p2_fighter.player_number = 1
+		p2_fighter.input_buffer = FighterInputBuffer.new(1)
+	for _frame in 3:
+		await tree.physics_frame
+	Input.action_press(&"p1_crouch")
+	for _frame in 40:
+		await tree.physics_frame
+	for fighter_node in movement_test._fighters:
+		if fighter_node is IdleRosterFighter:
+			var crouch_frames: int = fighter_node.animated_sprite.sprite_frames.get_frame_count(&"crouch")
+			expect.call(
+				fighter_node.current_state == Fighter.State.CROUCHING
+				and fighter_node.animated_sprite.animation == &"crouch"
+				and fighter_node.animated_sprite.frame == crouch_frames - 1,
+				"%s resta nell'ultima posa crouch mentre si tiene premuto giù" % fighter_node.fighter_id
+			)
+	Input.action_release(&"p1_crouch")
+	for _frame in 2:
+		await tree.physics_frame
+	for fighter_node in movement_test._fighters:
+		if fighter_node is IdleRosterFighter:
+			expect.call(
+				fighter_node.current_state == Fighter.State.STANDING_UP
+				and fighter_node.animated_sprite.animation == &"crouch"
+				and fighter_node.animated_sprite.get_playing_speed() < 0.0,
+				"%s riproduce crouch all'indietro al rilascio" % fighter_node.fighter_id
+			)
+	for _frame in 40:
+		await tree.physics_frame
+	for fighter_node in movement_test._fighters:
+		if fighter_node is IdleRosterFighter:
+			expect.call(
+				fighter_node.current_state == Fighter.State.IDLE
+				and fighter_node.animated_sprite.animation == &"idle",
+				"%s torna in idle dopo la risalita" % fighter_node.fighter_id
+			)
 	movement_test.queue_free()
 	await tree.process_frame
 	return true

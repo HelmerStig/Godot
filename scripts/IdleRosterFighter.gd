@@ -7,6 +7,7 @@ class_name IdleRosterFighter
 const IDLE_FPS := 18.0
 const WALK_FPS := 24.0
 const JUMP_FPS := 24.0
+const CROUCH_FPS := 24.0
 const GRAVITY := 3150.0
 
 @export var fighter_id: StringName
@@ -19,6 +20,10 @@ const GRAVITY := 3150.0
 @export_range(1, 999, 1) var walk_frame_count := 49
 @export_range(1, 99, 1) var walk_columns := 7
 @export var walk_cell_size := Vector2(512.0, 512.0)
+@export var crouch_sheet: Texture2D
+@export_range(1, 999, 1) var crouch_frame_count := 1
+@export_range(1, 99, 1) var crouch_columns := 5
+@export var crouch_cell_size := Vector2(512.0, 512.0)
 @export var jump_sheet: Texture2D
 ## Frame visivo (1-based) da cui parte l'animazione nel foglio.
 @export_range(0, 999, 1) var jump_start_frame := 0
@@ -54,6 +59,15 @@ func _physics_process(delta: float) -> void:
 		input_buffer.update(is_facing_right)
 
 	var on_floor := is_on_floor()
+	var down_held := input_buffer != null and input_buffer.is_down_held()
+	if crouch_sheet != null and controls_enabled and on_floor:
+		if down_held and current_state in [State.IDLE, State.WALKING]:
+			change_state(State.CROUCHING)
+		elif down_held and current_state == State.STANDING_UP:
+			change_state(State.CROUCHING)
+			animated_sprite.play(&"crouch", 1.0)
+		elif not down_held and current_state == State.CROUCHING:
+			change_state(State.STANDING_UP)
 
 	# Pressione salto: avvia la fase di startup (anticipazione a terra).
 	if (
@@ -119,6 +133,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_animation_finished() -> void:
+	if current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
+		change_state(State.IDLE)
+		return
 	if current_state in [State.JUMP_STARTUP, State.JUMPING] and animated_sprite.animation == &"jump":
 		_jump_startup = false
 		change_state(State.IDLE)
@@ -138,6 +155,8 @@ func _configure_animations() -> void:
 	if walk_sheet != null:
 		_add_sheet_animation(frames, &"walk", walk_sheet, walk_frame_count, walk_columns, walk_cell_size, WALK_FPS)
 		_add_sheet_animation(frames, &"backwalk", walk_sheet, walk_frame_count, walk_columns, walk_cell_size, WALK_FPS, true)
+	if crouch_sheet != null:
+		_add_sheet_animation(frames, &"crouch", crouch_sheet, crouch_frame_count, crouch_columns, crouch_cell_size, CROUCH_FPS, false, 0, false)
 	if jump_sheet != null and jump_idle_frame > jump_start_frame and jump_start_frame > 0:
 		_add_sheet_animation(
 			frames, &"jump", jump_sheet,

@@ -382,8 +382,8 @@ const ARIANNA_AIR_COLLISION_SIZE := Vector2(120.0, 90.0)
 # Il bordo inferiore resta a y=0 come nella collisione standing: cambiando
 # profilo a stacco/atterraggio l'origine del fighter non scende né risale.
 const ARIANNA_AIR_COLLISION_POSITION := Vector2(0.0, -45.0)
-const ARIANNA_SPRITE_SCALE := Vector2(0.85, 0.85)
-const ARIANNA_SPRITE_POSITION := Vector2(0.0, -120.0)
+const ARIANNA_SPRITE_SCALE := Vector2(0.78, 0.78)
+const ARIANNA_SPRITE_POSITION := Vector2(0.0, -110.0)
 
 @export_group("Audio MP")
 ## Ritardo tra l'avvio della mossa e il suono di movimento.

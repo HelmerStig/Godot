@@ -1,9 +1,9 @@
-ora abbiamo gli sprites per il salto, puoi inserirli?:
-- bue: assets\sprites\characters\bue\Bue-jump.png - 45 fotogrammi 
-- mileto: assets\sprites\characters\mileto\Mileto-jump.png - 45 fotogrammi
-- oscare: assets\sprites\characters\oscare\Oscare-jump.png - 45 fotogrammi
-- peirolo: assets\sprites\characters\peirolo\Peirolo-jump.png - 48 fotogrammi
-- torpe: assets\sprites\characters\torpe\torpe-spritesheet.png - 43 fotogrammi
+ora abbiamo gli sprites per il crouching, puoi inserirli?:
+- bue: assets\sprites\characters\bue\crouch-spritesheet.png - 7 fotogrammi 
+- mileto: assets\sprites\characters\mileto\crouch-spritesheet.png - 13 fotogrammi
+- oscare: assets\sprites\characters\oscare\crouch-spritesheet.png - 9 fotogrammi
+- peirolo: assets\sprites\characters\peirolo\crouch-spritesheet.png - 11 fotogrammi
+- torpe: assets\sprites\characters\torpe\crouch-spritesheet.png - 7 fotogrammi
 
 
 Correzioni
