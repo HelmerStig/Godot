@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/walk-spritesheet.png" id="4_walk"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/Bue-jump.png" id="5_jump"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/crouch-spritesheet.png" id="6_crouch"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/block-spritesheet.png" id="7_block"]
 
 [node name="Bue" instance=ExtResource("1_base")]
 script = ExtResource("2_script")
@@ -22,5 +23,8 @@ jump_sheet = ExtResource("5_jump")
 jump_start_frame = 4
 jump_takeoff_frame = 13
 jump_idle_frame = 41
+block_sheet = ExtResource("7_block")
+block_frame_count = 10
+block_columns = 5
 sprite_scale = Vector2(0.83, 0.83)
 sprite_position = Vector2(0.0, -117.0)

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dbc7h3laa773n"
-path="res://.godot/imported/spritesheet-block.png-0aaf21b14bb0ab0d599a00a11207e9f3.ctex"
+uid="uid://diqhhs55w8c7w"
+path="res://.godot/imported/Mileto-parata_bassa.png-bd0a9112fc4b8c6df1f74b7e2cb4f633.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/oscare/spritesheet-block.png"
-dest_files=["res://.godot/imported/spritesheet-block.png-0aaf21b14bb0ab0d599a00a11207e9f3.ctex"]
+source_file="res://assets/sprites/characters/mileto/Mileto-parata_bassa.png"
+dest_files=["res://.godot/imported/Mileto-parata_bassa.png-bd0a9112fc4b8c6df1f74b7e2cb4f633.ctex"]
 
 [params]
 

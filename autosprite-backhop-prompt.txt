@@ -1,9 +1,9 @@
-ora abbiamo gli sprites per la parata alta, si esegue l'animazione, quando la parata è finita, si esegue l'animazione al contrario e si torna in idle:
-- bue: assets\sprites\characters\bue\crouch-spritesheet.png - 7 fotogrammi 
-- mileto: assets\sprites\characters\mileto\crouch-spritesheet.png - 13 fotogrammi
-- oscare: assets\sprites\characters\oscare\crouch-spritesheet.png - 9 fotogrammi
-- peirolo: assets\sprites\characters\peirolo\crouch-spritesheet.png - 11 fotogrammi
-- torpe: assets\sprites\characters\torpe\crouch-spritesheet.png - 7 fotogrammi
+ora abbiamo gli sprites per la parata bassa, si esegue l'animazione, quando la parata è finita, si esegue l'animazione al contrario e si torna in crouched position:
+- bue: assets\sprites\characters\bue\Bue-parata_bassa.png - 11 fotogrammi 
+- mileto: assets\sprites\characters\mileto\Mileto-parata_bassa.png - 11 fotogrammi
+- oscare: assets\sprites\characters\oscare\Oscare-parata_bassa.png - 11 fotogrammi
+- peirolo: assets\sprites\characters\peirolo\Peirolo-parata_bassa.png - 11 fotogrammi
+- torpe: assets\sprites\characters\torpe\Torpe-parata_bassa.png - 11 fotogrammi
 
 
 Correzioni
