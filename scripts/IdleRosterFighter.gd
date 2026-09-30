@@ -9,6 +9,7 @@ const WALK_FPS := 24.0
 const JUMP_FPS := 24.0
 const CROUCH_FPS := 24.0
 const BLOCK_FPS := 24.0
+const BLOCK_LOW_FPS := 48.0
 const GRAVITY := 3150.0
 
 @export var fighter_id: StringName
@@ -38,6 +39,10 @@ const GRAVITY := 3150.0
 @export_range(1, 99, 1) var block_frame_count := 1
 @export_range(1, 99, 1) var block_columns := 7
 @export var block_cell_size := Vector2(512.0, 512.0)
+@export var block_low_sheet: Texture2D
+@export_range(1, 99, 1) var block_low_frame_count := 1
+@export_range(1, 99, 1) var block_low_columns := 5
+@export var block_low_cell_size := Vector2(512.0, 512.0)
 @export var idle_sprite_scale := Vector2(0.85, 0.85)
 @export var idle_sprite_position := Vector2(0.0, -115.0)
 ## Per-character sprite size and ground alignment; overrides the defaults above.
@@ -136,28 +141,39 @@ func _physics_process(delta: float) -> void:
 		else:
 			update_animation()
 
+	# Esci dall'accovacciato quando il giocatore non tiene più giù.
+	if current_state == State.CROUCHING and is_player_controlled and input_buffer != null:
+		if not input_buffer.is_down_held():
+			change_state(State.IDLE)
+
 
 func change_state(next_state: int, force_victory_exit := false) -> void:
-	# Intercetta BLOCKING→IDLE: inserisce la recovery con animazione inversa.
+	# Solo per la parata ALTA: inserisce la recovery inversa prima di tornare in idle.
 	if current_state == State.BLOCKING and next_state == State.IDLE \
-			and animated_sprite.sprite_frames.has_animation(&"block_high_recovery"):
-		super.change_state(State.BLOCK_RECOVERY, force_victory_exit)
-		return
+			and received_block_height != AttackData.HitHeight.LOW:
+		var recovery := get_block_recovery_animation(received_block_height)
+		if animated_sprite.sprite_frames.has_animation(recovery):
+			super.change_state(State.BLOCK_RECOVERY, force_victory_exit)
+			return
 	super.change_state(next_state, force_victory_exit)
 
 
-func get_block_animation(_height: AttackData.HitHeight, _crouched := false) -> StringName:
-	return &"block_high"
+func get_block_animation(height: AttackData.HitHeight, _crouched := false) -> StringName:
+	return &"block_low" if height == AttackData.HitHeight.LOW else &"block_high"
 
 
-func get_block_recovery_animation(_height: AttackData.HitHeight) -> StringName:
-	return &"block_high_recovery"
+func get_block_recovery_animation(height: AttackData.HitHeight) -> StringName:
+	return &"block_low_recovery" if height == AttackData.HitHeight.LOW else &"block_high_recovery"
 
 
 func _on_animation_finished() -> void:
-	if current_state == State.BLOCK_RECOVERY and animated_sprite.animation == &"block_high_recovery":
-		change_state(State.IDLE)
-		return
+	if current_state == State.BLOCK_RECOVERY:
+		if animated_sprite.animation == &"block_low_recovery":
+			change_state(State.CROUCHING)
+			return
+		if animated_sprite.animation == &"block_high_recovery":
+			change_state(State.IDLE)
+			return
 	if current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
 		change_state(State.IDLE)
 		return
@@ -192,6 +208,9 @@ func _configure_animations() -> void:
 	if block_sheet != null:
 		_add_sheet_animation(frames, &"block_high", block_sheet, block_frame_count, block_columns, block_cell_size, BLOCK_FPS, false, 0, false)
 		_add_sheet_animation(frames, &"block_high_recovery", block_sheet, block_frame_count, block_columns, block_cell_size, BLOCK_FPS, true, 0, false)
+	if block_low_sheet != null:
+		_add_sheet_animation(frames, &"block_low", block_low_sheet, block_low_frame_count, block_low_columns, block_low_cell_size, BLOCK_LOW_FPS, false, 0, false)
+		_add_sheet_animation(frames, &"block_low_recovery", block_low_sheet, block_low_frame_count, block_low_columns, block_low_cell_size, BLOCK_LOW_FPS, true, 0, false)
 	animated_sprite.sprite_frames = frames
 	animated_sprite.animation = &"idle"
 	update_sprite_scale()
