@@ -39,7 +39,13 @@ static func take_damage(
 	if attack_was_blocked:
 		block_reaction(combat, blockstun, hit_height, attacker)
 		return FighterCombat.DamageResult.BLOCKED
-	if causes_knockdown:
+	var crouched_low_hit := (
+		not was_airborne
+		and hit_height == AttackData.HitHeight.LOW
+		and (combat.fighter.current_state == Fighter.State.CROUCHING or combat.fighter.hurt_started_crouched)
+		and combat.fighter.animated_sprite.sprite_frames.has_animation(&"hurt_crouched")
+	)
+	if causes_knockdown and not crouched_low_hit:
 		sweep_knockdown_reaction(combat, attacker)
 	elif was_airborne:
 		airborne_knockdown_reaction(combat, attacker)
@@ -110,6 +116,10 @@ static func hit_reaction(
 
 	await combat.get_tree().create_timer(reaction_duration).timeout
 	if not _is_active(combat) or hit_generation != combat.action_generation or combat.current_health <= 0:
+		return
+	if combat.fighter.current_state != Fighter.State.HIT:
+		return
+	if combat.fighter.finish_crouched_hit_reaction():
 		return
 	combat.fighter.velocity.x = 0.0
 	combat.fighter.change_state(Fighter.State.IDLE)

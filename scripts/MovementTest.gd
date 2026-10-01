@@ -16,6 +16,8 @@ var _dummy_opponent: Fighter
 var _block_mode := 0  # 0=off  1=high  2=low
 var _hurt_h_held := false
 var _hurt_m_held := false
+var _hurt_l_held := false
+var _hurt_g_held := false
 var _hurt_preview_generation := 0
 
 
@@ -152,7 +154,7 @@ func _update_hint_text() -> void:
 			_hint_label.text = "[ BLOCK LOW ]   ·   Tab: disattiva   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.add_theme_color_override("font_color", Color(1.0, 0.75, 0.2))
 		_:
-			_hint_label.text = "MOVEMENT TEST   ·   Tab: block   ·   H: hurt_high   ·   H+M: hurt_medium   ·   F3: hitbox   ·   F2: titolo"
+			_hint_label.text = "MOVEMENT TEST   ·   Tab: block   ·   H: hurt_high   ·   H+M: hurt_medium   ·   H+L: hurt_low   ·   H+G: hurt_crouched   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.remove_theme_color_override("font_color")
 
 
@@ -229,7 +231,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				fighter.input_buffer.clear()
 				fighter.change_state(Fighter.State.IDLE)
 		_update_hint_text()
-	elif event is InputEventKey and event.keycode in [KEY_H, KEY_M] and not event.echo:
+	elif event is InputEventKey and event.keycode in [KEY_H, KEY_M, KEY_L, KEY_G] and not event.echo:
 		_handle_hurt_shortcut(event)
 	elif event is InputEventKey and event.keycode == KEY_F2 and event.pressed and not event.echo:
 		get_tree().change_scene_to_file("res://scenes/TitleScreen.tscn")
@@ -239,16 +241,28 @@ func _handle_hurt_shortcut(event: InputEventKey) -> void:
 	if event.keycode == KEY_H:
 		_hurt_h_held = event.pressed
 		if event.pressed:
-			if _hurt_m_held:
+			if _hurt_g_held:
+				_preview_hurt(AttackData.HitHeight.LOW, true)
+			elif _hurt_l_held:
+				_preview_hurt(AttackData.HitHeight.LOW)
+			elif _hurt_m_held:
 				_preview_hurt(AttackData.HitHeight.MID)
 			else:
 				# Aspetta la fine del batch di input: H+M nello stesso frame non mostra hurt_high.
 				_hurt_preview_generation += 1
 				call_deferred("_preview_high_if_uncombined", _hurt_preview_generation)
-	else:
+	elif event.keycode == KEY_M:
 		_hurt_m_held = event.pressed
 		if event.pressed and _hurt_h_held:
-			_preview_hurt(AttackData.HitHeight.MID)
+			_preview_hurt(AttackData.HitHeight.LOW if _hurt_l_held else AttackData.HitHeight.MID)
+	elif event.keycode == KEY_L:
+		_hurt_l_held = event.pressed
+		if event.pressed and _hurt_h_held:
+			_preview_hurt(AttackData.HitHeight.LOW)
+	else:
+		_hurt_g_held = event.pressed
+		if event.pressed and _hurt_h_held:
+			_preview_hurt(AttackData.HitHeight.LOW, true)
 
 
 func _preview_high_if_uncombined(request_generation: int) -> void:
@@ -256,16 +270,19 @@ func _preview_high_if_uncombined(request_generation: int) -> void:
 		_preview_hurt(AttackData.HitHeight.HIGH)
 
 
-func _preview_hurt(height: AttackData.HitHeight) -> void:
+func _preview_hurt(height: AttackData.HitHeight, from_crouch := false) -> void:
 	_hurt_preview_generation += 1
 	var preview_generation := _hurt_preview_generation
 	for f in _fighters:
 		var fighter := f as Fighter
 		if not is_instance_valid(fighter):
 			continue
+		fighter.combat.cancel_current_action()
+		if from_crouch:
+			fighter.return_to_crouch_pose()
 		fighter.start_hit_reaction(height, null, 0, false)
 		# I fighter del roster gestiscono anche la recovery inversa da animation_finished.
-		if fighter is IdleRosterFighter:
+		if fighter is IdleRosterFighter or fighter.hurt_started_crouched:
 			continue
 		# La preview di Arianna e Mangler termina sul segnale reale, senza pausa sull'ultimo frame.
 		var preview_animation := fighter.animated_sprite.animation

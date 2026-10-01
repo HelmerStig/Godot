@@ -1,4 +1,4 @@
-extends Fighter
+extends "res://scripts/Fighter.gd"
 class_name Arianna
 
 ## Fighter specializzato di Arianna, indipendente dal controller e dalla scena di Mangler.
@@ -2402,6 +2402,8 @@ func _is_inactive_attack_animation() -> bool:
 
 
 func _on_animation_finished() -> void:
+	if finish_crouched_hit_reaction():
+		return
 	if _is_inactive_attack_animation():
 		return
 	if animated_sprite.animation == &"arianna_combo_lp":

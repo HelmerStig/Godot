@@ -1,4 +1,4 @@
-extends Fighter
+extends "res://scripts/Fighter.gd"
 class_name IdleRosterFighter
 
 ## Fighter iniziale con idle e camminata, in attesa del moveset completo.
@@ -10,7 +10,7 @@ const JUMP_FPS := 24.0
 const CROUCH_FPS := 24.0
 const BLOCK_FPS := 24.0
 const BLOCK_LOW_FPS := 48.0
-const HURT_FPS := 24.0
+const HURT_FPS := 48.0
 const GRAVITY := 3150.0
 
 @export var fighter_id: StringName
@@ -54,6 +54,7 @@ const GRAVITY := 3150.0
 @export_range(1, 99, 1) var hurt_medium_frame_count := 11
 @export_range(1, 99, 1) var hurt_medium_columns := 5
 @export var hurt_medium_cell_size := Vector2(512.0, 512.0)
+@export var hurt_low_sheet: Texture2D
 @export var idle_sprite_scale := Vector2(0.85, 0.85)
 @export var idle_sprite_position := Vector2(0.0, -115.0)
 ## Per-character sprite size and ground alignment; overrides the defaults above.
@@ -175,11 +176,17 @@ func start_hit_reaction(
 	start_frame: int = 0,
 	apply_pushback: bool = true
 ) -> float:
-	# Il foglio medium include la posa iniziale: non saltarla in base al colpo ricevuto.
-	var effective_start := 0 if hit_height == AttackData.HitHeight.MID and hurt_medium_sheet != null else start_frame
+	# Medium e low includono la posa iniziale e il ritorno completo.
+	var full_sequence := (
+		(hit_height == AttackData.HitHeight.MID and hurt_medium_sheet != null)
+		or (hit_height == AttackData.HitHeight.LOW and hurt_low_sheet != null)
+	)
+	var effective_start := 0 if full_sequence else start_frame
 	var duration := super.start_hit_reaction(hit_height, attacker, effective_start, apply_pushback)
 	if hit_height == AttackData.HitHeight.MID and animated_sprite.sprite_frames.has_animation(&"hurt_mid_reverse"):
 		duration += get_animation_duration(&"hurt_mid_reverse")
+	if hit_height == AttackData.HitHeight.LOW and not hurt_started_crouched and animated_sprite.sprite_frames.has_animation(&"hurt_low_reverse"):
+		duration += get_animation_duration(&"hurt_low_reverse")
 	return duration
 
 
@@ -192,6 +199,8 @@ func get_block_recovery_animation(height: AttackData.HitHeight) -> StringName:
 
 
 func _on_animation_finished() -> void:
+	if finish_crouched_hit_reaction():
+		return
 	if current_state == State.BLOCK_RECOVERY:
 		if animated_sprite.animation == &"block_low_recovery":
 			change_state(State.CROUCHING)
@@ -200,6 +209,12 @@ func _on_animation_finished() -> void:
 			change_state(State.IDLE)
 			return
 	if current_state == State.HIT:
+		if animated_sprite.animation == &"hurt_low":
+			animated_sprite.play(&"hurt_low_reverse")
+			return
+		if animated_sprite.animation == &"hurt_low_reverse":
+			change_state(State.IDLE)
+			return
 		if animated_sprite.animation == &"hurt_mid" \
 				and animated_sprite.sprite_frames.has_animation(&"hurt_mid_reverse"):
 			animated_sprite.play(&"hurt_mid_reverse")
@@ -259,6 +274,9 @@ func _configure_animations() -> void:
 		_add_sheet_animation(frames, &"hurt_mid", hurt_medium_sheet, hurt_medium_frame_count, hurt_medium_columns, hurt_medium_cell_size, HURT_FPS, false, 0, false)
 		if hurt_medium_frame_count > 1:
 			_add_sheet_animation(frames, &"hurt_mid_reverse", hurt_medium_sheet, hurt_medium_frame_count - 1, hurt_medium_columns, hurt_medium_cell_size, HURT_FPS, true, 0, false)
+	if hurt_low_sheet != null:
+		_add_sheet_animation(frames, &"hurt_low", hurt_low_sheet, 11, 5, Vector2(512.0, 512.0), HURT_FPS, false, 0, false)
+		_add_sheet_animation(frames, &"hurt_low_reverse", hurt_low_sheet, 10, 5, Vector2(512.0, 512.0), HURT_FPS, true, 0, false)
 	animated_sprite.sprite_frames = frames
 	animated_sprite.animation = &"idle"
 	update_sprite_scale()

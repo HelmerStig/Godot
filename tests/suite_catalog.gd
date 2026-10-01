@@ -12,9 +12,11 @@ const SUITES := {
 		"res://tests/cases/attack_data.gd",
 		"res://tests/cases/guard_heights.gd",
 		"res://tests/cases/crouched_heavy_launch.gd",
+		"res://tests/cases/hurt_crouched.gd",
 	],
 	"arena": [
 		"res://tests/cases/arena_contract.gd",
 		"res://tests/cases/idle_roster_fighters.gd",
+		"res://tests/cases/roster_hurt_low.gd",
 	],
 }

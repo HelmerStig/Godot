@@ -1,8 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://cemh2xowvxf8g"]
+[gd_scene load_steps=8 format=3 uid="uid://cemh2xowvxf8g"]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/Mangler.gd" id="2_mangler"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/characters/mangler/idle_frames.tres" id="3_frames"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mangler/hurt_crouched_spritesheet.png" id="hurt_crouched_sheet"]
+
 [sub_resource type="RectangleShape2D" id="GrabShape"]
 size = Vector2(115, 155)
 [sub_resource type="RectangleShape2D" id="HeadbuttShape"]
@@ -10,6 +12,7 @@ size = Vector2(95, 70)
 [sub_resource type="SpriteFrames" id="GrabFrames"]
 
 [node name="Mangler" instance=ExtResource("1_base")]
+hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
 script = ExtResource("2_mangler")
 [node name="AnimatedSprite2D" parent="." index="1"]
 sprite_frames = ExtResource("3_frames")

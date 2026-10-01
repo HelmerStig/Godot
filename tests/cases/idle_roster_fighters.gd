@@ -81,8 +81,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		expect.call(
 			frames.get_frame_count(&"hurt_mid") == 11
 			and frames.get_frame_count(&"hurt_mid_reverse") == 10
-			and is_equal_approx(frames.get_animation_speed(&"hurt_mid"), 24.0)
-			and is_equal_approx(frames.get_animation_speed(&"hurt_mid_reverse"), 24.0)
+			and is_equal_approx(frames.get_animation_speed(&"hurt_mid"), 48.0)
+			and is_equal_approx(frames.get_animation_speed(&"hurt_mid_reverse"), 48.0)
 			and not frames.get_animation_loop(&"hurt_mid")
 			and not frames.get_animation_loop(&"hurt_mid_reverse")
 			and mid_first.atlas.resource_path == entry["hurt_mid"]
@@ -215,10 +215,10 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				and fighter_node.get_hit_animation(AttackData.HitHeight.MID) == &"hurt_mid"
 				and fighter_node.animated_sprite.animation == &"hurt_mid"
 				and fighter_node.animated_sprite.frame == 0
-				and is_equal_approx(reaction_duration, 21.0 / 24.0),
+				and is_equal_approx(reaction_duration, 21.0 / 48.0),
 				"%s riceve hurt medium dal primo frame e mantiene l'hitstun fino alla fine" % fighter_node.fighter_id
 			)
-	for _frame in 33:
+	for _frame in 17:
 		await tree.physics_frame
 	for fighter_node in movement_test._fighters:
 		if fighter_node is IdleRosterFighter:
@@ -311,7 +311,17 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		var fighter := fighter_node as Fighter
 		expect.call(
 			fighter.current_state == Fighter.State.HIT
-			and fighter.animated_sprite.animation == &"hurt_high",
+			and fighter.animated_sprite.animation == &"hurt_high"
+			and (
+				not (fighter is IdleRosterFighter)
+				or (
+					is_equal_approx(fighter.animated_sprite.sprite_frames.get_animation_speed(&"hurt_high"), 48.0)
+					and (
+						not fighter.animated_sprite.sprite_frames.has_animation(&"hurt_high_reverse")
+						or is_equal_approx(fighter.animated_sprite.sprite_frames.get_animation_speed(&"hurt_high_reverse"), 48.0)
+					)
+				)
+			),
 			"%s conserva hurt_high con H da sola" % fighter.name
 		)
 	movement_test._unhandled_input(h_up)

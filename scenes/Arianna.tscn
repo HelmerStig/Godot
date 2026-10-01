@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/Arianna.gd" id="2_arianna"]
 
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/arianna/basic-moves/hurt_crouched_spritesheet.png" id="hurt_crouched_sheet"]
+
 [node name="Arianna" instance=ExtResource("1_base")]
+hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
 script = ExtResource("2_arianna")

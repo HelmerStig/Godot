@@ -66,6 +66,7 @@ enum State {
 }
 
 @export var character_data: CharacterData
+@export var hurt_crouched_sheet: Texture2D
 @export var show_debug_boxes := true
 @export_range(1, 2, 1) var player_number := 1
 
@@ -93,6 +94,7 @@ var attack_afterimage_spawn_count := 0
 var grabbed_by: Fighter
 var grabbed_target: Fighter
 var _super_hurt_looping := false
+var hurt_started_crouched := false
 
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -105,6 +107,7 @@ var _super_hurt_looping := false
 
 
 func _ready() -> void:
+	_configure_hurt_crouched_animation()
 	default_z_index = z_index
 	input_buffer = FighterInputBuffer.new(player_number)
 	shadow_ground_y = global_position.y
@@ -135,6 +138,8 @@ func change_state(next_state: int, force_victory_exit := false) -> void:
 		return
 	var previous_state := current_state
 	current_state = next_state
+	if next_state != State.HIT:
+		hurt_started_crouched = false
 	_apply_state_movement()
 	update_animation()
 	update_collision_profile()
@@ -210,6 +215,13 @@ func start_hit_reaction(
 	start_frame: int = 0,
 	apply_pushback: bool = true
 ) -> float:
+	hurt_started_crouched = (
+		hit_height == AttackData.HitHeight.LOW
+		and (current_state == State.CROUCHING or (current_state == State.HIT and hurt_started_crouched))
+		and animated_sprite.sprite_frames.has_animation(&"hurt_crouched")
+	)
+	if hurt_started_crouched:
+		start_frame = 0
 	received_hit_height = hit_height
 	change_state(State.HIT)
 	var animation_name := get_hit_animation(hit_height)
@@ -507,6 +519,8 @@ func begin_jump_ascent() -> void:
 
 
 func get_hit_animation(hit_height: AttackData.HitHeight) -> StringName:
+	if hit_height == AttackData.HitHeight.LOW and hurt_started_crouched:
+		return &"hurt_crouched"
 	match hit_height:
 		AttackData.HitHeight.HIGH:
 			return &"hurt_high"
@@ -591,6 +605,8 @@ func update_collision_profile() -> void:
 
 
 func get_crouch_progress() -> float:
+	if current_state == State.HIT and hurt_started_crouched:
+		return 1.0
 	if animated_sprite.animation.begins_with("crouched_"):
 		return 1.0
 	if current_state not in [State.CROUCHING, State.STANDING_UP] or animated_sprite.animation != &"crouch":
@@ -633,6 +649,7 @@ func flip_character() -> void:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	hurt_started_crouched = false
 	reset_airborne_combat_state()
 	position = spawn_position
 	velocity = Vector2.ZERO
@@ -735,6 +752,8 @@ func _on_combat_attack_finished() -> void:
 
 
 func _on_animation_finished() -> void:
+	if finish_crouched_hit_reaction():
+		return
 	if _super_hurt_looping and animated_sprite.sprite_frames.has_animation(&"hurt_high"):
 		animated_sprite.play(&"hurt_high")
 		return
@@ -750,3 +769,32 @@ func _on_animation_frame_changed() -> void:
 	emit_attack_motion_effect()
 	if animated_sprite.animation == &"crouch":
 		update_collision_profile()
+
+
+func finish_crouched_hit_reaction() -> bool:
+	if current_state != State.HIT or not hurt_started_crouched or animated_sprite.animation != &"hurt_crouched":
+		return false
+	velocity.x = 0.0
+	if input_buffer != null and input_buffer.is_down_held():
+		return_to_crouch_pose()
+	else:
+		change_state(State.IDLE)
+	return true
+
+
+func _configure_hurt_crouched_animation() -> void:
+	if hurt_crouched_sheet == null:
+		return
+	# La lista animazioni e per istanza; gli atlas esistenti restano immutabili.
+	animated_sprite.sprite_frames = animated_sprite.sprite_frames.duplicate()
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"hurt_crouched"):
+		frames.remove_animation(&"hurt_crouched")
+	frames.add_animation(&"hurt_crouched")
+	frames.set_animation_speed(&"hurt_crouched", 24.0)
+	frames.set_animation_loop(&"hurt_crouched", false)
+	for source in 12:
+		var texture := AtlasTexture.new()
+		texture.atlas = hurt_crouched_sheet
+		texture.region = Rect2((source % 5) * 512, int(source / 5) * 512, 512, 512)
+		frames.add_frame(&"hurt_crouched", texture)
