@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/block-spritesheet.png" id="7_block"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/Peiro-parata_bassa.png" id="8_block_low"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/Peiro-hurt-high.png" id="9_hurt_high"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/hurt_medium_spritesheet.png" id="10_hurt_medium"]
 
 [node name="Peirolo" instance=ExtResource("1_base")]
 script = ExtResource("2_script")
@@ -34,5 +35,6 @@ hurt_high_sheet = ExtResource("9_hurt_high")
 hurt_high_frame_count = 9
 hurt_high_columns = 5
 hurt_high_has_reverse = true
+hurt_medium_sheet = ExtResource("10_hurt_medium")
 sprite_scale = Vector2(0.83, 0.83)
 sprite_position = Vector2(0.0, -117.0)

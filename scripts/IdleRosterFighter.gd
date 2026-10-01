@@ -50,6 +50,10 @@ const GRAVITY := 3150.0
 @export var hurt_high_cell_size := Vector2(512.0, 512.0)
 ## Se true, al termine dell'animazione la riproduce al contrario (senza l'ultimo frame) prima di tornare in idle.
 @export var hurt_high_has_reverse := false
+@export var hurt_medium_sheet: Texture2D
+@export_range(1, 99, 1) var hurt_medium_frame_count := 11
+@export_range(1, 99, 1) var hurt_medium_columns := 5
+@export var hurt_medium_cell_size := Vector2(512.0, 512.0)
 @export var idle_sprite_scale := Vector2(0.85, 0.85)
 @export var idle_sprite_position := Vector2(0.0, -115.0)
 ## Per-character sprite size and ground alignment; overrides the defaults above.
@@ -165,6 +169,20 @@ func change_state(next_state: int, force_victory_exit := false) -> void:
 	super.change_state(next_state, force_victory_exit)
 
 
+func start_hit_reaction(
+	hit_height: AttackData.HitHeight,
+	attacker: Fighter,
+	start_frame: int = 0,
+	apply_pushback: bool = true
+) -> float:
+	# Il foglio medium include la posa iniziale: non saltarla in base al colpo ricevuto.
+	var effective_start := 0 if hit_height == AttackData.HitHeight.MID and hurt_medium_sheet != null else start_frame
+	var duration := super.start_hit_reaction(hit_height, attacker, effective_start, apply_pushback)
+	if hit_height == AttackData.HitHeight.MID and animated_sprite.sprite_frames.has_animation(&"hurt_mid_reverse"):
+		duration += get_animation_duration(&"hurt_mid_reverse")
+	return duration
+
+
 func get_block_animation(height: AttackData.HitHeight, _crouched := false) -> StringName:
 	return &"block_low" if height == AttackData.HitHeight.LOW else &"block_high"
 
@@ -182,6 +200,13 @@ func _on_animation_finished() -> void:
 			change_state(State.IDLE)
 			return
 	if current_state == State.HIT:
+		if animated_sprite.animation == &"hurt_mid" \
+				and animated_sprite.sprite_frames.has_animation(&"hurt_mid_reverse"):
+			animated_sprite.play(&"hurt_mid_reverse")
+			return
+		if animated_sprite.animation == &"hurt_mid_reverse":
+			change_state(State.IDLE)
+			return
 		if animated_sprite.animation == &"hurt_high" \
 				and animated_sprite.sprite_frames.has_animation(&"hurt_high_reverse"):
 			animated_sprite.play(&"hurt_high_reverse")
@@ -230,6 +255,10 @@ func _configure_animations() -> void:
 		_add_sheet_animation(frames, &"hurt_high", hurt_high_sheet, hurt_high_frame_count, hurt_high_columns, hurt_high_cell_size, HURT_FPS, false, 0, false)
 		if hurt_high_has_reverse and hurt_high_frame_count > 1:
 			_add_sheet_animation(frames, &"hurt_high_reverse", hurt_high_sheet, hurt_high_frame_count - 1, hurt_high_columns, hurt_high_cell_size, HURT_FPS, true, 0, false)
+	if hurt_medium_sheet != null:
+		_add_sheet_animation(frames, &"hurt_mid", hurt_medium_sheet, hurt_medium_frame_count, hurt_medium_columns, hurt_medium_cell_size, HURT_FPS, false, 0, false)
+		if hurt_medium_frame_count > 1:
+			_add_sheet_animation(frames, &"hurt_mid_reverse", hurt_medium_sheet, hurt_medium_frame_count - 1, hurt_medium_columns, hurt_medium_cell_size, HURT_FPS, true, 0, false)
 	animated_sprite.sprite_frames = frames
 	animated_sprite.animation = &"idle"
 	update_sprite_scale()

@@ -1,11 +1,11 @@
 extends RefCounted
 
 const FIGHTERS := [
-	{"id": &"bue", "scene": "res://scenes/Bue.tscn", "sheet": "res://assets/sprites/characters/bue/idle-spritesheet.png", "walk": "res://assets/sprites/characters/bue/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/bue/crouch-spritesheet.png", "crouch_frames": 7, "frames": 63, "columns": 8},
-	{"id": &"mileto", "scene": "res://scenes/Mileto.tscn", "sheet": "res://assets/sprites/characters/mileto/idle-spritesheet.png", "walk": "res://assets/sprites/characters/mileto/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/mileto/crouch-spritesheet.png", "crouch_frames": 13, "frames": 63, "columns": 8},
-	{"id": &"oscare", "scene": "res://scenes/Oscare.tscn", "sheet": "res://assets/sprites/characters/oscare/idle-spritesheet.png", "walk": "res://assets/sprites/characters/oscare/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/oscare/crouch-spritesheet.png", "crouch_frames": 9, "frames": 63, "columns": 8},
-	{"id": &"peiro", "scene": "res://scenes/Peirolo.tscn", "sheet": "res://assets/sprites/characters/peirolo/idle_spritesheet.png", "walk": "res://assets/sprites/characters/peirolo/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/peirolo/crouch-spritesheet.png", "crouch_frames": 11, "frames": 63, "columns": 8},
-	{"id": &"torpe", "scene": "res://scenes/Torpe.tscn", "sheet": "res://assets/sprites/characters/torpe/idle-spritesheet.png", "walk": "res://assets/sprites/characters/torpe/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/torpe/crouch-spritesheet.png", "crouch_frames": 7, "frames": 61, "columns": 8},
+	{"id": &"bue", "scene": "res://scenes/Bue.tscn", "sheet": "res://assets/sprites/characters/bue/idle-spritesheet.png", "walk": "res://assets/sprites/characters/bue/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/bue/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/bue/hurt_medium_spritesheet.png", "crouch_frames": 7, "frames": 63, "columns": 8},
+	{"id": &"mileto", "scene": "res://scenes/Mileto.tscn", "sheet": "res://assets/sprites/characters/mileto/idle-spritesheet.png", "walk": "res://assets/sprites/characters/mileto/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/mileto/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/mileto/hurt_medium_spritesheet.png", "crouch_frames": 13, "frames": 63, "columns": 8},
+	{"id": &"oscare", "scene": "res://scenes/Oscare.tscn", "sheet": "res://assets/sprites/characters/oscare/idle-spritesheet.png", "walk": "res://assets/sprites/characters/oscare/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/oscare/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/oscare/hurt_medium_spritesheet.png", "crouch_frames": 9, "frames": 63, "columns": 8},
+	{"id": &"peiro", "scene": "res://scenes/Peirolo.tscn", "sheet": "res://assets/sprites/characters/peirolo/idle_spritesheet.png", "walk": "res://assets/sprites/characters/peirolo/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/peirolo/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/peirolo/hurt_medium_spritesheet.png", "crouch_frames": 11, "frames": 63, "columns": 8},
+	{"id": &"torpe", "scene": "res://scenes/Torpe.tscn", "sheet": "res://assets/sprites/characters/torpe/idle-spritesheet.png", "walk": "res://assets/sprites/characters/torpe/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/torpe/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/torpe/hurt_medium_spritesheet.png", "crouch_frames": 7, "frames": 61, "columns": 8},
 ]
 
 
@@ -73,6 +73,24 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				512.0, 512.0
 			),
 			"%s usa %d frame crouch a 24 FPS senza loop" % [entry["id"], crouch_count]
+		)
+		var mid_first := frames.get_frame_texture(&"hurt_mid", 0) as AtlasTexture
+		var mid_last := frames.get_frame_texture(&"hurt_mid", 10) as AtlasTexture
+		var mid_reverse_first := frames.get_frame_texture(&"hurt_mid_reverse", 0) as AtlasTexture
+		var mid_reverse_last := frames.get_frame_texture(&"hurt_mid_reverse", 9) as AtlasTexture
+		expect.call(
+			frames.get_frame_count(&"hurt_mid") == 11
+			and frames.get_frame_count(&"hurt_mid_reverse") == 10
+			and is_equal_approx(frames.get_animation_speed(&"hurt_mid"), 24.0)
+			and is_equal_approx(frames.get_animation_speed(&"hurt_mid_reverse"), 24.0)
+			and not frames.get_animation_loop(&"hurt_mid")
+			and not frames.get_animation_loop(&"hurt_mid_reverse")
+			and mid_first.atlas.resource_path == entry["hurt_mid"]
+			and mid_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
+			and mid_last.region == Rect2(0.0, 1024.0, 512.0, 512.0)
+			and mid_reverse_first.region == Rect2(2048.0, 512.0, 512.0, 512.0)
+			and mid_reverse_last.region == mid_first.region,
+			"%s usa hurt medium 1-11 e recovery 10-1 a 24 FPS" % entry["id"]
 		)
 		fighter.queue_free()
 		await tree.process_frame
@@ -189,6 +207,90 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				and fighter_node.animated_sprite.animation == &"idle",
 				"%s torna in idle dopo la risalita" % fighter_node.fighter_id
 			)
+	for fighter_node in movement_test._fighters:
+		if fighter_node is IdleRosterFighter:
+			var reaction_duration: float = fighter_node.start_hit_reaction(AttackData.HitHeight.MID, null, 4, false)
+			expect.call(
+				fighter_node.current_state == Fighter.State.HIT
+				and fighter_node.get_hit_animation(AttackData.HitHeight.MID) == &"hurt_mid"
+				and fighter_node.animated_sprite.animation == &"hurt_mid"
+				and fighter_node.animated_sprite.frame == 0
+				and is_equal_approx(reaction_duration, 21.0 / 24.0),
+				"%s riceve hurt medium dal primo frame e mantiene l'hitstun fino alla fine" % fighter_node.fighter_id
+			)
+	for _frame in 33:
+		await tree.physics_frame
+	for fighter_node in movement_test._fighters:
+		if fighter_node is IdleRosterFighter:
+			expect.call(
+				fighter_node.current_state == Fighter.State.HIT
+				and fighter_node.animated_sprite.animation == &"hurt_mid_reverse",
+				"%s riproduce il ritorno 10-1 di hurt medium" % fighter_node.fighter_id
+			)
+	for _frame in 34:
+		await tree.physics_frame
+	for fighter_node in movement_test._fighters:
+		if fighter_node is IdleRosterFighter:
+			expect.call(
+				fighter_node.current_state == Fighter.State.IDLE
+				and fighter_node.animated_sprite.animation == &"idle",
+				"%s torna in idle dopo hurt medium" % fighter_node.fighter_id
+			)
+	var h_down := InputEventKey.new()
+	h_down.keycode = KEY_H
+	h_down.pressed = true
+	var h_up := InputEventKey.new()
+	h_up.keycode = KEY_H
+	h_up.pressed = false
+	var m_down := InputEventKey.new()
+	m_down.keycode = KEY_M
+	m_down.pressed = true
+	var m_up := InputEventKey.new()
+	m_up.keycode = KEY_M
+	m_up.pressed = false
+	movement_test._unhandled_input(m_down)
+	for fighter_node in movement_test._fighters:
+		var fighter := fighter_node as Fighter
+		expect.call(
+			fighter.current_state == Fighter.State.IDLE,
+			"%s non reagisce a M da sola nel test" % fighter.name
+		)
+	movement_test._unhandled_input(h_down)
+	for fighter_node in movement_test._fighters:
+		var fighter := fighter_node as Fighter
+		expect.call(
+			fighter.current_state == Fighter.State.HIT
+			and fighter.animated_sprite.animation == &"hurt_mid",
+			"%s mostra hurt_medium con M poi H" % fighter.name
+		)
+	movement_test._unhandled_input(h_up)
+	movement_test._unhandled_input(m_up)
+	for fighter_node in movement_test._fighters:
+		(fighter_node as Fighter).change_state(Fighter.State.IDLE)
+	movement_test._unhandled_input(h_down)
+	movement_test._unhandled_input(m_down)
+	await tree.process_frame
+	for fighter_node in movement_test._fighters:
+		var fighter := fighter_node as Fighter
+		expect.call(
+			fighter.current_state == Fighter.State.HIT
+			and fighter.animated_sprite.animation == &"hurt_mid",
+			"%s mostra hurt_medium con H poi M senza passare da hurt_high" % fighter.name
+		)
+	movement_test._unhandled_input(h_up)
+	movement_test._unhandled_input(m_up)
+	for fighter_node in movement_test._fighters:
+		(fighter_node as Fighter).change_state(Fighter.State.IDLE)
+	movement_test._unhandled_input(h_down)
+	await tree.process_frame
+	for fighter_node in movement_test._fighters:
+		var fighter := fighter_node as Fighter
+		expect.call(
+			fighter.current_state == Fighter.State.HIT
+			and fighter.animated_sprite.animation == &"hurt_high",
+			"%s conserva hurt_high con H da sola" % fighter.name
+		)
+	movement_test._unhandled_input(h_up)
 	movement_test.queue_free()
 	await tree.process_frame
 	return true

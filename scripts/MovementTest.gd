@@ -14,6 +14,9 @@ var _camera: Camera2D
 var _hint_label: Label
 var _dummy_opponent: Fighter
 var _block_mode := 0  # 0=off  1=high  2=low
+var _hurt_h_held := false
+var _hurt_m_held := false
+var _hurt_preview_generation := 0
 
 
 func _ready() -> void:
@@ -149,7 +152,7 @@ func _update_hint_text() -> void:
 			_hint_label.text = "[ BLOCK LOW ]   ·   Tab: disattiva   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.add_theme_color_override("font_color", Color(1.0, 0.75, 0.2))
 		_:
-			_hint_label.text = "MOVEMENT TEST   ·   Tab: block   ·   H: hurt_high   ·   F3: hitbox   ·   F2: titolo"
+			_hint_label.text = "MOVEMENT TEST   ·   Tab: block   ·   H: hurt_high   ·   H+M: hurt_medium   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.remove_theme_color_override("font_color")
 
 
@@ -226,16 +229,44 @@ func _unhandled_input(event: InputEvent) -> void:
 				fighter.input_buffer.clear()
 				fighter.change_state(Fighter.State.IDLE)
 		_update_hint_text()
-	elif event is InputEventKey and event.keycode == KEY_H and event.pressed and not event.echo:
-		for f in _fighters:
-			var fighter := f as Fighter
-			if not is_instance_valid(fighter):
-				continue
-			fighter.start_hit_reaction(AttackData.HitHeight.HIGH, null, 0, false)
-			# IdleRosterFighter usa _on_animation_finished; Arianna/Mangler usano questo timer.
-			get_tree().create_timer(2.0).timeout.connect(func():
-				if is_instance_valid(fighter) and fighter.current_state == Fighter.State.HIT:
-					fighter.change_state(Fighter.State.IDLE)
-			)
+	elif event is InputEventKey and event.keycode in [KEY_H, KEY_M] and not event.echo:
+		_handle_hurt_shortcut(event)
 	elif event is InputEventKey and event.keycode == KEY_F2 and event.pressed and not event.echo:
 		get_tree().change_scene_to_file("res://scenes/TitleScreen.tscn")
+
+
+func _handle_hurt_shortcut(event: InputEventKey) -> void:
+	if event.keycode == KEY_H:
+		_hurt_h_held = event.pressed
+		if event.pressed:
+			if _hurt_m_held:
+				_preview_hurt(AttackData.HitHeight.MID)
+			else:
+				# Aspetta la fine del batch di input: H+M nello stesso frame non mostra hurt_high.
+				_hurt_preview_generation += 1
+				call_deferred("_preview_high_if_uncombined", _hurt_preview_generation)
+	else:
+		_hurt_m_held = event.pressed
+		if event.pressed and _hurt_h_held:
+			_preview_hurt(AttackData.HitHeight.MID)
+
+
+func _preview_high_if_uncombined(request_generation: int) -> void:
+	if request_generation == _hurt_preview_generation:
+		_preview_hurt(AttackData.HitHeight.HIGH)
+
+
+func _preview_hurt(height: AttackData.HitHeight) -> void:
+	_hurt_preview_generation += 1
+	var preview_generation := _hurt_preview_generation
+	for f in _fighters:
+		var fighter := f as Fighter
+		if not is_instance_valid(fighter):
+			continue
+		fighter.start_hit_reaction(height, null, 0, false)
+		# IdleRosterFighter usa _on_animation_finished; Arianna/Mangler usano questo timer.
+		get_tree().create_timer(2.0).timeout.connect(func():
+			if preview_generation == _hurt_preview_generation \
+					and is_instance_valid(fighter) and fighter.current_state == Fighter.State.HIT:
+				fighter.change_state(Fighter.State.IDLE)
+		)
