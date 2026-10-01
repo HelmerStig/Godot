@@ -10,6 +10,7 @@ const JUMP_FPS := 24.0
 const CROUCH_FPS := 24.0
 const BLOCK_FPS := 24.0
 const BLOCK_LOW_FPS := 48.0
+const HURT_FPS := 24.0
 const GRAVITY := 3150.0
 
 @export var fighter_id: StringName
@@ -43,6 +44,12 @@ const GRAVITY := 3150.0
 @export_range(1, 99, 1) var block_low_frame_count := 1
 @export_range(1, 99, 1) var block_low_columns := 5
 @export var block_low_cell_size := Vector2(512.0, 512.0)
+@export var hurt_high_sheet: Texture2D
+@export_range(1, 99, 1) var hurt_high_frame_count := 1
+@export_range(1, 99, 1) var hurt_high_columns := 5
+@export var hurt_high_cell_size := Vector2(512.0, 512.0)
+## Se true, al termine dell'animazione la riproduce al contrario (senza l'ultimo frame) prima di tornare in idle.
+@export var hurt_high_has_reverse := false
 @export var idle_sprite_scale := Vector2(0.85, 0.85)
 @export var idle_sprite_position := Vector2(0.0, -115.0)
 ## Per-character sprite size and ground alignment; overrides the defaults above.
@@ -174,6 +181,14 @@ func _on_animation_finished() -> void:
 		if animated_sprite.animation == &"block_high_recovery":
 			change_state(State.IDLE)
 			return
+	if current_state == State.HIT:
+		if animated_sprite.animation == &"hurt_high" \
+				and animated_sprite.sprite_frames.has_animation(&"hurt_high_reverse"):
+			animated_sprite.play(&"hurt_high_reverse")
+			return
+		if animated_sprite.animation in [&"hurt_high", &"hurt_high_reverse"]:
+			change_state(State.IDLE)
+			return
 	if current_state == State.STANDING_UP and animated_sprite.animation == &"crouch":
 		change_state(State.IDLE)
 		return
@@ -211,6 +226,10 @@ func _configure_animations() -> void:
 	if block_low_sheet != null:
 		_add_sheet_animation(frames, &"block_low", block_low_sheet, block_low_frame_count, block_low_columns, block_low_cell_size, BLOCK_LOW_FPS, false, 0, false)
 		_add_sheet_animation(frames, &"block_low_recovery", block_low_sheet, block_low_frame_count, block_low_columns, block_low_cell_size, BLOCK_LOW_FPS, true, 0, false)
+	if hurt_high_sheet != null:
+		_add_sheet_animation(frames, &"hurt_high", hurt_high_sheet, hurt_high_frame_count, hurt_high_columns, hurt_high_cell_size, HURT_FPS, false, 0, false)
+		if hurt_high_has_reverse and hurt_high_frame_count > 1:
+			_add_sheet_animation(frames, &"hurt_high_reverse", hurt_high_sheet, hurt_high_frame_count - 1, hurt_high_columns, hurt_high_cell_size, HURT_FPS, true, 0, false)
 	animated_sprite.sprite_frames = frames
 	animated_sprite.animation = &"idle"
 	update_sprite_scale()

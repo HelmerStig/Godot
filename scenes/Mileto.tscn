@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/crouch-spritesheet.png" id="6_crouch"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/block-spritesheet.png" id="7_block"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/Mileto-parata_bassa.png" id="8_block_low"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/Mileto-hurt-high.png" id="9_hurt_high"]
 
 [node name="Mileto" instance=ExtResource("1_base")]
 script = ExtResource("2_script")
@@ -29,5 +30,8 @@ block_frame_count = 6
 block_columns = 5
 block_low_sheet = ExtResource("8_block_low")
 block_low_frame_count = 11
+hurt_high_sheet = ExtResource("9_hurt_high")
+hurt_high_frame_count = 14
+hurt_high_columns = 5
 sprite_scale = Vector2(0.87, 0.87)
 sprite_position = Vector2(0.0, -105.0)

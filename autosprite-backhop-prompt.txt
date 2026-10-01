@@ -1,9 +1,11 @@
-ora abbiamo gli sprites per la parata bassa, si esegue l'animazione, quando la parata è finita, si esegue l'animazione al contrario e si torna in crouched position:
-- bue: assets\sprites\characters\bue\Bue-parata_bassa.png - 11 fotogrammi 
-- mileto: assets\sprites\characters\mileto\Mileto-parata_bassa.png - 11 fotogrammi
-- oscare: assets\sprites\characters\oscare\Oscare-parata_bassa.png - 11 fotogrammi
-- peirolo: assets\sprites\characters\peirolo\Peirolo-parata_bassa.png - 11 fotogrammi
-- torpe: assets\sprites\characters\torpe\Torpe-parata_bassa.png - 11 fotogrammi
+ora abbiamo gli sprites per hurt_high, quando si subisce un colpo alto.
+- bue: assets\sprites\characters\bue\Bue-hurt-high.png - 18 fotogrammi da eseguire a 1 a 18 e poi tornare in idle
+- mileto: assets\sprites\characters\mileto\Mileto-hurt-high.png - 14 da eseguire a 1 a 14 e poi tornare in idle
+- oscare: assets\sprites\characters\oscare\Oscare-hurt-high.png - 14 fotogrammi da eseguire a 1 a 14 e poi tornare in idle
+- peirolo: assets\sprites\characters\peirolo\Peirolo-hurt-high.png - 9 fotogrammi da eseguire da 1 a 9 -> poi da 8 a 1 e tornare in idle
+- torpe: assets\sprites\characters\torpe\Torpe-hurt-high.png - 8 fotogrammi da eseguire da 1 a 8 -> poi da 7 a 1 e tornare in idle
+
+puoi creare anche uno shortut con il tasto h per testare con f2 l'hurt_high ?
 
 
 Correzioni
@@ -12,3 +14,8 @@ Correzioni
 - oscare salto: l'animazione devbe partire da fotogramma 6, a fotogramma 14 si stacca da terra e a fotogramma 36 deve essere a terra, a fotogramma 44 passare in idle
 - peirolo salto: l'animazione devbe partire da fotogramma 5, a fotogramma 17 si stacca da terra e a fotogramma 35 deve essere a terra, a fotogramma 45 deve passare in idle
 - torpe salto: l'animazione devbe partire da fotogramma 5, a fotogramma 14 si stacca da terra e a fotogramma 30 deve essere a terra, a fotogramma 39 deve passare in idle
+
+Perfetto, ho creato l'animazione hurt_medium per ogni personaggio, vorrei che scaricassi gli spritesheet nelle relative cartelle.
+Poi associa ad ogni personaggio l'animazione hurt_medium nel gioco.
+Sono 11 fotogrammi da eseguire a 1 a 11 -> poi da 10 a 1 e poi tornare in idle.
+Che ne dici se creiamo una skill per l'associazione degli sprites agli eventi di gioco con tutta la logica automatizzata, scricamento e associazione dello spritheet con numero di fotogrammi, da dove partire e dove finire coi frame e se eseguire anche l'animazione all'inverso?

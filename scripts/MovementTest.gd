@@ -149,7 +149,7 @@ func _update_hint_text() -> void:
 			_hint_label.text = "[ BLOCK LOW ]   ·   Tab: disattiva   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.add_theme_color_override("font_color", Color(1.0, 0.75, 0.2))
 		_:
-			_hint_label.text = "MOVEMENT TEST   ·   Tab: block preview   ·   F3: hitbox   ·   F2: titolo"
+			_hint_label.text = "MOVEMENT TEST   ·   Tab: block   ·   H: hurt_high   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.remove_theme_color_override("font_color")
 
 
@@ -226,5 +226,16 @@ func _unhandled_input(event: InputEvent) -> void:
 				fighter.input_buffer.clear()
 				fighter.change_state(Fighter.State.IDLE)
 		_update_hint_text()
+	elif event is InputEventKey and event.keycode == KEY_H and event.pressed and not event.echo:
+		for f in _fighters:
+			var fighter := f as Fighter
+			if not is_instance_valid(fighter):
+				continue
+			fighter.start_hit_reaction(AttackData.HitHeight.HIGH, null, 0, false)
+			# IdleRosterFighter usa _on_animation_finished; Arianna/Mangler usano questo timer.
+			get_tree().create_timer(2.0).timeout.connect(func():
+				if is_instance_valid(fighter) and fighter.current_state == Fighter.State.HIT:
+					fighter.change_state(Fighter.State.IDLE)
+			)
 	elif event is InputEventKey and event.keycode == KEY_F2 and event.pressed and not event.echo:
 		get_tree().change_scene_to_file("res://scenes/TitleScreen.tscn")
