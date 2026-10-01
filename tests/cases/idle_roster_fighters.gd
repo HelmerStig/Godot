@@ -256,6 +256,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			"%s non reagisce a M da sola nel test" % fighter.name
 		)
 	movement_test._unhandled_input(h_down)
+	var longest_standard_hurt := 0.0
+	var idle_at_hurt_finish := {}
 	for fighter_node in movement_test._fighters:
 		var fighter := fighter_node as Fighter
 		expect.call(
@@ -263,8 +265,30 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			and fighter.animated_sprite.animation == &"hurt_mid",
 			"%s mostra hurt_medium con M poi H" % fighter.name
 		)
+		if fighter is Arianna or fighter is Mangler:
+			longest_standard_hurt = maxf(
+				longest_standard_hurt, fighter.get_animation_duration(&"hurt_mid")
+			)
+			var observed_fighter := fighter
+			var observed_name := String(fighter.name)
+			var on_hurt_finished := func() -> void:
+				idle_at_hurt_finish[observed_name] = (
+					observed_fighter.current_state == Fighter.State.IDLE
+					and observed_fighter.animated_sprite.animation == &"idle"
+				)
+			fighter.animated_sprite.animation_finished.connect(on_hurt_finished, CONNECT_ONE_SHOT)
 	movement_test._unhandled_input(h_up)
 	movement_test._unhandled_input(m_up)
+	await tree.create_timer(longest_standard_hurt + 0.12).timeout
+	for fighter_node in movement_test._fighters:
+		var fighter := fighter_node as Fighter
+		if fighter is Arianna or fighter is Mangler:
+			expect.call(
+				fighter.current_state == Fighter.State.IDLE
+				and fighter.animated_sprite.animation == &"idle"
+				and idle_at_hurt_finish.get(String(fighter.name), false),
+				"%s torna in idle sul segnale finale di hurt_medium" % fighter.name
+			)
 	for fighter_node in movement_test._fighters:
 		(fighter_node as Fighter).change_state(Fighter.State.IDLE)
 	movement_test._unhandled_input(h_down)

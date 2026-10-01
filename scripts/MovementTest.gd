@@ -264,9 +264,15 @@ func _preview_hurt(height: AttackData.HitHeight) -> void:
 		if not is_instance_valid(fighter):
 			continue
 		fighter.start_hit_reaction(height, null, 0, false)
-		# IdleRosterFighter usa _on_animation_finished; Arianna/Mangler usano questo timer.
-		get_tree().create_timer(2.0).timeout.connect(func():
+		# I fighter del roster gestiscono anche la recovery inversa da animation_finished.
+		if fighter is IdleRosterFighter:
+			continue
+		# La preview di Arianna e Mangler termina sul segnale reale, senza pausa sull'ultimo frame.
+		var preview_animation := fighter.animated_sprite.animation
+		var on_preview_finished := func() -> void:
 			if preview_generation == _hurt_preview_generation \
-					and is_instance_valid(fighter) and fighter.current_state == Fighter.State.HIT:
+					and is_instance_valid(fighter) \
+					and fighter.current_state == Fighter.State.HIT \
+					and fighter.animated_sprite.animation == preview_animation:
 				fighter.change_state(Fighter.State.IDLE)
-		)
+		fighter.animated_sprite.animation_finished.connect(on_preview_finished, CONNECT_ONE_SHOT)
