@@ -37,6 +37,7 @@ const GRAVITY := 3150.0
 @export_range(1, 99, 1) var jump_columns := 7
 @export var jump_cell_size := Vector2(512.0, 512.0)
 @export var block_sheet: Texture2D
+@export var block_medium_sheet: Texture2D
 @export_range(1, 99, 1) var block_frame_count := 1
 @export_range(1, 99, 1) var block_columns := 7
 @export var block_cell_size := Vector2(512.0, 512.0)
@@ -81,6 +82,10 @@ func _physics_process(delta: float) -> void:
 		input_buffer.update(is_facing_right)
 
 	var on_floor := is_on_floor()
+	combat.set_guarding(
+		controls_enabled and on_floor and is_holding_back()
+		and current_state in [State.IDLE, State.WALKING, State.CROUCHING, State.STANDING_UP, State.BLOCKING, State.BLOCK_RECOVERY]
+	)
 	var down_held := input_buffer != null and input_buffer.is_down_held()
 	if crouch_sheet != null and controls_enabled and on_floor:
 		if down_held and current_state in [State.IDLE, State.WALKING]:
@@ -191,21 +196,29 @@ func start_hit_reaction(
 
 
 func get_block_animation(height: AttackData.HitHeight, _crouched := false) -> StringName:
+	if height == AttackData.HitHeight.MID and block_medium_sheet != null:
+		return &"block_mid"
 	return &"block_low" if height == AttackData.HitHeight.LOW else &"block_high"
 
 
 func get_block_recovery_animation(height: AttackData.HitHeight) -> StringName:
+	if height == AttackData.HitHeight.MID and block_medium_sheet != null:
+		return &"block_mid_recovery"
 	return &"block_low_recovery" if height == AttackData.HitHeight.LOW else &"block_high_recovery"
 
 
 func _on_animation_finished() -> void:
-	if finish_crouched_hit_reaction():
+	if finish_crouched_hit_reaction(true):
+		return
+	if current_state == State.BLOCKING and animated_sprite.animation == &"block_mid":
+		animated_sprite.frame = 5
+		animated_sprite.pause()
 		return
 	if current_state == State.BLOCK_RECOVERY:
 		if animated_sprite.animation == &"block_low_recovery":
 			change_state(State.CROUCHING)
 			return
-		if animated_sprite.animation == &"block_high_recovery":
+		if animated_sprite.animation in [&"block_high_recovery", &"block_mid_recovery"]:
 			change_state(State.IDLE)
 			return
 	if current_state == State.HIT:
@@ -266,6 +279,9 @@ func _configure_animations() -> void:
 	if block_low_sheet != null:
 		_add_sheet_animation(frames, &"block_low", block_low_sheet, block_low_frame_count, block_low_columns, block_low_cell_size, BLOCK_LOW_FPS, false, 0, false)
 		_add_sheet_animation(frames, &"block_low_recovery", block_low_sheet, block_low_frame_count, block_low_columns, block_low_cell_size, BLOCK_LOW_FPS, true, 0, false)
+	if block_medium_sheet != null:
+		_add_sheet_animation(frames, &"block_mid", block_medium_sheet, 6, 5, Vector2(512.0, 512.0), 24.0, false, 0, false)
+		_add_sheet_animation(frames, &"block_mid_recovery", block_medium_sheet, 5, 5, Vector2(512.0, 512.0), 24.0, true, 0, false)
 	if hurt_high_sheet != null:
 		_add_sheet_animation(frames, &"hurt_high", hurt_high_sheet, hurt_high_frame_count, hurt_high_columns, hurt_high_cell_size, HURT_FPS, false, 0, false)
 		if hurt_high_has_reverse and hurt_high_frame_count > 1:

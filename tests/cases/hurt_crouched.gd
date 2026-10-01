@@ -20,6 +20,13 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		expect.call(frames.get_frame_count(&"hurt_crouched") == 12 and is_equal_approx(frames.get_animation_speed(&"hurt_crouched"), 24.0)
 			and is_equal_approx(fighter.get_animation_duration(&"hurt_crouched"), 0.5)
 			and not frames.get_animation_loop(&"hurt_crouched") and exact_regions, "%s: hurt_crouched 1-12 a 24 FPS senza loop" % fighter.name)
+		var reverse_regions := true
+		for index in 11:
+			var source := 10 - index
+			var texture := frames.get_frame_texture(&"hurt_crouched_reverse", index) as AtlasTexture
+			reverse_regions = reverse_regions and texture.atlas == fighter.hurt_crouched_sheet and texture.region == Rect2((source % 5) * 512, int(source / 5) * 512, 512, 512)
+		expect.call(frames.get_frame_count(&"hurt_crouched_reverse") == 11 and is_equal_approx(frames.get_animation_speed(&"hurt_crouched_reverse"), 24.0)
+			and not frames.get_animation_loop(&"hurt_crouched_reverse") and reverse_regions, "%s: hurt_crouched ritorna 11-1 a 24 FPS" % fighter.name)
 		fighter.input_buffer.record_input_snapshot(0, 1, [], fighter.is_facing_right)
 		fighter.return_to_crouch_pose()
 		var effects_before := tree.get_nodes_in_group("hurt_blue_explosion").size()
@@ -30,6 +37,10 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		expect.call(effects.size() == effects_before + 1 and (effects.back() as Node2D).global_position == fighter.global_position + Fighter.HURT_LOW_EFFECT_OFFSET,
 			"%s: esplosione particellare LOW" % fighter.name)
 	await tree.create_timer(0.56).timeout
+	for fighter in fighters:
+		expect.call(fighter.current_state == Fighter.State.HIT and fighter.animated_sprite.animation == &"hurt_crouched_reverse",
+			"%s: giu mantenuto avvia il ritorno 11-1" % fighter.name)
+	await tree.create_timer(0.5).timeout
 	for fighter in fighters:
 		expect.call(fighter.current_state == Fighter.State.CROUCHING and fighter.animated_sprite.animation == &"crouch"
 			and not fighter.animated_sprite.is_playing() and fighter.animated_sprite.frame == fighter.animated_sprite.sprite_frames.get_frame_count(&"crouch") - 1,

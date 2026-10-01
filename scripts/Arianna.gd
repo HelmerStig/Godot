@@ -2402,7 +2402,7 @@ func _is_inactive_attack_animation() -> bool:
 
 
 func _on_animation_finished() -> void:
-	if finish_crouched_hit_reaction():
+	if finish_crouched_hit_reaction(true):
 		return
 	if _is_inactive_attack_animation():
 		return

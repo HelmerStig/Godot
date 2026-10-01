@@ -520,6 +520,8 @@ func begin_jump_ascent() -> void:
 
 func get_hit_animation(hit_height: AttackData.HitHeight) -> StringName:
 	if hit_height == AttackData.HitHeight.LOW and hurt_started_crouched:
+		if animated_sprite.animation == &"hurt_crouched_reverse":
+			return &"hurt_crouched_reverse"
 		return &"hurt_crouched"
 	match hit_height:
 		AttackData.HitHeight.HIGH:
@@ -752,7 +754,7 @@ func _on_combat_attack_finished() -> void:
 
 
 func _on_animation_finished() -> void:
-	if finish_crouched_hit_reaction():
+	if finish_crouched_hit_reaction(true):
 		return
 	if _super_hurt_looping and animated_sprite.sprite_frames.has_animation(&"hurt_high"):
 		animated_sprite.play(&"hurt_high")
@@ -771,10 +773,15 @@ func _on_animation_frame_changed() -> void:
 		update_collision_profile()
 
 
-func finish_crouched_hit_reaction() -> bool:
-	if current_state != State.HIT or not hurt_started_crouched or animated_sprite.animation != &"hurt_crouched":
+func finish_crouched_hit_reaction(animation_finished := false) -> bool:
+	if current_state != State.HIT or not hurt_started_crouched or animated_sprite.animation not in [&"hurt_crouched", &"hurt_crouched_reverse"]:
 		return false
+	if not animation_finished:
+		return true
 	velocity.x = 0.0
+	if animated_sprite.animation == &"hurt_crouched" and input_buffer != null and input_buffer.is_down_held():
+		animated_sprite.play(&"hurt_crouched_reverse")
+		return true
 	if input_buffer != null and input_buffer.is_down_held():
 		return_to_crouch_pose()
 	else:
@@ -798,3 +805,13 @@ func _configure_hurt_crouched_animation() -> void:
 		texture.atlas = hurt_crouched_sheet
 		texture.region = Rect2((source % 5) * 512, int(source / 5) * 512, 512, 512)
 		frames.add_frame(&"hurt_crouched", texture)
+	if frames.has_animation(&"hurt_crouched_reverse"):
+		frames.remove_animation(&"hurt_crouched_reverse")
+	frames.add_animation(&"hurt_crouched_reverse")
+	frames.set_animation_speed(&"hurt_crouched_reverse", 24.0)
+	frames.set_animation_loop(&"hurt_crouched_reverse", false)
+	for source in range(10, -1, -1):
+		var texture := AtlasTexture.new()
+		texture.atlas = hurt_crouched_sheet
+		texture.region = Rect2((source % 5) * 512, int(source / 5) * 512, 512, 512)
+		frames.add_frame(&"hurt_crouched_reverse", texture)

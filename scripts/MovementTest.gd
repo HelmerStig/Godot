@@ -13,7 +13,7 @@ var _name_labels: Array = []
 var _camera: Camera2D
 var _hint_label: Label
 var _dummy_opponent: Fighter
-var _block_mode := 0  # 0=off  1=high  2=low
+var _block_mode := 0  # 0=off  1=high  2=medium  3=low
 var _hurt_h_held := false
 var _hurt_m_held := false
 var _hurt_l_held := false
@@ -148,9 +148,12 @@ func _update_hint_text() -> void:
 		return
 	match _block_mode:
 		1:
-			_hint_label.text = "[ BLOCK HIGH ]   ·   Tab: basso   ·   F3: hitbox   ·   F2: titolo"
+			_hint_label.text = "[ BLOCK HIGH ]   ·   Tab: medio   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.add_theme_color_override("font_color", Color(0.4, 0.9, 1.0))
 		2:
+			_hint_label.text = "[ BLOCK MEDIUM ]   ·   Tab: basso   ·   F3: hitbox   ·   F2: titolo"
+			_hint_label.add_theme_color_override("font_color", Color(0.6, 1.0, 0.6))
+		3:
 			_hint_label.text = "[ BLOCK LOW ]   ·   Tab: disattiva   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.add_theme_color_override("font_color", Color(1.0, 0.75, 0.2))
 		_:
@@ -171,9 +174,10 @@ func _fighters_center() -> Vector2:
 func _physics_process(_delta: float) -> void:
 	if _block_mode == 0:
 		return
-	var v_axis := 1 if _block_mode == 2 else 0  # down per il blocco basso
+	var v_axis := 1 if _block_mode == 3 else 0  # down per il blocco basso
 	var block_height := (
-		AttackData.HitHeight.LOW if _block_mode == 2 else AttackData.HitHeight.HIGH
+		AttackData.HitHeight.LOW if _block_mode == 3
+		else (AttackData.HitHeight.MID if _block_mode == 2 else AttackData.HitHeight.HIGH)
 	)
 	for f in _fighters:
 		var fighter := f as Fighter
@@ -217,7 +221,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			(f as Fighter).show_debug_boxes = show
 			(f as Fighter).queue_redraw()
 	elif event is InputEventKey and event.keycode == KEY_TAB and event.pressed and not event.echo:
-		_block_mode = (_block_mode + 1) % 3
+		_block_mode = (_block_mode + 1) % 4
 		var active := _block_mode != 0
 		if is_instance_valid(_dummy_opponent):
 			_dummy_opponent.combat.is_attacking = active

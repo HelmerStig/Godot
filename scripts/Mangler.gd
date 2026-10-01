@@ -985,7 +985,7 @@ func update_sprite_scale() -> void:
 		&"block_high_recovery", &"block_mid", &"block_mid_recovery", &"block_low",
 		&"block_low_crouched", &"block_low_recovery", &"crouched_light_kick", &"crouched_medium_kick",
 		&"crouched_heavy_kick",
-		&"victory", &"hurt_crouched"
+		&"victory", &"hurt_crouched", &"hurt_crouched_reverse"
 	]
 	if animated_sprite.animation in [&"jump_light_kick", &"jump_medium_kick", &"jump_heavy_kick"]:
 		animated_sprite.scale = JUMP_LIGHT_KICK_SPRITE_SCALE
@@ -1413,7 +1413,7 @@ func clear_attack_afterimages() -> void:
 
 
 func _on_animation_finished() -> void:
-	if finish_crouched_hit_reaction():
+	if finish_crouched_hit_reaction(true):
 		return
 	if animated_sprite.animation == &"victory":
 		# Victory finisce sull'ultimo frame, non cambiare stato.
