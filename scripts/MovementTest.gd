@@ -20,6 +20,9 @@ var _hurt_l_held := false
 var _hurt_g_held := false
 var _hurt_preview_generation := 0
 var _death_previews: Dictionary = {}
+var _sweep_previews: Dictionary = {}
+var _sweep_s_held := false
+var _sweep_k_held := false
 
 
 func _ready() -> void:
@@ -129,7 +132,7 @@ func _build_hud() -> void:
 	_hint_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint_label.offset_top = 10.0
-	_hint_label.offset_bottom = 40.0
+	_hint_label.offset_bottom = 70.0
 	_hint_label.add_theme_font_size_override("font_size", 18)
 	_update_hint_text()
 	layer.add_child(_hint_label)
@@ -160,7 +163,7 @@ func _update_hint_text() -> void:
 		_:
 			_hint_label.text = "MOVEMENT TEST   ·   Tab: block   ·   H: hurt_high   ·   H+M: hurt_medium   ·   H+L: hurt_low   ·   H+G: hurt_crouched   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.remove_theme_color_override("font_color")
-	_hint_label.text += "   ·   D: death"
+	_hint_label.text += "\nD: death   ·   S+K: sweep_knockdown + recovery"
 
 
 func _fighters_center() -> Vector2:
@@ -203,6 +206,11 @@ func _physics_process(_delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	for fighter in _sweep_previews.keys():
+		if not is_instance_valid(fighter):
+			_sweep_previews.erase(fighter)
+		elif fighter.combat.action_generation != _sweep_previews[fighter] or fighter.current_state == Fighter.State.IDLE:
+			_sweep_previews.erase(fighter)
 	for fighter in _death_previews.keys():
 		if not is_instance_valid(fighter):
 			_death_previews.erase(fighter)
@@ -235,6 +243,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_preview_death()
 	elif event is InputEventKey and event.keycode == KEY_TAB and event.pressed and not event.echo:
 		_cancel_death_previews()
+		_cancel_sweep_previews()
 		_block_mode = (_block_mode + 1) % 4
 		var active := _block_mode != 0
 		if is_instance_valid(_dummy_opponent):
@@ -249,6 +258,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				fighter.input_buffer.clear()
 				fighter.change_state(Fighter.State.IDLE)
 		_update_hint_text()
+	elif event is InputEventKey and event.keycode in [KEY_S, KEY_K]:
+		_handle_sweep_shortcut(event)
 	elif event is InputEventKey and event.keycode in [KEY_H, KEY_M, KEY_L, KEY_G] and not event.echo:
 		_handle_hurt_shortcut(event)
 	elif event is InputEventKey and event.keycode == KEY_F2 and event.pressed and not event.echo:
@@ -290,6 +301,7 @@ func _preview_high_if_uncombined(request_generation: int) -> void:
 
 func _preview_hurt(height: AttackData.HitHeight, from_crouch := false) -> void:
 	_cancel_death_previews()
+	_cancel_sweep_previews()
 	_hurt_preview_generation += 1
 	var preview_generation := _hurt_preview_generation
 	for f in _fighters:
@@ -316,24 +328,14 @@ func _preview_hurt(height: AttackData.HitHeight, from_crouch := false) -> void:
 
 func _preview_death() -> void:
 	_cancel_death_previews()
+	_cancel_sweep_previews()
 	_hurt_preview_generation += 1
-	# La guardia forzata non deve sovrascrivere lo stato KO al prossimo tick.
-	if _block_mode != 0:
-		_block_mode = 0
-		if is_instance_valid(_dummy_opponent):
-			_dummy_opponent.combat.is_attacking = false
-		for node in _fighters:
-			var fighter := node as Fighter
-			if not is_instance_valid(fighter):
-				continue
-			fighter.is_player_controlled = true
-			fighter.combat.set_guarding(false)
-			fighter.input_buffer.clear()
-			fighter.change_state(Fighter.State.IDLE, true)
-	_update_hint_text()
+	_disable_block_preview()
 	for node in _fighters:
-		var fighter := node as IdleRosterFighter
-		if not is_instance_valid(fighter) or fighter.death_sheet == null or fighter.combat.current_health <= 0:
+		var fighter := node as Fighter
+		if not is_instance_valid(fighter) or fighter.combat.current_health <= 0:
+			continue
+		if not fighter.animated_sprite.sprite_frames.has_animation(&"ko"):
 			continue
 		fighter.combat.cancel_current_action()
 		var generation := fighter.combat.action_generation
@@ -348,6 +350,23 @@ func _preview_death() -> void:
 		fighter.change_state(Fighter.State.KNOCKED_DOWN, true)
 		fighter.play_ko_animation()
 		fighter.animated_sprite.animation_finished.connect(finished)
+
+
+func _disable_block_preview() -> void:
+	# La guardia forzata non deve sovrascrivere lo stato KO al prossimo tick.
+	if _block_mode != 0:
+		_block_mode = 0
+		if is_instance_valid(_dummy_opponent):
+			_dummy_opponent.combat.is_attacking = false
+		for node in _fighters:
+			var fighter := node as Fighter
+			if not is_instance_valid(fighter):
+				continue
+			fighter.is_player_controlled = true
+			fighter.combat.set_guarding(false)
+			fighter.input_buffer.clear()
+			fighter.change_state(Fighter.State.IDLE, true)
+	_update_hint_text()
 
 
 func _on_death_preview_finished(fighter: Fighter, generation: int) -> void:
@@ -374,3 +393,46 @@ func _finish_death_preview(fighter: Fighter) -> void:
 		return
 	if fighter.current_state == Fighter.State.KNOCKED_DOWN:
 		fighter.change_state(Fighter.State.IDLE, true)
+
+
+func _handle_sweep_shortcut(event: InputEventKey) -> void:
+	var was_chord := _sweep_s_held and _sweep_k_held
+	if event.keycode == KEY_S:
+		_sweep_s_held = event.pressed
+	else:
+		_sweep_k_held = event.pressed
+	if _sweep_s_held and _sweep_k_held:
+		Input.action_release("p1_crouch")
+		Input.action_release("p1_light_kick")
+		get_viewport().set_input_as_handled()
+		if not was_chord and event.pressed and not event.echo:
+			_preview_sweep()
+
+
+func _preview_sweep() -> void:
+	_cancel_death_previews()
+	_cancel_sweep_previews()
+	_hurt_preview_generation += 1
+	_disable_block_preview()
+	for node in _fighters:
+		var fighter := node as Fighter
+		if not is_instance_valid(fighter) or fighter.combat.current_health <= 0:
+			continue
+		var frames := fighter.animated_sprite.sprite_frames
+		if not frames.has_animation(&"sweep_knockdown") or not frames.has_animation(&"knockdown_recovery"):
+			continue
+		fighter.combat.set_guarding(false)
+		fighter.input_buffer.clear()
+		fighter.velocity = Vector2.ZERO
+		fighter.combat.sweep_knockdown_reaction(null)
+		_sweep_previews[fighter] = fighter.combat.action_generation
+
+
+func _cancel_sweep_previews() -> void:
+	for fighter in _sweep_previews.keys():
+		if not is_instance_valid(fighter) or fighter.combat.action_generation != _sweep_previews[fighter]:
+			continue
+		fighter.combat.cancel_current_action()
+		if fighter.combat.current_health > 0 and fighter.current_state in [Fighter.State.SWEEP_KNOCKDOWN, Fighter.State.KNOCKDOWN_RECOVERY]:
+			fighter.change_state(Fighter.State.IDLE, true)
+	_sweep_previews.clear()

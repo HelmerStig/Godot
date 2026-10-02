@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -18,6 +18,11 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/block_medium_spritesheet.png" id="block_medium_sheet"]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/death.png" id="death_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/sweep_knockdown.png" id="sweep_knockdown_sheet"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/knockdown_recovery.png" id="knockdown_recovery_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/fall.png" id="fall_sheet"]
 
 [node name="Mileto" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
@@ -49,3 +54,6 @@ sprite_position = Vector2(0.0, -105.0)
 hurt_low_sheet = ExtResource("11_hurt_low")
 block_medium_sheet = ExtResource("block_medium_sheet")
 death_sheet = ExtResource("death_sheet")
+sweep_knockdown_sheet = ExtResource("sweep_knockdown_sheet")
+knockdown_recovery_sheet = ExtResource("knockdown_recovery_sheet")
+fall_sheet = ExtResource("fall_sheet")

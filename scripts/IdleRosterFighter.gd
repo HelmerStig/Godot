@@ -12,6 +12,8 @@ const BLOCK_FPS := 24.0
 const BLOCK_LOW_FPS := 48.0
 const HURT_FPS := 48.0
 const KO_FPS := 24.0
+const KNOCKDOWN_FPS := 24.0
+const SWEEP_GROUNDED_HOLD := 0.3
 const GRAVITY := 3150.0
 
 @export var fighter_id: StringName
@@ -57,7 +59,10 @@ const GRAVITY := 3150.0
 @export_range(1, 99, 1) var hurt_medium_columns := 5
 @export var hurt_medium_cell_size := Vector2(512.0, 512.0)
 @export var hurt_low_sheet: Texture2D
+@export var fall_sheet: Texture2D
 @export var death_sheet: Texture2D
+@export var sweep_knockdown_sheet: Texture2D
+@export var knockdown_recovery_sheet: Texture2D
 @export var idle_sprite_scale := Vector2(0.85, 0.85)
 @export var idle_sprite_position := Vector2(0.0, -115.0)
 ## Per-character sprite size and ground alignment; overrides the defaults above.
@@ -214,6 +219,10 @@ func play_ko_animation(_start_frame: int = 0) -> void:
 	super.play_ko_animation(0)
 
 
+func get_sweep_grounded_hold_duration() -> float:
+	return SWEEP_GROUNDED_HOLD
+
+
 func _on_animation_finished() -> void:
 	if finish_crouched_hit_reaction(true):
 		return
@@ -302,6 +311,12 @@ func _configure_animations() -> void:
 		_add_sheet_animation(frames, &"hurt_low_reverse", hurt_low_sheet, 10, 5, Vector2(512.0, 512.0), HURT_FPS, true, 0, false)
 	if death_sheet != null:
 		_add_sheet_animation(frames, &"ko", death_sheet, 49, 7, Vector2(512.0, 512.0), KO_FPS, false, 0, false)
+	if fall_sheet != null:
+		_add_sheet_animation(frames, &"hurted_in_jump", fall_sheet, 20, 7, Vector2(512.0, 512.0), KNOCKDOWN_FPS, false, 0, false)
+	if sweep_knockdown_sheet != null:
+		_add_sheet_animation(frames, &"sweep_knockdown", sweep_knockdown_sheet, 42, 7, Vector2(512.0, 512.0), KNOCKDOWN_FPS, false, 0, false)
+	if knockdown_recovery_sheet != null:
+		_add_sheet_animation(frames, &"knockdown_recovery", knockdown_recovery_sheet, 34, 6, Vector2(512.0, 512.0), KNOCKDOWN_FPS, false, 0, false)
 	animated_sprite.sprite_frames = frames
 	animated_sprite.animation = &"idle"
 	update_sprite_scale()

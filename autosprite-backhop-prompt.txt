@@ -15,10 +15,14 @@ Correzioni
 - peirolo salto: l'animazione devbe partire da fotogramma 5, a fotogramma 17 si stacca da terra e a fotogramma 35 deve essere a terra, a fotogramma 45 deve passare in idle
 - torpe salto: l'animazione devbe partire da fotogramma 5, a fotogramma 14 si stacca da terra e a fotogramma 30 deve essere a terra, a fotogramma 39 deve passare in idle
 
-Perfetto, ho creato l'animazione "death" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, usa la skill di autosprite , vorrei che scaricassi gli spritesheet nelle relative cartelle.
-Poi associa ad ogni personaggio l'animazione KO nel gioco: si attiva quando l'ebergia è finita
-Esegui tutti i 49 fotogrammi a 24 fps.
-Crea uno shortcut D per testare l'animazione "death" con F2. Nell pagina di test fai durare il death 2 secondi, poi torna in idle
+Perfetto, ho creato l'animazione "sweep_knockdown" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, usa la skill di autosprite , vorrei che scaricassi gli spritesheet nelle relative cartelle.
+Poi associa ad ogni personaggio l'animazione sweep_knockdown nel gioco: si attiva quando il personaggio viene colpito da un calcio basso potente (trovi l'esempio di logica in Ariananna e mangler)
+Esegui tutti i 42 fotogrammi a 24 fps.
+Ho poi creato l'animazione "knockdown_recovery" che va accodata all'animazione "sweep_knockdown", mantieni sweep_knockdown per 0.5s all'ultimo frame e poi passa a knockdown_recovery e poi in idle per ogni personaggio.
+knockdown_recovery dura 34 fotogrammi e va eseguita anch'essa a 24 fps.
+
+Crea uno shortcut S+K per testare l'animazione "sweep_knockdown" con F2. 
+
 
 Oscare 42 fotogrammi
 Bue 42 fotogrammi
@@ -28,4 +32,7 @@ Mileto 42 fotogrammi
 
 
 
+Recovery 34 fotogrammi
 
+
+hurt_in_jump 33 fotogrammi a 24 fps

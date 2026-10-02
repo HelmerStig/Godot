@@ -388,6 +388,7 @@ func start_airborne_hit_knockdown(attacker: Fighter) -> void:
 	change_state(State.HIT)
 	if animated_sprite.sprite_frames.has_animation(&"hurted_in_jump"):
 		animated_sprite.play(&"hurted_in_jump")
+		animated_sprite.set_frame_and_progress(0, 0.0)
 	var direction := -1.0 if is_facing_right else 1.0
 	if is_instance_valid(attacker):
 		direction = signf(global_position.x - attacker.global_position.x)
@@ -396,9 +397,10 @@ func start_airborne_hit_knockdown(attacker: Fighter) -> void:
 
 func hold_airborne_hit_landing_pose() -> void:
 	velocity = Vector2.ZERO
-	if animated_sprite.sprite_frames.has_animation(&"hurted_in_jump"):
-		animated_sprite.play(&"hurted_in_jump")
-		animated_sprite.frame = animated_sprite.sprite_frames.get_frame_count(&"hurted_in_jump") - 1
+	change_state(State.SWEEP_KNOCKDOWN)
+	if animated_sprite.sprite_frames.has_animation(&"sweep_knockdown"):
+		animated_sprite.play(&"sweep_knockdown")
+		animated_sprite.frame = animated_sprite.sprite_frames.get_frame_count(&"sweep_knockdown") - 1
 		animated_sprite.pause()
 
 
@@ -414,7 +416,7 @@ func start_sweep_knockdown(attacker: Fighter) -> float:
 
 
 func get_sweep_grounded_hold_duration() -> float:
-	return FighterCombat.SWEEP_GROUNDED_HOLD
+	return 0.3
 
 
 func start_knockdown_recovery() -> float:
@@ -454,6 +456,8 @@ func update_animation() -> void:
 			animated_sprite.play(&"crouch", -1.0)
 		return
 	if current_state == State.HIT:
+		if animated_sprite.animation == &"hurted_in_jump":
+			return
 		var hit_animation := get_hit_animation(received_hit_height)
 		if animated_sprite.sprite_frames.has_animation(hit_animation) and (animated_sprite.animation != hit_animation or not animated_sprite.is_playing()):
 			animated_sprite.play(hit_animation)
@@ -469,7 +473,7 @@ func update_animation() -> void:
 			animated_sprite.play(recovery_animation)
 		return
 	if current_state == State.SWEEP_KNOCKDOWN:
-		if animated_sprite.sprite_frames.has_animation(&"sweep_knockdown") and (animated_sprite.animation != &"sweep_knockdown" or not animated_sprite.is_playing()):
+		if animated_sprite.sprite_frames.has_animation(&"sweep_knockdown") and animated_sprite.animation != &"sweep_knockdown":
 			animated_sprite.play(&"sweep_knockdown")
 		return
 	if current_state == State.KNOCKDOWN_RECOVERY:
@@ -768,7 +772,8 @@ func _on_animation_finished() -> void:
 		animated_sprite.play(&"hurt_high")
 		return
 	if animated_sprite.animation == &"sweep_knockdown":
-		start_knockdown_recovery()
+		# FighterCombat gestisce la pausa e il passaggio alla recovery.
+		return
 	elif animated_sprite.animation == &"knockdown_recovery":
 		controls_enabled = true
 		can_move = true

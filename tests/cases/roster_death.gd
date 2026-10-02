@@ -51,16 +51,37 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		expect.call(fighter.current_state == Fighter.State.IDLE and fighter.animated_sprite.animation == &"idle"
 			and fighter.combat.current_health == fighter.combat.max_health, "%s: reset esce dal KO" % fighter.fighter_id)
 		observed[fighter] = [0]
+	var extra_fighters: Array[Fighter] = []
+	for node in movement._fighters:
+		if node is Arianna or node is Mangler:
+			var fighter := node as Fighter
+			extra_fighters.append(fighter)
+			observed[fighter] = [0]
+			fighter.animated_sprite.frame_changed.connect(func() -> void:
+				if fighter.animated_sprite.animation == &"ko":
+					observed[fighter].append(fighter.animated_sprite.frame)
+			)
+	expect.call(extra_fighters.size() == 2, "la scena F2 include Arianna e Mangler")
 	var death_key := InputEventKey.new()
 	death_key.keycode = KEY_D
 	death_key.pressed = true
 	Input.action_press("p1_move_right")
 	movement._unhandled_input(death_key)
 	expect.call(not Input.is_action_pressed("p1_move_right"), "D nella scena F2 non attiva il movimento verso destra")
+	var preview_duration := 2.2
+	for fighter in extra_fighters:
+		preview_duration = maxf(preview_duration, fighter.get_animation_duration(&"ko") + 0.15)
+		expect.call(fighter.current_state == Fighter.State.KNOCKED_DOWN and fighter.animated_sprite.animation == &"ko"
+			and fighter.animated_sprite.frame == 0 and fighter.combat.current_health == fighter.combat.max_health,
+			"%s: D avvia anche il KO originale senza danno" % fighter.name)
 	for fighter in fighters:
 		expect.call(fighter.current_state == Fighter.State.KNOCKED_DOWN and fighter.animated_sprite.animation == &"ko"
 			and fighter.combat.current_health == fighter.combat.max_health, "%s: D avvia preview senza danno" % fighter.fighter_id)
-	await tree.create_timer(2.2).timeout
+	await tree.create_timer(preview_duration).timeout
+	for fighter in extra_fighters:
+		expect.call(_saw_all_frames(observed[fighter], fighter.animated_sprite.sprite_frames.get_frame_count(&"ko"))
+			and fighter.current_state == Fighter.State.IDLE and fighter.animated_sprite.animation == &"idle" and fighter.can_move,
+			"%s: mostra tutto il KO e ritorna in idle" % fighter.name)
 	for fighter in fighters:
 		expect.call(_saw_all_frames(observed[fighter]) and fighter.current_state == Fighter.State.IDLE
 			and fighter.animated_sprite.animation == &"idle" and fighter.can_move,
@@ -69,7 +90,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	movement._unhandled_input(death_key)
 	await tree.create_timer(0.1).timeout
 	movement._unhandled_input(death_key)
-	expect.call(movement._death_previews.size() == 5, "D ripetuto riavvia le preview senza duplicare i callback")
+	expect.call(movement._death_previews.size() == 7, "D ripetuto riavvia le sette preview senza duplicare i callback")
 	var tab := InputEventKey.new()
 	tab.keycode = KEY_TAB
 	tab.pressed = true
@@ -103,8 +124,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	return true
 
 
-static func _saw_all_frames(observed: Array) -> bool:
-	for index in 49:
+static func _saw_all_frames(observed: Array, frame_count := 49) -> bool:
+	for index in frame_count:
 		if not observed.has(index):
 			return false
 	return true

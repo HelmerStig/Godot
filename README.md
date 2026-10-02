@@ -26,7 +26,9 @@ La guardia richiede la direzione opposta all'avversario. I colpi **LOW richiedon
 
 Bue, Peirò, Oscare, Torpe e Mileto riproducono `death` come animazione KO quando la vita arriva a zero: tutti i 49 fotogrammi a 24 FPS, senza loop, mantenendo la posa finale fino al reset. Gli spritesheet e gli atlas AutoSprite sono nelle rispettive cartelle dei personaggi come `death.png` e `death_atlas.json`.
 
-**F2** apre la scena di confronto del roster. Qui **D** prova contemporaneamente le cinque animazioni death senza togliere vita e torna in idle al termine (49/24 = circa 2,04 secondi). D è riservato alla preview in questa scena; per muoversi a destra si possono usare le frecce. Tab e le preview hurt interrompono death; F2 torna al titolo.
+Bue, Peir?, Oscare, Torpe e Mileto reagiscono al calcio basso potente con `sweep_knockdown`: 42 frame a 24 FPS, pausa di 0,5 secondi sull?ultimo frame, poi `knockdown_recovery` (34 frame a 24 FPS) e ritorno in idle. I relativi PNG e atlas sono nelle cartelle dei personaggi. La sequenza completa dura circa 3,67 secondi. Nella scena **F2**, **S+K** prova caduta e rialzata su tutti i personaggi senza infliggere danno; Arianna e Mangler mantengono le proprie sequenze esistenti.
+
+**F2** apre la scena di confronto del roster. Qui **D** prova contemporaneamente il KO di tutti i sette personaggi senza togliere vita e torna in idle al termine di ciascuna animazione. Le cinque death durano 49/24 = circa 2,04 secondi; Arianna e Mangler usano i rispettivi KO con i timing originali. D è riservato alla preview in questa scena; per muoversi a destra si possono usare le frecce. Tab e le preview hurt interrompono death; F2 torna al titolo.
 
 Il pugno forte accovacciato di Mangler lancia il bersaglio soltanto su un colpo entrato e non letale. Parata, rialzata invulnerabile e KO impediscono il lancio.
 

@@ -9,6 +9,7 @@ const SUITES := {
 	],
 	"mangler": ["res://tests/cases/mangler_moveset.gd"],
 	"combat": [
+		"res://tests/cases/roster_knockdown.gd",
 		"res://tests/cases/attack_data.gd",
 		"res://tests/cases/guard_heights.gd",
 		"res://tests/cases/crouched_heavy_launch.gd",

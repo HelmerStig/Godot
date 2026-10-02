@@ -1018,14 +1018,6 @@ func start_airborne_hit_knockdown(attacker: Fighter) -> void:
 		velocity.x = (-1.0 if is_facing_right else 1.0) * HIT_PUSHBACK_SPEED
 
 
-func hold_airborne_hit_landing_pose() -> void:
-	velocity = Vector2.ZERO
-	if animated_sprite.animation != &"hurted_in_jump":
-		animated_sprite.play(&"hurted_in_jump")
-	animated_sprite.frame = HURTED_IN_JUMP_FRAME_COUNT - 1
-	animated_sprite.pause()
-
-
 func start_sweep_knockdown(attacker: Fighter) -> float:
 	var duration := super.start_sweep_knockdown(attacker)
 	if is_zero_approx(velocity.x):

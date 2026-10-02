@@ -48,6 +48,7 @@ func configure_all() -> void:
 	configure_hurt_medium_frames()
 	configure_hurt_high_frames()
 	configure_hurt_low_frames()
+	configure_hurted_in_jump_frames()
 	configure_sweep_knockdown_frames()
 	configure_knockdown_recovery_frames()
 	configure_ko_frames()
@@ -998,3 +999,18 @@ func configure_full_atlas_animation(
 			cell_size
 		)
 		frames.add_frame(animation_name, atlas_frame)
+
+
+func configure_hurted_in_jump_frames() -> void:
+	var frames := animated_sprite.sprite_frames
+	if frames.has_animation(&"hurted_in_jump"):
+		frames.remove_animation(&"hurted_in_jump")
+	frames.add_animation(&"hurted_in_jump")
+	frames.set_animation_speed(&"hurted_in_jump", 24.0)
+	frames.set_animation_loop(&"hurted_in_jump", false)
+	var sheet := preload("res://assets/sprites/characters/arianna/basic-moves/hurted_in_jump.png")
+	for index in 17:
+		var texture := AtlasTexture.new()
+		texture.atlas = sheet
+		texture.region = Rect2((index % 5) * 512, int(index / 5) * 512, 512, 512)
+		frames.add_frame(&"hurted_in_jump", texture)

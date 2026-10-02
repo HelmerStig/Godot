@@ -21,13 +21,21 @@ godot --headless --path . --script res://tests/test_loading.gd
 
 Il caso `cases/loading_screen.gd` fa parte anche della suite arena. Copre errori della richiesta e del loader, risorse non valide, cambio scena fallito, riprova e ritorno al titolo tramite pulsante o annulla.
 
-Per verificare KO e preview death dei cinque fighter del roster:
+Per verificare KO dei cinque fighter del roster e preview con D di tutti i sette personaggi:
 
 ```text
 godot --headless --path . --script res://tests/test_death.gd
 ```
 
-`cases/roster_death.gd` è incluso nella suite arena e verifica slicing, riproduzione di tutti i 49 frame a 24 FPS, danno letale, posa finale, reset e shortcut D nella scena F2, comprese interruzioni e pressioni ripetute.
+`cases/roster_death.gd` è incluso nella suite arena e verifica slicing, riproduzione di tutti i 49 frame a 24 FPS, danno letale, posa finale, reset e shortcut D nella scena F2, comprese interruzioni e pressioni ripetute. La preview verifica anche la sequenza KO completa e il ritorno in idle di Arianna e Mangler con i rispettivi timing originali.
+
+Per verificare calcio basso potente, sweep, pausa, recovery e shortcut S+K:
+
+```text
+godot --headless --path . --script res://tests/test_knockdown.gd
+```
+
+`cases/roster_knockdown.gd` ? incluso nella suite combat. Verifica tutti i 42 e 34 frame a 24 FPS, pausa di 0,5 secondi, ritorno in idle, parata, KO, reset e interruzione della preview con Tab o D.
 
 ## Organizzazione
 

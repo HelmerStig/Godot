@@ -45,10 +45,10 @@ static func take_damage(
 		and (combat.fighter.current_state == Fighter.State.CROUCHING or combat.fighter.hurt_started_crouched)
 		and combat.fighter.animated_sprite.sprite_frames.has_animation(&"hurt_crouched")
 	)
-	if causes_knockdown and not crouched_low_hit:
-		sweep_knockdown_reaction(combat, attacker)
-	elif was_airborne:
+	if was_airborne:
 		airborne_knockdown_reaction(combat, attacker)
+	elif causes_knockdown and not crouched_low_hit:
+		sweep_knockdown_reaction(combat, attacker)
 	else:
 		if hit_height == AttackData.HitHeight.MID:
 			hit_reaction_start_frame = 4
@@ -129,12 +129,16 @@ static func airborne_knockdown_reaction(combat: FighterCombat, attacker: Fighter
 	combat.cancel_current_action()
 	var knockdown_generation := combat.action_generation
 	combat.fighter.start_airborne_hit_knockdown(attacker)
+	# Completa tutti i frame anche se il contatto avviene vicino al terreno.
+	await combat.get_tree().create_timer(combat.fighter.get_animation_duration(&"hurted_in_jump")).timeout
+	if not _is_active(combat) or knockdown_generation != combat.action_generation or combat.current_health <= 0:
+		return
 	while not combat.fighter.is_on_floor():
 		await combat.get_tree().physics_frame
 		if not _is_active(combat) or knockdown_generation != combat.action_generation or combat.current_health <= 0:
 			return
 	combat.fighter.hold_airborne_hit_landing_pose()
-	await combat.get_tree().create_timer(1.0).timeout
+	await combat.get_tree().create_timer(0.3).timeout
 	if not _is_active(combat) or knockdown_generation != combat.action_generation or combat.current_health <= 0:
 		return
 	var recovery_duration := combat.fighter.start_knockdown_recovery()
