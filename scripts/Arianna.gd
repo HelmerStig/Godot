@@ -449,6 +449,7 @@ var medium_punch_audio_active := false
 var medium_punch_hit_sound_played := false
 var medium_punch_audio_play_id := 0
 var light_punch_audio_active := false
+var light_punch_whoosh_audio_player: AudioStreamPlayer
 var light_punch_hit_sound_played := false
 var strong_punch_swosh_audio_player: AudioStreamPlayer
 var strong_punch_hit_audio_player: AudioStreamPlayer
@@ -512,6 +513,11 @@ func _ready() -> void:
 	medium_punch_hit_audio_player.name = "MediumPunchHitAudio"
 	medium_punch_hit_audio_player.stream = ARIANNA_MEDIUM_PUNCH_HIT_SOUND
 	add_child(medium_punch_hit_audio_player)
+	light_punch_whoosh_audio_player = AudioStreamPlayer.new()
+	light_punch_whoosh_audio_player.name = "LightPunchWhooshAudio"
+	light_punch_whoosh_audio_player.stream = preload("res://sound-libraries/punch_short_whoosh_30.wav")
+	light_punch_whoosh_audio_player.volume_db = -4.0
+	add_child(light_punch_whoosh_audio_player)
 	strong_punch_swosh_audio_player = AudioStreamPlayer.new()
 	strong_punch_swosh_audio_player.name = "StrongPunchSwoshAudio"
 	strong_punch_swosh_audio_player.stream = ARIANNA_MEDIUM_PUNCH_SWOSH_SOUND
@@ -1114,7 +1120,7 @@ func _on_combat_attack_connected(attack_name: StringName, result: int) -> void:
 		play_punch_hit_sound()
 	if (
 		attack_name == &"light_punch"
-		and result != FighterCombat.DamageResult.IGNORED
+		and result in [FighterCombat.DamageResult.HIT, FighterCombat.DamageResult.KNOCKOUT]
 		and light_punch_audio_active
 		and not light_punch_hit_sound_played
 	):
@@ -1169,6 +1175,8 @@ func play_punch_hit_sound() -> void:
 
 
 func stop_punch_audio() -> void:
+	if is_instance_valid(light_punch_whoosh_audio_player):
+		light_punch_whoosh_audio_player.stop()
 	medium_punch_audio_play_id += 1
 	medium_punch_audio_active = false
 	medium_punch_hit_sound_played = false
@@ -1862,6 +1870,7 @@ func _start_light_punch() -> void:
 	combat.hitbox_shape.position = ARIANNA_LIGHT_PUNCH_HITBOX_POSITION
 	combat.hitbox_shape.rotation = 0.0
 	combat.begin_animation_attack(&"arianna_light_punch", attack, null, false)
+	light_punch_whoosh_audio_player.play()
 
 
 func _try_queue_lp_mp_combo() -> bool:

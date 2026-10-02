@@ -4,6 +4,7 @@ extends RefCounted
 const SUITES := {
 	"input": ["res://tests/cases/input_buffer.gd"],
 	"arianna": [
+		"res://tests/cases/arianna_light_punch_audio.gd",
 		"res://tests/cases/arianna_moveset.gd",
 		"res://tests/cases/arianna_lifecycle.gd",
 	],
@@ -18,6 +19,7 @@ const SUITES := {
 		"res://tests/cases/roster_block_medium.gd",
 	],
 	"arena": [
+		"res://tests/cases/roster_light_punch.gd",
 		"res://tests/cases/roster_run.gd",
 		"res://tests/cases/roster_death.gd",
 		"res://tests/cases/loading_screen.gd",

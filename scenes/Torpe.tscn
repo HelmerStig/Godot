@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -26,6 +26,8 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/Torpe-run.png" id="run_sheet"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/back_jump_spritesheet.png" id="back_jump_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/light_punch_spritesheet.png" id="light_punch_sheet"]
 
 [node name="Torpe" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
@@ -64,3 +66,5 @@ fall_sheet = ExtResource("fall_sheet")
 run_sheet = ExtResource("run_sheet")
 run_frame_count = 30
 back_jump_sheet = ExtResource("back_jump_sheet")
+
+light_punch_sheet = ExtResource("light_punch_sheet")

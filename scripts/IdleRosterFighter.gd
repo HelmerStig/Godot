@@ -42,6 +42,8 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var crouch_cell_size := Vector2(512.0, 512.0)
 @export var jump_sheet: Texture2D
 @export var back_jump_sheet: Texture2D
+@export var light_punch_sheet: Texture2D
+@export_range(1, 7, 1) var light_punch_active_start_frame := 7
 ## Frame visivo (1-based) da cui parte l'animazione nel foglio.
 @export_range(0, 999, 1) var jump_start_frame := 0
 ## Frame visivo (1-based) di stacco da terra: qui viene applicato l'impulso.
@@ -89,6 +91,9 @@ var _back_jump_moving := false
 var _back_jump_elapsed := 0.0
 var _back_jump_start := Vector2.ZERO
 var _back_jump_direction := -1.0
+var _light_punch_hit_audio: AudioStreamPlayer
+var _light_punch_whoosh_audio: AudioStreamPlayer
+var _light_punch_hit_sound_played := false
 
 
 func _ready() -> void:
@@ -99,6 +104,16 @@ func _ready() -> void:
 	data.run_speed *= RUN_SPEED_MULTIPLIER
 	character_data = data
 	super._ready()
+	_light_punch_hit_audio = AudioStreamPlayer.new()
+	_light_punch_hit_audio.stream = preload("res://assets/sounds/sfx/light-punch.wav")
+	_light_punch_hit_audio.volume_db = -7.0
+	add_child(_light_punch_hit_audio)
+	_light_punch_whoosh_audio = AudioStreamPlayer.new()
+	_light_punch_whoosh_audio.stream = preload("res://sound-libraries/punch_short_whoosh_30.wav")
+	_light_punch_whoosh_audio.volume_db = -4.0
+	add_child(_light_punch_whoosh_audio)
+	combat.attack_connected.connect(_on_light_punch_connected)
+	animated_sprite.frame_changed.connect(_update_light_punch_hitbox)
 	animated_sprite.play(&"idle")
 
 
@@ -110,6 +125,9 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var on_floor := is_on_floor()
+	if light_punch_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and not input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING]:
+		if input_buffer.consume_attack(&"light_punch") != FighterInputBuffer.NO_DIRECTION:
+			_start_light_punch()
 	combat.set_guarding(
 		controls_enabled and on_floor and is_holding_back()
 		and current_state in [State.IDLE, State.WALKING, State.CROUCHING, State.STANDING_UP, State.BLOCKING, State.BLOCK_RECOVERY]
@@ -238,6 +256,39 @@ func update_animation() -> void:
 	super.update_animation()
 
 
+func _start_light_punch() -> void:
+	var attack := character_data.get_attack(&"light_punch")
+	if attack == null or light_punch_sheet == null:
+		return
+	_light_punch_hit_sound_played = false
+	var punch_shape := RectangleShape2D.new()
+	punch_shape.size = Vector2(160.0, 50.0)
+	combat.hitbox_shape.shape = punch_shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	combat.hitbox_shape.position = Vector2(85.0, -170.0)
+	combat.hitbox_shape.rotation = 0.0
+	combat.begin_animation_attack(&"light_punch", attack)
+	_light_punch_whoosh_audio.play()
+	animated_sprite.frame = 0
+	_update_light_punch_hitbox()
+
+
+func _update_light_punch_hitbox() -> void:
+	if current_state != State.ATTACKING or animated_sprite.animation != &"light_punch" or not combat.is_attacking:
+		return
+	if animated_sprite.frame >= light_punch_active_start_frame - 1 and animated_sprite.frame <= 6:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap(combat.action_generation)
+	else:
+		combat.disable_hitbox()
+
+
+func _on_light_punch_connected(attack_name: StringName, result: int) -> void:
+	if attack_name == &"light_punch" and result in [FighterCombat.DamageResult.HIT, FighterCombat.DamageResult.KNOCKOUT] and not _light_punch_hit_sound_played:
+		_light_punch_hit_sound_played = true
+		_light_punch_hit_audio.play()
+
+
 func _start_back_jump() -> void:
 	_back_jump_active = true
 	_back_jump_moving = false
@@ -320,6 +371,9 @@ func get_sweep_grounded_hold_duration() -> float:
 
 
 func _on_animation_finished() -> void:
+	if current_state == State.ATTACKING and animated_sprite.animation == &"light_punch":
+		combat.finish_animation_attack()
+		return
 	if _back_jump_active and animated_sprite.animation == &"back_jump":
 		velocity = Vector2.ZERO
 		change_state(State.IDLE)
@@ -376,6 +430,13 @@ func update_sprite_scale() -> void:
 func _configure_animations() -> void:
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
+	if light_punch_sheet != null:
+		_add_sheet_animation(frames, &"light_punch", light_punch_sheet, 7, 5, Vector2(512.0, 512.0), 24.0, false, 0, false)
+		for source_index in range(5, -1, -1):
+			var texture := AtlasTexture.new()
+			texture.atlas = light_punch_sheet
+			texture.region = Rect2(Vector2(source_index % 5, source_index / 5) * 512.0, Vector2(512.0, 512.0))
+			frames.add_frame(&"light_punch", texture)
 	_add_sheet_animation(frames, &"idle", idle_sheet, idle_frame_count, idle_columns, idle_cell_size, IDLE_FPS)
 	if walk_sheet != null:
 		_add_sheet_animation(frames, &"walk", walk_sheet, walk_frame_count, walk_columns, walk_cell_size, WALK_FPS)

@@ -60,3 +60,16 @@ hurt_in_jump 33 fotogrammi a 24 fps
 
 
 ho creato una nuova versione di Knockdown_recovery di 17 fotogrammi su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, puoi sostituirla all'attuale e correggere il numero di fotogrammi da 34 a 17? Stesso fps, correggilo su tutte le occorrenze tranne quelle di Arianna e Mangler
+
+ora verifica se per: 
+Oscare
+Bue
+Peirolo
+Torpe
+Mileto
+Abbiamo fatto tutte le animazioni di base
+- Movimenti base, salto, corsa etc
+- Parate in ogni posizione
+- Hurt in ogni posizione
+
+Possiamo passare alle mosse vere e proprie per loro?
