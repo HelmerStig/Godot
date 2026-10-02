@@ -24,5 +24,6 @@ const SUITES := {
 		"res://tests/cases/arena_contract.gd",
 		"res://tests/cases/idle_roster_fighters.gd",
 		"res://tests/cases/roster_hurt_low.gd",
+		"res://tests/cases/roster_back_jump.gd",
 	],
 }

@@ -26,14 +26,20 @@ Crea uno shortcut HG da eseguire in salto per testare l'animazione con F2.
 Integra anche Mangler e Arianna che hanno già l'animazione "hurted_in_jump".
 
 
-Oscare 31 fotogrammi
-Bue 31 fotogrammi
-Peirolo 33 fotogrammi
-Torpe 9-38 fotogrammi
-Mileto 32 fotogrammi
+Oscare Light punch 7frames hitbox a 7
+Bue Light punch 7frames hitbox a 5/6/7
+Peirolo Light punch 7frames hitbox a 5/6/7
+Torpe Light punch 7frames hitbox a 7
+Mileto Light punch 7frames hitbox a 7
 
 recovery 17 fotogrammi
+Perfetto, ho creato l'animazione small jump per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, usa la skill di autosprite , vorrei che scaricassi gli spritesheet nelle relative cartelle.
+Poi associa ad ogni personaggio l'animazione back_jump nel gioco:
+Il personaggio eseguirà l'animazione back_jump quando clicca due volte indietro. Il personaggio va mosso indietro con Godot quando questa mossa viene eseguita, per ora usa i parametri di Arianna, il movimento all'idietro deve partire al fotogramma 5 dell'animazione.
+Sono 20 fotogrammi da eseguire a 24fps per poi tornare in idle.
+Tutte a 24 fps
 
+oscare back 20
 
 
 Recovery 34 fotogrammi
