@@ -73,3 +73,8 @@ Abbiamo fatto tutte le animazioni di base
 - Hurt in ogni posizione
 
 Possiamo passare alle mosse vere e proprie per loro?
+
+Medium punch
+Oscar: 22frame andata a 48fps ritorno a 96fps
+Mileto: 24 frame senza ritorno a 48fps
+Torpe: 14 frame a 30fps andata e ritorno
