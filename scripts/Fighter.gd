@@ -492,6 +492,14 @@ func update_animation() -> void:
 			animated_sprite.play(animation_name)
 
 
+func play_ko_animation(start_frame: int = 0) -> void:
+	if not animated_sprite.sprite_frames.has_animation(&"ko"):
+		return
+	animated_sprite.play(&"ko")
+	var final_frame := animated_sprite.sprite_frames.get_frame_count(&"ko") - 1
+	animated_sprite.frame = clampi(start_frame, 0, final_frame)
+
+
 func update_sprite_scale() -> void:
 	pass
 

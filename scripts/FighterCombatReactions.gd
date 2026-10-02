@@ -162,10 +162,7 @@ static func sweep_knockdown_reaction(combat: FighterCombat, attacker: Fighter) -
 static func die(combat: FighterCombat, start_frame: int = 0) -> void:
 	combat.cancel_current_action()
 	combat.fighter.change_state(Fighter.State.KNOCKED_DOWN)
-	if combat.fighter.animated_sprite.sprite_frames.has_animation(&"ko"):
-		combat.fighter.animated_sprite.play(&"ko")
-		var final_frame := combat.fighter.animated_sprite.sprite_frames.get_frame_count(&"ko") - 1
-		combat.fighter.animated_sprite.frame = clampi(start_frame, 0, final_frame)
+	combat.fighter.play_ko_animation(start_frame)
 	combat.knocked_out.emit()
 	print("KO!")
 

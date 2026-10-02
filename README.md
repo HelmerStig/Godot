@@ -24,6 +24,10 @@ Player 1 supporta anche il gamepad 0, Player 2 il gamepad 1. **R** ripristina il
 
 La guardia richiede la direzione opposta all'avversario. I colpi **LOW richiedono giù + indietro**; HIGH e MID si parano con indietro anche da accovacciati. La parata funziona a terra e contro un attaccante davanti al fighter, annullando il danno.
 
+Bue, Peirò, Oscare, Torpe e Mileto riproducono `death` come animazione KO quando la vita arriva a zero: tutti i 49 fotogrammi a 24 FPS, senza loop, mantenendo la posa finale fino al reset. Gli spritesheet e gli atlas AutoSprite sono nelle rispettive cartelle dei personaggi come `death.png` e `death_atlas.json`.
+
+**F2** apre la scena di confronto del roster. Qui **D** prova contemporaneamente le cinque animazioni death senza togliere vita e torna in idle al termine (49/24 = circa 2,04 secondi). D è riservato alla preview in questa scena; per muoversi a destra si possono usare le frecce. Tab e le preview hurt interrompono death; F2 torna al titolo.
+
 Il pugno forte accovacciato di Mangler lancia il bersaglio soltanto su un colpo entrato e non letale. Parata, rialzata invulnerabile e KO impediscono il lancio.
 
 ## Test

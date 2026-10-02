@@ -19,6 +19,7 @@ var _hurt_m_held := false
 var _hurt_l_held := false
 var _hurt_g_held := false
 var _hurt_preview_generation := 0
+var _death_previews: Dictionary = {}
 
 
 func _ready() -> void:
@@ -159,6 +160,7 @@ func _update_hint_text() -> void:
 		_:
 			_hint_label.text = "MOVEMENT TEST   ·   Tab: block   ·   H: hurt_high   ·   H+M: hurt_medium   ·   H+L: hurt_low   ·   H+G: hurt_crouched   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.remove_theme_color_override("font_color")
+	_hint_label.text += "   ·   D: death"
 
 
 func _fighters_center() -> Vector2:
@@ -201,6 +203,11 @@ func _physics_process(_delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	for fighter in _death_previews.keys():
+		if not is_instance_valid(fighter):
+			_death_previews.erase(fighter)
+		elif _death_previews[fighter]["generation"] != fighter.combat.action_generation:
+			_finish_death_preview(fighter)
 	if _fighters.is_empty():
 		return
 	_camera.position = _fighters_center() + Vector2(0.0, CAMERA_Y_OFFSET)
@@ -220,7 +227,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		for f in _fighters:
 			(f as Fighter).show_debug_boxes = show
 			(f as Fighter).queue_redraw()
+	elif event is InputEventKey and event.keycode == KEY_D:
+		# D è una preview in questa scena; evita il movimento p1 associato allo stesso tasto.
+		Input.action_release("p1_move_right")
+		get_viewport().set_input_as_handled()
+		if event.pressed and not event.echo:
+			_preview_death()
 	elif event is InputEventKey and event.keycode == KEY_TAB and event.pressed and not event.echo:
+		_cancel_death_previews()
 		_block_mode = (_block_mode + 1) % 4
 		var active := _block_mode != 0
 		if is_instance_valid(_dummy_opponent):
@@ -275,6 +289,7 @@ func _preview_high_if_uncombined(request_generation: int) -> void:
 
 
 func _preview_hurt(height: AttackData.HitHeight, from_crouch := false) -> void:
+	_cancel_death_previews()
 	_hurt_preview_generation += 1
 	var preview_generation := _hurt_preview_generation
 	for f in _fighters:
@@ -297,3 +312,65 @@ func _preview_hurt(height: AttackData.HitHeight, from_crouch := false) -> void:
 					and fighter.animated_sprite.animation == preview_animation:
 				fighter.change_state(Fighter.State.IDLE)
 		fighter.animated_sprite.animation_finished.connect(on_preview_finished, CONNECT_ONE_SHOT)
+
+
+func _preview_death() -> void:
+	_cancel_death_previews()
+	_hurt_preview_generation += 1
+	# La guardia forzata non deve sovrascrivere lo stato KO al prossimo tick.
+	if _block_mode != 0:
+		_block_mode = 0
+		if is_instance_valid(_dummy_opponent):
+			_dummy_opponent.combat.is_attacking = false
+		for node in _fighters:
+			var fighter := node as Fighter
+			if not is_instance_valid(fighter):
+				continue
+			fighter.is_player_controlled = true
+			fighter.combat.set_guarding(false)
+			fighter.input_buffer.clear()
+			fighter.change_state(Fighter.State.IDLE, true)
+	_update_hint_text()
+	for node in _fighters:
+		var fighter := node as IdleRosterFighter
+		if not is_instance_valid(fighter) or fighter.death_sheet == null or fighter.combat.current_health <= 0:
+			continue
+		fighter.combat.cancel_current_action()
+		var generation := fighter.combat.action_generation
+		var finished := _on_death_preview_finished.bind(fighter, generation)
+		_death_previews[fighter] = {
+			"generation": generation,
+			"finished": finished,
+		}
+		fighter.combat.set_guarding(false)
+		fighter.input_buffer.clear()
+		fighter.velocity = Vector2.ZERO
+		fighter.change_state(Fighter.State.KNOCKED_DOWN, true)
+		fighter.play_ko_animation()
+		fighter.animated_sprite.animation_finished.connect(finished)
+
+
+func _on_death_preview_finished(fighter: Fighter, generation: int) -> void:
+	if not is_instance_valid(fighter) or not _death_previews.has(fighter):
+		return
+	if generation == fighter.combat.action_generation and fighter.animated_sprite.animation == &"ko":
+		_finish_death_preview(fighter)
+
+
+func _cancel_death_previews() -> void:
+	for fighter in _death_previews.keys():
+		_finish_death_preview(fighter)
+
+
+func _finish_death_preview(fighter: Fighter) -> void:
+	var preview: Dictionary = _death_previews[fighter]
+	_death_previews.erase(fighter)
+	if not is_instance_valid(fighter):
+		return
+	if fighter.animated_sprite.animation_finished.is_connected(preview["finished"]):
+		fighter.animated_sprite.animation_finished.disconnect(preview["finished"])
+	# Reset e nuove reazioni invalidano il ripristino della vecchia preview.
+	if preview["generation"] != fighter.combat.action_generation or fighter.combat.current_health <= 0:
+		return
+	if fighter.current_state == Fighter.State.KNOCKED_DOWN:
+		fighter.change_state(Fighter.State.IDLE, true)

@@ -15,11 +15,16 @@ Correzioni
 - peirolo salto: l'animazione devbe partire da fotogramma 5, a fotogramma 17 si stacca da terra e a fotogramma 35 deve essere a terra, a fotogramma 45 deve passare in idle
 - torpe salto: l'animazione devbe partire da fotogramma 5, a fotogramma 14 si stacca da terra e a fotogramma 30 deve essere a terra, a fotogramma 39 deve passare in idle
 
-Perfetto, ho creato l'animazione block_medium per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, usa la skill di autosprite , vorrei che scaricassi gli spritesheet nelle relative cartelle.
-Poi associa ad ogni personaggio l'animazione block_medium nel gioco:
-Il personaggio eseguirà l'animazione block_medium quando sta parando un colpo medio(medio in altezza no nin potenza), solo se il colpo è nella hurtbox.
-Sono 6 fotogrammi da eseguire a 1 a 6 fin a fine parata e da 5 a 1 quando la parata termina, poi tornare in idle. Attualmente lo shortcut per testare i block sono: 1 tab: block_high, 2 tab: block_low. Vorrei che diventassero: 1 tab: block_high, 2 tab: block_medium, 3 tab: block_low.
-Tutte a 24 fps
+Perfetto, ho creato l'animazione "death" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, usa la skill di autosprite , vorrei che scaricassi gli spritesheet nelle relative cartelle.
+Poi associa ad ogni personaggio l'animazione KO nel gioco: si attiva quando l'ebergia è finita
+Esegui tutti i 49 fotogrammi a 24 fps.
+Crea uno shortcut D per testare l'animazione "death" con F2. Nell pagina di test fai durare il death 2 secondi, poi torna in idle
+
+Oscare 42 fotogrammi
+Bue 42 fotogrammi
+Peirolo 42 fotogrammi
+Torpe 42 fotogrammi
+Mileto 42 fotogrammi
 
 
 

@@ -21,6 +21,14 @@ godot --headless --path . --script res://tests/test_loading.gd
 
 Il caso `cases/loading_screen.gd` fa parte anche della suite arena. Copre errori della richiesta e del loader, risorse non valide, cambio scena fallito, riprova e ritorno al titolo tramite pulsante o annulla.
 
+Per verificare KO e preview death dei cinque fighter del roster:
+
+```text
+godot --headless --path . --script res://tests/test_death.gd
+```
+
+`cases/roster_death.gd` è incluso nella suite arena e verifica slicing, riproduzione di tutti i 49 frame a 24 FPS, danno letale, posa finale, reset e shortcut D nella scena F2, comprese interruzioni e pressioni ripetute.
+
 ## Organizzazione
 
 | Suite | Casi in `tests/cases/` | Asserzioni della baseline |
