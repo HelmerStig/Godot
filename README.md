@@ -24,6 +24,8 @@ Player 1 supporta anche il gamepad 0, Player 2 il gamepad 1. **R** ripristina il
 
 La guardia richiede la direzione opposta all'avversario. I colpi **LOW richiedono giù + indietro**; HIGH e MID si parano con indietro anche da accovacciati. La parata funziona a terra e contro un attaccante davanti al fighter, annullando il danno.
 
+Bue, Peirò, Oscare, Torpe e Mileto possono correre premendo due volte avanti entro 15 frame fisici e mantenendo avanti, come Mangler. `run` riproduce in loop a 24 FPS i rispettivi 31, 33, 31, 30 e 32 fotogrammi. Rilasciare avanti o cambiare direzione termina la corsa; salto, accovacciamento e reazioni al danno la interrompono. La velocità usa `CharacterData.run_speed`. In F2 puoi provarla con un doppio tap sulla freccia avanti.
+
 Bue, Peirò, Oscare, Torpe e Mileto riproducono `death` come animazione KO quando la vita arriva a zero: tutti i 49 fotogrammi a 24 FPS, senza loop, mantenendo la posa finale fino al reset. Gli spritesheet e gli atlas AutoSprite sono nelle rispettive cartelle dei personaggi come `death.png` e `death_atlas.json`.
 
 Bue, Peirò, Oscare, Torpe e Mileto reagiscono al calcio basso potente con `sweep_knockdown`: 42 frame a 24 FPS, pausa di 0,3 secondi sull'ultimo frame, poi `knockdown_recovery` (17 frame a 24 FPS) e ritorno in idle. I relativi PNG e atlas sono nelle cartelle dei personaggi. La sequenza completa dura circa 2,76 secondi. Nella scena **F2**, **S+K** prova caduta e rialzata su tutti i personaggi senza infliggere danno; Arianna e Mangler usano i propri fogli esistenti con la stessa pausa finale di 0,3 secondi.

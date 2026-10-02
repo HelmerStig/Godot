@@ -102,6 +102,9 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	var selected_arena := arena_scene.instantiate() as MainArena
 	tree.root.add_child(selected_arena)
 	await tree.process_frame
+	# La prova di vittoria al suolo richiede il contatto fisico col pavimento.
+	for _tick in 4:
+		await tree.physics_frame
 	var selected_mangler := selected_arena.player1 as Mangler
 	selected_arena.round_ended.emit(1)
 	var grounded_victory_started := (

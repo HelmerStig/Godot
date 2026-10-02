@@ -45,6 +45,14 @@ godot --headless --path . --script res://tests/test_airborne_hit.gd
 
 `cases/airborne_hit.gd` fa parte della suite combat e verifica frame e FPS, priorità della reazione aerea, riproduzione completa anche vicino a terra, pausa finale, recovery, H+G in entrambi gli ordini, reset e KO.
 
+Per verificare la corsa dei cinque fighter del roster:
+
+```text
+godot --headless --path . --script res://tests/test_run.gd
+```
+
+`cases/roster_run.gd` fa parte della suite arena: frame e slicing, loop a 24 FPS, doppio avanti nei due orientamenti, velocità, rilascio, tap distanti e indietro, reset e interruzioni con danno, accovacciamento e salto.
+
 ## Organizzazione
 
 | Suite | Casi in `tests/cases/` | Asserzioni della baseline |

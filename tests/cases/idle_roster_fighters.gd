@@ -161,6 +161,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	if p2_fighter != null:
 		p2_fighter.player_number = 2
 		p2_fighter.input_buffer = FighterInputBuffer.new(2)
+		# Il nuovo controller parte con una nuova cronologia dei tap.
+		p2_fighter.reset_fighter(p2_fighter.position)
 		var p2_start_x := p2_fighter.position.x
 		Input.action_press(&"p2_move_right")
 		for _frame in 3:

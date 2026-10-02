@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -23,6 +23,8 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/knockdown_recovery.png" id="knockdown_recovery_sheet"]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/fall.png" id="fall_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/Bue-run.png" id="run_sheet"]
 
 [node name="Bue" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
@@ -57,3 +59,5 @@ sweep_knockdown_sheet = ExtResource("sweep_knockdown_sheet")
 knockdown_recovery_sheet = ExtResource("knockdown_recovery_sheet")
 fall_sheet = ExtResource("fall_sheet")
 knockdown_recovery_columns = 7
+run_sheet = ExtResource("run_sheet")
+run_frame_count = 31

@@ -6,6 +6,7 @@ class_name IdleRosterFighter
 
 const IDLE_FPS := 18.0
 const WALK_FPS := 24.0
+const RUN_FPS := 24.0
 const JUMP_FPS := 24.0
 const CROUCH_FPS := 24.0
 const BLOCK_FPS := 24.0
@@ -26,6 +27,10 @@ const GRAVITY := 3150.0
 @export_range(1, 999, 1) var walk_frame_count := 49
 @export_range(1, 99, 1) var walk_columns := 7
 @export var walk_cell_size := Vector2(512.0, 512.0)
+@export var run_sheet: Texture2D
+@export_range(1, 999, 1) var run_frame_count := 1
+@export_range(1, 99, 1) var run_columns := 7
+@export var run_cell_size := Vector2(512.0, 512.0)
 @export var crouch_sheet: Texture2D
 @export_range(1, 999, 1) var crouch_frame_count := 1
 @export_range(1, 99, 1) var crouch_columns := 5
@@ -96,7 +101,7 @@ func _physics_process(delta: float) -> void:
 	)
 	var down_held := input_buffer != null and input_buffer.is_down_held()
 	if crouch_sheet != null and controls_enabled and on_floor:
-		if down_held and current_state in [State.IDLE, State.WALKING]:
+		if down_held and current_state in [State.IDLE, State.WALKING, State.RUNNING]:
 			change_state(State.CROUCHING)
 		elif down_held and current_state == State.STANDING_UP:
 			change_state(State.CROUCHING)
@@ -109,7 +114,7 @@ func _physics_process(delta: float) -> void:
 		animated_sprite.sprite_frames.has_animation(&"jump")
 		and controls_enabled
 		and can_move
-		and current_state in [State.IDLE, State.WALKING]
+		and current_state in [State.IDLE, State.WALKING, State.RUNNING]
 		and on_floor
 		and input_buffer != null
 		and Input.is_action_just_pressed(get_input_action("jump"))
@@ -132,13 +137,21 @@ func _physics_process(delta: float) -> void:
 	var can_walk := (
 		controls_enabled
 		and can_move
-		and current_state in [State.IDLE, State.WALKING]
+		and current_state in [State.IDLE, State.WALKING, State.RUNNING]
 		and on_floor
 		and input_buffer != null
 	)
 	var direction := input_buffer.get_horizontal_axis() if can_walk else 0.0
 	if can_walk:
-		velocity.x = direction * character_data.walk_speed
+		if run_sheet != null and not down_held and input_buffer.is_forward_just_pressed():
+			var current_frame := Engine.get_physics_frames()
+			if current_frame > last_forward_tap_frame and current_frame - last_forward_tap_frame <= RUN_DOUBLE_TAP_WINDOW_FRAMES:
+				change_state(State.RUNNING)
+			last_forward_tap_frame = current_frame
+		if current_state == State.RUNNING and not input_buffer.is_forward_held():
+			change_state(State.WALKING if not is_zero_approx(direction) else State.IDLE)
+		var movement_speed := character_data.run_speed if current_state == State.RUNNING else character_data.walk_speed
+		velocity.x = direction * movement_speed
 	elif current_state not in [State.JUMPING, State.JUMP_STARTUP]:
 		velocity.x = 0.0
 	# Durante JUMPING velocity.x è preservata (direzione del salto).
@@ -159,8 +172,10 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0
 		return
 
-	if current_state in [State.IDLE, State.WALKING]:
-		var next_state := State.WALKING if not is_zero_approx(velocity.x) and is_on_floor() else State.IDLE
+	if current_state in [State.IDLE, State.WALKING, State.RUNNING]:
+		var next_state := State.IDLE
+		if not is_zero_approx(velocity.x) and is_on_floor():
+			next_state = State.RUNNING if current_state == State.RUNNING else State.WALKING
 		if current_state != next_state:
 			change_state(next_state)
 		else:
@@ -281,6 +296,8 @@ func _configure_animations() -> void:
 	if walk_sheet != null:
 		_add_sheet_animation(frames, &"walk", walk_sheet, walk_frame_count, walk_columns, walk_cell_size, WALK_FPS)
 		_add_sheet_animation(frames, &"backwalk", walk_sheet, walk_frame_count, walk_columns, walk_cell_size, WALK_FPS, true)
+	if run_sheet != null:
+		_add_sheet_animation(frames, &"run", run_sheet, run_frame_count, run_columns, run_cell_size, RUN_FPS)
 	if crouch_sheet != null:
 		_add_sheet_animation(frames, &"crouch", crouch_sheet, crouch_frame_count, crouch_columns, crouch_cell_size, CROUCH_FPS, false, 0, false)
 	if jump_sheet != null and jump_idle_frame > jump_start_frame and jump_start_frame > 0:
