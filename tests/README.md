@@ -13,6 +13,14 @@ godot --headless --path . --script res://tests/test_combat.gd
 godot --headless --path . --script res://tests/smoke_tests.gd
 ```
 
+Per verificare soltanto gli errori di caricamento e le azioni di recupero:
+
+```text
+godot --headless --path . --script res://tests/test_loading.gd
+```
+
+Il caso `cases/loading_screen.gd` fa parte anche della suite arena. Copre errori della richiesta e del loader, risorse non valide, cambio scena fallito, riprova e ritorno al titolo tramite pulsante o annulla.
+
 ## Organizzazione
 
 | Suite | Casi in `tests/cases/` | Asserzioni della baseline |
