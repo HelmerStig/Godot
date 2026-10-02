@@ -2472,20 +2472,19 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	player2.global_position.y = airborne_hit_ground_y
 	player2.velocity = Vector2(0.0, 1.0)
 	player2.move_and_slide()
-	await tree.physics_frame
-	await tree.physics_frame
+	await tree.create_timer(player2.get_animation_duration(&"hurted_in_jump") + 0.05).timeout
 	expect.call(
-		player2.current_state == Mangler.State.HIT
-		and player2.animated_sprite.animation == &"hurted_in_jump"
-		and player2.animated_sprite.frame == 24
+		player2.current_state == Mangler.State.SWEEP_KNOCKDOWN
+		and player2.animated_sprite.animation == &"sweep_knockdown"
+		and player2.animated_sprite.frame == player2.animated_sprite.sprite_frames.get_frame_count(&"sweep_knockdown") - 1
 		and not player2.animated_sprite.is_playing(),
-		"all'atterraggio mantiene il fotogramma 25 di hurted_in_jump"
+		"dopo tutti i frame aerei mantiene la posa finale sweep"
 	)
-	await tree.create_timer(1.05).timeout
+	await tree.create_timer(0.3).timeout
 	expect.call(
 		player2.current_state == Mangler.State.KNOCKDOWN_RECOVERY
 		and player2.animated_sprite.animation == &"knockdown_recovery",
-		"dopo un secondo a terra avvia knockdown_recovery"
+		"dopo 0.3 secondi a terra avvia knockdown_recovery"
 	)
 	await tree.create_timer(0.75).timeout
 	expect.call(player2.current_state == Mangler.State.IDLE, "la recovery dal colpo aereo torna in IDLE")

@@ -163,7 +163,7 @@ func _update_hint_text() -> void:
 		_:
 			_hint_label.text = "MOVEMENT TEST   ·   Tab: block   ·   H: hurt_high   ·   H+M: hurt_medium   ·   H+L: hurt_low   ·   H+G: hurt_crouched   ·   F3: hitbox   ·   F2: titolo"
 			_hint_label.remove_theme_color_override("font_color")
-	_hint_label.text += "\nD: death   ·   S+K: sweep_knockdown + recovery"
+	_hint_label.text += "\nD: death   ·   S+K: sweep_knockdown + recovery   ·   H+G in salto: hurted_in_jump"
 
 
 func _fighters_center() -> Vector2:
@@ -308,6 +308,14 @@ func _preview_hurt(height: AttackData.HitHeight, from_crouch := false) -> void:
 		var fighter := f as Fighter
 		if not is_instance_valid(fighter):
 			continue
+		if fighter.combat.current_health <= 0:
+			continue
+		if not fighter.is_on_floor():
+			fighter.combat.set_guarding(false)
+			fighter.input_buffer.clear()
+			fighter.combat.airborne_knockdown_reaction(null)
+			_sweep_previews[fighter] = fighter.combat.action_generation
+			continue
 		fighter.combat.cancel_current_action()
 		if from_crouch:
 			fighter.return_to_crouch_pose()
@@ -433,6 +441,7 @@ func _cancel_sweep_previews() -> void:
 		if not is_instance_valid(fighter) or fighter.combat.action_generation != _sweep_previews[fighter]:
 			continue
 		fighter.combat.cancel_current_action()
-		if fighter.combat.current_health > 0 and fighter.current_state in [Fighter.State.SWEEP_KNOCKDOWN, Fighter.State.KNOCKDOWN_RECOVERY]:
+		if fighter.combat.current_health > 0 and (fighter.current_state in [Fighter.State.SWEEP_KNOCKDOWN, Fighter.State.KNOCKDOWN_RECOVERY]
+				or (fighter.current_state == Fighter.State.HIT and fighter.animated_sprite.animation == &"hurted_in_jump")):
 			fighter.change_state(Fighter.State.IDLE, true)
 	_sweep_previews.clear()

@@ -63,6 +63,7 @@ const GRAVITY := 3150.0
 @export var death_sheet: Texture2D
 @export var sweep_knockdown_sheet: Texture2D
 @export var knockdown_recovery_sheet: Texture2D
+@export var knockdown_recovery_columns := 6
 @export var idle_sprite_scale := Vector2(0.85, 0.85)
 @export var idle_sprite_position := Vector2(0.0, -115.0)
 ## Per-character sprite size and ground alignment; overrides the defaults above.
@@ -316,7 +317,7 @@ func _configure_animations() -> void:
 	if sweep_knockdown_sheet != null:
 		_add_sheet_animation(frames, &"sweep_knockdown", sweep_knockdown_sheet, 42, 7, Vector2(512.0, 512.0), KNOCKDOWN_FPS, false, 0, false)
 	if knockdown_recovery_sheet != null:
-		_add_sheet_animation(frames, &"knockdown_recovery", knockdown_recovery_sheet, 34, 6, Vector2(512.0, 512.0), KNOCKDOWN_FPS, false, 0, false)
+		_add_sheet_animation(frames, &"knockdown_recovery", knockdown_recovery_sheet, 17, knockdown_recovery_columns, Vector2(512.0, 512.0), KNOCKDOWN_FPS, false, 0, false)
 	animated_sprite.sprite_frames = frames
 	animated_sprite.animation = &"idle"
 	update_sprite_scale()

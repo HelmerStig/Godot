@@ -1,8 +1,8 @@
 extends RefCounted
 
 const SWEEP_TIME := 42.0 / 24.0
-const HOLD_TIME := 0.5
-const RECOVERY_TIME := 34.0 / 24.0
+const HOLD_TIME := 0.3
+const RECOVERY_TIME := 17.0 / 24.0
 
 
 static func run(tree: SceneTree, expect: Callable) -> bool:
@@ -30,8 +30,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		)
 		var folder := "peirolo" if fighter.fighter_id == &"peiro" else String(fighter.fighter_id)
 		for animation in [&"sweep_knockdown", &"knockdown_recovery"]:
-			var count := 42 if animation == &"sweep_knockdown" else 34
-			var columns := 7 if animation == &"sweep_knockdown" else 6
+			var count := 42 if animation == &"sweep_knockdown" else 17
+			var columns := 7 if animation == &"sweep_knockdown" else (7 if fighter.fighter_id == &"bue" else 6)
 			var frames := fighter.animated_sprite.sprite_frames
 			var exact := frames.get_frame_count(animation) == count
 			for index in frames.get_frame_count(animation):
@@ -40,7 +40,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				exact = exact and texture.region == Rect2((index % columns) * 512, int(index / columns) * 512, 512, 512)
 			expect.call(exact and is_equal_approx(frames.get_animation_speed(animation), 24.0)
 				and not frames.get_animation_loop(animation), "%s: %s slicing, frame e 24 FPS" % [fighter.fighter_id, animation])
-		expect.call(is_equal_approx(fighter.get_sweep_grounded_hold_duration(), HOLD_TIME), "%s: pausa sweep di 0.5 secondi" % fighter.fighter_id)
+		expect.call(is_equal_approx(fighter.get_sweep_grounded_hold_duration(), HOLD_TIME), "%s: pausa sweep di 0.3 secondi" % fighter.fighter_id)
 	expect.call(fighters.size() == 5, "sweep e recovery configurate per tutti i cinque fighter")
 	var attack := attacker.character_data.get_attack(&"heavy_kick")
 	var variant := attack.get_variant(&"crouched")
@@ -59,20 +59,20 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			and fighter.current_state == Fighter.State.SWEEP_KNOCKDOWN
 			and fighter.animated_sprite.frame == 41 and not fighter.animated_sprite.is_playing(),
 			"%s: tutti i 42 frame, poi posa finale" % fighter.fighter_id)
-	await tree.create_timer(0.25).timeout
+	await tree.create_timer(0.1).timeout
 	for fighter in fighters:
 		expect.call(fighter.current_state == Fighter.State.SWEEP_KNOCKDOWN and fighter.animated_sprite.frame == 41
 			and not fighter.animated_sprite.is_playing(), "%s: mantiene il frame 42 durante la pausa" % fighter.fighter_id)
-	await tree.create_timer(0.25).timeout
+	await tree.create_timer(0.1).timeout
 	for fighter in fighters:
 		expect.call(fighter.current_state == Fighter.State.KNOCKDOWN_RECOVERY
 			and fighter.animated_sprite.animation == &"knockdown_recovery" and not fighter.can_move,
-			"%s: dopo 0.5s passa alla recovery" % fighter.fighter_id)
+			"%s: dopo 0.3s passa alla recovery" % fighter.fighter_id)
 	await tree.create_timer(RECOVERY_TIME).timeout
 	for fighter in fighters:
-		expect.call(_saw_frames(observed[fighter][&"knockdown_recovery"], 34)
+		expect.call(_saw_frames(observed[fighter][&"knockdown_recovery"], 17)
 			and fighter.current_state == Fighter.State.IDLE and fighter.animated_sprite.animation == &"idle" and fighter.can_move,
-			"%s: tutti i 34 frame recovery e ritorno in idle" % fighter.fighter_id)
+			"%s: tutti i 17 frame recovery e ritorno in idle" % fighter.fighter_id)
 		fighter.reset_fighter(fighter.position)
 	# Una guardia bassa riuscita e un colpo letale conservano le reazioni esistenti.
 	attacker.set_physics_process(false)

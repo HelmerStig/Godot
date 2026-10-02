@@ -35,7 +35,15 @@ Per verificare calcio basso potente, sweep, pausa, recovery e shortcut S+K:
 godot --headless --path . --script res://tests/test_knockdown.gd
 ```
 
-`cases/roster_knockdown.gd` ? incluso nella suite combat. Verifica tutti i 42 e 34 frame a 24 FPS, pausa di 0,5 secondi, ritorno in idle, parata, KO, reset e interruzione della preview con Tab o D.
+`cases/roster_knockdown.gd` è incluso nella suite combat. Verifica tutti i 42 e 17 frame a 24 FPS, pausa di 0,3 secondi, ritorno in idle, parata, KO, reset e interruzione della preview con Tab o D.
+
+Per verificare i colpi aerei e H+G in salto su tutti i sette fighter:
+
+```text
+godot --headless --path . --script res://tests/test_airborne_hit.gd
+```
+
+`cases/airborne_hit.gd` fa parte della suite combat e verifica frame e FPS, priorità della reazione aerea, riproduzione completa anche vicino a terra, pausa finale, recovery, H+G in entrambi gli ordini, reset e KO.
 
 ## Organizzazione
 

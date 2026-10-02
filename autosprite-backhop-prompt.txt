@@ -15,20 +15,24 @@ Correzioni
 - peirolo salto: l'animazione devbe partire da fotogramma 5, a fotogramma 17 si stacca da terra e a fotogramma 35 deve essere a terra, a fotogramma 45 deve passare in idle
 - torpe salto: l'animazione devbe partire da fotogramma 5, a fotogramma 14 si stacca da terra e a fotogramma 30 deve essere a terra, a fotogramma 39 deve passare in idle
 
-Perfetto, ho creato l'animazione "sweep_knockdown" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, usa la skill di autosprite , vorrei che scaricassi gli spritesheet nelle relative cartelle.
-Poi associa ad ogni personaggio l'animazione sweep_knockdown nel gioco: si attiva quando il personaggio viene colpito da un calcio basso potente (trovi l'esempio di logica in Ariananna e mangler)
-Esegui tutti i 42 fotogrammi a 24 fps.
-Ho poi creato l'animazione "knockdown_recovery" che va accodata all'animazione "sweep_knockdown", mantieni sweep_knockdown per 0.5s all'ultimo frame e poi passa a knockdown_recovery e poi in idle per ogni personaggio.
+Perfetto, ho creato l'animazione "fall" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, usa la skill di autosprite , vorrei che scaricassi gli spritesheet nelle relative cartelle.
+Poi associa ad ogni personaggio l'animazione hurted_in_jump nel gioco: si attiva quando il personaggio viene colpito quando è in salto.
+Quando si è in salto è si viene colpiti, si attiva l'animazione hurted_in_jump che sostituisce quella di jump.
+Esegui tutti i 20 fotogrammi a 24 fps.
+Mantieni sweep_knockdown per 0.3s all'ultimo frame e poi passa a knockdown_recovery e poi in idle per ogni personaggio.
 knockdown_recovery dura 34 fotogrammi e va eseguita anch'essa a 24 fps.
 
-Crea uno shortcut S+K per testare l'animazione "sweep_knockdown" con F2. 
+Crea uno shortcut HG da eseguire in salto per testare l'animazione con F2.
+Integra anche Mangler e Arianna che hanno già l'animazione "hurted_in_jump".
 
 
-Oscare 42 fotogrammi
-Bue 42 fotogrammi
-Peirolo 42 fotogrammi
-Torpe 42 fotogrammi
-Mileto 42 fotogrammi
+Oscare 31 fotogrammi
+Bue 31 fotogrammi
+Peirolo 33 fotogrammi
+Torpe 9-38 fotogrammi
+Mileto 32 fotogrammi
+
+recovery 17 fotogrammi
 
 
 
@@ -36,3 +40,6 @@ Recovery 34 fotogrammi
 
 
 hurt_in_jump 33 fotogrammi a 24 fps
+
+
+ho creato una nuova versione di Knockdown_recovery di 17 fotogrammi su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, puoi sostituirla all'attuale e correggere il numero di fotogrammi da 34 a 17? Stesso fps, correggilo su tutte le occorrenze tranne quelle di Arianna e Mangler

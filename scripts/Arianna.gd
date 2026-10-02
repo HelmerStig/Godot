@@ -1308,8 +1308,7 @@ func start_hit_reaction(
 
 
 func get_sweep_grounded_hold_duration() -> float:
-	# Il foglio termina già nella posa a terra: la recovery parte subito dopo.
-	return 0.0
+	return FighterCombat.SWEEP_GROUNDED_HOLD
 
 
 func begin_jump_ascent() -> void:

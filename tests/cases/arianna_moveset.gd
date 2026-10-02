@@ -791,13 +791,14 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		FighterCombat.DEFAULT_HITSTUN,
 		FighterCombat.DEFAULT_BLOCKSTUN,
 		AttackData.HitHeight.LOW,
-		true
+		true,
+		0, 0, true, true  # Fixture senza pavimento: prova esplicitamente il colpo a terra.
 	)
 	arianna._physics_process(0.0)
 	expect.call(
 		arianna.current_state == Mangler.State.SWEEP_KNOCKDOWN
 		and arianna.animated_sprite.animation == &"sweep_knockdown"
-		and is_zero_approx(arianna.get_sweep_grounded_hold_duration()),
+		and is_equal_approx(arianna.get_sweep_grounded_hold_duration(), 0.3),
 		"un calcio potente basso mantiene lo sweep_knockdown di Arianna nel frame fisico"
 	)
 	await tree.create_timer(2.4).timeout
@@ -811,7 +812,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			break
 	expect.call(
 		saw_knockdown_recovery,
-		"finito sweep_knockdown Arianna passa subito alla recovery"
+		"finito sweep_knockdown Arianna passa alla recovery dopo la pausa"
 	)
 	expect.call(
 		arianna.current_state == Mangler.State.IDLE

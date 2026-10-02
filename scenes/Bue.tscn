@@ -56,3 +56,4 @@ death_sheet = ExtResource("death_sheet")
 sweep_knockdown_sheet = ExtResource("sweep_knockdown_sheet")
 knockdown_recovery_sheet = ExtResource("knockdown_recovery_sheet")
 fall_sheet = ExtResource("fall_sheet")
+knockdown_recovery_columns = 7
