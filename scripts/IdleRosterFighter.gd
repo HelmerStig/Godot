@@ -12,6 +12,10 @@ const BLOCK_FPS := 24.0
 const BLOCK_LOW_FPS := 48.0
 const HURT_FPS := 48.0
 const GRAVITY := 3150.0
+# Profilo di movimento iniziale uguale al back jump di Arianna.
+const BACK_JUMP_DISTANCE := 80.0
+const BACK_JUMP_DURATION := 0.5
+const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 
 @export var fighter_id: StringName
 @export var fighter_display_name := "Fighter"
@@ -28,6 +32,7 @@ const GRAVITY := 3150.0
 @export_range(1, 99, 1) var crouch_columns := 5
 @export var crouch_cell_size := Vector2(512.0, 512.0)
 @export var jump_sheet: Texture2D
+@export var back_jump_sheet: Texture2D
 ## Frame visivo (1-based) da cui parte l'animazione nel foglio.
 @export_range(0, 999, 1) var jump_start_frame := 0
 ## Frame visivo (1-based) di stacco da terra: qui viene applicato l'impulso.
@@ -65,6 +70,11 @@ const GRAVITY := 3150.0
 var _jump_startup := false
 var _jump_takeoff_anim_idx := 0
 var _jump_direction := 0.0
+var _back_jump_active := false
+var _back_jump_moving := false
+var _back_jump_elapsed := 0.0
+var _back_jump_start := Vector2.ZERO
+var _back_jump_direction := -1.0
 
 
 func _ready() -> void:
@@ -80,6 +90,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if is_player_controlled and input_buffer != null:
 		input_buffer.update(is_facing_right)
+	if _back_jump_active:
+		_process_back_jump(delta)
+		return
 
 	var on_floor := is_on_floor()
 	combat.set_guarding(
@@ -87,6 +100,17 @@ func _physics_process(delta: float) -> void:
 		and current_state in [State.IDLE, State.WALKING, State.CROUCHING, State.STANDING_UP, State.BLOCKING, State.BLOCK_RECOVERY]
 	)
 	var down_held := input_buffer != null and input_buffer.is_down_held()
+	if (
+		back_jump_sheet != null and controls_enabled and can_move and on_floor
+		and current_state in [State.IDLE, State.WALKING]
+		and input_buffer != null and input_buffer.is_back_just_pressed()
+	):
+		var frame := Engine.get_physics_frames()
+		var previous_tap := last_back_tap_frame
+		last_back_tap_frame = frame
+		if frame - previous_tap <= BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES:
+			_start_back_jump()
+			return
 	if crouch_sheet != null and controls_enabled and on_floor:
 		if down_held and current_state in [State.IDLE, State.WALKING]:
 			change_state(State.CROUCHING)
@@ -165,6 +189,11 @@ func _physics_process(delta: float) -> void:
 
 
 func change_state(next_state: int, force_victory_exit := false) -> void:
+	var interrupted_back_jump := _back_jump_active and next_state not in [State.BACK_HOP_STARTUP, State.BACK_HOP]
+	if interrupted_back_jump:
+		_back_jump_active = false
+		_back_jump_moving = false
+		_back_jump_elapsed = 0.0
 	# Solo per la parata ALTA: inserisce la recovery inversa prima di tornare in idle.
 	if current_state == State.BLOCKING and next_state == State.IDLE \
 			and received_block_height != AttackData.HitHeight.LOW:
@@ -173,6 +202,55 @@ func change_state(next_state: int, force_victory_exit := false) -> void:
 			super.change_state(State.BLOCK_RECOVERY, force_victory_exit)
 			return
 	super.change_state(next_state, force_victory_exit)
+	if interrupted_back_jump:
+		update_physical_collision()
+		update_collision_profile()
+
+
+func update_animation() -> void:
+	if _back_jump_active and current_state in [State.BACK_HOP_STARTUP, State.BACK_HOP]:
+		return
+	super.update_animation()
+
+
+func _start_back_jump() -> void:
+	_back_jump_active = true
+	_back_jump_moving = false
+	_back_jump_elapsed = 0.0
+	_back_jump_start = position
+	_back_jump_direction = -1.0 if is_facing_right else 1.0
+	last_back_tap_frame = -BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES - 1
+	velocity = Vector2.ZERO
+	combat.set_guarding(false)
+	change_state(State.BACK_HOP_STARTUP)
+	animated_sprite.play(&"back_jump")
+	animated_sprite.frame = 0
+
+
+func _process_back_jump(delta: float) -> void:
+	if not _back_jump_moving and animated_sprite.frame >= BACK_JUMP_TAKEOFF_FRAME:
+		_back_jump_moving = true
+		change_state(State.BACK_HOP)
+	if _back_jump_moving:
+		_back_jump_elapsed = minf(_back_jump_elapsed + delta, BACK_JUMP_DURATION)
+		var target_x := clampf(_back_jump_start.x + _back_jump_direction * BACK_JUMP_DISTANCE, stage_left_limit, stage_right_limit)
+		position.x = lerpf(_back_jump_start.x, target_x, _back_jump_elapsed / BACK_JUMP_DURATION)
+		position.y = _back_jump_start.y
+		velocity = Vector2(_back_jump_direction * BACK_JUMP_DISTANCE / BACK_JUMP_DURATION if _back_jump_elapsed < BACK_JUMP_DURATION else 0.0, 0.0)
+		collision_layer = 0
+		collision_mask = GROUND_COLLISION_LAYER
+	else:
+		velocity = Vector2.ZERO
+	update_ground_shadow()
+
+
+func reset_fighter(spawn_position: Vector2) -> void:
+	_back_jump_active = false
+	_back_jump_moving = false
+	_back_jump_elapsed = 0.0
+	_jump_startup = false
+	super.reset_fighter(spawn_position)
+	update_physical_collision()
 
 
 func start_hit_reaction(
@@ -208,6 +286,10 @@ func get_block_recovery_animation(height: AttackData.HitHeight) -> StringName:
 
 
 func _on_animation_finished() -> void:
+	if _back_jump_active and animated_sprite.animation == &"back_jump":
+		velocity = Vector2.ZERO
+		change_state(State.IDLE)
+		return
 	if finish_crouched_hit_reaction(true):
 		return
 	if current_state == State.BLOCKING and animated_sprite.animation == &"block_mid":
@@ -264,6 +346,8 @@ func _configure_animations() -> void:
 	if walk_sheet != null:
 		_add_sheet_animation(frames, &"walk", walk_sheet, walk_frame_count, walk_columns, walk_cell_size, WALK_FPS)
 		_add_sheet_animation(frames, &"backwalk", walk_sheet, walk_frame_count, walk_columns, walk_cell_size, WALK_FPS, true)
+	if back_jump_sheet != null:
+		_add_sheet_animation(frames, &"back_jump", back_jump_sheet, 20, 5, Vector2(512.0, 512.0), 24.0, false, 0, false)
 	if crouch_sheet != null:
 		_add_sheet_animation(frames, &"crouch", crouch_sheet, crouch_frame_count, crouch_columns, crouch_cell_size, CROUCH_FPS, false, 0, false)
 	if jump_sheet != null and jump_idle_frame > jump_start_frame and jump_start_frame > 0:

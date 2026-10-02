@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -16,6 +16,8 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/hurt_crouched_spritesheet.png" id="hurt_crouched_sheet"]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/block_medium_spritesheet.png" id="block_medium_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/back_jump_spritesheet.png" id="back_jump_sheet"]
 
 [node name="Mileto" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
@@ -46,3 +48,4 @@ sprite_scale = Vector2(0.87, 0.87)
 sprite_position = Vector2(0.0, -105.0)
 hurt_low_sheet = ExtResource("11_hurt_low")
 block_medium_sheet = ExtResource("block_medium_sheet")
+back_jump_sheet = ExtResource("back_jump_sheet")
