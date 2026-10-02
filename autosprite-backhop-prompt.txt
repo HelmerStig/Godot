@@ -33,9 +33,20 @@ Torpe Light punch 7frames hitbox a 7
 Mileto Light punch 7frames hitbox a 7
 
 recovery 17 fotogrammi
-Perfetto, ho creato l'animazione small jump per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, usa la skill di autosprite , vorrei che scaricassi gli spritesheet nelle relative cartelle.
-Poi associa ad ogni personaggio l'animazione back_jump nel gioco:
-Il personaggio eseguirà l'animazione back_jump quando clicca due volte indietro. Il personaggio va mosso indietro con Godot quando questa mossa viene eseguita, per ora usa i parametri di Arianna, il movimento all'idietro deve partire al fotogramma 5 dell'animazione.
+
+Perfetto, ho creato l'animazione light punch per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, usa la skill di autosprite , vorrei che scaricassi gli spritesheet nelle relative cartelle.
+Poi associa ad ogni personaggio l'animazione light_punch nel gioco
+Sono 7 fotogrammi da eseguire da 1 a 7 e poi da 6 a 1 a 24fps per poi tornare in idle.
+L'attivazione delle hitbox avviene nei fotogrammi indicati per ogni personaggio:
+
+Oscare  hitbox a 7
+Bue  hitbox a 5/6/7
+Peirolo  hitbox a 5/6/7
+Torpe hitbox a 7
+Mileto  hitbox a 7
+
+Se il colpo va a segno, usa il suono che usa arianna per il colpo riuscito.
+
 Sono 20 fotogrammi da eseguire a 24fps per poi tornare in idle.
 Tutte a 24 fps
 

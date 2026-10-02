@@ -7,6 +7,7 @@ class_name IdleRosterFighter
 const IDLE_FPS := 18.0
 const WALK_FPS := 24.0
 const RUN_FPS := 24.0
+const RUN_SPEED_MULTIPLIER := 2.0  # Stessa velocità di corsa di Arianna.
 const JUMP_FPS := 24.0
 const CROUCH_FPS := 24.0
 const BLOCK_FPS := 24.0
@@ -95,6 +96,7 @@ func _ready() -> void:
 	var data := CharacterData.create_default()
 	data.character_name = String(fighter_id)
 	data.display_name = fighter_display_name
+	data.run_speed *= RUN_SPEED_MULTIPLIER
 	character_data = data
 	super._ready()
 	animated_sprite.play(&"idle")
