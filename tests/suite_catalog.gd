@@ -21,6 +21,7 @@ const SUITES := {
 		"res://tests/cases/roster_block_medium.gd",
 	],
 	"arena": [
+		"res://tests/cases/roster_medium_punch.gd",
 		"res://tests/cases/roster_light_punch.gd",
 		"res://tests/cases/roster_run.gd",
 		"res://tests/cases/roster_death.gd",

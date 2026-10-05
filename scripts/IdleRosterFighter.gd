@@ -43,6 +43,14 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var jump_sheet: Texture2D
 @export var back_jump_sheet: Texture2D
 @export var light_punch_sheet: Texture2D
+@export var medium_punch_sheet: Texture2D
+@export var medium_punch_frame_count := 1
+@export var medium_punch_columns := 5
+@export var medium_punch_fps := 48.0
+## Zero significa che il foglio contiene già la recovery.
+@export var medium_punch_reverse_fps := 48.0
+@export var medium_punch_active_start_frame := 1
+@export var medium_punch_active_end_frame := 1
 @export_range(1, 7, 1) var light_punch_active_start_frame := 7
 ## Frame visivo (1-based) da cui parte l'animazione nel foglio.
 @export_range(0, 999, 1) var jump_start_frame := 0
@@ -94,6 +102,8 @@ var _back_jump_direction := -1.0
 var _light_punch_hit_audio: AudioStreamPlayer
 var _light_punch_whoosh_audio: AudioStreamPlayer
 var _light_punch_hit_sound_played := false
+var _medium_punch_whoosh_audio: AudioStreamPlayer
+var _medium_punch_hit_sound_played := false
 
 
 func _ready() -> void:
@@ -112,6 +122,12 @@ func _ready() -> void:
 	_light_punch_whoosh_audio.stream = preload("res://sound-libraries/punch_short_whoosh_30.wav")
 	_light_punch_whoosh_audio.volume_db = -4.0
 	add_child(_light_punch_whoosh_audio)
+	_medium_punch_whoosh_audio = AudioStreamPlayer.new()
+	_medium_punch_whoosh_audio.stream = preload("res://assets/sounds/sfx/swosh.wav")
+	_medium_punch_whoosh_audio.volume_db = -4.0
+	add_child(_medium_punch_whoosh_audio)
+	combat.attack_connected.connect(_on_medium_punch_connected)
+	animated_sprite.frame_changed.connect(_update_medium_punch_hitbox)
 	combat.attack_connected.connect(_on_light_punch_connected)
 	animated_sprite.frame_changed.connect(_update_light_punch_hitbox)
 	animated_sprite.play(&"idle")
@@ -125,6 +141,9 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var on_floor := is_on_floor()
+	if medium_punch_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and not input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING]:
+		if input_buffer.consume_attack(&"medium_punch") != FighterInputBuffer.NO_DIRECTION:
+			_start_medium_punch()
 	if light_punch_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and not input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING]:
 		if input_buffer.consume_attack(&"light_punch") != FighterInputBuffer.NO_DIRECTION:
 			_start_light_punch()
@@ -232,6 +251,8 @@ func _physics_process(delta: float) -> void:
 
 
 func change_state(next_state: int, force_victory_exit := false) -> void:
+	if next_state != State.ATTACKING and is_instance_valid(_medium_punch_whoosh_audio):
+		_medium_punch_whoosh_audio.stop()
 	var interrupted_back_jump := _back_jump_active and next_state not in [State.BACK_HOP_STARTUP, State.BACK_HOP]
 	if interrupted_back_jump:
 		_back_jump_active = false
@@ -271,6 +292,53 @@ func _start_light_punch() -> void:
 	_light_punch_whoosh_audio.play()
 	animated_sprite.frame = 0
 	_update_light_punch_hitbox()
+
+
+func _start_medium_punch() -> void:
+	var attack := character_data.get_attack(&"medium_punch")
+	if attack == null or medium_punch_sheet == null:
+		return
+	_medium_punch_hit_sound_played = false
+	var variant := AttackVariantData.new()
+	variant.variant_id = &"roster_standing"
+	variant.animation_name = &"medium_punch"
+	variant.animation_fps = medium_punch_fps
+	variant.hit_height = AttackData.HitHeight.HIGH
+	variant.hit_reaction_start_frame = 0
+	var punch_shape := RectangleShape2D.new()
+	punch_shape.size = Vector2(190.0, 45.0)
+	combat.hitbox_shape.shape = punch_shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	# Il colpo alto incontra la testa in piedi e passa sopra la hurtbox crouched.
+	combat.hitbox_shape.position = Vector2(100.0, -240.0)
+	combat.hitbox_shape.rotation = 0.0
+	combat.begin_animation_attack(&"medium_punch", attack, variant)
+	animated_sprite.frame = 0
+	_update_medium_punch_hitbox()
+	_play_medium_punch_whoosh(combat.action_generation)
+
+
+func _play_medium_punch_whoosh(generation: int) -> void:
+	await get_tree().create_timer(0.2).timeout
+	if generation == combat.action_generation and combat.is_attacking:
+		_medium_punch_whoosh_audio.play()
+
+
+func _update_medium_punch_hitbox() -> void:
+	if current_state != State.ATTACKING or not combat.is_attacking:
+		return
+	if animated_sprite.animation == &"medium_punch" and animated_sprite.frame >= medium_punch_active_start_frame - 1 and animated_sprite.frame <= medium_punch_active_end_frame - 1:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap_immediately()
+		combat.resolve_attack_overlap(combat.action_generation)
+	elif animated_sprite.animation in [&"medium_punch", &"medium_punch_recovery"]:
+		combat.disable_hitbox()
+
+
+func _on_medium_punch_connected(attack_name: StringName, result: int) -> void:
+	if attack_name == &"medium_punch" and result in [FighterCombat.DamageResult.HIT, FighterCombat.DamageResult.KNOCKOUT] and not _medium_punch_hit_sound_played:
+		_medium_punch_hit_sound_played = true
+		_light_punch_hit_audio.play()
 
 
 func _update_light_punch_hitbox() -> void:
@@ -379,6 +447,16 @@ func get_sweep_grounded_hold_duration() -> float:
 
 
 func _on_animation_finished() -> void:
+	if current_state == State.ATTACKING and animated_sprite.animation == &"medium_punch":
+		combat.disable_hitbox()
+		if medium_punch_reverse_fps > 0.0:
+			animated_sprite.play(&"medium_punch_recovery")
+		else:
+			combat.finish_animation_attack()
+		return
+	if current_state == State.ATTACKING and animated_sprite.animation == &"medium_punch_recovery":
+		combat.finish_animation_attack()
+		return
 	if current_state == State.ATTACKING and animated_sprite.animation == &"light_punch":
 		combat.finish_animation_attack()
 		return
@@ -441,6 +519,10 @@ func update_sprite_scale() -> void:
 func _configure_animations() -> void:
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
+	if medium_punch_sheet != null:
+		_add_sheet_animation(frames, &"medium_punch", medium_punch_sheet, medium_punch_frame_count, medium_punch_columns, Vector2(512.0, 512.0), medium_punch_fps, false, 0, false)
+		if medium_punch_reverse_fps > 0.0:
+			_add_sheet_animation(frames, &"medium_punch_recovery", medium_punch_sheet, medium_punch_frame_count - 1, medium_punch_columns, Vector2(512.0, 512.0), medium_punch_reverse_fps, true, 0, false)
 	if light_punch_sheet != null:
 		_add_sheet_animation(frames, &"light_punch", light_punch_sheet, 7, 5, Vector2(512.0, 512.0), 24.0, false, 0, false)
 		for source_index in range(5, -1, -1):

@@ -526,6 +526,23 @@ func resolve_attack_overlap(attack_generation: int) -> void:
 		_apply_hit_to_area(area)
 
 
+## Una finestra di un solo frame animato può finire prima che Area2D aggiorni
+## la cache delle sovrapposizioni. Interroga la forma al momento dell'attivazione.
+func resolve_attack_overlap_immediately() -> void:
+	if not is_attacking or hitbox_shape.disabled or hitbox_shape.shape == null:
+		return
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = hitbox_shape.shape
+	query.transform = hitbox_shape.global_transform
+	query.collision_mask = hitbox.collision_mask
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	for contact in fighter.get_world_2d().direct_space_state.intersect_shape(query):
+		var area := contact["collider"] as Area2D
+		if area != null:
+			_apply_hit_to_area(area)
+
+
 func finish_animation_attack(next_state: int = Fighter.State.IDLE) -> void:
 	if not is_attacking:
 		return
