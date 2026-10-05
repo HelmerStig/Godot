@@ -349,13 +349,21 @@ func start_hit_reaction(
 	return duration
 
 
-func get_block_animation(height: AttackData.HitHeight, _crouched := false) -> StringName:
+func start_block_reaction(height: AttackData.HitHeight, started_crouched := false) -> float:
+	return super.start_block_reaction(height, started_crouched or is_holding_low_guard())
+
+
+func get_block_animation(height: AttackData.HitHeight, crouched := false) -> StringName:
+	if crouched:
+		return &"block_low"
 	if height == AttackData.HitHeight.MID and block_medium_sheet != null:
 		return &"block_mid"
 	return &"block_low" if height == AttackData.HitHeight.LOW else &"block_high"
 
 
 func get_block_recovery_animation(height: AttackData.HitHeight) -> StringName:
+	if block_started_crouched:
+		return &"block_low_recovery"
 	if height == AttackData.HitHeight.MID and block_medium_sheet != null:
 		return &"block_mid_recovery"
 	return &"block_low_recovery" if height == AttackData.HitHeight.LOW else &"block_high_recovery"
@@ -386,7 +394,10 @@ func _on_animation_finished() -> void:
 		return
 	if current_state == State.BLOCK_RECOVERY:
 		if animated_sprite.animation == &"block_low_recovery":
-			change_state(State.CROUCHING)
+			if input_buffer != null and input_buffer.is_down_held():
+				return_to_crouch_pose()
+			else:
+				change_state(State.IDLE)
 			return
 		if animated_sprite.animation in [&"block_high_recovery", &"block_mid_recovery"]:
 			change_state(State.IDLE)

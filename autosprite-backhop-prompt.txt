@@ -79,18 +79,18 @@ utilizzare il suono del pugno medio di arianna, il woosh.
 Se il colpo va a segno, riproduci il suono del pugno medio che colpisce di arianna all'attivazione della hitbox.
 Genera nell'avversario hurt_high se colpito o block_high se parato
 
-Oscar:
+Oscar: assets\sprites\characters\oscare\Oscare-medium_punch.png
 	- 22frame andata a 48fps ritorno a 96fps
 	- hitbox a frame 22:
-Mileto:
+Mileto: assets\sprites\characters\mileto\Mileto-medium_punch.png
 	- 24 frame senza ritorno a 48fps
 	- hitbox a frame 13/14/15
-Torpe:
+Torpe: assets\sprites\characters\torpe\Torpe-medium_punch.png
 	- 14 frame a 30fps andata e ritorno
 	- hitbox a frame 14
-Peirolo:
+Peirolo: assets\sprites\characters\peirolo\Peiro-medium_punch.png
 	- 15 frame a 48fps andata e ritorno
 	- hitbox a frame 15
-Bue:
+Bue: assets\sprites\characters\bue\Bue-medium_punch.png
 	- 11 frame a 24fps andata e ritorno
 	- hitbox a frame 11

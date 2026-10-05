@@ -86,14 +86,17 @@ static func block_reaction(
 		await combat.get_tree().process_frame
 		if not _is_active(combat) or block_generation != combat.action_generation or combat.current_health <= 0:
 			return
-	if hit_height == AttackData.HitHeight.LOW and combat.fighter.is_holding_low_guard():
+	if (hit_height == AttackData.HitHeight.LOW or combat.fighter.block_started_crouched) and combat.fighter.is_holding_low_guard():
 		combat.fighter.return_to_crouch_after_low_block()
 		return
 	var recovery_duration := combat.fighter.start_block_recovery()
 	await combat.get_tree().create_timer(recovery_duration).timeout
 	if not _is_active(combat) or block_generation != combat.action_generation or combat.current_health <= 0:
 		return
-	combat.fighter.change_state(Fighter.State.IDLE)
+	if combat.fighter.block_started_crouched and combat.fighter.input_buffer != null and combat.fighter.input_buffer.is_down_held():
+		combat.fighter.return_to_crouch_pose()
+	else:
+		combat.fighter.change_state(Fighter.State.IDLE)
 
 
 static func hit_reaction(

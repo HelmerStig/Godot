@@ -180,9 +180,11 @@ func start_block_reaction(
 	started_crouched: bool = false
 ) -> float:
 	received_block_height = hit_height
-	block_started_crouched = started_crouched
+	block_started_crouched = started_crouched or (
+		current_state in [State.BLOCKING, State.BLOCK_RECOVERY] and block_started_crouched
+	)
 	change_state(State.BLOCKING)
-	var animation_name := get_block_animation(hit_height, started_crouched)
+	var animation_name := get_block_animation(hit_height, block_started_crouched)
 	if animated_sprite.sprite_frames.has_animation(animation_name):
 		animated_sprite.play(animation_name)
 	return get_animation_duration(animation_name)
@@ -619,6 +621,8 @@ func update_collision_profile() -> void:
 
 
 func get_crouch_progress() -> float:
+	if current_state in [State.BLOCKING, State.BLOCK_RECOVERY] and block_started_crouched:
+		return 1.0
 	if current_state == State.HIT and hurt_started_crouched:
 		return 1.0
 	if animated_sprite.animation.begins_with("crouched_"):
