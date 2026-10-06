@@ -72,9 +72,9 @@ light_punch_sheet = ExtResource("light_punch_sheet")
 light_punch_active_start_frame = 5
 
 medium_punch_sheet = ExtResource("medium_punch_sheet")
-medium_punch_frame_count = 11
-medium_punch_columns = 5
-medium_punch_fps = 24.0
-medium_punch_reverse_fps = 24.0
-medium_punch_active_start_frame = 11
-medium_punch_active_end_frame = 11
+medium_punch_frame_count = 24
+medium_punch_columns = 7
+medium_punch_fps = 48.0
+medium_punch_reverse_fps = 96.0
+medium_punch_active_start_frame = 23
+medium_punch_active_end_frame = 24

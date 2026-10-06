@@ -15,7 +15,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		node.position.x = -5000.0
 		if node is IdleRosterFighter:
 			fighters.append(node)
-	var contracts := {&"oscare": [22,48.0,96.0,22,22], &"mileto": [24,48.0,0.0,13,15], &"torpe": [14,30.0,30.0,14,14], &"peiro": [15,48.0,48.0,15,15], &"bue": [11,24.0,24.0,11,11]}
+	var contracts := {&"oscare": [22,48.0,96.0,22,22], &"mileto": [24,48.0,0.0,13,15], &"torpe": [14,30.0,30.0,14,14], &"peiro": [15,48.0,48.0,15,15], &"bue": [24,48.0,96.0,23,24]}
 	for fighter in fighters:
 		var contract: Array = contracts[fighter.fighter_id]
 		var frames := fighter.animated_sprite.sprite_frames
