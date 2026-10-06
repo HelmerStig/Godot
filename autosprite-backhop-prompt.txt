@@ -74,23 +74,25 @@ Abbiamo fatto tutte le animazioni di base
 
 Possiamo passare alle mosse vere e proprie per loro?
 
-Medium punch
-utilizzare il suono del pugno medio di arianna, il woosh.
-Se il colpo va a segno, riproduci il suono del pugno medio che colpisce di arianna all'attivazione della hitbox.
+Passiamo allo Strong punch
+utilizzare il suono del pugno strong di arianna, il woosh.
+Se il colpo va a segno, riproduci il suono del pugno strong che colpisce di arianna all'attivazione della hitbox.
 Genera nell'avversario hurt_high se colpito o block_high se parato
 
-Oscar: assets\sprites\characters\oscare\Oscare-medium_punch.png
-	- 22frame andata a 48fps ritorno a 96fps
-	- hitbox a frame 22:
-Mileto: assets\sprites\characters\mileto\Mileto-medium_punch.png
-	- 24 frame senza ritorno a 48fps
-	- hitbox a frame 13/14/15
-Torpe: assets\sprites\characters\torpe\Torpe-medium_punch.png
-	- 14 frame a 30fps andata e ritorno
-	- hitbox a frame 14
-Peirolo: assets\sprites\characters\peirolo\Peiro-medium_punch.png
-	- 15 frame a 48fps andata e ritorno
-	- hitbox a frame 15
-Bue: assets\sprites\characters\bue\Bue-medium_punch.png
-	- 11 frame a 24fps andata e ritorno
-	- hitbox a frame 11
+Oscar: assets\sprites\characters\oscare\Oscare-strong_punch.png
+	- 28frame a 30fps
+	- hitbox a frame 16/17/18:
+Mileto: assets\sprites\characters\mileto\Mileto-strong_punch.png
+	- 38 frame senza ritorno a 30fps
+	- hitbox a frame 17/18/19
+Torpe: assets\sprites\characters\torpe\Torpe-strong_punch.png
+	- 31 frame a 30fps senza ritorno
+	- hitbox a frame 16/17/18:
+Peirolo: assets\sprites\characters\peirolo\Peiro-strong_punch.png
+	- 25 frame a 24fps senza ritorno
+	- hitbox a frame 11/12/13
+Bue: assets\sprites\characters\bue\Bue-strong_punch.png
+	- 21 frame a 24fps senza ritorno
+	- hitbox a frame 15/16/17
+
+	prompt per pugno potente: The character makes a small leap forward while winding up a punch with their right arm behind their head; their body leans forward toward the camera, with the right leg bent forward and the left leg back. They then rotate their body to turn their back to the camera and throw a punch aimed slightly downward, shifting their left leg back and their right leg forward. Finally, they return to the idle position.

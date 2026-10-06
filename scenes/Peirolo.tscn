@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -30,6 +30,8 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/light_punch_spritesheet.png" id="light_punch_sheet"]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/Peiro-medium_punch.png" id="medium_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/Peiro-strong_punch.png" id="strong_punch_sheet"]
 
 [node name="Peirolo" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
@@ -79,3 +81,10 @@ medium_punch_fps = 48.0
 medium_punch_reverse_fps = 48.0
 medium_punch_active_start_frame = 15
 medium_punch_active_end_frame = 15
+
+strong_punch_sheet = ExtResource("strong_punch_sheet")
+strong_punch_frame_count = 25
+strong_punch_columns = 7
+strong_punch_fps = 24.0
+strong_punch_active_start_frame = 11
+strong_punch_active_end_frame = 13
