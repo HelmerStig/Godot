@@ -1,6 +1,8 @@
 extends Resource
 class_name AttackVariantData
 
+enum ReactionPolicy { DEFAULT, TARGET_STANCE, CROUCHED_LOW, TARGET_STANCE_MEDIUM }
+
 ## Configurazione di una variante contestuale dello stesso attacco base.
 
 @export var variant_id: StringName = &"standing"
@@ -19,6 +21,8 @@ class_name AttackVariantData
 @export_range(-180.0, 180.0, 0.5) var hitbox_rotation_degrees := 0.0
 @export_enum("High", "Mid", "Low") var hit_height := 1
 @export var causes_knockdown := false
+## Hurt crouched/medio e parate low/high secondo la postura, senza lancio.
+@export var reaction_policy: ReactionPolicy = ReactionPolicy.DEFAULT
 @export_range(0, 99, 1, "or_greater") var hit_reaction_start_frame := 0
 
 

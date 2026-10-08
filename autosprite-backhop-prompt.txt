@@ -59,40 +59,49 @@ Recovery 34 fotogrammi
 hurt_in_jump 33 fotogrammi a 24 fps
 
 
-ho creato una nuova versione di Knockdown_recovery di 17 fotogrammi su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto, puoi sostituirla all'attuale e correggere il numero di fotogrammi da 34 a 17? Stesso fps, correggilo su tutte le occorrenze tranne quelle di Arianna e Mangler
+ho creato "Medium kick low" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto.
+Usa sempre i suoni di arianna per hit e wosh del calcio medio.
+va associata al calcio medio da abbassato, eseguito per poi tornare in crouched stance.
+Genera nell'avversario hurt_crouched se colpito quando è in crouched stance e block_crouched se parato in crouched stance.
+Genera nell'avversario hurt_medium se colpito quando è in standing stance e block_medium se parato in standing stance.
 
-ora verifica se per: 
-Oscare
-Bue
-Peirolo
-Torpe
-Mileto
-Abbiamo fatto tutte le animazioni di base
-- Movimenti base, salto, corsa etc
-- Parate in ogni posizione
-- Hurt in ogni posizione
+Oscar:
+	- 11 frame 48fps da eseguire avanti e poi indietro
+	- hitbox a frame 11
+Mileto:
+	- 35 frame a 48fps da eseguire solo avanti
+	- hitbox a frame 20/21/22
+Torpe:
+	- 29 frame a 48fps da eseguire solo avanti
+	- hitbox a frame 18/19
+Peirolo:
+	- 15 frame a 48fps da eseguire avanti e poi indietro
+	- hitbox a frame 15
+Bue:
+	- 17frame a 48fps da eseguire avanti e poi indietro
+	- hitbox a frame 16/17
 
-Possiamo passare alle mosse vere e proprie per loro?
+Passiamo al light punch da abbassato
+utilizzare il suono del pugno light di arianna, il woosh.
+Se il colpo va a segno, riproduci il suono del pugno light che colpisce di arianna all'attivazione della hitbox.
 
-Passiamo allo Strong punch
-utilizzare il suono del pugno strong di arianna, il woosh.
-Se il colpo va a segno, riproduci il suono del pugno strong che colpisce di arianna all'attivazione della hitbox.
-Genera nell'avversario hurt_high se colpito o block_high se parato
+Mi son odimenticato:
+anche medium punch low  e light punch low Generano nell'avversario hurt_low se colpito o block_low se parato in posizione abbassata, generano nell'avversario hurt_high se colpito o block_high se parato in posizione eretta.
 
 Oscar: assets\sprites\characters\oscare\Oscare-strong_punch.png
-	- 28frame a 30fps
-	- hitbox a frame 16/17/18:
+	- 7frame a 24fps
+	- hitbox a frame 3/4:
 Mileto: assets\sprites\characters\mileto\Mileto-strong_punch.png
-	- 38 frame senza ritorno a 30fps
-	- hitbox a frame 17/18/19
+	- 7 frame senza ritorno a 30fps
+	- hitbox a frame 3/4
 Torpe: assets\sprites\characters\torpe\Torpe-strong_punch.png
-	- 31 frame a 30fps senza ritorno
-	- hitbox a frame 16/17/18:
+	- 7 frame a 30fps senza ritorno
+	- hitbox a frame 3/4:
 Peirolo: assets\sprites\characters\peirolo\Peiro-strong_punch.png
-	- 25 frame a 24fps senza ritorno
-	- hitbox a frame 11/12/13
+	- 11 frame a 24fps senza ritorno
+	- hitbox a frame 6/7
 Bue: assets\sprites\characters\bue\Bue-strong_punch.png
-	- 21 frame a 24fps senza ritorno
-	- hitbox a frame 15/16/17
+	- 7 frame a 24fps senza ritorno
+	- hitbox a frame 3/4
 
 	prompt per pugno potente: The character makes a small leap forward while winding up a punch with their right arm behind their head; their body leans forward toward the camera, with the right leg bent forward and the left leg back. They then rotate their body to turn their back to the camera and throw a punch aimed slightly downward, shifting their left leg back and their right leg forward. Finally, they return to the idle position.

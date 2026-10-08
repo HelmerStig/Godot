@@ -43,6 +43,38 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var jump_sheet: Texture2D
 @export var back_jump_sheet: Texture2D
 @export var light_punch_sheet: Texture2D
+@export var low_medium_kick_sheet: Texture2D
+@export var low_medium_kick_frame_count := 11
+@export var low_medium_kick_columns := 7
+@export var low_medium_kick_fps := 48.0
+@export var low_medium_kick_reverse := false
+@export var low_medium_kick_active_start_frame := 11
+@export var low_medium_kick_active_end_frame := 11
+
+@export var low_light_kick_sheet: Texture2D
+@export var low_light_kick_frame_count := 14
+@export var low_light_kick_columns := 7
+@export var low_light_kick_fps := 32.0
+@export var low_light_kick_active_start_frame := 7
+@export var low_light_kick_active_end_frame := 7
+
+@export var low_light_punch_sheet: Texture2D
+@export var low_light_punch_frame_count := 7
+@export var low_light_punch_columns := 5
+@export var low_light_punch_active_start_frame := 3
+@export var low_light_punch_active_end_frame := 4
+@export var low_medium_punch_sheet: Texture2D
+@export var low_medium_punch_frame_count := 24
+@export var low_medium_punch_columns := 7
+@export var low_medium_punch_fps := 60.0
+@export var low_medium_punch_active_start_frame := 13
+@export var low_medium_punch_active_end_frame := 15
+@export var low_strong_punch_sheet: Texture2D
+@export var low_strong_punch_frame_count := 27
+@export var low_strong_punch_columns := 7
+@export var low_strong_punch_fps := 48.0
+@export var low_strong_punch_active_start_frame := 13
+@export var low_strong_punch_active_end_frame := 15
 @export var medium_punch_sheet: Texture2D
 @export var medium_punch_frame_count := 1
 @export var medium_punch_columns := 5
@@ -106,6 +138,12 @@ var _back_jump_elapsed := 0.0
 var _back_jump_start := Vector2.ZERO
 var _back_jump_direction := -1.0
 var _light_punch_hit_audio: AudioStreamPlayer
+var _medium_kick_whoosh_audio: AudioStreamPlayer
+var _medium_kick_hit_audio: AudioStreamPlayer
+var _medium_kick_hit_sound_played := false
+var _light_kick_whoosh_audio: AudioStreamPlayer
+var _light_kick_hit_audio: AudioStreamPlayer
+var _light_kick_hit_sound_played := false
 var _light_punch_whoosh_audio: AudioStreamPlayer
 var _light_punch_hit_sound_played := false
 var _medium_punch_whoosh_audio: AudioStreamPlayer
@@ -149,6 +187,29 @@ func _ready() -> void:
 	animated_sprite.frame_changed.connect(_update_strong_punch_hitbox)
 	combat.attack_connected.connect(_on_light_punch_connected)
 	animated_sprite.frame_changed.connect(_update_light_punch_hitbox)
+	animated_sprite.frame_changed.connect(_update_low_light_punch_hitbox)
+	animated_sprite.frame_changed.connect(_update_low_medium_punch_hitbox)
+	animated_sprite.frame_changed.connect(_update_low_strong_punch_hitbox)
+	_light_kick_whoosh_audio = AudioStreamPlayer.new()
+	_light_kick_whoosh_audio.stream = preload("res://sound-libraries/kick_short_whoosh_12.wav")
+	_light_kick_whoosh_audio.volume_db = -4.0
+	add_child(_light_kick_whoosh_audio)
+	_light_kick_hit_audio = AudioStreamPlayer.new()
+	_light_kick_hit_audio.stream = preload("res://sound-libraries/body_hit_small_11.wav")
+	_light_kick_hit_audio.volume_db = -7.0
+	add_child(_light_kick_hit_audio)
+	combat.attack_connected.connect(_on_light_kick_connected)
+	animated_sprite.frame_changed.connect(_update_low_light_kick_hitbox)
+	_medium_kick_whoosh_audio = AudioStreamPlayer.new()
+	_medium_kick_whoosh_audio.stream = preload("res://sound-libraries/kick_short_whoosh_23.wav")
+	_medium_kick_whoosh_audio.volume_db = -4.0
+	add_child(_medium_kick_whoosh_audio)
+	_medium_kick_hit_audio = AudioStreamPlayer.new()
+	_medium_kick_hit_audio.stream = preload("res://sound-libraries/body_hit_large_44.wav")
+	_medium_kick_hit_audio.volume_db = -7.0
+	add_child(_medium_kick_hit_audio)
+	combat.attack_connected.connect(_on_medium_kick_connected)
+	animated_sprite.frame_changed.connect(_update_low_medium_kick_hitbox)
 	animated_sprite.play(&"idle")
 
 
@@ -160,6 +221,21 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var on_floor := is_on_floor()
+	if low_medium_kick_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING, State.CROUCHING, State.STANDING_UP]:
+		if input_buffer.consume_attack(&"medium_kick") != FighterInputBuffer.NO_DIRECTION:
+			_start_low_medium_kick()
+	if low_light_kick_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING, State.CROUCHING, State.STANDING_UP]:
+		if input_buffer.consume_attack(&"light_kick") != FighterInputBuffer.NO_DIRECTION:
+			_start_low_light_kick()
+	if low_strong_punch_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING, State.CROUCHING, State.STANDING_UP]:
+		if input_buffer.consume_attack(&"heavy_punch") != FighterInputBuffer.NO_DIRECTION:
+			_start_low_strong_punch()
+	if low_medium_punch_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING, State.CROUCHING, State.STANDING_UP]:
+		if input_buffer.consume_attack(&"medium_punch") != FighterInputBuffer.NO_DIRECTION:
+			_start_low_medium_punch()
+	if low_light_punch_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING, State.CROUCHING, State.STANDING_UP]:
+		if input_buffer.consume_attack(&"light_punch") != FighterInputBuffer.NO_DIRECTION:
+			_start_low_light_punch()
 	if strong_punch_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and not input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING]:
 		if input_buffer.consume_attack(&"heavy_punch") != FighterInputBuffer.NO_DIRECTION:
 			_start_strong_punch()
@@ -273,6 +349,10 @@ func _physics_process(delta: float) -> void:
 
 
 func change_state(next_state: int, force_victory_exit := false) -> void:
+	if next_state != State.ATTACKING and is_instance_valid(_medium_kick_whoosh_audio):
+		_medium_kick_whoosh_audio.stop()
+	if next_state != State.ATTACKING and is_instance_valid(_light_kick_whoosh_audio):
+		_light_kick_whoosh_audio.stop()
 	if next_state != State.ATTACKING and is_instance_valid(_strong_punch_whoosh_audio):
 		_strong_punch_whoosh_audio.stop()
 	if next_state != State.ATTACKING and is_instance_valid(_medium_punch_whoosh_audio):
@@ -316,6 +396,228 @@ func _start_light_punch() -> void:
 	_light_punch_whoosh_audio.play()
 	animated_sprite.frame = 0
 	_update_light_punch_hitbox()
+
+
+func _start_low_light_punch() -> void:
+	var attack := character_data.get_attack(&"light_punch")
+	if attack == null or low_light_punch_sheet == null:
+		return
+	_light_punch_hit_sound_played = false
+	var variant := AttackVariantData.new()
+	variant.variant_id = &"roster_crouched"
+	variant.animation_name = &"crouched_light_punch"
+	variant.animation_fps = 24.0
+	variant.startup_frames = low_light_punch_active_start_frame - 1
+	variant.active_frames = low_light_punch_active_end_frame - low_light_punch_active_start_frame + 1
+	variant.recovery_frames = low_light_punch_frame_count - low_light_punch_active_end_frame
+	variant.active_animation_frame = low_light_punch_active_start_frame - 1
+	variant.hit_height = AttackData.HitHeight.LOW
+	variant.reaction_policy = AttackVariantData.ReactionPolicy.TARGET_STANCE
+	variant.hitbox_size = Vector2(160.0, 50.0)
+	variant.hitbox_position = Vector2(85.0, -170.0)
+	var punch_shape := RectangleShape2D.new()
+	punch_shape.size = variant.hitbox_size
+	combat.hitbox_shape.shape = punch_shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	combat.hitbox_shape.position = variant.hitbox_position
+	combat.hitbox_shape.rotation = 0.0
+	combat.begin_animation_attack(&"crouched_light_punch", attack, variant)
+	combat.is_crouched_light_punch = true
+	animated_sprite.frame = 0
+	update_collision_profile()
+	_light_punch_whoosh_audio.play()
+	_update_low_light_punch_hitbox()
+
+
+func _update_low_light_punch_hitbox() -> void:
+	if current_state != State.ATTACKING or not combat.is_attacking or animated_sprite.animation != &"crouched_light_punch":
+		return
+	if animated_sprite.frame >= low_light_punch_active_start_frame - 1 and animated_sprite.frame <= low_light_punch_active_end_frame - 1:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap_immediately()
+		combat.resolve_attack_overlap(combat.action_generation)
+	else:
+		combat.disable_hitbox()
+
+
+func _start_low_medium_kick() -> void:
+	var attack := character_data.get_attack(&"medium_kick")
+	if attack == null or low_medium_kick_sheet == null:
+		return
+	_medium_kick_hit_sound_played = false
+	var variant := AttackVariantData.new()
+	variant.variant_id = &"roster_crouched_medium_kick"
+	variant.animation_name = &"crouched_medium_kick"
+	variant.animation_fps = low_medium_kick_fps
+	variant.startup_frames = low_medium_kick_active_start_frame - 1
+	variant.active_frames = low_medium_kick_active_end_frame - low_medium_kick_active_start_frame + 1
+	variant.recovery_frames = low_medium_kick_frame_count - low_medium_kick_active_end_frame + (low_medium_kick_frame_count - 1 if low_medium_kick_reverse else 0)
+	variant.active_animation_frame = low_medium_kick_active_start_frame - 1
+	variant.hit_height = AttackData.HitHeight.MID
+	variant.reaction_policy = AttackVariantData.ReactionPolicy.TARGET_STANCE_MEDIUM
+	variant.hitbox_size = Vector2(140.0, 45.0)
+	variant.hitbox_position = Vector2(115.0, -80.0)
+	var kick_shape := RectangleShape2D.new()
+	kick_shape.size = variant.hitbox_size
+	combat.hitbox_shape.shape = kick_shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	combat.hitbox_shape.position = variant.hitbox_position
+	combat.hitbox_shape.rotation = 0.0
+	combat.begin_animation_attack(&"crouched_medium_kick", attack, variant)
+	combat.is_crouched_medium_kick = true
+	animated_sprite.frame = 0
+	update_collision_profile()
+	_medium_kick_whoosh_audio.play()
+	_update_low_medium_kick_hitbox()
+
+
+func _update_low_medium_kick_hitbox() -> void:
+	if current_state != State.ATTACKING or not combat.is_attacking or animated_sprite.animation != &"crouched_medium_kick":
+		return
+	if animated_sprite.frame >= low_medium_kick_active_start_frame - 1 and animated_sprite.frame <= low_medium_kick_active_end_frame - 1:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap_immediately()
+		combat.resolve_attack_overlap(combat.action_generation)
+	else:
+		combat.disable_hitbox()
+
+
+func _on_medium_kick_connected(attack_name: StringName, result: int) -> void:
+	if attack_name == &"medium_kick" and result in [FighterCombat.DamageResult.HIT, FighterCombat.DamageResult.KNOCKOUT] and not _medium_kick_hit_sound_played:
+		_medium_kick_hit_sound_played = true
+		_medium_kick_hit_audio.play()
+
+
+func _start_low_light_kick() -> void:
+	var attack := character_data.get_attack(&"light_kick")
+	if attack == null or low_light_kick_sheet == null:
+		return
+	_light_kick_hit_sound_played = false
+	var variant := AttackVariantData.new()
+	variant.variant_id = &"roster_crouched_light_kick"
+	variant.animation_name = &"crouched_light_kick"
+	variant.animation_fps = low_light_kick_fps
+	variant.startup_frames = low_light_kick_active_start_frame - 1
+	variant.active_frames = low_light_kick_active_end_frame - low_light_kick_active_start_frame + 1
+	variant.recovery_frames = low_light_kick_frame_count - low_light_kick_active_end_frame
+	variant.active_animation_frame = low_light_kick_active_start_frame - 1
+	variant.hit_height = AttackData.HitHeight.LOW
+	variant.reaction_policy = AttackVariantData.ReactionPolicy.CROUCHED_LOW
+	variant.hitbox_size = Vector2(210.0, 45.0)
+	variant.hitbox_position = Vector2(110.0, -80.0)
+	var kick_shape := RectangleShape2D.new()
+	kick_shape.size = variant.hitbox_size
+	combat.hitbox_shape.shape = kick_shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	combat.hitbox_shape.position = variant.hitbox_position
+	combat.hitbox_shape.rotation = 0.0
+	combat.begin_animation_attack(&"crouched_light_kick", attack, variant)
+	combat.is_crouched_light_kick = true
+	animated_sprite.frame = 0
+	update_collision_profile()
+	_light_kick_whoosh_audio.play()
+	_update_low_light_kick_hitbox()
+
+
+func _update_low_light_kick_hitbox() -> void:
+	if current_state != State.ATTACKING or not combat.is_attacking or animated_sprite.animation != &"crouched_light_kick":
+		return
+	if animated_sprite.frame >= low_light_kick_active_start_frame - 1 and animated_sprite.frame <= low_light_kick_active_end_frame - 1:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap_immediately()
+		combat.resolve_attack_overlap(combat.action_generation)
+	else:
+		combat.disable_hitbox()
+
+
+func _on_light_kick_connected(attack_name: StringName, result: int) -> void:
+	if attack_name == &"light_kick" and result in [FighterCombat.DamageResult.HIT, FighterCombat.DamageResult.KNOCKOUT] and not _light_kick_hit_sound_played:
+		_light_kick_hit_sound_played = true
+		_light_kick_hit_audio.play()
+
+
+func _start_low_medium_punch() -> void:
+	var attack := character_data.get_attack(&"medium_punch")
+	if attack == null or low_medium_punch_sheet == null:
+		return
+	_medium_punch_hit_sound_played = false
+	var variant := AttackVariantData.new()
+	variant.variant_id = &"roster_crouched"
+	variant.animation_name = &"crouched_medium_punch"
+	variant.animation_fps = low_medium_punch_fps
+	variant.startup_frames = low_medium_punch_active_start_frame - 1
+	variant.active_frames = low_medium_punch_active_end_frame - low_medium_punch_active_start_frame + 1
+	variant.recovery_frames = low_medium_punch_frame_count - low_medium_punch_active_end_frame
+	variant.active_animation_frame = low_medium_punch_active_start_frame - 1
+	variant.hit_height = AttackData.HitHeight.LOW
+	variant.reaction_policy = AttackVariantData.ReactionPolicy.TARGET_STANCE
+	variant.hitbox_size = Vector2(160.0, 50.0)
+	variant.hitbox_position = Vector2(85.0, -170.0)
+	var punch_shape := RectangleShape2D.new()
+	punch_shape.size = variant.hitbox_size
+	combat.hitbox_shape.shape = punch_shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	combat.hitbox_shape.position = variant.hitbox_position
+	combat.hitbox_shape.rotation = 0.0
+	combat.begin_animation_attack(&"crouched_medium_punch", attack, variant)
+	combat.is_crouched_medium_punch = true
+	animated_sprite.frame = 0
+	update_collision_profile()
+	_medium_punch_whoosh_audio.play()
+	_update_low_medium_punch_hitbox()
+
+
+func _update_low_medium_punch_hitbox() -> void:
+	if current_state != State.ATTACKING or not combat.is_attacking or animated_sprite.animation != &"crouched_medium_punch":
+		return
+	if animated_sprite.frame >= low_medium_punch_active_start_frame - 1 and animated_sprite.frame <= low_medium_punch_active_end_frame - 1:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap_immediately()
+		combat.resolve_attack_overlap(combat.action_generation)
+	else:
+		combat.disable_hitbox()
+
+
+func _start_low_strong_punch() -> void:
+	var attack := character_data.get_attack(&"heavy_punch")
+	if attack == null or low_strong_punch_sheet == null:
+		return
+	_strong_punch_hit_sound_played = false
+	var variant := AttackVariantData.new()
+	variant.variant_id = &"roster_crouched_strong"
+	variant.animation_name = &"crouched_strong_punch"
+	variant.animation_fps = low_strong_punch_fps
+	variant.startup_frames = low_strong_punch_active_start_frame - 1
+	variant.active_frames = low_strong_punch_active_end_frame - low_strong_punch_active_start_frame + 1
+	variant.recovery_frames = low_strong_punch_frame_count - low_strong_punch_active_end_frame
+	variant.active_animation_frame = low_strong_punch_active_start_frame - 1
+	variant.hit_height = AttackData.HitHeight.HIGH
+	variant.reaction_policy = AttackVariantData.ReactionPolicy.TARGET_STANCE
+	variant.hitbox_size = Vector2(160.0, 150.0)
+	variant.hitbox_position = Vector2(85.0, -195.0)
+	var punch_shape := RectangleShape2D.new()
+	punch_shape.size = variant.hitbox_size
+	combat.hitbox_shape.shape = punch_shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	combat.hitbox_shape.position = variant.hitbox_position
+	combat.hitbox_shape.rotation = 0.0
+	combat.begin_animation_attack(&"crouched_strong_punch", attack, variant)
+	combat.is_crouched_heavy_punch = true
+	animated_sprite.frame = 0
+	update_collision_profile()
+	_strong_punch_whoosh_audio.play()
+	_update_low_strong_punch_hitbox()
+
+
+func _update_low_strong_punch_hitbox() -> void:
+	if current_state != State.ATTACKING or not combat.is_attacking or animated_sprite.animation != &"crouched_strong_punch":
+		return
+	if animated_sprite.frame >= low_strong_punch_active_start_frame - 1 and animated_sprite.frame <= low_strong_punch_active_end_frame - 1:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap_immediately()
+		combat.resolve_attack_overlap(combat.action_generation)
+	else:
+		combat.disable_hitbox()
 
 
 func _start_medium_punch() -> void:
@@ -464,6 +766,12 @@ func _process_back_jump(delta: float) -> void:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	_medium_kick_hit_sound_played = false
+	if is_instance_valid(_medium_kick_hit_audio):
+		_medium_kick_hit_audio.stop()
+	_light_kick_hit_sound_played = false
+	if is_instance_valid(_light_kick_hit_audio):
+		_light_kick_hit_audio.stop()
 	_back_jump_active = false
 	_back_jump_moving = false
 	_back_jump_elapsed = 0.0
@@ -522,6 +830,34 @@ func get_sweep_grounded_hold_duration() -> float:
 
 
 func _on_animation_finished() -> void:
+	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_medium_kick":
+		combat.disable_hitbox()
+		if low_medium_kick_reverse:
+			animated_sprite.play(&"crouched_medium_kick_recovery")
+		else:
+			combat.finish_animation_attack(State.CROUCHING)
+			return_to_crouch_pose()
+		return
+	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_medium_kick_recovery":
+		combat.finish_animation_attack(State.CROUCHING)
+		return_to_crouch_pose()
+		return
+	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_light_kick":
+		combat.finish_animation_attack(State.CROUCHING)
+		return_to_crouch_pose()
+		return
+	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_strong_punch":
+		combat.finish_animation_attack(State.CROUCHING)
+		return_to_crouch_pose()
+		return
+	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_medium_punch":
+		combat.finish_animation_attack(State.CROUCHING)
+		return_to_crouch_pose()
+		return
+	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_light_punch":
+		combat.finish_animation_attack(State.CROUCHING)
+		return_to_crouch_pose()
+		return
 	if current_state == State.ATTACKING and animated_sprite.animation == &"strong_punch":
 		combat.finish_animation_attack()
 		return
@@ -597,6 +933,18 @@ func update_sprite_scale() -> void:
 func _configure_animations() -> void:
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
+	if low_strong_punch_sheet != null:
+		_add_sheet_animation(frames, &"crouched_strong_punch", low_strong_punch_sheet, low_strong_punch_frame_count, low_strong_punch_columns, Vector2(512.0, 512.0), low_strong_punch_fps, false, 0, false)
+	if low_medium_punch_sheet != null:
+		_add_sheet_animation(frames, &"crouched_medium_punch", low_medium_punch_sheet, low_medium_punch_frame_count, low_medium_punch_columns, Vector2(512.0, 512.0), low_medium_punch_fps, false, 0, false)
+	if low_medium_kick_sheet != null:
+		_add_sheet_animation(frames, &"crouched_medium_kick", low_medium_kick_sheet, low_medium_kick_frame_count, low_medium_kick_columns, Vector2(512.0, 512.0), low_medium_kick_fps, false, 0, false)
+		if low_medium_kick_reverse:
+			_add_sheet_animation(frames, &"crouched_medium_kick_recovery", low_medium_kick_sheet, low_medium_kick_frame_count - 1, low_medium_kick_columns, Vector2(512.0, 512.0), low_medium_kick_fps, true, 0, false)
+	if low_light_kick_sheet != null:
+		_add_sheet_animation(frames, &"crouched_light_kick", low_light_kick_sheet, low_light_kick_frame_count, low_light_kick_columns, Vector2(512.0, 512.0), low_light_kick_fps, false, 0, false)
+	if low_light_punch_sheet != null:
+		_add_sheet_animation(frames, &"crouched_light_punch", low_light_punch_sheet, low_light_punch_frame_count, low_light_punch_columns, Vector2(512.0, 512.0), 24.0, false, 0, false)
 	if strong_punch_sheet != null:
 		_add_sheet_animation(frames, &"strong_punch", strong_punch_sheet, strong_punch_frame_count, strong_punch_columns, Vector2(512.0, 512.0), strong_punch_fps, false, 0, false)
 	if medium_punch_sheet != null:

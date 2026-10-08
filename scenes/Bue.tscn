@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -32,6 +32,16 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/Bue-medium_punch.png" id="medium_punch_sheet"]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/Bue-strong_punch.png" id="strong_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/light_punch_low.png" id="low_light_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/medium_punch_low.png" id="low_medium_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/strong_punch_low.png" id="low_strong_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/light_kick_low.png" id="low_light_kick_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/medium_kick_low.png" id="low_medium_kick_sheet"]
 
 [node name="Bue" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
@@ -87,3 +97,38 @@ strong_punch_columns = 7
 strong_punch_fps = 24.0
 strong_punch_active_start_frame = 15
 strong_punch_active_end_frame = 17
+
+low_light_punch_sheet = ExtResource("low_light_punch_sheet")
+low_light_punch_frame_count = 7
+low_light_punch_columns = 5
+low_light_punch_active_start_frame = 3
+low_light_punch_active_end_frame = 4
+
+low_medium_punch_sheet = ExtResource("low_medium_punch_sheet")
+low_medium_punch_frame_count = 20
+low_medium_punch_columns = 7
+low_medium_punch_fps = 60.0
+low_medium_punch_active_start_frame = 12
+low_medium_punch_active_end_frame = 14
+
+low_strong_punch_sheet = ExtResource("low_strong_punch_sheet")
+low_strong_punch_frame_count = 18
+low_strong_punch_columns = 7
+low_strong_punch_fps = 60.0
+low_strong_punch_active_start_frame = 8
+low_strong_punch_active_end_frame = 10
+
+low_light_kick_sheet = ExtResource("low_light_kick_sheet")
+low_light_kick_frame_count = 21
+low_light_kick_columns = 7
+low_light_kick_fps = 48.0
+low_light_kick_active_start_frame = 12
+low_light_kick_active_end_frame = 12
+
+low_medium_kick_sheet = ExtResource("low_medium_kick_sheet")
+low_medium_kick_frame_count = 17
+low_medium_kick_columns = 7
+low_medium_kick_fps = 48.0
+low_medium_kick_reverse = true
+low_medium_kick_active_start_frame = 16
+low_medium_kick_active_end_frame = 17

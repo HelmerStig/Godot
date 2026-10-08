@@ -21,6 +21,11 @@ const SUITES := {
 		"res://tests/cases/roster_block_medium.gd",
 	],
 	"arena": [
+		"res://tests/cases/roster_low_medium_kick.gd",
+		"res://tests/cases/roster_low_light_kick.gd",
+		"res://tests/cases/roster_low_strong_punch.gd",
+		"res://tests/cases/roster_low_medium_punch.gd",
+		"res://tests/cases/roster_low_light_punch.gd",
 		"res://tests/cases/roster_strong_punch.gd",
 		"res://tests/cases/roster_medium_punch.gd",
 		"res://tests/cases/roster_light_punch.gd",

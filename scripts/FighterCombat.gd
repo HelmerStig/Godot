@@ -749,6 +749,18 @@ func get_hit_reaction_start_frame(attack: AttackData) -> int:
 	return attack.hit_reaction_start_frame
 
 
+func uses_target_stance_reactions() -> bool:
+	return current_variant != null and current_variant.reaction_policy == AttackVariantData.ReactionPolicy.TARGET_STANCE
+
+
+func uses_crouched_low_reactions() -> bool:
+	return current_variant != null and current_variant.reaction_policy == AttackVariantData.ReactionPolicy.CROUCHED_LOW
+
+
+func uses_target_stance_medium_reactions() -> bool:
+	return current_variant != null and current_variant.reaction_policy == AttackVariantData.ReactionPolicy.TARGET_STANCE_MEDIUM
+
+
 func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 	if current_variant != null:
 		return current_variant.hit_height
@@ -820,6 +832,10 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		return
 	hit_targets.append(target)
 	var effective_hit_height := get_effective_hit_height(current_attack)
+	if uses_target_stance_reactions() or uses_target_stance_medium_reactions():
+		var target_is_crouched := target.get_crouch_progress() >= 0.5 or target.is_holding_low_guard()
+		var standing_height := AttackData.HitHeight.MID if uses_target_stance_medium_reactions() else AttackData.HitHeight.HIGH
+		effective_hit_height = AttackData.HitHeight.LOW if target_is_crouched else standing_height
 	if (
 		current_attack.attack_id == &"light_punch"
 		and not is_crouched_light_punch
@@ -850,7 +866,7 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		)
 		effective_reaction_frame = 4 if medium_kick_followup_done else 0
 		effective_knockdown = false
-	var should_launch := current_attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch
+	var should_launch := current_attack.attack_id == &"heavy_punch" and is_crouched_heavy_punch and not uses_target_stance_reactions()
 	# take_damage può terminare il round in modo sincrono. In quel caso il fighter
 	# vincitore cancella l'azione e current_attack viene azzerato prima del ritorno.
 	var connected_attack_id := current_attack.attack_id

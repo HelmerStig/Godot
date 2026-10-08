@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -33,10 +33,26 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/Peiro-strong_punch.png" id="strong_punch_sheet"]
 
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/light_punch_low.png" id="low_light_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/medium_punch_low.png" id="low_medium_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/strong_punch_low.png" id="low_strong_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/light_kick_low.png" id="low_light_kick_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/peirolo/medium_kick_low.png" id="low_medium_kick_sheet"]
+
 [node name="Peirolo" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
 script = ExtResource("2_script")
 fighter_id = &"peiro"
+low_light_kick_sheet = ExtResource("low_light_kick_sheet")
+low_light_kick_frame_count = 14
+low_light_kick_columns = 7
+low_light_kick_fps = 32.0
+low_light_kick_active_start_frame = 7
+low_light_kick_active_end_frame = 7
 fighter_display_name = "Peirò"
 idle_sheet = ExtResource("3_idle")
 idle_frame_count = 63
@@ -88,3 +104,31 @@ strong_punch_columns = 7
 strong_punch_fps = 24.0
 strong_punch_active_start_frame = 11
 strong_punch_active_end_frame = 13
+
+low_light_punch_sheet = ExtResource("low_light_punch_sheet")
+low_light_punch_frame_count = 11
+low_light_punch_columns = 5
+low_light_punch_active_start_frame = 6
+low_light_punch_active_end_frame = 7
+
+low_medium_punch_sheet = ExtResource("low_medium_punch_sheet")
+low_medium_punch_frame_count = 23
+low_medium_punch_columns = 7
+low_medium_punch_fps = 60.0
+low_medium_punch_active_start_frame = 17
+low_medium_punch_active_end_frame = 17
+
+low_strong_punch_sheet = ExtResource("low_strong_punch_sheet")
+low_strong_punch_frame_count = 23
+low_strong_punch_columns = 7
+low_strong_punch_fps = 42.0
+low_strong_punch_active_start_frame = 17
+low_strong_punch_active_end_frame = 17
+
+low_medium_kick_sheet = ExtResource("low_medium_kick_sheet")
+low_medium_kick_frame_count = 15
+low_medium_kick_columns = 7
+low_medium_kick_fps = 48.0
+low_medium_kick_reverse = true
+low_medium_kick_active_start_frame = 15
+low_medium_kick_active_end_frame = 15
