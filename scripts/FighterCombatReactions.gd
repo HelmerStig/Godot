@@ -71,7 +71,7 @@ static func block_reaction(
 	combat.cancel_current_action()
 	var block_generation := combat.action_generation
 	var animation_duration := combat.fighter.start_block_reaction(hit_height, started_crouched)
-	if is_instance_valid(attacker) and attacker.combat != null and (attacker.combat.uses_target_stance_reactions() or attacker.combat.uses_crouched_low_reactions()):
+	if is_instance_valid(attacker) and attacker.combat != null and attacker.combat.uses_target_stance_reactions():
 		var animation: StringName = &"block_low" if hit_height == AttackData.HitHeight.LOW else &"block_high"
 		if combat.fighter.animated_sprite.sprite_frames.has_animation(animation):
 			combat.fighter.animated_sprite.play(animation)

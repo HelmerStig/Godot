@@ -39,7 +39,7 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/strong_punch_low.png" id="low_strong_punch_sheet"]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/light_kick_low.png" id="low_light_kick_sheet"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/light_kick_low_v2.png" id="low_light_kick_sheet"]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/medium_kick_low.png" id="low_medium_kick_sheet"]
 
@@ -118,11 +118,11 @@ low_strong_punch_active_start_frame = 13
 low_strong_punch_active_end_frame = 15
 
 low_light_kick_sheet = ExtResource("low_light_kick_sheet")
-low_light_kick_frame_count = 14
+low_light_kick_frame_count = 28
 low_light_kick_columns = 7
-low_light_kick_fps = 32.0
-low_light_kick_active_start_frame = 8
-low_light_kick_active_end_frame = 8
+low_light_kick_fps = 48.0
+low_light_kick_active_start_frame = 10
+low_light_kick_active_end_frame = 12
 
 low_medium_kick_sheet = ExtResource("low_medium_kick_sheet")
 low_medium_kick_frame_count = 11
@@ -131,3 +131,5 @@ low_medium_kick_fps = 48.0
 low_medium_kick_reverse = true
 low_medium_kick_active_start_frame = 11
 low_medium_kick_active_end_frame = 11
+
+low_light_kick_reverse = false

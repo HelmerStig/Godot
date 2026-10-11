@@ -59,27 +59,27 @@ Recovery 34 fotogrammi
 hurt_in_jump 33 fotogrammi a 24 fps
 
 
-ho creato "Medium kick low" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto.
+ho ricreato "Light kick low" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto.
 Usa sempre i suoni di arianna per hit e wosh del calcio medio.
-va associata al calcio medio da abbassato, eseguito per poi tornare in crouched stance.
+va associata al calcio leggero da abbassato, eseguito per poi tornare in crouched stance.
 Genera nell'avversario hurt_crouched se colpito quando è in crouched stance e block_crouched se parato in crouched stance.
-Genera nell'avversario hurt_medium se colpito quando è in standing stance e block_medium se parato in standing stance.
+Genera nell'avversario hurt_low se colpito quando è in standing stance il colpo è parabile solo da abbassato, in standing stance non può essere parato.
 
 Oscar:
-	- 11 frame 48fps da eseguire avanti e poi indietro
-	- hitbox a frame 11
+	- 28 frame 48fps
+	- hitbox a frame 10/11/12  da eseguire solo avanti
 Mileto:
-	- 35 frame a 48fps da eseguire solo avanti
-	- hitbox a frame 20/21/22
+	- 28 frame a 48fps da eseguire solo avanti
+	- hitbox a frame 16/17/18
 Torpe:
-	- 29 frame a 48fps da eseguire solo avanti
-	- hitbox a frame 18/19
+	- 28 frame a 48fps da eseguire solo avanti
+	- hitbox a frame 10/11/12
 Peirolo:
-	- 15 frame a 48fps da eseguire avanti e poi indietro
-	- hitbox a frame 15
+	- 28 frame a 48fps da eseguire avanti e poi indietro
+	- hitbox a frame 17/18/19
 Bue:
-	- 17frame a 48fps da eseguire avanti e poi indietro
-	- hitbox a frame 16/17
+	- 28frame a 48fps da eseguire solo avanti
+	- hitbox a frame 10/11/12
 
 Passiamo al light punch da abbassato
 utilizzare il suono del pugno light di arianna, il woosh.

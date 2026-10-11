@@ -792,6 +792,10 @@ func can_block_attack(attacker: Fighter, hit_height: AttackData.HitHeight) -> bo
 		and fighter.is_attack_in_front(attacker)
 		and fighter.is_on_floor()
 		and (hit_height != AttackData.HitHeight.LOW or fighter.is_holding_low_guard())
+		and (
+			not (is_instance_valid(attacker) and attacker.combat != null and attacker.combat.uses_crouched_low_reactions())
+			or fighter.get_crouch_progress() >= 0.5
+		)
 	)
 
 

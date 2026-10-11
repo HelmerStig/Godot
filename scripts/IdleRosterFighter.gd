@@ -55,6 +55,7 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var low_light_kick_frame_count := 14
 @export var low_light_kick_columns := 7
 @export var low_light_kick_fps := 32.0
+@export var low_light_kick_reverse := false
 @export var low_light_kick_active_start_frame := 7
 @export var low_light_kick_active_end_frame := 7
 
@@ -191,11 +192,11 @@ func _ready() -> void:
 	animated_sprite.frame_changed.connect(_update_low_medium_punch_hitbox)
 	animated_sprite.frame_changed.connect(_update_low_strong_punch_hitbox)
 	_light_kick_whoosh_audio = AudioStreamPlayer.new()
-	_light_kick_whoosh_audio.stream = preload("res://sound-libraries/kick_short_whoosh_12.wav")
+	_light_kick_whoosh_audio.stream = preload("res://sound-libraries/kick_short_whoosh_23.wav")
 	_light_kick_whoosh_audio.volume_db = -4.0
 	add_child(_light_kick_whoosh_audio)
 	_light_kick_hit_audio = AudioStreamPlayer.new()
-	_light_kick_hit_audio.stream = preload("res://sound-libraries/body_hit_small_11.wav")
+	_light_kick_hit_audio.stream = preload("res://sound-libraries/body_hit_large_44.wav")
 	_light_kick_hit_audio.volume_db = -7.0
 	add_child(_light_kick_hit_audio)
 	combat.attack_connected.connect(_on_light_kick_connected)
@@ -499,7 +500,7 @@ func _start_low_light_kick() -> void:
 	variant.animation_fps = low_light_kick_fps
 	variant.startup_frames = low_light_kick_active_start_frame - 1
 	variant.active_frames = low_light_kick_active_end_frame - low_light_kick_active_start_frame + 1
-	variant.recovery_frames = low_light_kick_frame_count - low_light_kick_active_end_frame
+	variant.recovery_frames = low_light_kick_frame_count - low_light_kick_active_end_frame + (low_light_kick_frame_count - 1 if low_light_kick_reverse else 0)
 	variant.active_animation_frame = low_light_kick_active_start_frame - 1
 	variant.hit_height = AttackData.HitHeight.LOW
 	variant.reaction_policy = AttackVariantData.ReactionPolicy.CROUCHED_LOW
@@ -843,6 +844,14 @@ func _on_animation_finished() -> void:
 		return_to_crouch_pose()
 		return
 	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_light_kick":
+		combat.disable_hitbox()
+		if low_light_kick_reverse:
+			animated_sprite.play(&"crouched_light_kick_recovery")
+		else:
+			combat.finish_animation_attack(State.CROUCHING)
+			return_to_crouch_pose()
+		return
+	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_light_kick_recovery":
 		combat.finish_animation_attack(State.CROUCHING)
 		return_to_crouch_pose()
 		return
@@ -943,6 +952,8 @@ func _configure_animations() -> void:
 			_add_sheet_animation(frames, &"crouched_medium_kick_recovery", low_medium_kick_sheet, low_medium_kick_frame_count - 1, low_medium_kick_columns, Vector2(512.0, 512.0), low_medium_kick_fps, true, 0, false)
 	if low_light_kick_sheet != null:
 		_add_sheet_animation(frames, &"crouched_light_kick", low_light_kick_sheet, low_light_kick_frame_count, low_light_kick_columns, Vector2(512.0, 512.0), low_light_kick_fps, false, 0, false)
+		if low_light_kick_reverse:
+			_add_sheet_animation(frames, &"crouched_light_kick_recovery", low_light_kick_sheet, low_light_kick_frame_count - 1, low_light_kick_columns, Vector2(512.0, 512.0), low_light_kick_fps, true, 0, false)
 	if low_light_punch_sheet != null:
 		_add_sheet_animation(frames, &"crouched_light_punch", low_light_punch_sheet, low_light_punch_frame_count, low_light_punch_columns, Vector2(512.0, 512.0), 24.0, false, 0, false)
 	if strong_punch_sheet != null:
