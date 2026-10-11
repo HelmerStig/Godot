@@ -81,9 +81,44 @@ Bue:
 	- 34frame a 48fps da eseguire solo avanti
 	- hitbox a frame 14/15/16
 
-Passiamo al light punch da abbassato
-utilizzare il suono del pugno light di arianna, il woosh.
-Se il colpo va a segno, riproduci il suono del pugno light che colpisce di arianna all'attivazione della hitbox.
+Medium kick (light_kick su autosprite):
+Oscare:
+	- 33 frames a 48fps da eseguire solo avanti
+	- hitbox a frame 18/19/20
+Mileto:
+	- 38 frames a 48fps da eseguire solo avanti
+	- hitbox a frame 18/19/20
+
+Passiamo al light kick da posizione eretta.
+Usa sempre i suoni di arianna per hit e wosh del calcio leggero.
+Li ho creati su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto.
+
+
+Light kick (si chiama: "light kick rework" su autosprite):
+	
+	Genera nell'avversario hurt_low, se l'avversario è colpito in standing stance, se colpito in crouched stance genera hurt_crouched.
+
+	Oscare:
+	- 25 frames a 48fps da eseguire solo avanti
+	- hitbox a frame 10/11/12
+	
+	Mileto:
+	- 21 frames a 48fps da eseguire solo avanti
+	- hitbox a frame 9/10/11
+
+Light kick  (si chiama: "light kick" su autosprite):
+Torpe:
+	- 14 frames a 24fps da eseguire solo avanti
+	- hitbox a frame 8/9/10
+	- Genera nell'avversario hurt_medium, se l'avversario è colpito in standing stance, se colpito in crouched stance genera hurt_crouched.
+Peirolo:
+	- 23 frames a 40fps da eseguire solo avanti
+	- hitbox a frame 11/12/13
+	- Genera nell'avversario hurt_low, se l'avversario è colpito in standing stance, se colpito in crouched stance genera hurt_crouched.
+Bue:
+	- 26 frames a 48fps da eseguire solo avanti
+	- hitbox a frame 10/11/12
+	- Genera nell'avversario hurt_low, se l'avversario è colpito in standing stance, se colpito in crouched stance genera hurt_crouched.
 
 Mi son odimenticato:
 anche medium punch low  e light punch low Generano nell'avversario hurt_low se colpito o block_low se parato in posizione abbassata, generano nell'avversario hurt_high se colpito o block_high se parato in posizione eretta.

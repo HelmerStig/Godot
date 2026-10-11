@@ -45,6 +45,8 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/strong_kick_low.png" id="low_strong_kick_sheet"]
 
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/light_kick.png" id="light_kick_sheet"]
+
 [node name="Mileto" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
 script = ExtResource("2_script")
@@ -142,3 +144,11 @@ low_strong_kick_columns = 7
 low_strong_kick_fps = 48.0
 low_strong_kick_active_start_frame = 14
 low_strong_kick_active_end_frame = 16
+
+light_kick_sheet = ExtResource("light_kick_sheet")
+light_kick_frame_count = 21
+light_kick_columns = 7
+light_kick_fps = 48.0
+light_kick_active_start_frame = 9
+light_kick_active_end_frame = 11
+light_kick_hit_height = 2
