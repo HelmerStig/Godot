@@ -17,11 +17,11 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			fighters.append(node)
 	for fighter in fighters:
 		var contracts := {
-			&"oscare": [11, 48.0, 11, 11, true],
+			&"oscare": [25, 48.0, 12, 14, false],
 			&"mileto": [35, 48.0, 20, 22, false],
-			&"torpe": [29, 48.0, 18, 19, false],
-			&"peiro": [15, 48.0, 15, 15, true],
-			&"bue": [17, 48.0, 16, 17, true],
+			&"torpe": [32, 48.0, 19, 21, false],
+			&"peiro": [33, 48.0, 14, 16, false],
+			&"bue": [29, 48.0, 16, 18, false],
 		}
 		var contract: Array = contracts[fighter.fighter_id]
 		var count: int = contract[0]
@@ -34,7 +34,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		for index in count:
 			var texture := frames.get_frame_texture(&"crouched_medium_kick", index) as AtlasTexture
 			exact = exact and texture.atlas == fighter.low_medium_kick_sheet and texture.region == Rect2(Vector2(index % 7, index / 7) * 512.0, Vector2(512.0, 512.0))
-		expect.call(exact and fighter.low_medium_kick_sheet.resource_path.ends_with("/medium_kick_low.png"), fighter.name + ": foglio, slicing e FPS del calcio basso")
+		expect.call(exact and fighter.low_medium_kick_sheet.resource_path.ends_with("/medium_kick_low.png" if fighter.fighter_id == &"mileto" else "/medium_kick_low_v2.png"), fighter.name + ": foglio, slicing e FPS del calcio basso")
 		fighter.opponent = null
 		fighter.position.x = -10000.0
 		for facing in [true, false]:

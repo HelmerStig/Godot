@@ -41,7 +41,9 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/light_kick_low_v2.png" id="low_light_kick_sheet"]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/medium_kick_low.png" id="low_medium_kick_sheet"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/medium_kick_low_v2.png" id="low_medium_kick_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/strong_kick_low.png" id="low_strong_kick_sheet"]
 
 [node name="Torpe" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
@@ -126,11 +128,18 @@ low_light_kick_active_start_frame = 10
 low_light_kick_active_end_frame = 12
 
 low_medium_kick_sheet = ExtResource("low_medium_kick_sheet")
-low_medium_kick_frame_count = 29
+low_medium_kick_frame_count = 32
 low_medium_kick_columns = 7
 low_medium_kick_fps = 48.0
 low_medium_kick_reverse = false
-low_medium_kick_active_start_frame = 18
-low_medium_kick_active_end_frame = 19
+low_medium_kick_active_start_frame = 19
+low_medium_kick_active_end_frame = 21
 
 low_light_kick_reverse = false
+
+low_strong_kick_sheet = ExtResource("low_strong_kick_sheet")
+low_strong_kick_frame_count = 38
+low_strong_kick_columns = 7
+low_strong_kick_fps = 48.0
+low_strong_kick_active_start_frame = 18
+low_strong_kick_active_end_frame = 20

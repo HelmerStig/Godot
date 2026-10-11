@@ -47,7 +47,16 @@ static func take_damage(
 	var crouched_low_hit := (
 		not was_airborne
 		and hit_height == AttackData.HitHeight.LOW
-		and (combat.fighter.current_state == Fighter.State.CROUCHING or combat.fighter.hurt_started_crouched)
+		and (
+			combat.fighter.current_state == Fighter.State.CROUCHING
+			or combat.fighter.hurt_started_crouched
+			or (
+				is_instance_valid(attacker)
+				and attacker.combat != null
+				and attacker.combat.uses_crouched_low_reactions()
+				and combat.fighter.get_crouch_progress() >= 0.5
+			)
+		)
 		and combat.fighter.animated_sprite.sprite_frames.has_animation(&"hurt_crouched")
 	)
 	if was_airborne:

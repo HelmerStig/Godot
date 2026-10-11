@@ -20,7 +20,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			&"oscare": [28, 48.0, 10, 12, false],
 			&"mileto": [28, 48.0, 16, 18, false],
 			&"torpe": [28, 48.0, 10, 12, false],
-			&"peiro": [28, 48.0, 17, 19, true],
+			&"peiro": [28, 48.0, 17, 19, false],
 			&"bue": [28, 48.0, 10, 12, false],
 		}
 		var contract: Array = contracts[fighter.fighter_id]

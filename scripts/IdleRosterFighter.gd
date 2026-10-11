@@ -51,6 +51,13 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var low_medium_kick_active_start_frame := 11
 @export var low_medium_kick_active_end_frame := 11
 
+@export var low_strong_kick_sheet: Texture2D
+@export var low_strong_kick_frame_count := 38
+@export var low_strong_kick_columns := 7
+@export var low_strong_kick_fps := 48.0
+@export var low_strong_kick_active_start_frame := 18
+@export var low_strong_kick_active_end_frame := 20
+
 @export var low_light_kick_sheet: Texture2D
 @export var low_light_kick_frame_count := 14
 @export var low_light_kick_columns := 7
@@ -142,6 +149,9 @@ var _light_punch_hit_audio: AudioStreamPlayer
 var _medium_kick_whoosh_audio: AudioStreamPlayer
 var _medium_kick_hit_audio: AudioStreamPlayer
 var _medium_kick_hit_sound_played := false
+var _strong_kick_whoosh_audio: AudioStreamPlayer
+var _strong_kick_hit_audio: AudioStreamPlayer
+var _strong_kick_hit_sound_played := false
 var _light_kick_whoosh_audio: AudioStreamPlayer
 var _light_kick_hit_audio: AudioStreamPlayer
 var _light_kick_hit_sound_played := false
@@ -191,6 +201,16 @@ func _ready() -> void:
 	animated_sprite.frame_changed.connect(_update_low_light_punch_hitbox)
 	animated_sprite.frame_changed.connect(_update_low_medium_punch_hitbox)
 	animated_sprite.frame_changed.connect(_update_low_strong_punch_hitbox)
+	_strong_kick_whoosh_audio = AudioStreamPlayer.new()
+	_strong_kick_whoosh_audio.stream = preload("res://sound-libraries/kick_long_whoosh_19.wav")
+	_strong_kick_whoosh_audio.volume_db = -4.0
+	add_child(_strong_kick_whoosh_audio)
+	_strong_kick_hit_audio = AudioStreamPlayer.new()
+	_strong_kick_hit_audio.stream = preload("res://sound-libraries/body_hit_large_76.wav")
+	_strong_kick_hit_audio.volume_db = -5.0
+	add_child(_strong_kick_hit_audio)
+	combat.attack_connected.connect(_on_strong_kick_connected)
+	animated_sprite.frame_changed.connect(_update_low_strong_kick_hitbox)
 	_light_kick_whoosh_audio = AudioStreamPlayer.new()
 	_light_kick_whoosh_audio.stream = preload("res://sound-libraries/kick_short_whoosh_23.wav")
 	_light_kick_whoosh_audio.volume_db = -4.0
@@ -225,6 +245,9 @@ func _physics_process(delta: float) -> void:
 	if low_medium_kick_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING, State.CROUCHING, State.STANDING_UP]:
 		if input_buffer.consume_attack(&"medium_kick") != FighterInputBuffer.NO_DIRECTION:
 			_start_low_medium_kick()
+	if low_strong_kick_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING, State.CROUCHING, State.STANDING_UP]:
+		if input_buffer.consume_attack(&"heavy_kick") != FighterInputBuffer.NO_DIRECTION:
+			_start_low_strong_kick()
 	if low_light_kick_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING, State.CROUCHING, State.STANDING_UP]:
 		if input_buffer.consume_attack(&"light_kick") != FighterInputBuffer.NO_DIRECTION:
 			_start_low_light_kick()
@@ -350,6 +373,8 @@ func _physics_process(delta: float) -> void:
 
 
 func change_state(next_state: int, force_victory_exit := false) -> void:
+	if next_state != State.ATTACKING and is_instance_valid(_strong_kick_whoosh_audio):
+		_strong_kick_whoosh_audio.stop()
 	if next_state != State.ATTACKING and is_instance_valid(_medium_kick_whoosh_audio):
 		_medium_kick_whoosh_audio.stop()
 	if next_state != State.ATTACKING and is_instance_valid(_light_kick_whoosh_audio):
@@ -487,6 +512,55 @@ func _on_medium_kick_connected(attack_name: StringName, result: int) -> void:
 	if attack_name == &"medium_kick" and result in [FighterCombat.DamageResult.HIT, FighterCombat.DamageResult.KNOCKOUT] and not _medium_kick_hit_sound_played:
 		_medium_kick_hit_sound_played = true
 		_medium_kick_hit_audio.play()
+
+
+func _start_low_strong_kick() -> void:
+	var attack := character_data.get_attack(&"heavy_kick")
+	if attack == null or low_strong_kick_sheet == null:
+		return
+	_strong_kick_hit_sound_played = false
+	var variant := AttackVariantData.new()
+	variant.variant_id = &"roster_crouched_strong_kick"
+	variant.animation_name = &"crouched_strong_kick"
+	variant.animation_fps = low_strong_kick_fps
+	variant.startup_frames = low_strong_kick_active_start_frame - 1
+	variant.active_frames = low_strong_kick_active_end_frame - low_strong_kick_active_start_frame + 1
+	variant.recovery_frames = low_strong_kick_frame_count - low_strong_kick_active_end_frame
+	variant.active_animation_frame = low_strong_kick_active_start_frame - 1
+	variant.hit_height = AttackData.HitHeight.LOW
+	variant.reaction_policy = AttackVariantData.ReactionPolicy.CROUCHED_LOW
+	variant.causes_knockdown = true
+	variant.hitbox_size = Vector2(250.0, 60.0)
+	variant.hitbox_position = Vector2(125.0, -65.0)
+	var kick_shape := RectangleShape2D.new()
+	kick_shape.size = variant.hitbox_size
+	combat.hitbox_shape.shape = kick_shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	combat.hitbox_shape.position = variant.hitbox_position
+	combat.hitbox_shape.rotation = 0.0
+	combat.begin_animation_attack(&"crouched_strong_kick", attack, variant)
+	combat.is_crouched_heavy_kick = true
+	animated_sprite.frame = 0
+	update_collision_profile()
+	_strong_kick_whoosh_audio.play()
+	_update_low_strong_kick_hitbox()
+
+
+func _update_low_strong_kick_hitbox() -> void:
+	if current_state != State.ATTACKING or not combat.is_attacking or animated_sprite.animation != &"crouched_strong_kick":
+		return
+	if animated_sprite.frame >= low_strong_kick_active_start_frame - 1 and animated_sprite.frame <= low_strong_kick_active_end_frame - 1:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap_immediately()
+		combat.resolve_attack_overlap(combat.action_generation)
+	else:
+		combat.disable_hitbox()
+
+
+func _on_strong_kick_connected(attack_name: StringName, result: int) -> void:
+	if attack_name == &"heavy_kick" and result in [FighterCombat.DamageResult.HIT, FighterCombat.DamageResult.KNOCKOUT] and not _strong_kick_hit_sound_played:
+		_strong_kick_hit_sound_played = true
+		_strong_kick_hit_audio.play()
 
 
 func _start_low_light_kick() -> void:
@@ -770,6 +844,9 @@ func reset_fighter(spawn_position: Vector2) -> void:
 	_medium_kick_hit_sound_played = false
 	if is_instance_valid(_medium_kick_hit_audio):
 		_medium_kick_hit_audio.stop()
+	_strong_kick_hit_sound_played = false
+	if is_instance_valid(_strong_kick_hit_audio):
+		_strong_kick_hit_audio.stop()
 	_light_kick_hit_sound_played = false
 	if is_instance_valid(_light_kick_hit_audio):
 		_light_kick_hit_audio.stop()
@@ -840,6 +917,10 @@ func _on_animation_finished() -> void:
 			return_to_crouch_pose()
 		return
 	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_medium_kick_recovery":
+		combat.finish_animation_attack(State.CROUCHING)
+		return_to_crouch_pose()
+		return
+	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_strong_kick":
 		combat.finish_animation_attack(State.CROUCHING)
 		return_to_crouch_pose()
 		return
@@ -950,6 +1031,8 @@ func _configure_animations() -> void:
 		_add_sheet_animation(frames, &"crouched_medium_kick", low_medium_kick_sheet, low_medium_kick_frame_count, low_medium_kick_columns, Vector2(512.0, 512.0), low_medium_kick_fps, false, 0, false)
 		if low_medium_kick_reverse:
 			_add_sheet_animation(frames, &"crouched_medium_kick_recovery", low_medium_kick_sheet, low_medium_kick_frame_count - 1, low_medium_kick_columns, Vector2(512.0, 512.0), low_medium_kick_fps, true, 0, false)
+	if low_strong_kick_sheet != null:
+		_add_sheet_animation(frames, &"crouched_strong_kick", low_strong_kick_sheet, low_strong_kick_frame_count, low_strong_kick_columns, Vector2(512.0, 512.0), low_strong_kick_fps, false, 0, false)
 	if low_light_kick_sheet != null:
 		_add_sheet_animation(frames, &"crouched_light_kick", low_light_kick_sheet, low_light_kick_frame_count, low_light_kick_columns, Vector2(512.0, 512.0), low_light_kick_fps, false, 0, false)
 		if low_light_kick_reverse:

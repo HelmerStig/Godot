@@ -59,27 +59,27 @@ Recovery 34 fotogrammi
 hurt_in_jump 33 fotogrammi a 24 fps
 
 
-ho ricreato "Light kick low" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto.
-Usa sempre i suoni di arianna per hit e wosh del calcio medio.
-va associata al calcio leggero da abbassato, eseguito per poi tornare in crouched stance.
-Genera nell'avversario hurt_crouched se colpito quando è in crouched stance e block_crouched se parato in crouched stance.
-Genera nell'avversario hurt_low se colpito quando è in standing stance il colpo è parabile solo da abbassato, in standing stance non può essere parato.
+ho creato "Strong kick low" su autosprite per ogni personaggio: Bue, Peirolo (su autosprite si chiama Peiro), Oscare, Torpe e Mileto.
+Usa sempre i suoni di arianna per hit e wosh del calcio forte.
+va associata al calcio forte da abbassato, eseguito per poi tornare in crouched stance.
+Genera nell'avversario sweep_knockdown, se l'avversario è colpito in standing stance
+Genera nell'avversario hurt_crouched se colpito quando è in crouched stance il colpo è parabile solo da abbassato, in standing stance non può essere parato.
 
 Oscar:
-	- 28 frame 48fps
-	- hitbox a frame 10/11/12  da eseguire solo avanti
+	- 38 frame 48fps
+	- hitbox a frame 18/19/20  da eseguire solo avanti
 Mileto:
-	- 28 frame a 48fps da eseguire solo avanti
-	- hitbox a frame 16/17/18
+	- 38 frame a 48fps da eseguire solo avanti
+	- hitbox a frame 14/15/16
 Torpe:
-	- 28 frame a 48fps da eseguire solo avanti
-	- hitbox a frame 10/11/12
+	- 38 frame a 48fps da eseguire solo avanti
+	- hitbox a frame 18/19/20
 Peirolo:
-	- 28 frame a 48fps da eseguire avanti e poi indietro
-	- hitbox a frame 17/18/19
+	- 37 frame a 48fps da eseguire solo avanti
+	- hitbox a frame 14/15/16
 Bue:
-	- 28frame a 48fps da eseguire solo avanti
-	- hitbox a frame 10/11/12
+	- 34frame a 48fps da eseguire solo avanti
+	- hitbox a frame 14/15/16
 
 Passiamo al light punch da abbassato
 utilizzare il suono del pugno light di arianna, il woosh.
