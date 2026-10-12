@@ -857,6 +857,7 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		current_attack.attack_id == &"medium_kick"
 		and not is_crouched_medium_kick
 		and not is_airborne_medium_kick
+		and not uses_target_stance_medium_reactions()
 		and not (
 			current_variant != null
 			and current_variant.variant_id in [&"arianna_standing", &"arianna_low"]

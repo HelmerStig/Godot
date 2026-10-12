@@ -58,6 +58,13 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var low_strong_kick_active_start_frame := 18
 @export var low_strong_kick_active_end_frame := 20
 
+@export var medium_kick_sheet: Texture2D
+@export var medium_kick_frame_count := 1
+@export var medium_kick_columns := 7
+@export var medium_kick_fps := 48.0
+@export var medium_kick_active_start_frame := 1
+@export var medium_kick_active_end_frame := 3
+
 @export var light_kick_sheet: Texture2D
 @export var light_kick_frame_count := 25
 @export var light_kick_columns := 7
@@ -250,6 +257,7 @@ func _ready() -> void:
 	add_child(_medium_kick_hit_audio)
 	combat.attack_connected.connect(_on_medium_kick_connected)
 	animated_sprite.frame_changed.connect(_update_low_medium_kick_hitbox)
+	animated_sprite.frame_changed.connect(_update_medium_kick_hitbox)
 	animated_sprite.play(&"idle")
 
 
@@ -282,6 +290,9 @@ func _physics_process(delta: float) -> void:
 	if strong_punch_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and not input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING]:
 		if input_buffer.consume_attack(&"heavy_punch") != FighterInputBuffer.NO_DIRECTION:
 			_start_strong_punch()
+	if medium_kick_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and not input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING]:
+		if input_buffer.consume_attack(&"medium_kick") != FighterInputBuffer.NO_DIRECTION:
+			_start_medium_kick()
 	if light_kick_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and not input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING]:
 		if input_buffer.consume_attack(&"light_kick") != FighterInputBuffer.NO_DIRECTION:
 			_start_light_kick()
@@ -585,6 +596,47 @@ func _on_strong_kick_connected(attack_name: StringName, result: int) -> void:
 	if attack_name == &"heavy_kick" and result in [FighterCombat.DamageResult.HIT, FighterCombat.DamageResult.KNOCKOUT] and not _strong_kick_hit_sound_played:
 		_strong_kick_hit_sound_played = true
 		_strong_kick_hit_audio.play()
+
+
+func _start_medium_kick() -> void:
+	var attack := character_data.get_attack(&"medium_kick")
+	if attack == null or medium_kick_sheet == null:
+		return
+	_medium_kick_hit_sound_played = false
+	var variant := AttackVariantData.new()
+	variant.variant_id = &"roster_standing_medium_kick"
+	variant.animation_name = &"medium_kick"
+	variant.animation_fps = medium_kick_fps
+	variant.startup_frames = medium_kick_active_start_frame - 1
+	variant.active_frames = medium_kick_active_end_frame - medium_kick_active_start_frame + 1
+	variant.recovery_frames = medium_kick_frame_count - medium_kick_active_end_frame
+	variant.active_animation_frame = medium_kick_active_start_frame - 1
+	variant.hit_height = AttackData.HitHeight.MID
+	variant.reaction_policy = AttackVariantData.ReactionPolicy.TARGET_STANCE_MEDIUM
+	variant.hitbox_size = Vector2(165.0, 55.0)
+	variant.hitbox_position = Vector2(110.0, -105.0)
+	var kick_shape := RectangleShape2D.new()
+	kick_shape.size = variant.hitbox_size
+	combat.hitbox_shape.shape = kick_shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	combat.hitbox_shape.position = variant.hitbox_position
+	combat.hitbox_shape.rotation = 0.0
+	combat.begin_animation_attack(&"medium_kick", attack, variant)
+	animated_sprite.frame = 0
+	update_collision_profile()
+	_medium_kick_whoosh_audio.play()
+	_update_medium_kick_hitbox()
+
+
+func _update_medium_kick_hitbox() -> void:
+	if current_state != State.ATTACKING or not combat.is_attacking or animated_sprite.animation != &"medium_kick":
+		return
+	if animated_sprite.frame >= medium_kick_active_start_frame - 1 and animated_sprite.frame <= medium_kick_active_end_frame - 1:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap_immediately()
+		combat.resolve_attack_overlap(combat.action_generation)
+	else:
+		combat.disable_hitbox()
 
 
 func _start_light_kick() -> void:
@@ -985,7 +1037,7 @@ func get_sweep_grounded_hold_duration() -> float:
 
 
 func _on_animation_finished() -> void:
-	if current_state == State.ATTACKING and animated_sprite.animation == &"light_kick":
+	if current_state == State.ATTACKING and animated_sprite.animation in [&"light_kick", &"medium_kick"]:
 		combat.finish_animation_attack(State.IDLE)
 		return
 	if current_state == State.ATTACKING and animated_sprite.animation == &"crouched_medium_kick":
@@ -1107,6 +1159,8 @@ func _configure_animations() -> void:
 		_add_sheet_animation(frames, &"crouched_strong_punch", low_strong_punch_sheet, low_strong_punch_frame_count, low_strong_punch_columns, Vector2(512.0, 512.0), low_strong_punch_fps, false, 0, false)
 	if low_medium_punch_sheet != null:
 		_add_sheet_animation(frames, &"crouched_medium_punch", low_medium_punch_sheet, low_medium_punch_frame_count, low_medium_punch_columns, Vector2(512.0, 512.0), low_medium_punch_fps, false, 0, false)
+	if medium_kick_sheet != null:
+		_add_sheet_animation(frames, &"medium_kick", medium_kick_sheet, medium_kick_frame_count, medium_kick_columns, Vector2(512.0, 512.0), medium_kick_fps, false, 0, false)
 	if low_medium_kick_sheet != null:
 		_add_sheet_animation(frames, &"crouched_medium_kick", low_medium_kick_sheet, low_medium_kick_frame_count, low_medium_kick_columns, Vector2(512.0, 512.0), low_medium_kick_fps, false, 0, false)
 		if low_medium_kick_reverse:
