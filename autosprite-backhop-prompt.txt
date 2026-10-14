@@ -81,13 +81,30 @@ Bue:
 	- 34frame a 48fps da eseguire solo avanti
 	- hitbox a frame 14/15/16
 
+Ho creato l'animazione per il medium kick in standing stance per ogni personaggio su autosprite.
+
 Medium kick (light_kick su autosprite):
 Oscare:
 	- 33 frames a 48fps da eseguire solo avanti
 	- hitbox a frame 18/19/20
+	- Genera nell'avversario hurt_medium, se l'avversario è colpito in standing stance, se in parata genera block_medium, se colpito in crouched stance genera hurt_crouched, se in parata genera block_crouched.
 Mileto:
 	- 38 frames a 48fps da eseguire solo avanti
 	- hitbox a frame 18/19/20
+	- Genera nell'avversario hurt_medium, se l'avversario è colpito in standing stance, se in parata genera block_medium, se colpito in crouched stance genera hurt_crouched, se in parata genera block_crouched.
+Medium kick (si chiama: "medium_kick" su autosprite):
+Torpe:
+	- 23 frames a 48fps da eseguire solo avanti
+	- hitbox a frame 14/15/16/
+	- Genera nell'avversario hurt_medium, se l'avversario è colpito in standing stance, se in parata genera block_medium, se colpito in crouched stance genera hurt_crouched, se in parata genera block_crouched.
+Peirolo:
+	- 24 frames a 48fps da eseguire solo avanti
+	- hitbox a frame 14/15/16/
+	- Genera nell'avversario hurt_medium, se l'avversario è colpito in standing stance, se in parata genera block_medium, se colpito in crouched stance genera hurt_crouched, se in parata genera block_crouched.
+Bue:
+	- 22 frames a 48fps da eseguire solo avanti
+	- hitbox a frame 9/10/11
+	- Genera nell'avversario hurt_medium, se l'avversario è colpito in standing stance, se in parata genera block_medium, se colpito in crouched stance genera hurt_crouched, se in parata genera block_crouched.
 
 Passiamo al light kick da posizione eretta.
 Usa sempre i suoni di arianna per hit e wosh del calcio leggero.

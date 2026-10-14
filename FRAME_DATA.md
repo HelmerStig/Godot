@@ -76,6 +76,20 @@ Questi personaggi usano temporaneamente `IdleRosterFighter`. Gli idle hanno cell
 | Peirò | `peirolo/idle_spritesheet.png` | 63 | 49 |
 | Torpe | `torpe/idle-spritesheet.png` | 61 | 49 |
 
+## Medium kick in piedi del roster
+
+Frame visivi 1-based, sequenza soltanto avanti a 48 FPS (60 FPS per Mileto), senza loop. Hitbox e danno vengono gestiti dalla variante `roster_standing_medium_kick`; il recupero termina in idle.
+
+| Personaggio | Frame totali | Startup | Frame attivi visivi | Active | Recovery |
+|---|---:|---:|---|---:|---:|
+| Oscare | 33 | 17 | 18-20 | 3 | 13 |
+| Mileto | 38 | 17 | 18-20 | 3 | 18 |
+| Torpe | 23 | 13 | 14-16 | 3 | 7 |
+| Peirolo | 24 | 13 | 14-16 | 3 | 8 |
+| Bue | 22 | 8 | 9-11 | 3 | 11 |
+
+Fonte AutoSprite: `Light kick` per Oscare e Mileto, `Medium kick` per gli altri. Oscare usa i primi 33 dei 34 frame disponibili. Un singolo impatto da 12 danni seleziona hurt medio/parata media in piedi e hurt accovacciato/parata bassa da accovacciati.
+
 ## Movimento
 
 `CharacterData` predefinito: 100 HP, camminata 200 px/s, corsa 320 px/s, velocità aerea 280 px/s e impulso salto -850 px/s. I controller applicano modificatori: Mangler moltiplica l'impulso del salto per 1,5 e usa gravità 3150 px/s²; Arianna usa gravità 1800 px/s² e corsa a `run_speed × 2`. Scala e offset degli sprite dipendono dall'animazione.

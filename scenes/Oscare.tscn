@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -48,6 +48,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/light_kick.png" id="light_kick_sheet"]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/strong_kick.png" id="standing_strong_kick_sheet"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/medium_kick_standing.png" id="medium_kick_sheet"]
 
 [node name="Oscare" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
@@ -159,3 +160,7 @@ light_kick_fps = 48.0
 light_kick_active_start_frame = 10
 light_kick_active_end_frame = 12
 light_kick_hit_height = 2
+medium_kick_sheet = ExtResource("medium_kick_sheet")
+medium_kick_frame_count = 33
+medium_kick_active_start_frame = 18
+medium_kick_active_end_frame = 20

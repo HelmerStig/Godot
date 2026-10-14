@@ -53,6 +53,14 @@ godot --headless --path . --script res://tests/test_run.gd
 
 `cases/roster_run.gd` fa parte della suite arena: frame e slicing, loop a 24 FPS, doppio avanti nei due orientamenti, velocità, rilascio, tap distanti e indietro, reset e interruzioni con danno, accovacciamento e salto.
 
+Per verificare il medium kick in piedi dei cinque fighter:
+
+```text
+godot --headless --path . --script res://tests/test_standing_medium_kick.gd
+```
+
+`cases/roster_standing_medium_kick.gd` fa parte della suite arena: slicing e FPS richiesti (48, oppure 60 per Mileto), tre frame attivi, orientamento e profilo standing, sequenza completa senza ritorno, contatti contro tutti gli altri fighter con posture e guardie alte/basse, danno singolo, input standing/accovacciato, interruzione e reset.
+
 ## Organizzazione
 
 | Suite | Casi in `tests/cases/` | Asserzioni della baseline |
