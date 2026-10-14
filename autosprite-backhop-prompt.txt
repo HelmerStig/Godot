@@ -139,4 +139,35 @@ Bue: assets\sprites\characters\bue\Bue-strong_punch.png
 	- 7 frame a 24fps senza ritorno
 	- hitbox a frame 3/4
 
-	prompt per pugno potente: The character makes a small leap forward while winding up a punch with their right arm behind their head; their body leans forward toward the camera, with the right leg bent forward and the left leg back. They then rotate their body to turn their back to the camera and throw a punch aimed slightly downward, shifting their left leg back and their right leg forward. Finally, they return to the idle position.
+
+Ora passimo allo strong kick, da eseguire, e poi tornare in idle.
+Genera nella'avversario hurt_high se colpito o block_high se parato in posizione eretta.
+Usa gli stessi suoni di arianna per hit e wosh del calcio forte.
+	Oscar:
+		su autosprite si chiama "Strong Kick v3 - Chest Facing Camera"
+		- 48 fotogrammi da eseguire solo avanti a 48fps
+		- hitbox a frame dal 16 al 21
+	Mileto:
+		su autosprite si chiama "Strong Kick - Spinning High Kick"
+		- 48 fotogrammi da eseguire solo avanti a 48fps
+		- hitbox a frame dal 16 al 21
+	Torpe:
+		su autosprite si chiama "Strong Kick v3 - Chest Facing Camera"
+		- 37 fotogrammi da eseguire solo avanti a 48fps
+		- hitbox a frame dal 13 al 18
+	Peirolo:
+		su autosprite si chiama "Strong Kick - Spinning High Kick"
+		- 43 fotogrammi da eseguire solo avanti a 48fps
+		- hitbox a frame dal 14 al 18
+	Bue:
+		su autosprite si chiama "Strong Kick"
+		- 27 fotogrammi da eseguire solo avanti a 48fps
+		- hitbox a frame dal 11 al 14
+
+Okay quelli buoni sono per ora Strong Kick v3 - Chest Facing Camera, Strong Kick - Spinning High Kick, e Strong Kick
+
+ora per Torpe usa "Strong Kick v3 - Chest Facing Camera"
+per Peirolo usa "Strong Kick - Spinning High Kick"
+per Bue usa "Strong Kick"
+
+ 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=29 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -47,9 +47,16 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/light_kick.png" id="light_kick_sheet"]
 
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/bue/strong_kick.png" id="standing_strong_kick_sheet"]
+
 [node name="Bue" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
 script = ExtResource("2_script")
+strong_kick_sheet = ExtResource("standing_strong_kick_sheet")
+strong_kick_frame_count = 27
+strong_kick_fps = 48.0
+strong_kick_active_start_frame = 11
+strong_kick_active_end_frame = 14
 fighter_id = &"bue"
 fighter_display_name = "Bue"
 idle_sheet = ExtResource("3_idle")

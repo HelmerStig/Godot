@@ -83,3 +83,19 @@ Questi personaggi usano temporaneamente `IdleRosterFighter`. Gli idle hanno cell
 ## Verifica
 
 Baseline corrente: 709 asserzioni superate nelle cinque suite headless (input 14, Arianna 218, Mangler 359, combat 83, arena 35); vedere [tests/README.md](tests/README.md). Le vecchie tabelle che mescolavano timing dichiarati, pose mantenute e dati non più aggiornati sono conservate in [archivio](docs/archive/FRAME_DATA.md).
+
+## Calcio forte in piedi del roster (14 ottobre 2026)
+
+`heavy_kick` avvia `strong_kick`: solo avanti a 48 FPS, senza loop o reverse, poi idle. Frame visivi 1-based, estremi inclusi. Si riproducono i primi N frame del foglio AutoSprite 7x7; i PNG e atlas originali conservano tutti i 49 frame.
+
+| Fighter | Frame | Attivi | Startup / Active / Recovery | AutoSprite | Spritesheet ID |
+|---|---:|---|---|---|---|
+| Oscare | 48 | 16-21 | 15 / 6 / 27 | Strong Kick v3 - Chest Facing Camera | cmv7tsx2200c111efd1z6ojp5 |
+| Mileto | 48 | 16-21 | 15 / 6 / 27 | Strong Kick - Spinning High Kick | cmv7u79al001t5kpzv3mwl62y |
+| Torpe | 37 | 13-18 | 12 / 6 / 19 | Strong Kick v3 - Chest Facing Camera | cmv7uibu00041dr60ygpk4mx9 |
+| Peirolo | 43 | 14-18 | 13 / 5 / 25 | Strong Kick - Spinning High Kick | cmv7uimby0045dr60cuksy2aa |
+| Bue | 27 | 11-14 | 10 / 4 / 13 | Strong Kick | cmv7uihws0012qmjlo56st6zh |
+
+Altezza HIGH, danno base 20, nessun knockdown. Sul bersaglio eretto: `hurt_high` se colpito, `block_high` se parato. Un solo impatto per esecuzione. Suoni condivisi con Arianna: `kick_long_whoosh_19.wav` alla partenza e `body_hit_large_76.wav` soltanto su HIT/KO. La hitbox alta segue l'orientamento del fighter; cancellazione e reset la disattivano.
+
+Test dedicato: `godot --headless --path . --script res://tests/test_strong_kick.gd`.
