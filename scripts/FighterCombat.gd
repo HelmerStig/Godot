@@ -761,6 +761,10 @@ func uses_target_stance_medium_reactions() -> bool:
 	return current_variant != null and current_variant.reaction_policy == AttackVariantData.ReactionPolicy.TARGET_STANCE_MEDIUM
 
 
+func uses_target_stance_high_reactions() -> bool:
+	return current_variant != null and current_variant.reaction_policy == AttackVariantData.ReactionPolicy.TARGET_STANCE_HIGH
+
+
 func get_effective_hit_height(attack: AttackData) -> AttackData.HitHeight:
 	if current_variant != null:
 		return current_variant.hit_height
@@ -836,7 +840,7 @@ func _apply_hit_to_area(area: Area2D) -> void:
 		return
 	hit_targets.append(target)
 	var effective_hit_height := get_effective_hit_height(current_attack)
-	if uses_target_stance_reactions() or uses_target_stance_medium_reactions():
+	if uses_target_stance_reactions() or uses_target_stance_medium_reactions() or uses_target_stance_high_reactions():
 		var target_is_crouched := target.get_crouch_progress() >= 0.5 or target.is_holding_low_guard()
 		var standing_height := AttackData.HitHeight.MID if uses_target_stance_medium_reactions() else AttackData.HitHeight.HIGH
 		effective_hit_height = AttackData.HitHeight.LOW if target_is_crouched else standing_height

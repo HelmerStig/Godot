@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -50,9 +50,15 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/strong_kick.png" id="standing_strong_kick_sheet"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/medium_kick_standing.png" id="medium_kick_sheet"]
 
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mileto/jump_light_punch.png" id="jump_light_punch_sheet"]
+
 [node name="Mileto" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
 script = ExtResource("2_script")
+jump_light_punch_sheet = ExtResource("jump_light_punch_sheet")
+jump_light_punch_frame_count = 13
+jump_light_punch_active_start_frame = 6
+jump_light_punch_active_end_frame = 8
 strong_kick_sheet = ExtResource("standing_strong_kick_sheet")
 strong_kick_frame_count = 48
 strong_kick_fps = 48.0

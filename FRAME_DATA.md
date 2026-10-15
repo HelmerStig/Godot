@@ -113,3 +113,23 @@ Baseline corrente: 709 asserzioni superate nelle cinque suite headless (input 14
 Altezza HIGH, danno base 20, nessun knockdown. Sul bersaglio eretto: `hurt_high` se colpito, `block_high` se parato. Un solo impatto per esecuzione. Suoni condivisi con Arianna: `kick_long_whoosh_19.wav` alla partenza e `body_hit_large_76.wav` soltanto su HIT/KO. La hitbox alta segue l'orientamento del fighter; cancellazione e reset la disattivano.
 
 Test dedicato: `godot --headless --path . --script res://tests/test_strong_kick.gd`.
+
+## Pugno leggero in salto del roster (14 ottobre 2026)
+
+Fonte AutoSprite: **Jump Light Punch v3 - Diagonal Down**. Sequenza solo avanti a 24 FPS, senza loop o reverse. Frame visivi 1-based, estremi inclusi.
+
+| Fighter | Frame | Attivi | Startup / Active / Recovery | Spritesheet ID |
+|---|---:|---|---|---|
+| Oscare | 10 | 4-6 | 3 / 3 / 4 | cmv7xq1o00007kiv2y07cxhdd |
+| Mileto | 13 | 6-8 | 5 / 3 / 5 | cmv7xti3j00anmm2ltf80pgmt |
+| Torpe | 13 | 4-7 | 3 / 4 / 6 | cmv7xw5x200clmm2ltk9v9sr8 |
+| Peirolo | 13 | 6-9 | 5 / 4 / 4 | cmv7xxxpc00f8mm2ld7op0a6z |
+| Bue | 10 | 4-6 | 3 / 3 / 4 | cmv7xnq1c004i2sp1ccs3xl9k |
+
+I fogli hanno celle 512x512 e 5 colonne. Per Bue si riproducono i primi 10 dei 24 frame disponibili; gli altri fogli sono le esportazioni accorciate. La posa aerea ferma usa il primo frame trasparente della mossa, corrispondente alla Jump Pose.
+
+Input light punch durante JUMPING, una mossa per salto, con velocità orizzontale e gravità conservate. Alla fine si resta in jump pose finché si atterra; l'atterraggio durante qualsiasi fase interrompe subito attacco e hitbox e torna in idle. Danno base 5, un solo impatto per esecuzione, nessun knockdown sul bersaglio a terra. La variante TARGET_STANCE_HIGH seleziona hurt_high/block_high in piedi e hurt_crouched/parata accovacciata in basso (block_low nel roster, block_low_crouched dove previsto dal controller). Mantiene le regole esistenti per bersagli aerei e KO.
+
+Suoni condivisi con Arianna: punch_short_whoosh_30.wav alla partenza e light-punch.wav solo su HIT/KO. Interruzione e reset disattivano la hitbox e fermano il whoosh.
+
+Test dedicato: `godot --headless --path . --script res://tests/test_jump_light_punch.gd`.

@@ -224,6 +224,7 @@ func start_hit_reaction(
 			or (current_state == State.HIT and hurt_started_crouched)
 			or (is_instance_valid(attacker) and attacker.combat != null and attacker.combat.uses_target_stance_reactions())
 			or (is_instance_valid(attacker) and attacker.combat != null and attacker.combat.uses_target_stance_medium_reactions())
+			or (is_instance_valid(attacker) and attacker.combat != null and attacker.combat.uses_target_stance_high_reactions())
 			or (is_instance_valid(attacker) and attacker.combat != null and attacker.combat.uses_crouched_low_reactions() and get_crouch_progress() >= 0.5)
 		)
 		and animated_sprite.sprite_frames.has_animation(&"hurt_crouched")

@@ -1,5 +1,13 @@
 # Test headless
 
+Pugno leggero in salto dei cinque fighter del roster:
+
+```text
+godot --headless --path . --script res://tests/test_jump_light_punch.gd
+```
+
+Il caso `cases/roster_jump_light_punch.gd` è incluso nella suite arena. Verifica frame e FPS, finestre attive, input in aria, traiettoria e orientamento, contatti reali con Arianna e roster in piedi/accovacciati con e senza guardia, singolo danno e audio, ritorno alla jump pose, atterraggio nelle diverse fasi, interruzione e reset.
+
 Eseguire `tests/run_smoke_tests.cmd` dalla radice del progetto per avviare cinque processi Godot separati. Il parametro `-GodotPath` permette di scegliere l'eseguibile; altrimenti il runner usa `.vscode/settings.json` oppure il `PATH`.
 
 ```powershell

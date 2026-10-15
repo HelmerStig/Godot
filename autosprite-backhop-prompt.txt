@@ -157,34 +157,36 @@ Bue: assets\sprites\characters\bue\Bue-strong_punch.png
 	- hitbox a frame 3/4
 
 
-Ora passimo allo strong kick, da eseguire, e poi tornare in idle.
+Ora passimo all'integrazione del light punch in salto, da eseguire, per poi tornare in jump pose a meno che non si sia atterrati, in quel caso si tornerà in idle.
 Genera nella'avversario hurt_high se colpito o block_high se parato in posizione eretta.
-Usa gli stessi suoni di arianna per hit e wosh del calcio forte.
+Genera nell'avversario hurt_crouched se colpito o block_crouched se parato in posizione abbassata.
+Usa gli stessi suoni di arianna per hit e wosh del pugno leggero.
+Su autosprite si chiama "Jump Light Punch v3 - Diagonal Down"
+	
 	Oscar:
-		su autosprite si chiama "Strong Kick v3 - Chest Facing Camera"
-		- 48 fotogrammi da eseguire solo avanti a 48fps
-		- hitbox a frame dal 16 al 21
+		- 10 fotogrammi da eseguire solo avanti a 24fps
+		- hitbox a frame dal 4 al 6
 	Mileto:
-		su autosprite si chiama "Strong Kick - Spinning High Kick"
-		- 48 fotogrammi da eseguire solo avanti a 48fps
-		- hitbox a frame dal 16 al 21
+		- 13 fotogrammi da eseguire solo avanti a 24fps
+		- hitbox a frame dal 6 al 8
 	Torpe:
-		su autosprite si chiama "Strong Kick v3 - Chest Facing Camera"
-		- 37 fotogrammi da eseguire solo avanti a 48fps
-		- hitbox a frame dal 13 al 18
+		- 13 fotogrammi da eseguire solo avanti a 24fps
+		- hitbox a frame dal 4 al 7
 	Peirolo:
-		su autosprite si chiama "Strong Kick - Spinning High Kick"
-		- 43 fotogrammi da eseguire solo avanti a 48fps
-		- hitbox a frame dal 14 al 18
+		- 13 fotogrammi da eseguire solo avanti a 24fps
+		- hitbox a frame dal 6 al 9
 	Bue:
-		su autosprite si chiama "Strong Kick"
-		- 27 fotogrammi da eseguire solo avanti a 48fps
-		- hitbox a frame dal 11 al 14
+		- 10 fotogrammi da eseguire solo avanti a 24fps
+		- hitbox a frame dal 4 al 6
 
 Okay quelli buoni sono per ora Strong Kick v3 - Chest Facing Camera, Strong Kick - Spinning High Kick, e Strong Kick
 
 ora per Torpe usa "Strong Kick v3 - Chest Facing Camera"
 per Peirolo usa "Strong Kick - Spinning High Kick"
 per Bue usa "Strong Kick"
+
+
+Perfetto ora vorrei fare le animazioni del pugno debole in salto, come frame iniziale troverai "jump pose", da utilizzare come primo ed ultimo fotogramma dell'animazione in salto. Partiamo da oscarq
+CPme riferimento potremmo usare questo: https://ultimateframedata.com/sf6/hitboxes/alex/alex-j-lp.gif
 
  

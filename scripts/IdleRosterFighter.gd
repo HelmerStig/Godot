@@ -43,6 +43,12 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var jump_sheet: Texture2D
 @export var back_jump_sheet: Texture2D
 @export var light_punch_sheet: Texture2D
+@export var jump_light_punch_sheet: Texture2D
+@export var jump_light_punch_frame_count := 10
+@export var jump_light_punch_columns := 5
+## Inclusive visual frame numbers (1-based).
+@export var jump_light_punch_active_start_frame := 4
+@export var jump_light_punch_active_end_frame := 6
 @export var low_medium_kick_sheet: Texture2D
 @export var low_medium_kick_frame_count := 11
 @export var low_medium_kick_columns := 7
@@ -160,6 +166,7 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var sprite_position := Vector2(0.0, 0.0)
 
 var _jump_startup := false
+var _holding_jump_pose := false
 var _jump_takeoff_anim_idx := 0
 var _jump_direction := 0.0
 var _back_jump_active := false
@@ -223,6 +230,7 @@ func _ready() -> void:
 	animated_sprite.frame_changed.connect(_update_strong_punch_hitbox)
 	combat.attack_connected.connect(_on_light_punch_connected)
 	animated_sprite.frame_changed.connect(_update_light_punch_hitbox)
+	animated_sprite.frame_changed.connect(_update_jump_light_punch_hitbox)
 	animated_sprite.frame_changed.connect(_update_low_light_punch_hitbox)
 	animated_sprite.frame_changed.connect(_update_low_medium_punch_hitbox)
 	animated_sprite.frame_changed.connect(_update_low_strong_punch_hitbox)
@@ -278,6 +286,9 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var on_floor := is_on_floor()
+	if jump_light_punch_sheet != null and controls_enabled and can_move and not on_floor and current_state == State.JUMPING and not aerial_attack_used and input_buffer != null:
+		if input_buffer.consume_attack(&"light_punch") != FighterInputBuffer.NO_DIRECTION:
+			_start_jump_light_punch()
 	if low_medium_kick_sheet != null and controls_enabled and can_move and on_floor and input_buffer != null and input_buffer.is_down_held() and current_state in [State.IDLE, State.WALKING, State.RUNNING, State.CROUCHING, State.STANDING_UP]:
 		if input_buffer.consume_attack(&"medium_kick") != FighterInputBuffer.NO_DIRECTION:
 			_start_low_medium_kick()
@@ -382,7 +393,7 @@ func _physics_process(delta: float) -> void:
 			change_state(State.WALKING if not is_zero_approx(direction) else State.IDLE)
 		var movement_speed := character_data.run_speed if current_state == State.RUNNING else character_data.walk_speed
 		velocity.x = direction * movement_speed
-	elif current_state not in [State.JUMPING, State.JUMP_STARTUP]:
+	elif current_state not in [State.JUMPING, State.JUMP_STARTUP] and not combat.is_airborne_light_punch:
 		velocity.x = 0.0
 	# Durante JUMPING velocity.x è preservata (direzione del salto).
 	if not on_floor:
@@ -394,6 +405,17 @@ func _physics_process(delta: float) -> void:
 	position.x = clampf(position.x, stage_left_limit, stage_right_limit)
 	update_facing_direction()
 	update_ground_shadow()
+
+	if is_on_floor() and velocity.y >= 0.0:
+		if combat.is_airborne_light_punch and combat.is_attacking:
+			_finish_jump_light_punch()
+			return
+		if _holding_jump_pose:
+			_holding_jump_pose = false
+			reset_airborne_combat_state()
+			velocity = Vector2.ZERO
+			change_state(State.IDLE)
+			return
 
 	# A terra dopo il salto: blocca il movimento e lascia che l'animazione
 	# completi i frame di atterraggio; _on_animation_finished passerà in idle.
@@ -418,6 +440,13 @@ func _physics_process(delta: float) -> void:
 
 
 func change_state(next_state: int, force_victory_exit := false) -> void:
+	if next_state not in [State.JUMPING, State.ATTACKING]:
+		_holding_jump_pose = false
+	if next_state != State.ATTACKING:
+		if combat != null and combat.is_attacking and combat.is_airborne_light_punch:
+			combat.cancel_current_action()
+		if is_instance_valid(_light_punch_whoosh_audio):
+			_light_punch_whoosh_audio.stop()
 	if next_state != State.ATTACKING and is_instance_valid(_standing_light_kick_whoosh_audio):
 		_standing_light_kick_whoosh_audio.stop()
 	if next_state != State.ATTACKING and is_instance_valid(_strong_kick_whoosh_audio):
@@ -449,9 +478,64 @@ func change_state(next_state: int, force_victory_exit := false) -> void:
 
 
 func update_animation() -> void:
+	if _holding_jump_pose and current_state == State.JUMPING:
+		animated_sprite.play(&"jump_pose")
+		animated_sprite.pause()
+		return
 	if _back_jump_active and current_state in [State.BACK_HOP_STARTUP, State.BACK_HOP]:
 		return
 	super.update_animation()
+
+
+func _start_jump_light_punch() -> void:
+	var attack := character_data.get_attack(&"light_punch")
+	if attack == null or jump_light_punch_sheet == null or is_on_floor() or current_state != State.JUMPING or aerial_attack_used:
+		return
+	_holding_jump_pose = false
+	_light_punch_hit_sound_played = false
+	var variant := AttackVariantData.new()
+	variant.variant_id = &"roster_airborne_light_punch"
+	variant.animation_name = &"jump_light_punch"
+	variant.animation_fps = 24.0
+	variant.startup_frames = jump_light_punch_active_start_frame - 1
+	variant.active_frames = jump_light_punch_active_end_frame - jump_light_punch_active_start_frame + 1
+	variant.recovery_frames = jump_light_punch_frame_count - jump_light_punch_active_end_frame
+	variant.active_animation_frame = jump_light_punch_active_start_frame - 1
+	variant.hit_height = AttackData.HitHeight.HIGH
+	variant.reaction_policy = AttackVariantData.ReactionPolicy.TARGET_STANCE_HIGH
+	variant.hitbox_size = Vector2(110.0, 65.0)
+	variant.hitbox_position = Vector2(95.0, -175.0)
+	variant.hitbox_rotation_degrees = 45.0
+	var shape := RectangleShape2D.new()
+	shape.size = variant.hitbox_size
+	combat.hitbox_shape.shape = shape
+	combat.hitbox.scale.x = 1.0 if is_facing_right else -1.0
+	combat.hitbox_shape.position = variant.hitbox_position
+	combat.hitbox_shape.rotation_degrees = variant.hitbox_rotation_degrees
+	combat.begin_animation_attack(&"jump_light_punch", attack, variant, true)
+	animated_sprite.frame = 0
+	_light_punch_whoosh_audio.play()
+	_update_jump_light_punch_hitbox()
+
+
+func _update_jump_light_punch_hitbox() -> void:
+	if current_state != State.ATTACKING or not combat.is_attacking or animated_sprite.animation != &"jump_light_punch":
+		return
+	if animated_sprite.frame >= jump_light_punch_active_start_frame - 1 and animated_sprite.frame <= jump_light_punch_active_end_frame - 1:
+		combat.enable_hitbox()
+		combat.resolve_attack_overlap_immediately()
+		combat.resolve_attack_overlap(combat.action_generation)
+	else:
+		combat.disable_hitbox()
+
+
+func _finish_jump_light_punch() -> void:
+	var grounded := is_on_floor()
+	_holding_jump_pose = not grounded
+	combat.finish_animation_attack(State.IDLE if grounded else State.JUMPING)
+	if grounded:
+		reset_airborne_combat_state()
+		velocity = Vector2.ZERO
 
 
 func _start_light_punch() -> void:
@@ -1020,6 +1104,10 @@ func _process_back_jump(delta: float) -> void:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	_holding_jump_pose = false
+	_light_punch_hit_sound_played = false
+	if is_instance_valid(_light_punch_hit_audio):
+		_light_punch_hit_audio.stop()
 	_light_kick_started_standing = false
 	if is_instance_valid(_standing_light_kick_hit_audio):
 		_standing_light_kick_hit_audio.stop()
@@ -1090,6 +1178,9 @@ func get_sweep_grounded_hold_duration() -> float:
 
 
 func _on_animation_finished() -> void:
+	if current_state == State.ATTACKING and animated_sprite.animation == &"jump_light_punch":
+		_finish_jump_light_punch()
+		return
 	if current_state == State.ATTACKING and animated_sprite.animation in [&"light_kick", &"medium_kick", &"strong_kick"]:
 		combat.finish_animation_attack(State.IDLE)
 		return
@@ -1243,6 +1334,9 @@ func _configure_animations() -> void:
 			texture.atlas = light_punch_sheet
 			texture.region = Rect2(Vector2(source_index % 5, source_index / 5) * 512.0, Vector2(512.0, 512.0))
 			frames.add_frame(&"light_punch", texture)
+	if jump_light_punch_sheet != null:
+		_add_sheet_animation(frames, &"jump_light_punch", jump_light_punch_sheet, jump_light_punch_frame_count, jump_light_punch_columns, Vector2(512.0, 512.0), 24.0, false, 0, false)
+		_add_sheet_animation(frames, &"jump_pose", jump_light_punch_sheet, 1, jump_light_punch_columns, Vector2(512.0, 512.0), 24.0, false, 0, false)
 	_add_sheet_animation(frames, &"idle", idle_sheet, idle_frame_count, idle_columns, idle_cell_size, IDLE_FPS)
 	if walk_sheet != null:
 		_add_sheet_animation(frames, &"walk", walk_sheet, walk_frame_count, walk_columns, walk_cell_size, WALK_FPS)

@@ -1,7 +1,7 @@
 extends Resource
 class_name AttackVariantData
 
-enum ReactionPolicy { DEFAULT, TARGET_STANCE, CROUCHED_LOW, TARGET_STANCE_MEDIUM }
+enum ReactionPolicy { DEFAULT, TARGET_STANCE, CROUCHED_LOW, TARGET_STANCE_MEDIUM, TARGET_STANCE_HIGH }
 
 ## Configurazione di una variante contestuale dello stesso attacco base.
 
