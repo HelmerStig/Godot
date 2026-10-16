@@ -1,0 +1,23 @@
+{
+  "character": "Mileto",
+  "sourceSheet": "res://assets/sprites/characters/mileto/jump_light_kick_turbo_candidate.png",
+  "sourceFrameNumbers": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8,
+    9,
+    21,
+    22,
+    23,
+    1
+  ],
+  "frameCount": 12,
+  "fps": 24,
+  "loop": false,
+  "endpointPolicy": "First and last reference the same Jump Pose cell.",
+  "review": "Single kick selected from existing Turbo output; no new generation. Preview only, no gameplay binding."
+}

@@ -157,27 +157,50 @@ Bue: assets\sprites\characters\bue\Bue-strong_punch.png
 	- hitbox a frame 3/4
 
 
-Ora passimo all'integrazione del light punch in salto, da eseguire, per poi tornare in jump pose a meno che non si sia atterrati, in quel caso si tornerà in idle.
+Ora passimo all'integrazione del light kick in saltoda eseguire, per poi tornare in jump pose a meno che non si sia atterrati, in quel caso si tornerà in idle.
 Genera nella'avversario hurt_high se colpito o block_high se parato in posizione eretta.
 Genera nell'avversario hurt_crouched se colpito o block_crouched se parato in posizione abbassata.
-Usa gli stessi suoni di arianna per hit e wosh del pugno leggero.
-Su autosprite si chiama "Jump Light Punch v3 - Diagonal Down"
-	
+Usa gli stessi suoni di arianna per hit e wosh del light kick
+
+
+
 	Oscar:
-		- 10 fotogrammi da eseguire solo avanti a 24fps
-		- hitbox a frame dal 4 al 6
+		Light Kick in salto: "Jump Light Kick - Forward Snap" Su autosprite
+		- 16 fotogrammi da eseguire solo avanti a 32fps
+		- hitbox a frame dal 7 al 10
 	Mileto:
-		- 13 fotogrammi da eseguire solo avanti a 24fps
-		- hitbox a frame dal 6 al 8
+		Light Kick in salto: "Jump Light Kick - Single Hold v2" Su autosprite
+		- 17 fotogrammi da eseguire solo avanti a 30fps
+		- hitbox a frame dal 7 al 10
 	Torpe:
-		- 13 fotogrammi da eseguire solo avanti a 24fps
-		- hitbox a frame dal 4 al 7
-	Peirolo:
-		- 13 fotogrammi da eseguire solo avanti a 24fps
+		Light Kick in salto: "Jump Light Kick - Single Hold v2" Su autosprite
+		- 12 fotogrammi da eseguire solo avanti a 24fps
 		- hitbox a frame dal 6 al 9
+	Peirolo:
+		Light Kick in salto: "Jump Light Kick - Forward Snap" Su autosprite
+		- 16 fotogrammi da eseguire solo avanti a 30fps
+		- hitbox a frame dal 7 al 10
 	Bue:
-		- 10 fotogrammi da eseguire solo avanti a 24fps
-		- hitbox a frame dal 4 al 6
+		Light Kick in salto: "Jump Light Kick - Forward Snap" Su autosprite
+		- 13 fotogrammi da eseguire solo avanti a 24fps
+		- hitbox a frame dal 5 al 9
+
+Strong Punch in salto: "Jump Heavy Punch - Double Hammer" Su autosprite
+	Oscar:
+		- 34 fotogrammi da eseguire solo avanti a 60fps
+		- hitbox a frame dal 13 al 20
+	Mileto:
+		- 31 fotogrammi da eseguire solo avanti a 60fps
+		- hitbox a frame dal 15 al 20
+	Torpe:
+		- 33 fotogrammi da eseguire solo avanti a 60fps
+		- hitbox a frame dal 15 al 21
+	Peirolo:
+		- 23 fotogrammi da eseguire solo avanti a 48fps
+		- hitbox a frame dal 9 al 15
+	Bue:
+		- 26 fotogrammi da eseguire solo avanti a 48fps
+		- hitbox a frame dal 12 al 17
 
 Okay quelli buoni sono per ora Strong Kick v3 - Chest Facing Camera, Strong Kick - Spinning High Kick, e Strong Kick
 
@@ -186,7 +209,7 @@ per Peirolo usa "Strong Kick - Spinning High Kick"
 per Bue usa "Strong Kick"
 
 
-Perfetto ora vorrei fare le animazioni del pugno debole in salto, come frame iniziale troverai "jump pose", da utilizzare come primo ed ultimo fotogramma dell'animazione in salto. Partiamo da oscarq
-CPme riferimento potremmo usare questo: https://ultimateframedata.com/sf6/hitboxes/alex/alex-j-lp.gif
+Perfetto ora vorrei fare le animazioni del calcio debole in salto, come frame iniziale troverai "jump pose", da utilizzare come primo ed ultimo fotogramma dell'animazione in salto. Partiamo da oscar come tipologia usa modalità PRO a 2secondi
+Come riferimento potremmo usare questo: https://ultimateframedata.com/sf6/hitboxes/sagat/sagat-j-mk.gif
 
  

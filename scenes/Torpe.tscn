@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3]
+[gd_scene load_steps=34 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
@@ -51,6 +51,12 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/medium_kick_standing.png" id="medium_kick_sheet"]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/jump_light_punch.png" id="jump_light_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/jump_medium_punch.png" id="jump_medium_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/jump_strong_punch.png" id="jump_strong_punch_sheet"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/torpe/jump_light_kick_game.png" id="jump_light_kick_sheet"]
 
 [node name="Torpe" instance=ExtResource("1_base")]
 hurt_crouched_sheet = ExtResource("hurt_crouched_sheet")
@@ -171,3 +177,24 @@ medium_kick_sheet = ExtResource("medium_kick_sheet")
 medium_kick_frame_count = 23
 medium_kick_active_start_frame = 14
 medium_kick_active_end_frame = 16
+
+jump_medium_punch_sheet = ExtResource("jump_medium_punch_sheet")
+jump_medium_punch_frame_count = 32
+jump_medium_punch_columns = 7
+jump_medium_punch_fps = 60.0
+jump_medium_punch_active_start_frame = 16
+jump_medium_punch_active_end_frame = 21
+
+jump_strong_punch_sheet = ExtResource("jump_strong_punch_sheet")
+jump_strong_punch_frame_count = 33
+jump_strong_punch_columns = 7
+jump_strong_punch_fps = 60.0
+jump_strong_punch_active_start_frame = 15
+jump_strong_punch_active_end_frame = 21
+
+jump_light_kick_sheet = ExtResource("jump_light_kick_sheet")
+jump_light_kick_frame_count = 12
+jump_light_kick_columns = 5
+jump_light_kick_fps = 24.0
+jump_light_kick_active_start_frame = 6
+jump_light_kick_active_end_frame = 9
