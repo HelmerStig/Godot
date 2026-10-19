@@ -191,3 +191,19 @@ Comando QCF + LP/MP/SP con finestra 36 tick (600 ms), diagonale finale e transiz
 Un solo impatto da 10 danni: hurt_high in piedi o hurt_crouched in basso, parata media/bassa secondo postura e intersezione con hurtbox. Collisione con bersaglio, parata o terreno: 12 frammenti fisici ritagliati tramite UV dalla texture e spruzzo di birra; collisioni dei frammenti solo col terreno, nessun danno secondario, dissolvenza ed eliminazione in 1,4 secondi. `sibilo.wav` parte una volta al rilascio e si ferma all'impatto; `bottiglia-rotta.wav` parte una volta alla rottura con player indipendente dal proiettile. Scia Line2D ambrata in coordinate mondo: ultimi 0,12 secondi di traiettoria, larghezza 5 pixel, dissolvenza in 0,14 secondi all'impatto. Reset elimina proiettili, frammenti, scie e suoni del proprietario; i proiettili residui spariscono a fine round.
 
 Controller `scripts/Torpe.gd`; volo `scripts/TorpeBeerBottleProjectile.gd`; rottura `scripts/TorpeBeerShatter.gd`. Test dedicato `res://tests/test_torpe_beer.gd`, incluso nella suite combat. Nessuna nuova generazione o spesa di crediti per l'integrazione.
+
+## Torpe Special 2: saldatura (19 ottobre 2026)
+
+Fonte AutoSprite `Special 2 - Welding Lunge`, sheet `cmvfcfza300cdup7ovl9a63fz`, celle 512x512, 8 colonne e 56 frame nativi. La sequenza `special_2_welding_64_frames.tres` conserva i 64 frame con 8 ripetizioni documentate nel relativo `.autosprite.json`. Nel gioco usa 60 FPS, non loop, durata 64/60 secondi, poi idle. Attivazione QCB + LP/MP/SP: 36 tick di tolleranza (600 ms), accetta anche diagonale finale e giù/indietro rapido. Direzione fissata all'avvio; l'attacco interrompe guardia e movimento.
+
+Scintille attive ai frame runtime 43-64 (native 38-56), cioè per tutta la durata dell'arco presente nello sprite. La punta è tracciata sul canvas del personaggio e trasformata con scala, offset e facing. Ogni scintilla percorre una traiettoria indipendente dal personaggio, orizzontale in partenza e discendente per gravità 850 px/s²: velocità 1040 px/s, portata 300 pixel, vita massima 300/1040 secondi. Le scie sono linee orizzontali con bagliore, colori alternati blu, rosso e giallo; in più tre CPUParticles2D producono punti luminosi degli stessi colori con gravità e portata coerenti.
+
+| Variante | Scie al secondo | Particelle per colore | Danno per esecuzione |
+|---|---:|---:|---:|
+| LP | 600 | 60 | 10 |
+| MP | 1000 | 100 | 15 |
+| SP | 1400 | 140 | 20 |
+
+Le collisioni interrogano il segmento effettivo percorso da ciascuna scintilla contro le sole hurtbox, escludendo il proprietario. Un bersaglio subisce danno una sola volta per esecuzione; i punti aggiuntivi sono decorativi. Su HIT a terra si esegue hurt_high anche contro un bersaglio accovacciato; ogni ciclo completo, incluso un eventuale ritorno, può ripetersi al successivo contatto con una scintilla, senza altro danno. Il tracciamento della generazione dell’azione impedisce di sovrascrivere reset o azioni successive. La reazione breve di Oscare resta così visibile per il getto, conservando 8 frame a 48 FPS. Guardia media in piedi e bassa da accovacciato. In aria resta la normale reazione aerea. `saldatore.wav` inizia con l'emissione, può ripetersi senza modificare il WAV condiviso e si ferma insieme al getto. Le particelle residue possono terminare il volo dopo la recovery naturale; interruzione, KO e reset eliminano getto e audio.
+
+Controller `scripts/Torpe.gd`, effetto e proiettili `scripts/TorpeWeldingSparks.gd`, test `res://tests/test_torpe_welding.gd` nella suite combat. Nessuna generazione o spesa AutoSprite durante l'integrazione.

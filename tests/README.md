@@ -1,5 +1,13 @@
 # Test headless
 
+Special 2 di Torpe (saldatura):
+
+```text
+godot --headless --path . --script res://tests/test_torpe_welding.gd
+```
+
+Il caso `cases/torpe_welding_special.gd` è incluso nella suite combat. Verifica i 64 frame a 60 FPS, QCB nei due versi con LP/MP/SP e tolleranza, emissione e audio ai frame 43-64, aggancio alla punta, tre colori, densità e danni crescenti, particelle aggiuntive, gravità e portata 300 pixel. Le collisioni reali coprono hit, sovrapposizione iniziale, parate, accovacciamento, bersagli fuori portata, alle spalle o sopra il getto, invulnerabilità, danno singolo, hurt_high, interruzioni e reset. Verifica la riproduzione di tutti i frame hurt_high e dell'eventuale ritorno su tutti i sette difensori con fisica attiva; Oscare deve ripetere almeno due cicli completi senza ulteriori danni. La scena MainArena ripete il caso Torpe/Oscare con QCB da input reali e verifica anche un KO con cancellazione sincrona di getto/audio e avvio di Victory.
+
 Special 1 di Torpe (birra):
 
 ```text

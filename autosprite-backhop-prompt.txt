@@ -243,7 +243,12 @@ associa al proiettile della birra questo suono: assets\sounds\sfx\sibilo.wav
 associa alla rottura della bottiglia questo suono: assets\sounds\sfx\bottiglia-rotta.wav
 
 Ora vorrei creare l'animazione della mossa speciale 2 per Torpe.
-Ho creato la posa "Saldatura", vorrei che torpe estrasse da dietro la schiena una maschera da saldatore e la indossasse, poi eseguisse un movimento di saldatura in avanti estendendosi un po' più in avanti di come è ora la posa. Devo creare l'animazione su autosprite, fai 64 framee vediamo cosa esce.
+Ho creato la posa "Saldatura", vorrei che torpe estrasse da dietro la schiena una maschera da saldatore e la indossasse, poi eseguisse un movimento di saldatura in avanti con il saldatore che appare fra le sue mani. estendendosi un po' più in avanti di come è ora la posa. Devo creare l'animazione su autosprite, fai 64 framee vediamo cosa esce.
+
+Perfetto integra come special 2 di torpe l'animazione creata. Special 2 - Welding Lunge
+A 60fps, quando l'animazione della sldatura parte per tutta la durata di scintille di autosprite fai partire delle scintille in avanti che cadono verso il basso e colpisocno l'avversartio per circa 150 pixel, alterna blu-rossi-gialli per le scintille di saldatura. Associa a queste scintille un effetto sonoro di saldatura: assets\sounds\sfx\saldatore.wav
+quarto di luna indietro + LP, (puoi farla anche con MP e SP, in quel caso aumenta quantitò di particelle ed aumenta il danno) metti tollerenza in modo che non sia troppo difficile da eseguire.
+
 
 
 

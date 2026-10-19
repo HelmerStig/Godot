@@ -72,8 +72,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				expect.call(effect.damage == spec[2] and effect.emission_rate == spec[3] and effect.audio.playing and effect.audio.stream.data == Sparks.SOUND.data, "Saldatura: danno e densita crescenti, saldatore.wav durante il getto")
 				var particles_valid := effect.particle_emitters.size() == 3
 				for particles in effect.particle_emitters:
-					particles_valid = particles_valid and particles.emitting and not particles.local_coords and particles.amount >= 60 and particles.gravity.y > 0 and particles.direction.x == (1 if right else -1) and particles.initial_velocity_max * particles.lifetime <= 150.01
-				expect.call(particles_valid, "Saldatura: tre emettitori luminosi blu/rossi/gialli, gravita e portata 150 px")
+					particles_valid = particles_valid and particles.emitting and not particles.local_coords and particles.amount >= 60 and particles.gravity.y > 0 and particles.direction.x == (1 if right else -1) and particles.initial_velocity_max * particles.lifetime <= 300.01
+				expect.call(particles_valid, "Saldatura: tre emettitori luminosi blu/rossi/gialli, gravita e portata 300 px")
 				var direction := 1.0 if right else -1.0
 				var expected := actor.animated_sprite.to_global(Vector2(92*direction,-115) + actor.animated_sprite.offset)
 				expect.call(effect.emitter_position.is_equal_approx(expected), "Saldatura: scintille ancorate alla punta e specchiate")
@@ -84,8 +84,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				for spark in effect.sparks:
 					if not colors.has(spark.color):
 						colors.append(spark.color)
-					falling = falling and signf(spark.velocity.x) == direction and spark.velocity.y > -15 and absf(spark.position.x-spark.origin.x) <= 150
-				expect.call(colors.size() == 3 and falling, "Saldatura: alternanza blu/rosso/giallo, avanzamento e gravita entro 150 px")
+					falling = falling and signf(spark.velocity.x) == direction and spark.velocity.y > -15 and absf(spark.position.x-spark.origin.x) <= 300
+				expect.call(colors.size() == 3 and falling, "Saldatura: alternanza blu/rosso/giallo, avanzamento e gravita entro 300 px")
 				var old_particle: Vector2 = effect.sparks[0].position
 				actor.position.x += 12
 				actor.animated_sprite.frame = 45
@@ -102,7 +102,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	# Actual ray collisions, with the target 110px in front of the torch.
 	for right in [true,false]:
 		for strength in [&"light",&"medium",&"heavy"]:
-			for scenario in ["hit","overlap","block","crouched_hit","crouched_block","far","behind","above","invulnerable","knockout"]:
+			for scenario in ["hit","long_range","overlap","block","crouched_hit","crouched_block","far","behind","above","invulnerable","knockout"]:
 				await Helpers.settle(tree,actor,target,arena.FLOOR_Y)
 				actor.is_facing_right = right
 				actor.animated_sprite.flip_h = not right
@@ -120,7 +120,9 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 					target.input_buffer.record_input_snapshot(int(direction) if guarded else 0,0,[],not right)
 				target.combat.set_guarding(guarded)
 				if scenario == "far":
-					target.position.x = actor.position.x + direction * 330
+					target.position.x = actor.position.x + direction * 500
+				elif scenario == "long_range":
+					target.position.x = actor.position.x + direction * 410
 				elif scenario == "behind":
 					target.position.x = actor.position.x - direction * 200
 				elif scenario == "above":
@@ -143,8 +145,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				expect.call(target.combat.current_health == expected_health, "Saldatura: il numero di scintille non moltiplica il danno")
 				expect.call(actor.combat.current_health == 100, "Saldatura: nessun danno al proprietario")
 				if not miss and scenario != "knockout":
-					var expected: StringName = (&"block_low" if crouched else &"block_mid") if guarded else (&"hurt_crouched" if crouched else &"hurt_mid")
-					expect.call(target.animated_sprite.animation == expected, "Saldatura: hurt/parata coerenti con la postura")
+					var expected: StringName = (&"block_low" if crouched else &"block_mid") if guarded else &"hurt_high"
+					expect.call(target.animated_sprite.animation == expected, "Saldatura: hurt_high su HIT, parata coerente con la postura")
 	await Helpers.settle(tree,actor,target,arena.FLOOR_Y)
 	actor._start_welding_special()
 	await tree.create_timer(1.15).timeout
@@ -182,6 +184,85 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	for tick in 2:
 		await tree.physics_frame
 	expect.call(tree.get_nodes_in_group("torpe_welding_sparks").is_empty() and not actor.welding_special_active, "Saldatura: reset elimina getto, danni e audio")
+	await Helpers.settle(tree,actor,target,arena.FLOOR_Y)
+	actor.is_facing_right = true
+	actor.animated_sprite.flip_h = false
+	target.position.x = 1200
+	for tick in 2:
+		await tree.physics_frame
+	var old_jet := ignite(actor)
+	for tick in 10:
+		old_jet._physics_process(1.0/60.0)
+	expect.call(target.combat.current_health == 90, "Saldatura: contatto prima del reset del difensore")
+	target.reset_fighter(Vector2(1200,arena.FLOOR_Y))
+	for tick in 10:
+		old_jet._physics_process(1.0/60.0)
+	expect.call(target.combat.current_health == 100 and target.current_state == Fighter.State.IDLE, "Saldatura: nessun hurt o danno tardivo dopo il reset del difensore")
+	target._start_light_punch()
+	old_jet._hit_area(target.get_node("Hurtbox"))
+	expect.call(target.animated_sprite.animation == &"light_punch", "Saldatura: la ripetizione del vecchio hurt non sovrascrive una nuova azione")
+	target.reset_fighter(Vector2(-10000,arena.FLOOR_Y))
+	for tick in 2:
+		await tree.physics_frame
+	# Real animation and physics on every defender, including Oscare's short hurt.
+	var defenders: Array[Fighter] = []
+	for fighter: Fighter in arena._fighters:
+		if fighter != actor:
+			defenders.append(fighter)
+	var torpe_defender := (load("res://scenes/Torpe.tscn") as PackedScene).instantiate() as Fighter
+	arena.add_child(torpe_defender)
+	torpe_defender.is_player_controlled = false
+	torpe_defender.set_physics_process(false)
+	defenders.append(torpe_defender)
+	for defender in defenders:
+		await Helpers.settle(tree,actor,defender,arena.FLOOR_Y)
+		actor.is_facing_right = true
+		actor.animated_sprite.flip_h = false
+		defender.position.x = 1200
+		defender.is_facing_right = false
+		defender.animated_sprite.flip_h = true
+		var observed: Array[int] = []
+		var reverse_observed: Array[int] = []
+		var record := func():
+			if defender.animated_sprite.animation == &"hurt_high":
+				if observed.is_empty() or observed[-1] != defender.animated_sprite.frame:
+					observed.append(defender.animated_sprite.frame)
+			elif defender.animated_sprite.animation == &"hurt_high_reverse":
+				reverse_observed.append(defender.animated_sprite.frame)
+		# Idle frame 0 -> hurt frame 0 changes the animation without necessarily
+		# emitting frame_changed, so record its reset after animation_changed too.
+		var record_start := func():
+			if defender.animated_sprite.animation == &"hurt_high":
+				record.call_deferred()
+		defender.animated_sprite.frame_changed.connect(record)
+		defender.animated_sprite.animation_changed.connect(record_start)
+		actor.set_physics_process(true)
+		defender.set_physics_process(true)
+		actor._start_welding_special()
+		await tree.create_timer(1.25 + defender.get_animation_duration(&"hurt_high")).timeout
+		actor.set_physics_process(false)
+		defender.set_physics_process(false)
+		var complete := true
+		for index in defender.animated_sprite.sprite_frames.get_frame_count(&"hurt_high"):
+			complete = complete and observed.has(index)
+		if defender.animated_sprite.sprite_frames.has_animation(&"hurt_high_reverse"):
+			for index in defender.animated_sprite.sprite_frames.get_frame_count(&"hurt_high_reverse"):
+				complete = complete and reverse_observed.has(index)
+		expect.call(defender.combat.current_health == 90 and not observed.is_empty(), "%s: scintille reali infliggono danno e avviano hurt_high" % defender.name)
+		expect.call(complete, "%s: tutti i fotogrammi hurt_high realmente riprodotti con fisica attiva" % defender.name)
+		if defender is Oscare:
+			var full_cycles := 0
+			for offset in range(0,observed.size()-7,8):
+				var full_cycle := true
+				for frame in 8:
+					full_cycle = full_cycle and observed[offset+frame] == frame
+				if full_cycle:
+					full_cycles += 1
+			expect.call(full_cycles >= 2, "Oscare: il getto mantiene almeno due hurt_high completi senza danno aggiuntivo")
+		print("WELDING_REACTION: %s frames=%s state=%s animation=%s" % [defender.name,observed,defender.current_state,defender.animated_sprite.animation])
+		defender.animated_sprite.frame_changed.disconnect(record)
+		defender.animated_sprite.animation_changed.disconnect(record_start)
+		defender.position.x = -10000
 	arena.queue_free()
 	await tree.process_frame
 	await tree.process_frame
@@ -189,10 +270,34 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	var selection := tree.root.get_node("CharacterSelection")
 	var previous := [selection.player1_id,selection.player2_id]
 	selection.player1_id = "torpe"
-	selection.player2_id = "bue"
+	selection.player2_id = "oscare"
 	var main := (load("res://scenes/MainArena.tscn") as PackedScene).instantiate() as MainArena
 	tree.root.add_child(main)
 	await tree.create_timer(3.15).timeout
+	var real_actor := main.player1 as Torpe
+	var real_defender := main.player2 as Oscare
+	real_actor.position = Vector2(876,main.FLOOR_Y)
+	real_defender.position = Vector2(1076,main.FLOOR_Y)
+	var high_end_frames: Array[int] = []
+	var record_high_end := func():
+		if real_defender.animated_sprite.animation == &"hurt_high" and real_defender.animated_sprite.frame == 7:
+			high_end_frames.append(7)
+	real_defender.animated_sprite.frame_changed.connect(record_high_end)
+	Input.action_press(&"p1_crouch")
+	for tick in 4:
+		await tree.physics_frame
+	Input.action_press(&"p1_move_left")
+	for tick in 4:
+		await tree.physics_frame
+	Input.action_release(&"p1_crouch")
+	Input.action_press(&"p1_light_punch")
+	for tick in 2:
+		await tree.physics_frame
+	Input.action_release(&"p1_light_punch")
+	Input.action_release(&"p1_move_left")
+	await tree.create_timer(1.5).timeout
+	expect.call(real_defender.combat.current_health == 90 and high_end_frames.size() >= 2, "Arena Torpe contro Oscare: QCB reale produce piu hurt_high completi con un solo danno")
+	real_defender.animated_sprite.frame_changed.disconnect(record_high_end)
 	main.set_physics_process(false)
 	(load("res://tests/cases/roster_victory.gd") as GDScript).reset_round(main)
 	var winner := main.player1 as Torpe

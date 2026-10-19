@@ -2,12 +2,13 @@ extends Node2D
 class_name TorpeWeldingSparks
 
 const SOUND := preload("res://assets/sounds/sfx/saldatore.wav")
+const Reactions := preload("res://scripts/FighterCombatReactions.gd")
 const DAMAGE := {&"light": 10, &"medium": 15, &"heavy": 20}
 const RATES := {&"light": 600.0, &"medium": 1000.0, &"heavy": 1400.0}
 const PARTICLE_AMOUNTS := {&"light": 60, &"medium": 100, &"heavy": 140}
 const COLORS := [Color(.15,.60,1), Color(1,.12,.08), Color(1,.85,.10)]
-const REACH := 150.0
-const SPEED := 520.0
+const REACH := 300.0
+const SPEED := 1040.0
 const GRAVITY := 850.0
 const LIFETIME := REACH / SPEED
 
@@ -25,6 +26,9 @@ var emitted_count := 0
 var _emission_accumulator := 0.0
 var particle_emitters: Array[CPUParticles2D] = []
 var _tail_remaining := 0.0
+var elapsed := 0.0
+var _hurt_generations: Dictionary = {}
+var _next_hurt_cycle: Dictionary = {}
 
 
 func setup(fighter: Fighter, direction_right: bool, strength: StringName = &"light") -> void:
@@ -76,7 +80,7 @@ func _create_particle_emitters() -> void:
 		particles.direction = Vector2(1 if facing_right else -1,0)
 		particles.spread = 6
 		particles.gravity = Vector2(0,GRAVITY)
-		particles.initial_velocity_min = 430
+		particles.initial_velocity_min = 860
 		particles.initial_velocity_max = SPEED
 		particles.scale_amount_min = .12
 		particles.scale_amount_max = .26
@@ -135,6 +139,7 @@ func _physics_process(delta: float) -> void:
 	sync_from_fighter()
 	if is_queued_for_deletion():
 		return
+	elapsed += delta
 	if not emitting:
 		_tail_remaining -= delta
 	if emitting:
@@ -188,14 +193,47 @@ func _hit_area(area: Area2D) -> bool:
 	if target == null or target == source_fighter:
 		return false
 	if hit_targets.has(target):
+		_refresh_hurt_high(target)
 		return true
 	var crouched := target.get_crouch_progress() >= .5 or target.is_holding_low_guard()
 	var height := AttackData.HitHeight.LOW if crouched else AttackData.HitHeight.MID
-	var result := target.combat.take_damage(damage,source_fighter,.3,.18,height,false,0,0,false,false,height,COLORS[emitted_count % COLORS.size()],true)
+	var hitstun := maxf(.3,_hurt_cycle_duration(target))
+	var result := target.combat.take_damage(damage,source_fighter,hitstun,.18,height,false,0,0,false,false,AttackData.HitHeight.HIGH,COLORS[emitted_count % COLORS.size()],true)
 	if result == FighterCombat.DamageResult.IGNORED:
 		return false
 	hit_targets.append(target)
+	if result == FighterCombat.DamageResult.HIT and target.is_on_floor():
+		_remember_hurt_cycle(target)
 	return true
+
+
+func _remember_hurt_cycle(target: Fighter) -> void:
+	var id := target.get_instance_id()
+	_hurt_generations[id] = target.combat.action_generation
+	_next_hurt_cycle[id] = elapsed + _hurt_cycle_duration(target)
+
+
+func _hurt_cycle_duration(target: Fighter) -> float:
+	var duration := target.get_animation_duration(&"hurt_high")
+	if target.animated_sprite.sprite_frames.has_animation(&"hurt_high_reverse"):
+		duration += target.get_animation_duration(&"hurt_high_reverse")
+	return duration
+
+
+func _refresh_hurt_high(target: Fighter) -> void:
+	var id := target.get_instance_id()
+	if (
+		not _hurt_generations.has(id) or not target.is_on_floor()
+		or not target.controls_enabled or target.combat.current_health <= 0
+		or target.combat.action_generation != int(_hurt_generations[id])
+		or elapsed < float(_next_hurt_cycle[id])
+		or target.current_state != Fighter.State.IDLE
+	):
+		return
+	# The next actual spark contact restarts a complete recoil, never the damage.
+	# Short reactions (notably Oscare) remain visible throughout the welding jet.
+	Reactions.hit_reaction(target.combat,maxf(.3,_hurt_cycle_duration(target)),AttackData.HitHeight.HIGH,source_fighter,0,false,COLORS[emitted_count % COLORS.size()])
+	_remember_hurt_cycle(target)
 
 
 func _draw() -> void:

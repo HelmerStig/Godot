@@ -44,6 +44,12 @@ Giù, giù-avanti, avanti + LP/MP/SP, con la stessa tolleranza di 600 ms di Osca
 
 La bottiglia lascia una scia ambrata che segue l'arco senza ruotare con lo sprite e svanisce rapidamente all'impatto. `sibilo.wav` parte al rilascio e si ferma alla rottura. All'impatto con avversario, parata o terreno la bottiglia si frantuma in dodici pezzi della propria texture, con rimbalzo e spruzzo di birra; `bottiglia-rotta.wav` può completarsi anche dopo la scomparsa del proiettile. I frammenti sono decorativi e scompaiono dopo 1,4 secondi. Danno iniziale 10; hurt_high in piedi, hurt_crouched da accovacciato, solo se la traiettoria interseca la hurtbox. Parata media in piedi e bassa da accovacciato. Reset elimina proiettili, scie, suoni ed effetti; a fine round spariscono i proiettili rimasti.
 
+### Special 2 di Torpe: saldatura
+
+Giù, giù-indietro, indietro + LP/MP/SP, relativo al lato dell'avversario; finestra di 600 ms, con diagonale finale e passaggio rapido giù/indietro accettati. `Special 2 - Welding Lunge` esegue 64 frame a 60 FPS, senza loop, poi idle. Dal frame 43 al 64, durante l'arco AutoSprite, dalla punta del saldatore partono scie orizzontali e particelle luminose blu, rosse e gialle. Il getto avanza fino a 300 pixel a 1040 px/s e scende per gravità; segue la punta soltanto all'emissione, poi ogni scintilla continua nel mondo. `saldatore.wav` accompagna l'emissione e si ferma al termine o all'interruzione.
+
+LP/MP/SP emettono rispettivamente 600/1000/1400 scie al secondo, più 60/100/140 particelle per ciascun colore, con danno 10/15/20. Ogni avversario subisce il danno una sola volta per esecuzione, solo se una scintilla attraversa la hurtbox; i punti luminosi aggiuntivi sono decorativi. Un HIT a terra produce hurt_high, anche da accovacciato; i cicli completi si ripetono finché altre scintille raggiungono il bersaglio, senza ulteriori danni. Una nuova azione, un reset o la fine dei contatti interrompono la ripetizione. Parata media in piedi e bassa da accovacciato. I bersagli aerei mantengono la reazione aerea. Le scintille già in volo si esauriscono in meno di 0,3 secondi dopo il termine naturale. Hurt, KO e reset del proprietario eliminano il getto e fermano l'audio.
+
 ### Special 1 di Oscare: sigaretta
 
 Giù, giù-avanti, avanti + LP/MP/SP, relativo al lato dell'avversario. La finestra del movimento è di 36 tick fisici (600 ms); accetta anche il pugno sulla diagonale finale e il passaggio rapido da giù ad avanti. Per Player 1 rivolto a destra: S → S+D → D+J/H/U.
