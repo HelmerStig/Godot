@@ -1,0 +1,73 @@
+{
+  "creditsSpent": 11,
+  "character": {
+    "name": "Special 2 - Violent Smoke Breath",
+    "sheetId": "cmvf7as4i002v13p8hb86xzns",
+    "videoId": "cmvf798v7006813qc7ag7n3ur",
+    "file": "special_2_blow_candidate.png",
+    "frameCount": 49,
+    "columns": 7,
+    "cellSize": [
+      512,
+      512
+    ],
+    "durationSeconds": 2,
+    "playbackFps": 60,
+    "usedFrames1Based": [
+      1,
+      49
+    ],
+    "animation": "special_2_smoke_breath"
+  },
+  "smoke": {
+    "name": "Oscare Special 2 Smoke Breath",
+    "assetId": "cmvf7a562000bxzsjmej47u1q",
+    "sheetId": "cmvf7bs1u00ad13fpl0ganhbi",
+    "file": "special_2_smoke_candidate.png",
+    "frameCount": 49,
+    "columns": 7,
+    "cellSize": [
+      512,
+      512
+    ],
+    "durationSeconds": 2,
+    "horizontalClippingFrames1Based": [
+      27,
+      49
+    ],
+    "fullyContainedFrameRange1Based": [
+      1,
+      26
+    ],
+    "notes": "Cone persists throughout the clip. Use engine-controlled appearance and fade; later source frames clip at the right edge.",
+    "playbackFps": 60,
+    "usedFrames1Based": [
+      1,
+      26
+    ],
+    "fighterStartFrame1Based": 21,
+    "anchoredTo": "mouth",
+    "scaleRelativeToFighter": 0.7,
+    "fadeInFrames": 3,
+    "fadeOutFrames": 6,
+    "sound": "res://assets/sounds/sfx/soffio.wav",
+    "soundEvent": "smoke_spawn",
+    "impactSound": null,
+    "standingReaction": "hurt_medium",
+    "standingHurtRepeatFrames": 6,
+    "damagePerTarget": 10,
+    "repeatDamage": 0
+  },
+  "gameplayBound": true,
+  "input": "DOWN, DOWN_BACK, BACK + LP/MP/SP (relative facing); 600 ms motion window",
+  "integrationCreditsSpent": 0,
+  "preparation": {
+    "animation": "special_1_light_cigarette",
+    "frameCount": 20,
+    "playbackFps": 60,
+    "sound": "res://assets/sounds/sfx/siga-accensione.wav",
+    "soundFrame1Based": 6
+  },
+  "totalGameplayFrames": 69,
+  "totalGameplaySeconds": 1.15
+}

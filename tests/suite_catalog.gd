@@ -11,6 +11,7 @@ const SUITES := {
 	"mangler": ["res://tests/cases/mangler_moveset.gd", "res://tests/cases/mangler_attack_audio.gd"],
 	"combat": [
 		"res://tests/cases/oscare_cigarette_special.gd",
+		"res://tests/cases/oscare_smoke_special.gd",
 		"res://tests/cases/calibrated_hitboxes.gd",
 		"res://tests/cases/roster_crouched_guard.gd",
 		"res://tests/cases/crouched_block_collision.gd",

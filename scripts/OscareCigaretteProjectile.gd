@@ -3,6 +3,7 @@ class_name OscareCigaretteProjectile
 
 const SHEET := preload("res://assets/sprites/characters/oscare/siga_projectile.png")
 const IMPACT_SOUND := preload("res://assets/sounds/sfx/crepitio.wav")
+const IMPACT_COLOR := Color(1.0, 0.42, 0.06, 0.94)
 const SPEEDS := {&"light": 520.0, &"medium": 720.0, &"heavy": 920.0}
 const DAMAGE := 10
 const MAX_LIFETIME := 3.0
@@ -90,7 +91,7 @@ func _hit_area(area: Area2D) -> bool:
 	var height := AttackData.HitHeight.LOW if crouched else AttackData.HitHeight.MID
 	var hurt_height := AttackData.HitHeight.LOW if crouched else AttackData.HitHeight.HIGH
 	var result := target.combat.take_damage(
-		DAMAGE, source_fighter, 0.3, 0.18, height, false, 0, 0, true, false, hurt_height
+		DAMAGE, source_fighter, 0.3, 0.18, height, false, 0, 0, true, false, hurt_height, IMPACT_COLOR
 	)
 	if result == FighterCombat.DamageResult.IGNORED:
 		return false

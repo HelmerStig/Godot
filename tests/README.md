@@ -1,12 +1,14 @@
 # Test headless
 
-Special 1 di Oscare (sigaretta):
+Speciali di Oscare (sigaretta e soffio):
 
 ```text
 godot --headless --path . --script res://tests/test_oscare_special.gd
 ```
 
 Il caso `cases/oscare_cigarette_special.gd` è incluso nella suite combat. Verifica i due atlas aggiornati, 60 FPS, quarto di luna in entrambi i versi e con LP/MP/SP, tolleranza e scadenza, priorità sui pugni normali, rilascio unico, velocità e origine speculare del proiettile, riproduzione reale completa, interruzioni e reset. Le collisioni reali coprono sweep rapido nelle due direzioni, danno singolo, parate, bersaglio accovacciato e colpo che passa sopra la hurtbox.
+
+Anche `cases/oscare_smoke_special.gd` è incluso nella suite combat. Verifica i 49 frame di Oscare e i primi 26 del fumo a 60 FPS, quarto di luna indietro nelle due direzioni con tre pugni e input semplificati, accensione iniziale di 20 frame e audio al frame 6, passaggio diretto al soffio, aggancio alla bocca, soffio.wav unico alla comparsa, nessun suono di impatto, dissolvenza, ritorno in idle, interruzioni/KO/reset e collisioni reali speculari con guardie, bersagli lontani o sopra il cono. Il fumo applica il danno una sola volta per bersaglio, ripete hurt_medium ogni 6 frame sui bersagli in piedi ancora nel cono e rimane visibile fino alla fine. Il test copre anche uscita/rientro nel cono, fine della raffica ed esclusione di crouch, parate e KO. Per eseguirlo separatamente: `godot --headless --path . --script res://tests/test_oscare_smoke.gd`.
 
 Pugno leggero in salto dei cinque fighter del roster:
 

@@ -103,6 +103,8 @@ func record_input_snapshot(
 		inferred_directions = [Direction.DOWN, Direction.DOWN_FORWARD]
 	elif previous_direction == Direction.DOWN and _current_direction == Direction.FORWARD:
 		inferred_directions = [Direction.DOWN_FORWARD]
+	elif previous_direction == Direction.DOWN and _current_direction == Direction.BACK:
+		inferred_directions = [Direction.DOWN_BACK]
 	for inferred_direction in inferred_directions:
 		_history.insert(1, {
 			"frame": Engine.get_physics_frames(),

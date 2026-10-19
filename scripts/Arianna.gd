@@ -1298,7 +1298,8 @@ func start_hit_reaction(
 	hit_height: AttackData.HitHeight,
 	attacker: Fighter,
 	start_frame: int = 0,
-	apply_pushback: bool = true
+	apply_pushback: bool = true,
+	hurt_effect_color: Color = Color.TRANSPARENT
 ) -> float:
 	if hit_height in [
 		AttackData.HitHeight.LOW,
@@ -1308,7 +1309,7 @@ func start_hit_reaction(
 		# Le reazioni custom di Arianna riproducono sempre la sequenza completa.
 		start_frame = 0
 	var reaction_duration := super.start_hit_reaction(
-		hit_height, attacker, start_frame, apply_pushback
+		hit_height, attacker, start_frame, apply_pushback, hurt_effect_color
 	)
 	if hit_height == AttackData.HitHeight.MID and apply_pushback:
 		velocity.x *= ARIANNA_HURT_MEDIUM_PUSHBACK_MULTIPLIER

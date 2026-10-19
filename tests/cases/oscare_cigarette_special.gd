@@ -190,12 +190,21 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		arena.add_child(p)
 		p.set_physics_process(false)
 		p.position = Vector2(1050,arena.FLOOR_Y - (225 if scenario == "above_crouch" else 170))
+		var previous_effects := tree.get_nodes_in_group("hurt_colored_explosion")
+		var previous_blue_count := tree.get_nodes_in_group("hurt_blue_explosion").size()
 		p._physics_process(0.3)
 		var miss: bool = scenario == "above_crouch"
 		var expected_health := 100 if guarded or miss else (0 if knockout else 90)
 		expect.call(target.combat.current_health == expected_health and p.has_hit == not miss, "Sigaretta: sweep reale, collisione e danno " + scenario)
 		var impact_audio := tree.get_nodes_in_group("oscare_cigarette_impact_audio")
 		expect.call(impact_audio.size() == (0 if guarded or miss else 1), "Sigaretta: crepitio solo a segno " + scenario)
+		var new_effects := tree.get_nodes_in_group("hurt_colored_explosion").filter(func(fx): return not previous_effects.has(fx))
+		expect.call(new_effects.size() == (0 if guarded or miss else 1) and tree.get_nodes_in_group("hurt_blue_explosion").size() == previous_blue_count, "Sigaretta: solo esplosione arancione su HIT/KO " + scenario)
+		for fx in new_effects:
+			var sparks := fx.get_node("BlueSparks") as CPUParticles2D
+			var flash := fx.get_node("BlueFlash") as Sprite2D
+			var glow := flash.texture as GradientTexture2D
+			expect.call(sparks.color == Projectile.IMPACT_COLOR and glow.gradient.get_color(1) == Color(1.0,0.42,0.06,0.58), "Sigaretta: scintille e bagliore realmente arancioni " + scenario)
 		if not miss:
 			var expected: StringName = (&"block_low" if crouched else &"block_mid") if guarded else (&"hurt_crouched" if crouched else &"hurt_high")
 			if knockout:
@@ -233,6 +242,30 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	expiring_audio_projectile.queue_free()
 	await tree.create_timer(1.1).timeout
 	expect.call(tree.get_nodes_in_group("oscare_cigarette_impact_audio").is_empty(), "Sigaretta: fine del crepitio libera il player audio")
+	# All fighter overrides must forward the per-hit tint; subsequent normal
+	# attacks on the same victim must still use the unchanged blue palette.
+	var mirror_victim := (load("res://scenes/Oscare.tscn") as PackedScene).instantiate() as Fighter
+	arena.add_child(mirror_victim)
+	mirror_victim.set_physics_process(false)
+	mirror_victim.is_player_controlled = false
+	var victims: Array = arena._fighters.duplicate()
+	victims.append(mirror_victim)
+	for victim: Fighter in victims:
+		if victim == actor:
+			continue
+		await settle(tree,actor,victim,arena.FLOOR_Y)
+		var old_orange := tree.get_nodes_in_group("hurt_colored_explosion")
+		var p := Projectile.new()
+		p.setup(actor,true)
+		arena.add_child(p)
+		p.set_physics_process(false)
+		p._hit_area(victim.get_node("Hurtbox"))
+		var orange := tree.get_nodes_in_group("hurt_colored_explosion").filter(func(fx): return not old_orange.has(fx))
+		expect.call(orange.size() == 1 and (orange[0].get_node("BlueSparks") as CPUParticles2D).color == Projectile.IMPACT_COLOR, str(victim.name) + ": impatto sigaretta arancione")
+		var old_blue := tree.get_nodes_in_group("hurt_blue_explosion")
+		victim.combat.take_damage(1,actor,0.3,0.1,AttackData.HitHeight.HIGH)
+		var blue := tree.get_nodes_in_group("hurt_blue_explosion").filter(func(fx): return not old_blue.has(fx))
+		expect.call(blue.size() == 1 and (blue[0].get_node("BlueSparks") as CPUParticles2D).color == Color(0.24,0.76,1.0,0.94), str(victim.name) + ": il colpo successivo conserva il blu normale")
 	arena.queue_free()
 	await tree.process_frame
 	return true

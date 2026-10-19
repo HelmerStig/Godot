@@ -19,7 +19,8 @@ static func take_damage(
 	ko_start_frame: int,
 	apply_pushback: bool,
 	force_grounded_reaction: bool,
-	hurt_height_override: int = -1
+	hurt_height_override: int = -1,
+	hurt_effect_color: Color = Color.TRANSPARENT
 ) -> FighterCombat.DamageResult:
 	if combat.fighter.current_state in [Fighter.State.KNOCKDOWN_RECOVERY, Fighter.State.KNOCKED_DOWN]:
 		return FighterCombat.DamageResult.IGNORED
@@ -36,6 +37,8 @@ static func take_damage(
 
 	if combat.current_health <= 0:
 		die(combat, ko_start_frame)
+		if hurt_effect_color.a > 0.0:
+			combat.fighter.spawn_hurt_blue_explosion(hit_height, hurt_effect_color)
 		return FighterCombat.DamageResult.KNOCKOUT
 	if attack_was_blocked:
 		block_reaction(combat, blockstun, hit_height, attacker)
@@ -71,12 +74,14 @@ static func take_damage(
 	)
 	if was_airborne:
 		airborne_knockdown_reaction(combat, attacker)
+		if hurt_effect_color.a > 0.0:
+			combat.fighter.spawn_hurt_blue_explosion(hit_height, hurt_effect_color)
 	elif causes_knockdown and not crouched_low_hit:
 		sweep_knockdown_reaction(combat, attacker)
 	else:
 		if hit_height == AttackData.HitHeight.MID:
 			hit_reaction_start_frame = 4
-		hit_reaction(combat, hitstun, hit_height, attacker, hit_reaction_start_frame, apply_pushback)
+		hit_reaction(combat, hitstun, hit_height, attacker, hit_reaction_start_frame, apply_pushback, hurt_effect_color)
 	return FighterCombat.DamageResult.HIT
 
 
@@ -134,7 +139,8 @@ static func hit_reaction(
 	hit_height: AttackData.HitHeight,
 	attacker: Fighter,
 	hit_reaction_start_frame: int,
-	apply_pushback: bool
+	apply_pushback: bool,
+	hurt_effect_color: Color = Color.TRANSPARENT
 ) -> void:
 	combat.cancel_current_action()
 	var hit_generation := combat.action_generation
@@ -142,7 +148,8 @@ static func hit_reaction(
 		hit_height,
 		attacker,
 		hit_reaction_start_frame,
-		apply_pushback
+		apply_pushback,
+		hurt_effect_color
 	)
 	var reaction_duration := maxf(duration, animation_duration)
 

@@ -18,6 +18,8 @@ Al frame visivo 6 dell'accensione parte `assets/sounds/sfx/siga-accensione.wav`,
 
 Un impatto riuscito o KO riproduce `assets/sounds/sfx/crepitio.wav` una volta. Parata, contatto ignorato e colpo a vuoto restano silenziosi. Il player appartiene all'arena per completare il suono dopo la rimozione del proiettile; viene liberato alla fine della clip o al reset del proprietario.
 
+L'esplosione sull'avversario usa scintille e bagliore arancioni, specifici del proiettile. Le reazioni degli altri attacchi mantengono il blu predefinito; la tinta non persiste sul bersaglio dopo il contatto.
+
 Comando: giù → giù-avanti → avanti + pugno. Finestra 36 tick (600 ms), buffer pulsante 10 tick, diagonale finale accettata; il buffer esistente ricostruisce la diagonale durante un passaggio giù → avanti tra due tick. Funziona anche durante il rialzarsi; non in aria, hitstun o guardia.
 
 Velocità LP/MP/SP: 520/720/920 px/s. Danno iniziale invariato fra le versioni: 10. Durata massima proiettile: 3 s; collisione continua 26×10, con esclusione del proprietario e del fumo. Un solo impatto; hurt_high/parata media sul bersaglio in piedi, hurt accovacciato/parata bassa sul bersaglio in basso se intercettato. La reazione del proiettile resta indipendente da altre mosse iniziate nel frattempo dal proprietario. Conserva reazioni aeree e KO del combattimento condiviso. L'interruzione prima del rilascio annulla il lancio; il reset elimina i proiettili del proprietario.
@@ -153,3 +155,17 @@ Input light punch durante JUMPING, una mossa per salto, con velocità orizzontal
 Suoni condivisi con Arianna: punch_short_whoosh_30.wav alla partenza e light-punch.wav solo su HIT/KO. Interruzione e reset disattivano la hitbox e fermano il whoosh.
 
 Test dedicato: `godot --headless --path . --script res://tests/test_jump_light_punch.gd`.
+
+## Oscare Special 2: soffio di fumo (19 ottobre 2026)
+
+Input relativo: giù, giù-indietro, indietro + LP/MP/SP; finestra movimento 36 tick (600 ms), pugno 10 tick. Accetta la diagonale finale e il passaggio rapido giù-indietro. Le tre intensità condividono attualmente gli stessi parametri.
+
+Personaggio: `special_2_blow_candidate.png`, celle 512x512, 7 colonne, frame 1-49 solo avanti a 60 FPS, non loop, poi idle. Prima del soffio si esegue `Special 1 - Light Cigarette`: 20 frame a 60 FPS e `siga-accensione.wav` al frame 6, poi passaggio diretto ai 49 frame del soffio senza idle o lancio della sigaretta.
+
+Fumo: `special_2_smoke_candidate.png`, stessa griglia, esclusivamente frame 1-26 a 60 FPS. Compare al frame visivo 21 di Oscare, segue la bocca e termina al frame 46; i frame 47-49 sono recupero senza proiettile. Dissolvenza iniziale 3 frame, finale 6 frame; l'ultimo frame è soltanto visivo. Durata totale (20+49)/60 = 1,15 s; il fumo comincia quindi al frame complessivo 41. Scala fumo: 0,7 volte quella dello sprite del personaggio.
+
+Collisione convessa per frame ricavata dalla sagoma del fumo, speculare al facing. Danno complessivo di 10 per bersaglio, applicato una sola volta; hitstun 0,3 s e blockstun 0,18 s. In piedi il primo colpo usa hurt_medium e la reazione riparte ogni 6 frame del fumo (100 ms), esclusivamente mentre il bersaglio interseca il cono attivo. Si rinnova anche l'hitstun; l'ultimo hurt termina normalmente. Uscita dal cono, fine del fumo e interruzione fermano le ripetizioni. Da accovacciato produce hurt_crouched; la parata è media/bassa secondo la postura. Mantiene KO e reazioni aeree, senza raffica medium su accovacciati, bersagli aerei, in parata o KO.
+
+`soffio.wav` parte alla comparsa del cono, una sola volta; la registrazione può finire dopo il recupero naturale, mentre interruzioni e reset la fermano. Nessun audio di impatto; particelle arancioni su HIT/KO e sui hurt_medium ripetuti. Il cono continua fino alla fine anche dopo un impatto, ma scompare su interruzione, KO del proprietario o reset.
+
+Test dedicato: `godot --headless --path . --script res://tests/test_oscare_smoke.gd`; entrambe le speciali: `res://tests/test_oscare_special.gd`.

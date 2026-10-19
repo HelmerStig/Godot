@@ -215,7 +215,8 @@ func start_hit_reaction(
 	hit_height: AttackData.HitHeight,
 	attacker: Fighter,
 	start_frame: int = 0,
-	apply_pushback: bool = true
+	apply_pushback: bool = true,
+	hurt_effect_color: Color = Color.TRANSPARENT
 ) -> float:
 	hurt_started_crouched = (
 		hit_height == AttackData.HitHeight.LOW
@@ -239,7 +240,7 @@ func start_hit_reaction(
 		animated_sprite.frame = clampi(
 			start_frame, 0, animated_sprite.sprite_frames.get_frame_count(animation_name) - 1
 		)
-	spawn_hurt_blue_explosion(hit_height)
+	spawn_hurt_blue_explosion(hit_height, hurt_effect_color)
 	if apply_pushback:
 		var direction := -1.0 if is_facing_right else 1.0
 		if is_instance_valid(attacker):
@@ -325,10 +326,11 @@ func release_grab() -> void:
 	can_move = true
 
 
-func spawn_hurt_blue_explosion(hit_height: AttackData.HitHeight) -> Node2D:
+func spawn_hurt_blue_explosion(hit_height: AttackData.HitHeight, color_override: Color = Color.TRANSPARENT) -> Node2D:
+	var custom_color := color_override.a > 0.0
 	var explosion := Node2D.new()
-	explosion.name = "LowHurtBlueExplosion"
-	explosion.add_to_group("hurt_blue_explosion")
+	explosion.name = "ColoredHurtExplosion" if custom_color else "LowHurtBlueExplosion"
+	explosion.add_to_group("hurt_colored_explosion" if custom_color else "hurt_blue_explosion")
 	explosion.z_index = z_index + 4
 	var parent_node: Node = get_tree().current_scene
 	if parent_node == null:
@@ -344,7 +346,7 @@ func spawn_hurt_blue_explosion(hit_height: AttackData.HitHeight) -> Node2D:
 	material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	var flash := Sprite2D.new()
 	flash.name = "BlueFlash"
-	flash.texture = create_hurt_blue_glow_texture()
+	flash.texture = create_hurt_blue_glow_texture(color_override)
 	flash.scale = Vector2(0.32, 0.32)
 	flash.material = material
 	explosion.add_child(flash)
@@ -363,7 +365,7 @@ func spawn_hurt_blue_explosion(hit_height: AttackData.HitHeight) -> Node2D:
 	sparks.initial_velocity_max = 285.0
 	sparks.scale_amount_min = 1.3
 	sparks.scale_amount_max = 3.8
-	sparks.color = Color(0.24, 0.76, 1.0, 0.94)
+	sparks.color = color_override if custom_color else Color(0.24, 0.76, 1.0, 0.94)
 	sparks.material = material
 	explosion.add_child(sparks)
 	sparks.emitting = true
@@ -375,13 +377,19 @@ func _configure_hurt_effect(_flash_tween: Tween, _sparks: CPUParticles2D) -> voi
 	pass
 
 
-func create_hurt_blue_glow_texture() -> GradientTexture2D:
+func create_hurt_blue_glow_texture(color_override: Color = Color.TRANSPARENT) -> GradientTexture2D:
 	var gradient := Gradient.new()
 	gradient.colors = PackedColorArray([
 		Color(0.78, 0.96, 1.0, 0.98),
 		Color(0.2, 0.7, 1.0, 0.58),
 		Color(0.05, 0.3, 0.95, 0.0),
 	])
+	if color_override.a > 0.0:
+		gradient.colors = PackedColorArray([
+			Color(1.0, 0.5 + color_override.g * 0.5, 0.5 + color_override.b * 0.5, 0.98),
+			Color(color_override.r, color_override.g, color_override.b, 0.58),
+			Color(color_override.r * 0.8, color_override.g * 0.4, color_override.b * 0.2, 0.0),
+		])
 	gradient.offsets = PackedFloat32Array([0.0, 0.44, 1.0])
 	var texture := GradientTexture2D.new()
 	texture.gradient = gradient

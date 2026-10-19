@@ -1402,7 +1402,8 @@ func start_hit_reaction(
 	hit_height: AttackData.HitHeight,
 	attacker: Fighter,
 	start_frame: int = 0,
-	apply_pushback: bool = true
+	apply_pushback: bool = true,
+	hurt_effect_color: Color = Color.TRANSPARENT
 ) -> float:
 	# Medium e low includono la posa iniziale e il ritorno completo.
 	var full_sequence := (
@@ -1410,7 +1411,7 @@ func start_hit_reaction(
 		or (hit_height == AttackData.HitHeight.LOW and hurt_low_sheet != null)
 	)
 	var effective_start := 0 if full_sequence else start_frame
-	var duration := super.start_hit_reaction(hit_height, attacker, effective_start, apply_pushback)
+	var duration := super.start_hit_reaction(hit_height, attacker, effective_start, apply_pushback, hurt_effect_color)
 	if hit_height == AttackData.HitHeight.MID and animated_sprite.sprite_frames.has_animation(&"hurt_mid_reverse"):
 		duration += get_animation_duration(&"hurt_mid_reverse")
 	if hit_height == AttackData.HitHeight.LOW and not hurt_started_crouched and animated_sprite.sprite_frames.has_animation(&"hurt_low_reverse"):
