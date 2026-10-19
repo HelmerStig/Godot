@@ -10,6 +10,8 @@ const SUITES := {
 	],
 	"mangler": ["res://tests/cases/mangler_moveset.gd", "res://tests/cases/mangler_attack_audio.gd"],
 	"combat": [
+		"res://tests/cases/torpe_welding_special.gd",
+		"res://tests/cases/torpe_beer_special.gd",
 		"res://tests/cases/oscare_cigarette_special.gd",
 		"res://tests/cases/oscare_smoke_special.gd",
 		"res://tests/cases/calibrated_hitboxes.gd",

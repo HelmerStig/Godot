@@ -5,7 +5,7 @@ const FIGHTERS := [
 	{"id": &"mileto", "scene": "res://scenes/Mileto.tscn", "sheet": "res://assets/sprites/characters/mileto/idle-spritesheet.png", "walk": "res://assets/sprites/characters/mileto/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/mileto/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/mileto/hurt_medium_spritesheet.png", "crouch_frames": 13, "frames": 63, "columns": 8},
 	{"id": &"oscare", "scene": "res://scenes/Oscare.tscn", "sheet": "res://assets/sprites/characters/oscare/idle-spritesheet.png", "walk": "res://assets/sprites/characters/oscare/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/oscare/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/oscare/hurt_medium_spritesheet.png", "crouch_frames": 9, "frames": 63, "columns": 8},
 	{"id": &"peiro", "scene": "res://scenes/Peirolo.tscn", "sheet": "res://assets/sprites/characters/peirolo/idle_spritesheet.png", "walk": "res://assets/sprites/characters/peirolo/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/peirolo/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/peirolo/hurt_medium_spritesheet.png", "crouch_frames": 11, "frames": 63, "columns": 8},
-	{"id": &"torpe", "scene": "res://scenes/Torpe.tscn", "sheet": "res://assets/sprites/characters/torpe/idle-spritesheet.png", "walk": "res://assets/sprites/characters/torpe/walk-spritesheet.png", "crouch": "res://assets/sprites/characters/torpe/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/torpe/hurt_medium_spritesheet.png", "crouch_frames": 7, "frames": 61, "columns": 8},
+	{"id": &"torpe", "scene": "res://scenes/Torpe.tscn", "sheet": "res://assets/sprites/characters/torpe/idle-spritesheet.png", "walk": "res://assets/sprites/characters/torpe/Torpe-walk-trimmed.png", "walk_frames": 21, "crouch": "res://assets/sprites/characters/torpe/crouch-spritesheet.png", "hurt_mid": "res://assets/sprites/characters/torpe/hurt_medium_spritesheet.png", "crouch_frames": 7, "frames": 61, "columns": 8},
 ]
 
 
@@ -40,12 +40,13 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			"%s usa tutti i frame idle a 18 FPS in loop" % entry["id"]
 		)
 		var walk_first := frames.get_frame_texture(&"walk", 0) as AtlasTexture
-		var walk_last := frames.get_frame_texture(&"walk", 48) as AtlasTexture
+		var walk_count: int = entry.get("walk_frames", 49)
+		var walk_last := frames.get_frame_texture(&"walk", walk_count - 1) as AtlasTexture
 		var back_first := frames.get_frame_texture(&"backwalk", 0) as AtlasTexture
-		var back_last := frames.get_frame_texture(&"backwalk", 48) as AtlasTexture
+		var back_last := frames.get_frame_texture(&"backwalk", walk_count - 1) as AtlasTexture
 		expect.call(
-			frames.get_frame_count(&"walk") == 49
-			and frames.get_frame_count(&"backwalk") == 49
+			frames.get_frame_count(&"walk") == walk_count
+			and frames.get_frame_count(&"backwalk") == walk_count
 			and is_equal_approx(frames.get_animation_speed(&"walk"), 24.0)
 			and is_equal_approx(frames.get_animation_speed(&"backwalk"), 24.0)
 			and frames.get_animation_loop(&"walk")
@@ -53,10 +54,10 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			and walk_first.atlas.resource_path == entry["walk"]
 			and back_first.atlas.resource_path == entry["walk"]
 			and walk_first.region == Rect2(0.0, 0.0, 512.0, 512.0)
-			and walk_last.region == Rect2(3072.0, 3072.0, 512.0, 512.0)
+			and walk_last.region == Rect2((walk_count - 1) % 7 * 512.0, (walk_count - 1) / 7 * 512.0, 512.0, 512.0)
 			and back_first.region == walk_last.region
 			and back_last.region == walk_first.region,
-			"%s usa 49 frame walk a 24 FPS e backwalk inverso" % entry["id"]
+			"%s usa %d frame walk a 24 FPS e backwalk inverso" % [entry["id"], walk_count]
 		)
 		var crouch_count: int = entry["crouch_frames"]
 		var crouch_first := frames.get_frame_texture(&"crouch", 0) as AtlasTexture

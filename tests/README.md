@@ -1,5 +1,13 @@
 # Test headless
 
+Special 1 di Torpe (birra):
+
+```text
+godot --headless --path . --script res://tests/test_torpe_beer.gd
+```
+
+Il caso `cases/torpe_beer_special.gd` è incluso nella suite combat. Copre atlas e ritaglio del doppione, 64 frame a 64 FPS, input QCF speculari con tre pugni e tolleranza, rilascio singolo, scala e posizione della bottiglia, arco e rotazione, scia in coordinate mondo e dissolvenza, sibilo al rilascio e rottura indipendente dal proiettile, impatti reali anche durante la rotazione, parate, accovacciamento, KO, terreno, frammenti fisici, scadenza e reset.
+
 Vittoria dei cinque fighter del roster:
 
 ```text

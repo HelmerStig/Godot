@@ -38,6 +38,12 @@ Il pugno forte accovacciato di Mangler lancia il bersaglio soltanto su un colpo 
 
 Il medium kick in piedi dei cinque fighter usa `medium_kick_standing.png`, solo avanti a 48 FPS (60 FPS per Mileto), senza loop o ritorno inverso, poi idle. Oscare esegue i frame 1-33 del foglio AutoSprite `Light kick` da 34 frame; Mileto usa `Light kick` da 38 frame. Torpe, Peirolo e Bue usano i rispettivi `Medium kick` da 23, 24 e 22 frame. La hitbox resta attiva solo nei frame visivi 18-20 (Oscare/Mileto), 14-16 (Torpe/Peirolo), 9-11 (Bue). Il colpo produce hurt medio o parata media su un bersaglio in piedi, hurt accovacciato o parata bassa su uno accovacciato. La mossa usa un singolo impatto da 12 danni; giu + calcio medio conserva la variante accovacciata.
 
+### Special 1 di Torpe: lancio della birra
+
+Giù, giù-avanti, avanti + LP/MP/SP, con la stessa tolleranza di 600 ms di Oscare. Per Player 1 rivolto a destra: S → S+D → D+J/H/U. La sequenza dura un secondo: 64 frame a 64 FPS, poi idle. La bottiglia nasce dalla mano al frame visivo 38; velocità orizzontale 520/720/920 px/s, arco con gravità e rotazione gestiti da Godot. La dimensione visibile è circa 73 pixel alla scala attuale di Torpe, ingrandita del 20% rispetto alla prima integrazione.
+
+La bottiglia lascia una scia ambrata che segue l'arco senza ruotare con lo sprite e svanisce rapidamente all'impatto. `sibilo.wav` parte al rilascio e si ferma alla rottura. All'impatto con avversario, parata o terreno la bottiglia si frantuma in dodici pezzi della propria texture, con rimbalzo e spruzzo di birra; `bottiglia-rotta.wav` può completarsi anche dopo la scomparsa del proiettile. I frammenti sono decorativi e scompaiono dopo 1,4 secondi. Danno iniziale 10; hurt_high in piedi, hurt_crouched da accovacciato, solo se la traiettoria interseca la hurtbox. Parata media in piedi e bassa da accovacciato. Reset elimina proiettili, scie, suoni ed effetti; a fine round spariscono i proiettili rimasti.
+
 ### Special 1 di Oscare: sigaretta
 
 Giù, giù-avanti, avanti + LP/MP/SP, relativo al lato dell'avversario. La finestra del movimento è di 36 tick fisici (600 ms); accetta anche il pugno sulla diagonale finale e il passaggio rapido da giù ad avanti. Per Player 1 rivolto a destra: S → S+D → D+J/H/U.

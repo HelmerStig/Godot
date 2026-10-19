@@ -1,0 +1,32 @@
+{
+  "status": "succeeded",
+  "spritesheetId": "cmvfcfza300cdup7ovl9a63fz",
+  "exportedFrameCount": 56,
+  "jobId": "wf_35c18fcd-2283-4d7a-9f61-b9ac4ad23134",
+  "videoId": "cmvfcf2gd006iuisu62v6bjg7",
+  "creditsSpent": 5,
+  "estimatedCredits": 5,
+  "request": {
+    "characterId": "cmu2ekkyu003j2u5fimgct9ib",
+    "animations": [
+      {
+        "kind": "custom",
+        "name": "Special 2 - Welding Lunge",
+        "first_frame_pose_id": "cmu2ekl0e003l2u5fjql40hz8",
+        "last_frame_pose_id": "cmvfbu7t70064up7ouaqw7kg8",
+        "loop": false,
+        "raw_prompt": true,
+        "prompt": "Create one non-looping side-view fighting-game special move, facing RIGHT. Begin in the supplied empty-handed guard. Torpe reaches BEHIND HIS BACK, takes out ONE welding helmet, raises it over his head and lowers it securely onto his face. Only after the helmet is on, ONE handheld welding torch materializes between his hands. Use the supplied Saldatura ending pose for the helmet, torch and grip. With both feet planted, bend the knees and lean the chest noticeably farther toward the RIGHT than in that reference pose. Extend both arms and perform ONE short forward welding stroke. A compact blue-white welding arc and a few small sparks stay attached to the torch tip. Settle into the supplied welding pose at the end. Preserve his face, long hair, black AC/DC shirt, shorts, sandals and proportions. Exactly two arms, two hands and two legs. Fixed camera, stable ground line, full body and tool inside the canvas, ample room ahead of the torch. One preparation and one welding action."
+      }
+    ],
+    "videoTier": "turbo",
+    "durationSec": 2,
+    "spritesheet": {
+      "frameCount": 64,
+      "frameSize": 512
+    },
+    "removeBg": "default",
+    "turboMode": "first_frame",
+    "withSound": false
+  }
+}

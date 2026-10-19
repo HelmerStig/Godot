@@ -224,6 +224,27 @@ Ora la seconda parte, si parte dalla posa "Special 1 - Light Cigarette Pose", il
 
 Okay, la mossa va eseguita a 60fps, si parte da Special 1 - Light Cigarette e si continua con Special 1 - Cigarette Flick - Smoking Hand v2, dove si materializza il proiettile della sigaretta che va in direzione avanti, puoi implementarlo per oscar o hai bisogno di ulteriori dettagli?
 la mossa che lo attiva è : giù, giù-avanti, aventi + LP, (puoi farla anche con MP e SP, in quel caso aumenta la velocità del proiettile) metti tollerenza in modo che non sia troppo difficile da eseguire.
- 
+
+Ora per la special 2 mi servirebbe partire da Special 1 - Light Cigarette Pose". Dopo aver acceso la sigaretta, il personaggio si piega in avanti e soffia violentemente (tipo lo yoga flame di dhalsim, hai presente?). Secondo t, meglio creare il fumo a parte come proiettile?
+Devo generare il doffio in autosprite
+
+Mi sono dimenticato della posa di vittoria, quando un personaggio vince il round. Su autosprite la trovi come "Victory", la inserisci per i 5 personaggi?
+
+Ora vorrei creare l'animazione della mossa speciale 1 per Torpe.
+Ho salvato la posa "Lancio Birra", vorrei che al personaggio si mettesse in posizione come da bose, si materializzasse la bottiglia e la lanciasse in avanti come proiettile. (il proiettile sarà una bottiglia che poi andremo ad inserire), devo creare l'animazione su autosprite, fai 64 frame, pro, 2 secondi e vediamo cosa esce.
+Un quarto di luna in avanti + LP, (puoi farla anche con MP e SP, in quel caso aumenta la velocità del proiettile) metti tollerenza in modo che non sia troppo difficile da eseguire.
+
+qui c'è l'assets a posto: assets\sprites\characters\torpe\special_1_beer_throw_candidate.png
+qui c'è l'assets per il proiettile della birra: C:\Users\Oscare\Downloads\moretti.png
+Riusciamo a farla ruotare in godot come un vero lancio o devo creare la rotazione in autosprite?
+Quando la bottiglia colpisce deve esplodere, adegua le dimensioni della bottiglia, ora è 512x512 ma deve essere coerente ocn quella che torpe ha in mano.
+
+associa al proiettile della birra questo suono: assets\sounds\sfx\sibilo.wav
+associa alla rottura della bottiglia questo suono: assets\sounds\sfx\bottiglia-rotta.wav
+
+Ora vorrei creare l'animazione della mossa speciale 2 per Torpe.
+Ho creato la posa "Saldatura", vorrei che torpe estrasse da dietro la schiena una maschera da saldatore e la indossasse, poi eseguisse un movimento di saldatura in avanti estendendosi un po' più in avanti di come è ora la posa. Devo creare l'animazione su autosprite, fai 64 framee vediamo cosa esce.
+
+
 
  

@@ -88,7 +88,7 @@ La tabella è un riferimento per le sequenze principali, non un elenco completo 
 
 ## Fighter con idle e camminata
 
-Questi personaggi usano temporaneamente `IdleRosterFighter`. Gli idle hanno celle da 512×512, 8 colonne e loop a 18 FPS. Ogni `walk-spritesheet.png` usa 49 frame in una griglia 7×7 da 512×512: `walk` avanza a 24 FPS e `backwalk` riproduce gli stessi frame al contrario a 24 FPS. La velocità di spostamento predefinita è 200 px/s.
+Questi personaggi usano temporaneamente `IdleRosterFighter`. Gli idle hanno celle da 512×512, 8 colonne e loop a 18 FPS. Le camminate usano 49 frame in una griglia 7×7 da 512×512, tranne Torpe: `Torpe-walk-trimmed.png` contiene 21 frame in una griglia 7×3. `walk` avanza in loop a 24 FPS e `backwalk` riproduce gli stessi frame al contrario, sempre in loop a 24 FPS. La velocità di spostamento predefinita è 200 px/s.
 
 | Personaggio | Spritesheet idle | Frame idle | Frame walk |
 |---|---|---:|---:|
@@ -179,3 +179,15 @@ Il segnale `MainArena.round_ended` avvia la sequenza soltanto sul vincitore, sia
 PNG, atlas e provenienza sono nelle cartelle dei cinque personaggi: `victory.png`, `victory.atlas.json`, `victory_autosprite.json`. Nessuna nuova generazione o spesa di crediti.
 
 Test dedicato: `godot --headless --path . --script res://tests/test_roster_victory.gd`.
+
+## Torpe Special 1: lancio birra (19 ottobre 2026)
+
+`special_1_beer_throw_candidate.png`: 56 celle native 512x512, 8 colonne. `special_1_beer_throw_64_frames.tres` conserva la sequenza di 64 frame con 8 ripetizioni registrate in `special_1_beer_throw_candidate.autosprite.json`. Riproduzione aggiornata a 64 FPS, durata 1 secondo, solo avanti e poi idle. Ai frame runtime 38/39, corrispondenti ai sorgenti 33/34, un ritaglio runtime dei primi 40 pixel elimina la bottiglia già disegnata in volo; il margine dell'atlas mantiene il canvas virtuale 512x512. PNG originale invariato.
+
+Comando QCF + LP/MP/SP con finestra 36 tick (600 ms), diagonale finale e transizione rapida giù/avanti accettate. Rilascio unico al frame runtime 38, dita in coordinate canvas (390,62), posizione speculare e direzione bloccata dall'avvio. L'attacco può essere interrotto prima del rilascio; nessuna hitbox corpo a corpo durante la preparazione.
+
+`beer_bottle.png` è una copia del Moretti fornito: canvas 1024x1536, rettangolo visibile (320,51,389,1400). Lunghezza visibile 81,6 pixel del personaggio, circa 73,44 pixel nel mondo alla scala 0,9 di Torpe, ingrandita del 20% dopo la prima integrazione. Velocità orizzontale 520/720/920 px/s; velocità verticale iniziale -150 px/s, gravità 600 px/s²; rotazione 1,8/2,2/2,6 giri/s speculare secondo il pugno. La collisione usa una capsula orientata e sweep sul passo fisico completo.
+
+Un solo impatto da 10 danni: hurt_high in piedi o hurt_crouched in basso, parata media/bassa secondo postura e intersezione con hurtbox. Collisione con bersaglio, parata o terreno: 12 frammenti fisici ritagliati tramite UV dalla texture e spruzzo di birra; collisioni dei frammenti solo col terreno, nessun danno secondario, dissolvenza ed eliminazione in 1,4 secondi. `sibilo.wav` parte una volta al rilascio e si ferma all'impatto; `bottiglia-rotta.wav` parte una volta alla rottura con player indipendente dal proiettile. Scia Line2D ambrata in coordinate mondo: ultimi 0,12 secondi di traiettoria, larghezza 5 pixel, dissolvenza in 0,14 secondi all'impatto. Reset elimina proiettili, frammenti, scie e suoni del proprietario; i proiettili residui spariscono a fine round.
+
+Controller `scripts/Torpe.gd`; volo `scripts/TorpeBeerBottleProjectile.gd`; rottura `scripts/TorpeBeerShatter.gd`. Test dedicato `res://tests/test_torpe_beer.gd`, incluso nella suite combat. Nessuna nuova generazione o spesa di crediti per l'integrazione.
