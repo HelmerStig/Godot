@@ -8,8 +8,10 @@ const SUITES := {
 		"res://tests/cases/arianna_moveset.gd",
 		"res://tests/cases/arianna_lifecycle.gd",
 	],
-	"mangler": ["res://tests/cases/mangler_moveset.gd"],
+	"mangler": ["res://tests/cases/mangler_moveset.gd", "res://tests/cases/mangler_attack_audio.gd"],
 	"combat": [
+		"res://tests/cases/oscare_cigarette_special.gd",
+		"res://tests/cases/calibrated_hitboxes.gd",
 		"res://tests/cases/roster_crouched_guard.gd",
 		"res://tests/cases/crouched_block_collision.gd",
 		"res://tests/cases/airborne_hit.gd",

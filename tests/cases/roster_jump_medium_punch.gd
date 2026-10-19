@@ -1,5 +1,7 @@
 extends RefCounted
 
+const Contact := preload("res://tests/support/hitbox_contact.gd")
+
 
 static func airborne(fighter: IdleRosterFighter, origin: Vector2) -> void:
 	fighter.reset_fighter(origin)
@@ -78,13 +80,16 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 					fighter.animated_sprite.pause()
 					fighter.animated_sprite.frame = int(spec[1])-1
 					fighter._update_jump_medium_punch_hitbox()
+					var will_hit := Contact.will_connect(fighter,target,&"jump_medium_punch",int(spec[1]),int(spec[1]))
 					var expected: StringName = &"hurt_crouched" if crouched else &"hurt_high"
 					if guarded:
 						expected = target.get_block_animation(AttackData.HitHeight.LOW if crouched else AttackData.HitHeight.HIGH, crouched)
-					expect.call(target.animated_sprite.animation == expected and target.combat.current_health == (100 if guarded else 90), "%s -> %s: reazione %s e danno corretti" % [fighter.name, target.name, expected])
-					expect.call(fighter._medium_punch_hit_sound_played == not guarded and fighter._light_punch_hit_audio.stream == load("res://assets/sounds/sfx/light-punch.wav"), fighter.name + ": hit audio di Arianna solo a segno")
+					if not will_hit:
+						expected = &"crouch" if crouched else &"idle"
+					expect.call(target.animated_sprite.animation == expected and target.combat.current_health == (100 if guarded or not will_hit else 90), "%s -> %s: reazione %s e danno corretti" % [fighter.name, target.name, expected])
+					expect.call(fighter._medium_punch_hit_sound_played == (will_hit and not guarded) and fighter._light_punch_hit_audio.stream == load("res://assets/sounds/sfx/light-punch.wav"), fighter.name + ": hit audio di Arianna solo a segno")
 					fighter._update_jump_medium_punch_hitbox()
-					expect.call(target.combat.current_health == (100 if guarded else 90), fighter.name + ": singolo impatto per mossa")
+					expect.call(target.combat.current_health == (100 if guarded or not will_hit else 90), fighter.name + ": singolo impatto per mossa")
 					fighter.combat.cancel_current_action()
 					target.reset_fighter(Vector2(-5000.0, movement.FLOOR_Y))
 		# Actual animation playback finishes in air without reversing.

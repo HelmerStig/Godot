@@ -43,8 +43,10 @@ func draw_collision_box(shape_node: CollisionShape2D, box_scale: Vector2, fill_c
 	if rectangle == null:
 		return
 
-	var size = rectangle.size * box_scale.abs()
-	var center = shape_node.position * box_scale
-	var box = Rect2(center - size * 0.5, size)
-	draw_rect(box, fill_color, true)
-	draw_rect(box, outline_color, false, 2.0)
+	# Include anche rotazione e trasformazioni dei parent (es. facing a sinistra).
+	var points := PackedVector2Array()
+	for corner in [Vector2(-1,-1), Vector2(1,-1), Vector2(1,1), Vector2(-1,1)]:
+		points.append(to_local(shape_node.to_global(corner * rectangle.size * 0.5)))
+	draw_colored_polygon(points, fill_color)
+	points.append(points[0])
+	draw_polyline(points, outline_color, 2.0, true)

@@ -217,4 +217,13 @@ per Bue usa "Strong Kick"
 Perfetto ora vorrei fare le animazioni del calcio potente in salto, come frame iniziale troverai "jump pose", da utilizzare come primo ed ultimo fotogramma dell'animazione in salto. Partiamo da oscar 49 fotogrammi
 Come riferimento potremmo usare questo: https://ultimateframedata.com/sf6/hitboxes/akuma/akuma-j-hk.gif
 
+Ora vorrei creare la prima Special move di Oscare.
+Ho caricato la posa "smoking", il personaggio deve tirare fuori dalla tasca un accendino ed accendersi una sigaretta come da riferimento posa "smoking". Fai aggiungere anche il fumo in movimento. Crea questa animazione che sarà la prima parte della Special move di Oscar. La sigaretta sarò un proiettile che verrà lanciato in un'animazione seguente.
+
+Ora la seconda parte, si parte dalla posa "Special 1 - Light Cigarette Pose", il personaggio lancia an avanti la sigaretta con una schicchera tipica del lancio si una sigaretta (tipo schiocco di dita) e rimette in tasca l'accendino. Hai bisogno di ulteriori dettagli sul lancio?
+
+Okay, la mossa va eseguita a 60fps, si parte da Special 1 - Light Cigarette e si continua con Special 1 - Cigarette Flick - Smoking Hand v2, dove si materializza il proiettile della sigaretta che va in direzione avanti, puoi implementarlo per oscar o hai bisogno di ulteriori dettagli?
+la mossa che lo attiva è : giù, giù-avanti, aventi + LP, (puoi farla anche con MP e SP, in quel caso aumenta la velocità del proiettile) metti tollerenza in modo che non sia troppo difficile da eseguire.
+ 
+
  

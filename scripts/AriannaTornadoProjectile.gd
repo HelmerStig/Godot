@@ -100,6 +100,7 @@ func _ready() -> void:
 	tornado_sprite.scale = START_SCALE
 	tornado_sprite.flip_h = travel_direction < 0.0
 	add_child(tornado_sprite)
+	_update_hitbox_growth()
 	_create_wind_effects()
 	tornado_sprite.play()
 	var audio := AudioStreamPlayer.new()
@@ -108,7 +109,7 @@ func _ready() -> void:
 	audio.play()
 	var growth := tornado_sprite.create_tween()
 	growth.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	growth.tween_property(tornado_sprite, "scale", SPRITE_SCALE, GROWTH_DURATION)
+	growth.tween_method(_set_growth_scale, START_SCALE, SPRITE_SCALE, GROWTH_DURATION)
 
 
 func _physics_process(delta: float) -> void:
@@ -116,6 +117,18 @@ func _physics_process(delta: float) -> void:
 	lifetime += delta
 	if lifetime >= MAX_LIFETIME:
 		queue_free()
+
+
+func _set_growth_scale(value: Vector2) -> void:
+	tornado_sprite.scale = value
+	_update_hitbox_growth()
+
+
+func _update_hitbox_growth() -> void:
+	var growth_ratio := tornado_sprite.scale / SPRITE_SCALE
+	var collision := get_node("CollisionShape2D") as CollisionShape2D
+	(collision.shape as RectangleShape2D).size = HITBOX_SIZE * growth_ratio.abs()
+	collision.position = HITBOX_POSITION * growth_ratio
 
 
 func _create_hitbox() -> void:

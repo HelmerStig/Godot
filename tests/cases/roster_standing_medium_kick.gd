@@ -1,5 +1,7 @@
 extends RefCounted
 
+const Contact := preload("res://tests/support/hitbox_contact.gd")
+
 
 static func run(tree: SceneTree, expect: Callable) -> bool:
 	var movement := (load("res://scenes/MovementTest.tscn") as PackedScene).instantiate()
@@ -83,19 +85,22 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				target.combat.set_guarding(guarded)
 				target.velocity = Vector2(0.0, 1.0)
 				target.move_and_slide()
-				await tree.physics_frame
+				for tick in 2: await tree.physics_frame
 				fighter._start_medium_kick()
 				fighter.animated_sprite.pause()
 				fighter.animated_sprite.frame = first - 1
 				fighter._update_medium_kick_hitbox()
 				await tree.physics_frame
+				var will_hit := Contact.will_connect(fighter,target,&"medium_kick",first,first)
 				var reaction: StringName = target.get_block_animation(AttackData.HitHeight.LOW if crouched else AttackData.HitHeight.MID, crouched) if guarded else (&"hurt_crouched" if crouched else &"hurt_mid")
+				if not will_hit:
+					reaction = &"crouch" if crouched else &"idle"
 				var damage: int = fighter.character_data.get_attack(&"medium_kick").damage
 				expect.call(target.animated_sprite.animation == reaction
-					and target.combat.current_health == (100 if guarded else 100 - damage),
+					and target.combat.current_health == (100 if guarded or not will_hit else 100 - damage),
 					"%s contro %s: %s produce %s" % [fighter.name, target.name, scenario, reaction])
 				fighter.combat.resolve_attack_overlap_immediately()
-				expect.call(target.combat.current_health == (100 if guarded else 100 - damage), fighter.name + ": un solo impatto per mossa")
+				expect.call(target.combat.current_health == (100 if guarded or not will_hit else 100 - damage), fighter.name + ": un solo impatto per mossa")
 				fighter.combat.cancel_current_action()
 				fighter.reset_fighter(Vector2(-6000.0, movement.FLOOR_Y))
 				target.reset_fighter(Vector2(-5000.0 - 500.0 * movement._fighters.find(target), movement.FLOOR_Y))

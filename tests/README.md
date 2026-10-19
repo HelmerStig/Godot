@@ -1,5 +1,13 @@
 # Test headless
 
+Special 1 di Oscare (sigaretta):
+
+```text
+godot --headless --path . --script res://tests/test_oscare_special.gd
+```
+
+Il caso `cases/oscare_cigarette_special.gd` è incluso nella suite combat. Verifica i due atlas aggiornati, 60 FPS, quarto di luna in entrambi i versi e con LP/MP/SP, tolleranza e scadenza, priorità sui pugni normali, rilascio unico, velocità e origine speculare del proiettile, riproduzione reale completa, interruzioni e reset. Le collisioni reali coprono sweep rapido nelle due direzioni, danno singolo, parate, bersaglio accovacciato e colpo che passa sopra la hurtbox.
+
 Pugno leggero in salto dei cinque fighter del roster:
 
 ```text

@@ -1,5 +1,7 @@
 extends RefCounted
 
+const Contact := preload("res://tests/support/hitbox_contact.gd")
+
 
 static func run(tree: SceneTree, expect: Callable) -> bool:
 	var movement := (load("res://scenes/MovementTest.tscn") as PackedScene).instantiate()
@@ -67,12 +69,15 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			fighter._start_low_strong_punch()
 			expect.call(fighter._strong_punch_whoosh_audio.playing and fighter._strong_punch_whoosh_audio.stream == load("res://assets/sounds/sfx/swosh.wav"), fighter.name + ": whoosh alla partenza")
 			await tree.create_timer(float(first - 1) / fps + 0.025).timeout
+			var will_hit := Contact.will_connect(fighter,target,&"crouched_strong_punch",first,mini(last, first+1))
 			var reaction: StringName = (&"block_low" if crouched else &"block_high") if guarded else (&"hurt_crouched" if crouched else &"hurt_mid")
-			expect.call(target.animated_sprite.animation == reaction and target.combat.current_health == (100 if guarded else 85), fighter.name + ": contatto reale " + scenario)
+			if not will_hit:
+				reaction = &"crouch" if crouched else &"idle"
+			expect.call(target.animated_sprite.animation == reaction and target.combat.current_health == (100 if guarded or not will_hit else 85), fighter.name + ": contatto reale " + scenario)
 			expect.call(target.velocity.y >= 0.0, fighter.name + ": reazione richiesta senza lancio in aria")
-			expect.call(fighter._strong_punch_hit_sound_played == not guarded and fighter._strong_punch_hit_audio.stream == load("res://assets/sounds/sfx/strong-punch.wav"), fighter.name + ": impatto audio solo sul colpo entrato")
+			expect.call(fighter._strong_punch_hit_sound_played == (will_hit and not guarded) and fighter._strong_punch_hit_audio.stream == load("res://assets/sounds/sfx/strong-punch.wav"), fighter.name + ": impatto audio solo sul colpo entrato")
 			await tree.create_timer(duration + 0.05).timeout
-			expect.call(fighter.current_state == Fighter.State.CROUCHING and target.combat.current_health == (100 if guarded else 85), fighter.name + ": un solo danno e ritorno accovacciato")
+			expect.call(fighter.current_state == Fighter.State.CROUCHING and target.combat.current_health == (100 if guarded or not will_hit else 85), fighter.name + ": un solo danno e ritorno accovacciato")
 			fighter.position.x = -5000.0
 		fighter.reset_fighter(Vector2(1000.0, movement.FLOOR_Y))
 		target.reset_fighter(Vector2(1130.0, movement.FLOOR_Y))
@@ -84,7 +89,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		await tree.create_timer(0.04).timeout
 		target.return_to_crouch_pose()
 		await tree.create_timer(float(first - 1) / fps - 0.04 + 0.025).timeout
-		expect.call(target.animated_sprite.animation == &"hurt_crouched" and target.combat.current_health == 85, fighter.name + ": sceglie la postura al contatto, dopo l'inizio dell'attacco")
+		var changed_contact := Contact.will_connect(fighter,target,&"crouched_strong_punch",first,mini(last,first+1))
+		expect.call(target.animated_sprite.animation == (&"hurt_crouched" if changed_contact else &"crouch") and target.combat.current_health == (85 if changed_contact else 100), fighter.name + ": postura al contatto e traiettoria dopo l'inizio dell'attacco")
 		await tree.create_timer(duration + 0.05).timeout
 		fighter.reset_fighter(Vector2(1000.0, movement.FLOOR_Y))
 		target.reset_fighter(Vector2(2000.0, movement.FLOOR_Y))

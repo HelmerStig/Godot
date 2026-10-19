@@ -1,7 +1,7 @@
 [gd_scene load_steps=36 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Fighter.tscn" id="1_base"]
-[ext_resource type="Script" path="res://scripts/IdleRosterFighter.gd" id="2_script"]
+[ext_resource type="Script" path="res://scripts/Oscare.gd" id="2_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/idle-spritesheet.png" id="3_idle"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/walk-spritesheet.png" id="4_walk"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/oscare/Oscare-jump.png" id="5_jump"]

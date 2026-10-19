@@ -1,6 +1,26 @@
 # Sanmo — frame data
 
-Verifica delle risorse: 15 settembre 2026.
+Verifica delle risorse: 15 settembre 2026. Special 1 di Oscare aggiornata il 19 ottobre 2026.
+
+## Oscare: Special 1 — sigaretta
+
+Controller: `scripts/Oscare.gd`; proiettile: `scripts/OscareCigaretteProjectile.gd`.
+
+| Parte | Frame | FPS | AutoSprite sheet ID |
+|---|---:|---:|---|
+| Special 1 - Light Cigarette | 20 | 60 | cmvf44j5e006a10h5cywi9i25 |
+| Special 1 - Cigarette Flick - Smoking Hand v2 | 29 | 60 | cmvf4pva6000k3p27mmhm83pe |
+| Proiettile siga (ciclo) | 25 | 60 | cmvf4om5y0071g6zj2ig2xwbv |
+
+Le due parti del fighter usano 7 colonne di celle 512×512; il proiettile usa 5 colonne. Al frame visivo 19 della seconda parte nasce un solo proiettile dalla mano, nella direzione fissata all'avvio. Lo stesso frame contiene una sigaretta disegnata in volo: il runtime riusa la posa pulita del frame 20 al suo posto, conservando 29 frame di durata e i PNG originali. La sequenza totale dura 49/60 s, poi torna in idle. Nessuna hitbox corpo a corpo durante la preparazione.
+
+Al frame visivo 6 dell'accensione parte `assets/sounds/sfx/siga-accensione.wav`, una sola volta per esecuzione. Il suono completa la propria coda dopo la recovery naturale; interruzione e reset lo fermano.
+
+Un impatto riuscito o KO riproduce `assets/sounds/sfx/crepitio.wav` una volta. Parata, contatto ignorato e colpo a vuoto restano silenziosi. Il player appartiene all'arena per completare il suono dopo la rimozione del proiettile; viene liberato alla fine della clip o al reset del proprietario.
+
+Comando: giù → giù-avanti → avanti + pugno. Finestra 36 tick (600 ms), buffer pulsante 10 tick, diagonale finale accettata; il buffer esistente ricostruisce la diagonale durante un passaggio giù → avanti tra due tick. Funziona anche durante il rialzarsi; non in aria, hitstun o guardia.
+
+Velocità LP/MP/SP: 520/720/920 px/s. Danno iniziale invariato fra le versioni: 10. Durata massima proiettile: 3 s; collisione continua 26×10, con esclusione del proprietario e del fumo. Un solo impatto; hurt_high/parata media sul bersaglio in piedi, hurt accovacciato/parata bassa sul bersaglio in basso se intercettato. La reazione del proiettile resta indipendente da altre mosse iniziate nel frattempo dal proprietario. Conserva reazioni aeree e KO del combattimento condiviso. L'interruzione prima del rilascio annulla il lancio; il reset elimina i proiettili del proprietario.
 
 ## Timing dichiarati nelle risorse
 

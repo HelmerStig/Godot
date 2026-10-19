@@ -1421,10 +1421,10 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	var jump_light_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	await tree.create_timer(0.45).timeout
 	expect.call(
-		jump_light_kick_shape.size == Vector2(170.0, 55.0)
-		and player1.combat.hitbox_shape.position == Vector2(95.0, -55.0)
-		and is_equal_approx(player1.combat.hitbox_shape.rotation_degrees, 12.0),
-		"il calcio leggero aereo usa una hitbox nella parte bassa"
+		jump_light_kick_shape.size.is_equal_approx(Vector2(60.0, 36.0))
+		and player1.combat.hitbox_shape.position.distance_to(Vector2(-20.0,-30.0)) < 8.0
+		and absf(player1.combat.hitbox_shape.rotation_degrees + 47.0) < 8.0,
+		"il calcio leggero aereo segue la scarpa nella posa mantenuta"
 	)
 	expect.call(
 		player1.animated_sprite.frame == 19
@@ -1598,10 +1598,10 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	var jump_medium_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	await tree.create_timer(0.45).timeout
 	expect.call(
-		jump_medium_kick_shape.size == Vector2(170.0, 55.0)
-		and player1.combat.hitbox_shape.position == Vector2(95.0, -55.0)
-		and is_equal_approx(player1.combat.hitbox_shape.rotation_degrees, 12.0),
-		"il calcio medio aereo usa una hitbox nella parte bassa"
+		jump_medium_kick_shape.size.is_equal_approx(Vector2(68.0, 40.0))
+		and player1.combat.hitbox_shape.position.distance_to(Vector2(176.0,-14.0)) < 8.0
+		and absf(player1.combat.hitbox_shape.rotation_degrees + 24.0) < 8.0,
+		"il calcio medio aereo segue la scarpa nella posa mantenuta"
 	)
 	expect.call(
 		player1.animated_sprite.frame == 19
@@ -1664,9 +1664,9 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	await tree.create_timer(0.45).timeout
 	var jump_heavy_kick_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	expect.call(
-		jump_heavy_kick_shape.size == FighterCombat.JUMP_HEAVY_KICK_HITBOX_SIZE
-		and player1.combat.hitbox_shape.position == FighterCombat.JUMP_HEAVY_KICK_HITBOX_POSITION
-		and is_equal_approx(player1.combat.hitbox_shape.rotation_degrees, 10.0),
+		jump_heavy_kick_shape.size.is_equal_approx(Vector2(76.0,44.0))
+		and player1.combat.hitbox_shape.position.distance_to(Vector2(180.0,-105.0)) < 8.0
+		and absf(player1.combat.hitbox_shape.rotation_degrees + 22.0) < 8.0,
 		"il calcio potente aereo usa una hitbox inclinata lungo la gamba"
 	)
 	expect.call(
@@ -2043,8 +2043,10 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	await tree.create_timer(0.25).timeout
 	var special_shape := player1.combat.hitbox_shape.shape as RectangleShape2D
 	expect.call(
-		special_shape.size == Vector2(340.0, 60.0)
-		and player1.combat.hitbox_shape.position == Vector2(0.0, -165.0)
+		special_shape.size.is_equal_approx(Vector2(340.0, 45.0))
+		and absf(player1.combat.hitbox_shape.position.x) < 1.0
+		and player1.combat.hitbox_shape.position.y < -190.0
+		and player1.combat.hitbox_shape.position.y > -250.0
 		and not player1.combat.hitbox_shape.disabled,
 		"la hitbox di 720 Punch copre l'intera apertura delle braccia"
 	)

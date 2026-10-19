@@ -38,6 +38,12 @@ Il pugno forte accovacciato di Mangler lancia il bersaglio soltanto su un colpo 
 
 Il medium kick in piedi dei cinque fighter usa `medium_kick_standing.png`, solo avanti a 48 FPS (60 FPS per Mileto), senza loop o ritorno inverso, poi idle. Oscare esegue i frame 1-33 del foglio AutoSprite `Light kick` da 34 frame; Mileto usa `Light kick` da 38 frame. Torpe, Peirolo e Bue usano i rispettivi `Medium kick` da 23, 24 e 22 frame. La hitbox resta attiva solo nei frame visivi 18-20 (Oscare/Mileto), 14-16 (Torpe/Peirolo), 9-11 (Bue). Il colpo produce hurt medio o parata media su un bersaglio in piedi, hurt accovacciato o parata bassa su uno accovacciato. La mossa usa un singolo impatto da 12 danni; giu + calcio medio conserva la variante accovacciata.
 
+### Special 1 di Oscare: sigaretta
+
+Giù, giù-avanti, avanti + LP/MP/SP, relativo al lato dell'avversario. La finestra del movimento è di 36 tick fisici (600 ms); accetta anche il pugno sulla diagonale finale e il passaggio rapido da giù ad avanti. Per Player 1 rivolto a destra: S → S+D → D+J/H/U.
+
+Accensione (20 frame) e lancio (29 frame) si concatenano a 60 FPS, poi idle. Il proiettile nasce al frame 19 del lancio e viaggia a 520/720/920 px/s secondo il pugno usato. Danno iniziale: 10 per tutte le varianti; la collisione considera la sigaretta, non il fumo. Un colpo entrato produce hurt_high in piedi o hurt accovacciato in basso, se la traiettoria interseca la hurtbox; parata media/bassa secondo la postura.
+
 ## Test
 
 ```powershell

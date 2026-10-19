@@ -865,7 +865,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	expect.call(
 		tornado_preview.collision_layer == 2
 		and tornado_preview.collision_mask == 4
-		and tornado_shape.size == AriannaTornadoProjectile.HITBOX_SIZE
+		and tornado_shape.size.is_equal_approx(AriannaTornadoProjectile.HITBOX_SIZE * tornado_preview.tornado_sprite.scale / AriannaTornadoProjectile.SPRITE_SCALE)
 		and AriannaTornadoProjectile.DAMAGE == 10,
 		"il tornado usa una hitbox MID e infligge 10 danni al primo contatto"
 	)
@@ -1753,8 +1753,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		arianna.low_light_punch_active
 		and arianna.animated_sprite.animation == &"arianna_low_light_punch"
 		and not arianna.combat.hitbox_shape.disabled
-		and low_light_shape.size == Arianna.ARIANNA_LOW_LIGHT_PUNCH_HITBOX_SIZE
-		and arianna.combat.hitbox_shape.position == Arianna.ARIANNA_LOW_LIGHT_PUNCH_HITBOX_POSITION
+		and low_light_shape.size.is_equal_approx(Vector2(40.0,34.0))
+		and arianna.combat.hitbox_shape.position.distance_to(Vector2(110.0,-125.0)) < 5.0
 		and arianna.combat.get_effective_hit_height(arianna.combat.current_attack)
 			== AttackData.HitHeight.MID
 		and arianna.get_block_animation(AttackData.HitHeight.MID) == &"block_mid"
@@ -1942,6 +1942,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	live_arianna.last_back_tap_frame = -100000
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.global_position.x = live_arianna.opponent.global_position.x - 120.0
 	live_arianna.is_facing_right = true
 	live_arianna.animated_sprite.flip_h = false
@@ -1968,6 +1970,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	var health_before_medium_punch := live_arianna.opponent.combat.current_health
 	live_arianna.input_buffer.record_input_snapshot(0, 0, [&"medium_punch"], true)
@@ -1991,6 +1995,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	var health_before_low_medium := live_arianna.opponent.combat.current_health
 	var afterimages_before_low_medium := live_arianna.attack_afterimage_spawn_count
@@ -2016,6 +2022,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	live_arianna.change_state(Mangler.State.IDLE)
 	var health_before_strong := live_arianna.opponent.combat.current_health
@@ -2032,7 +2040,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			== health_before_strong - live_arianna.character_data.get_attack(&"heavy_punch").damage
 		and live_arianna.opponent.current_state == Mangler.State.HIT
 		and live_arianna.opponent.animated_sprite.animation == &"hurt_high"
-		and strong_hitbox_shape.size == Vector2(110.0, 65.0)
+		and strong_hitbox_shape.size.is_equal_approx(Vector2(52.0,44.0))
 		and live_arianna.attack_afterimage_spawn_count > afterimages_before_strong
 	)
 	live_arianna._on_animation_finished()
@@ -2044,6 +2052,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	var health_before_crouched_strong := live_arianna.opponent.combat.current_health
 	var afterimages_before_crouched_strong := live_arianna.attack_afterimage_spawn_count
@@ -2069,6 +2079,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	live_arianna.change_state(Mangler.State.IDLE)
 	var health_before_light_kick := live_arianna.opponent.combat.current_health
@@ -2087,7 +2099,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		and live_arianna.combat.get_effective_hit_height(
 			live_arianna.character_data.get_attack(&"light_kick")
 		) == AttackData.HitHeight.MID
-		and light_kick_shape.size == Vector2(165.0, 55.0)
+		and light_kick_shape.size.is_equal_approx(Vector2(60.0,36.0))
 	)
 	live_arianna._on_animation_finished()
 	live_arianna._on_animation_finished()
@@ -2099,6 +2111,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	live_arianna.change_state(Mangler.State.IDLE)
 	var health_before_low_light_kick := live_arianna.opponent.combat.current_health
@@ -2117,7 +2131,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		and live_arianna.combat.get_effective_hit_height(
 			live_arianna.character_data.get_attack(&"light_kick")
 		) == AttackData.HitHeight.LOW
-		and low_light_kick_shape.size == Arianna.ARIANNA_LOW_LIGHT_KICK_HITBOX_SIZE
+		and low_light_kick_shape.size.is_equal_approx(Vector2(60.0,36.0))
 	)
 	live_arianna._on_animation_finished()
 	live_arianna._on_animation_finished()
@@ -2129,6 +2143,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	live_arianna.change_state(Mangler.State.IDLE)
 	var health_before_medium_kick := live_arianna.opponent.combat.current_health
@@ -2147,7 +2163,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		and live_arianna.combat.get_effective_hit_height(
 			live_arianna.character_data.get_attack(&"medium_kick")
 		) == AttackData.HitHeight.MID
-		and medium_kick_shape.size == Arianna.ARIANNA_MEDIUM_KICK_HITBOX_SIZE
+		and medium_kick_shape.size.is_equal_approx(Vector2(68.0,40.0))
 	)
 	live_arianna._on_animation_finished()
 	live_arianna._on_animation_finished()
@@ -2159,6 +2175,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	live_arianna.change_state(Mangler.State.IDLE)
 	var health_before_low_medium_kick := live_arianna.opponent.combat.current_health
@@ -2176,7 +2194,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		and live_arianna.combat.get_effective_hit_height(
 			live_arianna.character_data.get_attack(&"medium_kick")
 		) == AttackData.HitHeight.LOW
-		and low_medium_kick_shape.size == Vector2(140.0, 45.0)
+		and low_medium_kick_shape.size.is_equal_approx(Vector2(68.0,40.0))
 	)
 	live_arianna._on_animation_finished()
 	live_arianna._on_animation_finished()
@@ -2188,6 +2206,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	)
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	live_arianna.change_state(Mangler.State.IDLE)
 	live_arianna._start_strong_kick()
@@ -2220,6 +2240,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	live_arianna._on_animation_finished()
 	live_arianna.opponent.combat.reset()
 	live_arianna.opponent.change_state(Mangler.State.IDLE)
+	live_arianna.opponent.velocity = Vector2.ZERO
+	live_arianna.opponent.global_position.x = live_arianna.global_position.x + 120.0
 	live_arianna.input_buffer.clear()
 	live_arianna.change_state(Mangler.State.IDLE)
 	live_arianna.velocity = Vector2.ZERO

@@ -18,7 +18,8 @@ static func take_damage(
 	hit_reaction_start_frame: int,
 	ko_start_frame: int,
 	apply_pushback: bool,
-	force_grounded_reaction: bool
+	force_grounded_reaction: bool,
+	hurt_height_override: int = -1
 ) -> FighterCombat.DamageResult:
 	if combat.fighter.current_state in [Fighter.State.KNOCKDOWN_RECOVERY, Fighter.State.KNOCKED_DOWN]:
 		return FighterCombat.DamageResult.IGNORED
@@ -44,6 +45,15 @@ static func take_damage(
 	if is_instance_valid(attacker) and attacker.combat != null and attacker.combat.uses_target_stance_reactions():
 		if hit_height == AttackData.HitHeight.HIGH:
 			hit_height = AttackData.HitHeight.MID
+	# A projectile may request a hurt animation independently of its guard type
+	# and the attack its owner has started since firing. Guard/KO already returned.
+	match hurt_height_override:
+		AttackData.HitHeight.HIGH:
+			hit_height = AttackData.HitHeight.HIGH
+		AttackData.HitHeight.MID:
+			hit_height = AttackData.HitHeight.MID
+		AttackData.HitHeight.LOW:
+			hit_height = AttackData.HitHeight.LOW
 	var crouched_low_hit := (
 		not was_airborne
 		and hit_height == AttackData.HitHeight.LOW

@@ -316,6 +316,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if is_player_controlled and input_buffer != null:
 		input_buffer.update(is_facing_right)
+	_try_start_character_special()
 	if _back_jump_active:
 		_process_back_jump(delta)
 		return
@@ -487,6 +488,10 @@ func _physics_process(delta: float) -> void:
 	if current_state == State.CROUCHING and is_player_controlled and input_buffer != null:
 		if not input_buffer.is_down_held():
 			change_state(State.IDLE)
+
+
+func _try_start_character_special() -> bool:
+	return false
 
 
 func change_state(next_state: int, force_victory_exit := false) -> void:

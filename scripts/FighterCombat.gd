@@ -4,6 +4,7 @@ class_name FighterCombat
 ## Gestisce il ciclo degli attacchi, le hitbox, i danni e le reazioni ai colpi.
 
 const Reactions := preload("res://scripts/FighterCombatReactions.gd")
+const HitboxProfiles := preload("res://scripts/FighterHitboxProfiles.gd")
 
 signal health_changed(current_health: int, max_health: int)
 signal knocked_out
@@ -100,6 +101,7 @@ func _ready() -> void:
 		# Ogni fighter deve poter cambiare la propria hitbox indipendentemente.
 		hitbox_shape.shape = hitbox_shape.shape.duplicate()
 	hitbox.area_entered.connect(_on_hitbox_area_entered)
+	fighter.get_node("AnimatedSprite2D").frame_changed.connect(_update_active_hitbox_profile)
 	disable_hitbox()
 
 
@@ -438,7 +440,8 @@ func take_damage(
 	hit_reaction_start_frame: int = 0,
 	ko_start_frame: int = 0,
 	apply_pushback: bool = true,
-	force_grounded_reaction: bool = false
+	force_grounded_reaction: bool = false,
+	hurt_height_override: int = -1
 ) -> DamageResult:
 	return Reactions.take_damage(
 		self,
@@ -451,7 +454,8 @@ func take_damage(
 		hit_reaction_start_frame,
 		ko_start_frame,
 		apply_pushback,
-		force_grounded_reaction
+		force_grounded_reaction,
+		hurt_height_override
 	)
 
 
@@ -597,7 +601,13 @@ func get_health_percentage() -> float:
 
 func enable_hitbox() -> void:
 	if hitbox_shape:
+		HitboxProfiles.apply(self)
 		hitbox_shape.disabled = false
+
+
+func _update_active_hitbox_profile() -> void:
+	if is_attacking and not hitbox_shape.disabled:
+		HitboxProfiles.apply(self)
 
 
 func perform_special_720_multi_hit(active_duration: float, attack_generation: int) -> void:
@@ -838,12 +848,17 @@ func _apply_hit_to_area(area: Area2D) -> void:
 	var target := area.get_parent() as Fighter
 	if target == null or target == fighter or hit_targets.has(target) or current_attack == null:
 		return
-	hit_targets.append(target)
 	var effective_hit_height := get_effective_hit_height(current_attack)
 	if uses_target_stance_reactions() or uses_target_stance_medium_reactions() or uses_target_stance_high_reactions():
 		var target_is_crouched := target.get_crouch_progress() >= 0.5 or target.is_holding_low_guard()
 		var standing_height := AttackData.HitHeight.MID if uses_target_stance_medium_reactions() else AttackData.HitHeight.HIGH
 		effective_hit_height = AttackData.HitHeight.LOW if target_is_crouched else standing_height
+	# La taratura dello sprite non cambia la regola dei colpi alti in piedi:
+	# l'avversario accovacciato li evita. I colpi aerei e gli uppercut bassi
+	# mantengono invece il loro normale controllo di traiettoria e postura.
+	if effective_hit_height == AttackData.HitHeight.HIGH and get_current_variant_id() == &"standing" and target.get_crouch_progress() >= 0.5:
+		return
+	hit_targets.append(target)
 	if (
 		current_attack.attack_id == &"light_punch"
 		and not is_crouched_light_punch

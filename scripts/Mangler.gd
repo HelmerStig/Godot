@@ -349,6 +349,7 @@ var super_frozen_target: Fighter
 var super_start_aura_spawned := false
 var super_drum_roll_completed_loops := 0
 var victory_pending_until_landing := false
+var attack_audio: Node
 
 @onready var grab_front_sprite: AnimatedSprite2D = $GrabFrontSprite
 @onready var grab_box: Area2D = $GrabBox
@@ -362,6 +363,10 @@ var victory_pending_until_landing := false
 func _ready() -> void:
 	AnimationSetup.configure_all(self)
 	super._ready()
+	attack_audio = preload("res://scripts/FighterAttackAudio.gd").new()
+	attack_audio.name = "AttackAudio"
+	add_child(attack_audio)
+	attack_audio.setup(combat)
 	var arena: Node = get_parent()
 	if arena != null and arena.has_signal(&"round_ended"):
 		arena.connect(&"round_ended", _on_round_ended)
@@ -1106,6 +1111,8 @@ func is_holding_back() -> bool:
 
 
 func reset_fighter(spawn_position: Vector2) -> void:
+	if is_instance_valid(attack_audio):
+		attack_audio.reset()
 	victory_pending_until_landing = false
 	release_super_freeze()
 	release_grab()
