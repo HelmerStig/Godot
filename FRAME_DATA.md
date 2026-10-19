@@ -164,8 +164,18 @@ Personaggio: `special_2_blow_candidate.png`, celle 512x512, 7 colonne, frame 1-4
 
 Fumo: `special_2_smoke_candidate.png`, stessa griglia, esclusivamente frame 1-26 a 60 FPS. Compare al frame visivo 21 di Oscare, segue la bocca e termina al frame 46; i frame 47-49 sono recupero senza proiettile. Dissolvenza iniziale 3 frame, finale 6 frame; l'ultimo frame è soltanto visivo. Durata totale (20+49)/60 = 1,15 s; il fumo comincia quindi al frame complessivo 41. Scala fumo: 0,7 volte quella dello sprite del personaggio.
 
-Collisione convessa per frame ricavata dalla sagoma del fumo, speculare al facing. Danno complessivo di 10 per bersaglio, applicato una sola volta; hitstun 0,3 s e blockstun 0,18 s. In piedi il primo colpo usa hurt_medium e la reazione riparte ogni 6 frame del fumo (100 ms), esclusivamente mentre il bersaglio interseca il cono attivo. Si rinnova anche l'hitstun; l'ultimo hurt termina normalmente. Uscita dal cono, fine del fumo e interruzione fermano le ripetizioni. Da accovacciato produce hurt_crouched; la parata è media/bassa secondo la postura. Mantiene KO e reazioni aeree, senza raffica medium su accovacciati, bersagli aerei, in parata o KO.
+Collisione convessa per frame ricavata dalla sagoma del fumo, speculare al facing. Danno complessivo di 10 per bersaglio, applicato una sola volta; hitstun 0,3 s e blockstun 0,18 s. In piedi il primo colpo usa hurt_medium e la reazione riparte solo dopo aver completato tutti i frame di andata e di eventuale ritorno, esclusivamente mentre il bersaglio interseca il cono attivo. Si rinnova anche l'hitstun; l'ultimo hurt termina normalmente. Uscita dal cono, fine del fumo e interruzione fermano le ripetizioni. Da accovacciato produce hurt_crouched; la parata è media/bassa secondo la postura. Mantiene KO e reazioni aeree, senza raffica medium su accovacciati, bersagli aerei, in parata o KO.
 
 `soffio.wav` parte alla comparsa del cono, una sola volta; la registrazione può finire dopo il recupero naturale, mentre interruzioni e reset la fermano. Nessun audio di impatto; particelle arancioni su HIT/KO e sui hurt_medium ripetuti. Il cono continua fino alla fine anche dopo un impatto, ma scompare su interruzione, KO del proprietario o reset.
 
 Test dedicato: `godot --headless --path . --script res://tests/test_oscare_smoke.gd`; entrambe le speciali: `res://tests/test_oscare_special.gd`.
+
+## Vittoria di Bue, Peirolo, Oscare, Torpe e Mileto (19 ottobre 2026)
+
+Fonte AutoSprite: `Victory`. Tutti i 49 frame di ciascun foglio, celle 512x512, 7 colonne, a 24 FPS, solo avanti e senza loop. Durata 49/24 = circa 2,04 secondi. L'ultimo frame resta fermo nello stato VICTORY fino al reset del training.
+
+Il segnale `MainArena.round_ended` avvia la sequenza soltanto sul vincitore, sia Player 1 sia Player 2. Cancella attacchi e movimento in corso; in aria conserva la caduta e attende il contatto col suolo. Reset e nuovo round annullano anche una vittoria ancora in attesa dell'atterraggio. Scala, offset e orientamento usano quelli del fighter.
+
+PNG, atlas e provenienza sono nelle cartelle dei cinque personaggi: `victory.png`, `victory.atlas.json`, `victory_autosprite.json`. Nessuna nuova generazione o spesa di crediti.
+
+Test dedicato: `godot --headless --path . --script res://tests/test_roster_victory.gd`.

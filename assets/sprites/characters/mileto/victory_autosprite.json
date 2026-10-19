@@ -1,0 +1,16 @@
+{
+  "characterId": "cmu2elbu30001frxowdg4ngym",
+  "spritesheetId": "cmvf8t1vb005ml6j9nb0tsd7u",
+  "animation": "Victory",
+  "file": "victory.png",
+  "frameCount": 49,
+  "columns": 7,
+  "cellSize": [
+    512,
+    512
+  ],
+  "fps": 24,
+  "loop": false,
+  "holdFinalFrame": true,
+  "creditsSpent": 0
+}

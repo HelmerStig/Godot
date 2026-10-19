@@ -20,7 +20,8 @@ static func take_damage(
 	apply_pushback: bool,
 	force_grounded_reaction: bool,
 	hurt_height_override: int = -1,
-	hurt_effect_color: Color = Color.TRANSPARENT
+	hurt_effect_color: Color = Color.TRANSPARENT,
+	play_full_hurt_animation: bool = false
 ) -> FighterCombat.DamageResult:
 	if combat.fighter.current_state in [Fighter.State.KNOCKDOWN_RECOVERY, Fighter.State.KNOCKED_DOWN]:
 		return FighterCombat.DamageResult.IGNORED
@@ -79,7 +80,7 @@ static func take_damage(
 	elif causes_knockdown and not crouched_low_hit:
 		sweep_knockdown_reaction(combat, attacker)
 	else:
-		if hit_height == AttackData.HitHeight.MID:
+		if hit_height == AttackData.HitHeight.MID and not play_full_hurt_animation:
 			hit_reaction_start_frame = 4
 		hit_reaction(combat, hitstun, hit_height, attacker, hit_reaction_start_frame, apply_pushback, hurt_effect_color)
 	return FighterCombat.DamageResult.HIT

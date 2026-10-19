@@ -48,7 +48,11 @@ Accensione (20 frame) e lancio (29 frame) si concatenano a 60 FPS, poi idle. Il 
 
 Giù, giù-indietro, indietro + LP/MP/SP, relativo all'avversario, con la stessa tolleranza di 600 ms della Special 1. In F2 usare frecce o joypad: D è riservato alla preview KO.
 
-`Special 1 - Light Cigarette` (20 frame) precede `Special 2 - Violent Smoke Breath` (49 frame): tutto a 60 FPS, poi idle. L'accensione riproduce `siga-accensione.wav` al frame 6, come nella Special 1. Dal frame 21 del soffio si aggancia alla bocca il cono di fumo: solo i primi 26 frame del foglio, sempre a 60 FPS, con comparsa e dissolvenza gestite da Godot. Il cono segue il busto e resta orientato nella direzione iniziale. La collisione segue la sagoma del fumo. Sul bersaglio in piedi ripete hurt_medium ogni 6 frame finché resta nel cono attivo; da accovacciato produce hurt_crouched. Il danno complessivo resta di 10 per bersaglio; parate, KO e bersagli aerei mantengono le proprie reazioni. L'impatto usa particelle arancioni. `soffio.wav` parte quando compare il fumo; nessun suono aggiuntivo al contatto con l'avversario. Interruzione e reset eliminano il cono.
+`Special 1 - Light Cigarette` (20 frame) precede `Special 2 - Violent Smoke Breath` (49 frame): tutto a 60 FPS, poi idle. L'accensione riproduce `siga-accensione.wav` al frame 6, come nella Special 1. Dal frame 21 del soffio si aggancia alla bocca il cono di fumo: solo i primi 26 frame del foglio, sempre a 60 FPS, con comparsa e dissolvenza gestite da Godot. Il cono segue il busto e resta orientato nella direzione iniziale. La collisione segue la sagoma del fumo. Sul bersaglio in piedi ripete hurt_medium soltanto dopo ogni ciclo completo, incluso il ritorno, finché resta nel cono attivo; da accovacciato produce hurt_crouched. Il danno complessivo resta di 10 per bersaglio; parate, KO e bersagli aerei mantengono le proprie reazioni. L'impatto usa particelle arancioni. `soffio.wav` parte quando compare il fumo; nessun suono aggiuntivo al contatto con l'avversario. Interruzione e reset eliminano il cono.
+
+### Vittoria del roster
+
+Bue, Peirolo, Oscare, Torpe e Mileto riproducono `Victory` quando vincono il round: 49 fotogrammi a 24 FPS, senza loop, mantenendo l'ultimo fotogramma fino al reset. La vittoria annulla l'attacco in corso e blocca i comandi; se il vincitore è in aria, completa l'atterraggio prima di festeggiare. Gli spritesheet e gli atlas originali sono salvati come `victory.png` e `victory.atlas.json` nelle cartelle dei personaggi.
 
 ## Test
 

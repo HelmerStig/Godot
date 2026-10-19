@@ -1,5 +1,13 @@
 # Test headless
 
+Vittoria dei cinque fighter del roster:
+
+```text
+godot --headless --path . --script res://tests/test_roster_victory.gd
+```
+
+Il caso `cases/roster_victory.gd` è incluso nella suite arena. Copre entrambi gli slot di giocatore per ciascun personaggio: KO reale nell'arena, 49 frame esatti a 24 FPS, cancellazione dell'attacco, posa finale mantenuta, vittoria dopo l'atterraggio e reset durante la posa o l'attesa in aria.
+
 Speciali di Oscare (sigaretta e soffio):
 
 ```text
@@ -8,7 +16,7 @@ godot --headless --path . --script res://tests/test_oscare_special.gd
 
 Il caso `cases/oscare_cigarette_special.gd` è incluso nella suite combat. Verifica i due atlas aggiornati, 60 FPS, quarto di luna in entrambi i versi e con LP/MP/SP, tolleranza e scadenza, priorità sui pugni normali, rilascio unico, velocità e origine speculare del proiettile, riproduzione reale completa, interruzioni e reset. Le collisioni reali coprono sweep rapido nelle due direzioni, danno singolo, parate, bersaglio accovacciato e colpo che passa sopra la hurtbox.
 
-Anche `cases/oscare_smoke_special.gd` è incluso nella suite combat. Verifica i 49 frame di Oscare e i primi 26 del fumo a 60 FPS, quarto di luna indietro nelle due direzioni con tre pugni e input semplificati, accensione iniziale di 20 frame e audio al frame 6, passaggio diretto al soffio, aggancio alla bocca, soffio.wav unico alla comparsa, nessun suono di impatto, dissolvenza, ritorno in idle, interruzioni/KO/reset e collisioni reali speculari con guardie, bersagli lontani o sopra il cono. Il fumo applica il danno una sola volta per bersaglio, ripete hurt_medium ogni 6 frame sui bersagli in piedi ancora nel cono e rimane visibile fino alla fine. Il test copre anche uscita/rientro nel cono, fine della raffica ed esclusione di crouch, parate e KO. Per eseguirlo separatamente: `godot --headless --path . --script res://tests/test_oscare_smoke.gd`.
+Anche `cases/oscare_smoke_special.gd` è incluso nella suite combat. Verifica i 49 frame di Oscare e i primi 26 del fumo a 60 FPS, quarto di luna indietro nelle due direzioni con tre pugni e input semplificati, accensione iniziale di 20 frame e audio al frame 6, passaggio diretto al soffio, aggancio alla bocca, soffio.wav unico alla comparsa, nessun suono di impatto, dissolvenza, ritorno in idle, interruzioni/KO/reset e collisioni reali speculari con guardie, bersagli lontani o sopra il cono. Il fumo applica il danno una sola volta per bersaglio, ripete hurt_medium dopo il ciclo completo con eventuale ritorno inverso sui bersagli in piedi ancora nel cono e rimane visibile fino alla fine. Il test copre anche tutti i frame di tre cicli su ciascuno dei sette difensori, uscita/rientro nel cono, fine della raffica ed esclusione di crouch, parate e KO. Per eseguirlo separatamente: `godot --headless --path . --script res://tests/test_oscare_smoke.gd`.
 
 Pugno leggero in salto dei cinque fighter del roster:
 

@@ -14,6 +14,7 @@ const BLOCK_FPS := 24.0
 const BLOCK_LOW_FPS := 48.0
 const HURT_FPS := 48.0
 const KO_FPS := 24.0
+const VICTORY_FPS := 24.0
 const KNOCKDOWN_FPS := 24.0
 const SWEEP_GROUNDED_HOLD := 0.3
 const GRAVITY := 3150.0
@@ -186,6 +187,9 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var hurt_low_sheet: Texture2D
 @export var fall_sheet: Texture2D
 @export var death_sheet: Texture2D
+@export var victory_sheet: Texture2D
+@export var victory_frame_count := 49
+@export var victory_columns := 7
 @export var sweep_knockdown_sheet: Texture2D
 @export var knockdown_recovery_sheet: Texture2D
 @export var knockdown_recovery_columns := 6
@@ -196,6 +200,7 @@ const BACK_JUMP_TAKEOFF_FRAME := 4  # Frame visivo 5, indice 0-based.
 @export var sprite_position := Vector2(0.0, 0.0)
 
 var _jump_startup := false
+var victory_pending_until_landing := false
 var _holding_jump_pose := false
 var _jump_takeoff_anim_idx := 0
 var _jump_direction := 0.0
@@ -311,9 +316,26 @@ func _ready() -> void:
 	animated_sprite.frame_changed.connect(_update_low_medium_kick_hitbox)
 	animated_sprite.frame_changed.connect(_update_medium_kick_hitbox)
 	animated_sprite.play(&"idle")
+	var arena := get_parent()
+	if arena != null and arena.has_signal(&"round_ended"):
+		arena.connect(&"round_ended", _on_round_ended)
 
 
 func _physics_process(delta: float) -> void:
+	if victory_pending_until_landing:
+		velocity.x = 0.0
+		if not is_on_floor():
+			velocity.y += GRAVITY * delta
+		update_physical_collision()
+		move_and_slide()
+		if is_on_floor():
+			_start_victory_animation()
+		update_ground_shadow()
+		return
+	if current_state == State.VICTORY:
+		velocity = Vector2.ZERO
+		update_ground_shadow()
+		return
 	if is_player_controlled and input_buffer != null:
 		input_buffer.update(is_facing_right)
 	_try_start_character_special()
@@ -1373,7 +1395,33 @@ func _process_back_jump(delta: float) -> void:
 	update_ground_shadow()
 
 
+func _on_round_ended(winner: int) -> void:
+	if winner != player_number or victory_sheet == null:
+		return
+	combat.cancel_current_action()
+	_jump_startup = false
+	_holding_jump_pose = false
+	_back_jump_active = false
+	_back_jump_moving = false
+	_back_jump_elapsed = 0.0
+	if is_on_floor():
+		_start_victory_animation()
+	else:
+		victory_pending_until_landing = true
+		can_move = false
+		velocity.x = 0.0
+
+
+func _start_victory_animation() -> void:
+	victory_pending_until_landing = false
+	reset_airborne_combat_state()
+	velocity = Vector2.ZERO
+	change_state(State.VICTORY)
+	animated_sprite.play(&"victory")
+
+
 func reset_fighter(spawn_position: Vector2) -> void:
+	victory_pending_until_landing = false
 	_holding_jump_pose = false
 	_light_punch_hit_sound_played = false
 	if is_instance_valid(_light_punch_hit_audio):
@@ -1449,6 +1497,8 @@ func get_sweep_grounded_hold_duration() -> float:
 
 
 func _on_animation_finished() -> void:
+	if current_state == State.VICTORY or victory_pending_until_landing:
+		return
 	if current_state == State.ATTACKING and animated_sprite.animation in [&"jump_light_punch", &"jump_medium_punch", &"jump_strong_punch", &"jump_light_kick", &"jump_medium_kick", &"jump_strong_kick"]:
 		_finish_jump_attack()
 		return
@@ -1569,6 +1619,8 @@ func update_sprite_scale() -> void:
 
 func _configure_animations() -> void:
 	var frames := SpriteFrames.new()
+	if victory_sheet != null:
+		_add_sheet_animation(frames, &"victory", victory_sheet, victory_frame_count, victory_columns, Vector2(512,512), VICTORY_FPS, false, 0, false)
 	frames.remove_animation(&"default")
 	if low_strong_punch_sheet != null:
 		_add_sheet_animation(frames, &"crouched_strong_punch", low_strong_punch_sheet, low_strong_punch_frame_count, low_strong_punch_columns, Vector2(512.0, 512.0), low_strong_punch_fps, false, 0, false)

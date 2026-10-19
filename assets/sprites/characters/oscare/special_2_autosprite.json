@@ -54,9 +54,9 @@
     "soundEvent": "smoke_spawn",
     "impactSound": null,
     "standingReaction": "hurt_medium",
-    "standingHurtRepeatFrames": 6,
     "damagePerTarget": 10,
-    "repeatDamage": 0
+    "repeatDamage": 0,
+    "standingHurtRepeat": "after_full_forward_and_reverse_cycle"
   },
   "gameplayBound": true,
   "input": "DOWN, DOWN_BACK, BACK + LP/MP/SP (relative facing); 600 ms motion window",

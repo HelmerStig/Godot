@@ -9,7 +9,6 @@ const FRAME_COUNT := 26
 const START_FRAME := 20 # Fighter visual frame 21.
 const OUTLET := Vector2(23,256)
 const SIZE_RATIO := 0.7
-const HURT_REPEAT_FRAMES := 6 # 100 ms on the 60 FPS smoke timeline.
 
 var source_fighter: Fighter
 var facing_right := true
@@ -17,7 +16,7 @@ var sprite: AnimatedSprite2D
 var hit_shape := ConvexPolygonShape2D.new()
 var hit_targets: Array[Fighter] = []
 var active := false
-var _last_hurt_frame: Dictionary = {}
+var _hurt_generations: Dictionary = {}
 
 
 func setup(fighter: Fighter, direction_right: bool) -> void:
@@ -101,23 +100,39 @@ func _hit_area(area: Area2D) -> void:
 		return
 	var guard_height := AttackData.HitHeight.LOW if crouched else AttackData.HitHeight.MID
 	var hurt_height := AttackData.HitHeight.LOW if crouched else AttackData.HitHeight.MID
-	var result := target.combat.take_damage(Impact.DAMAGE,source_fighter,0.3,0.18,guard_height,false,0,0,true,false,hurt_height,Impact.IMPACT_COLOR)
+	var result := target.combat.take_damage(Impact.DAMAGE,source_fighter,0.3,0.18,guard_height,false,0,0,true,false,hurt_height,Impact.IMPACT_COLOR,true)
 	if result != FighterCombat.DamageResult.IGNORED:
 		hit_targets.append(target)
 		if result == FighterCombat.DamageResult.HIT and not crouched and target.is_on_floor():
-			_last_hurt_frame[target.get_instance_id()] = sprite.frame
+			_hurt_generations[target.get_instance_id()] = target.combat.action_generation
 
 
 func _refresh_standing_hurt(target: Fighter, crouched: bool) -> void:
 	var id := target.get_instance_id()
 	if (
-		not _last_hurt_frame.has(id) or crouched or not target.is_on_floor()
+		not _hurt_generations.has(id) or crouched or not target.is_on_floor()
 		or not target.controls_enabled or target.combat.current_health <= 0
 		or target.current_state in [Fighter.State.KNOCKED_DOWN, Fighter.State.KNOCKDOWN_RECOVERY, Fighter.State.BLOCKING, Fighter.State.BLOCK_RECOVERY]
-		or sprite.frame - int(_last_hurt_frame[id]) < HURT_REPEAT_FRAMES
+		or target.combat.action_generation != int(_hurt_generations[id])
+		or not _hurt_cycle_finished(target)
 	):
 		return
-	_last_hurt_frame[id] = sprite.frame
-	# Refresh only the reaction and its generation-protected hitstun. The move
-	# still deals damage once; blocks and airborne/crouched hits never enter here.
-	Reactions.hit_reaction(target.combat,0.3,AttackData.HitHeight.MID,source_fighter,4,false,Impact.IMPACT_COLOR)
+	# A new cycle starts only after the complete forward/reverse sequence.
+	# Damage stays a single event; reset or another action invalidates the loop.
+	Reactions.hit_reaction(target.combat,0.3,AttackData.HitHeight.MID,source_fighter,0,false,Impact.IMPACT_COLOR)
+	_hurt_generations[id] = target.combat.action_generation
+
+
+func _hurt_cycle_finished(target: Fighter) -> bool:
+	if target.current_state != Fighter.State.HIT:
+		return true
+	var animation := target.animated_sprite.animation
+	if animation == &"hurt_mid" and target.animated_sprite.sprite_frames.has_animation(&"hurt_mid_reverse"):
+		return false
+	if animation not in [&"hurt_mid", &"hurt_mid_reverse"]:
+		return false
+	return (
+		not target.animated_sprite.is_playing()
+		and target.animated_sprite.frame == target.animated_sprite.sprite_frames.get_frame_count(animation)-1
+		and target.animated_sprite.frame_progress >= 1.0
+	)

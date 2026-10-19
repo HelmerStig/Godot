@@ -442,7 +442,8 @@ func take_damage(
 	apply_pushback: bool = true,
 	force_grounded_reaction: bool = false,
 	hurt_height_override: int = -1,
-	hurt_effect_color: Color = Color.TRANSPARENT
+	hurt_effect_color: Color = Color.TRANSPARENT,
+	play_full_hurt_animation: bool = false
 ) -> DamageResult:
 	return Reactions.take_damage(
 		self,
@@ -457,7 +458,8 @@ func take_damage(
 		apply_pushback,
 		force_grounded_reaction,
 		hurt_height_override,
-		hurt_effect_color
+		hurt_effect_color,
+		play_full_hurt_animation
 	)
 
 

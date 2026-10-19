@@ -162,47 +162,81 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				actor.animated_sprite.frame = 34
 				smoke._physics_process(1.0/60.0)
 				expect.call(target.combat.action_generation == before and target.combat.current_health == expected_health, "Fumo: raffica medium esclusa per " + scenario)
-	# One damage event, several medium reactions while still intersecting smoke.
-	await Helpers.settle(tree,actor,target,arena.FLOOR_Y)
-	actor.is_facing_right = true
-	actor.animated_sprite.flip_h = false
-	target.position.x = 1250
-	actor._start_smoke_special()
-	actor._on_animation_finished()
-	actor.animated_sprite.pause()
-	actor.animated_sprite.frame = 20
-	var repeating := actor._smoke_projectile as OscareSmokeBreathProjectile
-	repeating.set_physics_process(false)
-	for tick in 2:
-		await tree.physics_frame
-	repeating._physics_process(1.0/60.0)
-	var hit_generation := target.combat.action_generation
-	for frame in [25,26,32]:
-		actor.animated_sprite.frame = frame
+	# Observe every frame across real, complete cycles on all seven defenders.
+	var mirror := (load("res://scenes/Oscare.tscn") as PackedScene).instantiate() as Fighter
+	arena.add_child(mirror)
+	mirror.set_physics_process(false)
+	mirror.is_player_controlled = false
+	var victims: Array = arena._fighters.duplicate()
+	victims.append(mirror)
+	for victim: Fighter in victims:
+		if victim == actor:
+			continue
+		for other: Fighter in victims:
+			if other != actor and other != victim:
+				other.position.x = -10000
+		await Helpers.settle(tree,actor,victim,arena.FLOOR_Y)
+		actor.is_facing_right = true
+		actor.animated_sprite.flip_h = false
+		victim.position.x = 1250
+		var expected: Array[String] = []
+		for animation in [&"hurt_mid",&"hurt_mid_reverse"]:
+			if victim.animated_sprite.sprite_frames.has_animation(animation):
+				for frame in victim.animated_sprite.sprite_frames.get_frame_count(animation):
+					expected.append("%s:%d" % [animation,frame])
+		var trace: Array[String] = []
+		var record := func():
+			var anim := victim.animated_sprite.animation
+			if victim.current_state == Fighter.State.HIT and anim in [&"hurt_mid",&"hurt_mid_reverse"]:
+				var entry := "%s:%d" % [anim,victim.animated_sprite.frame]
+				if trace.is_empty() or trace[-1] != entry:
+					trace.append(entry)
+		victim.animated_sprite.frame_changed.connect(record)
+		actor._start_smoke_special()
+		actor._on_animation_finished()
+		actor.animated_sprite.pause()
+		actor.animated_sprite.frame = 28
+		var repeating := actor._smoke_projectile as OscareSmokeBreathProjectile
+		repeating.set_physics_process(false)
+		for tick in 2:
+			await tree.physics_frame
 		repeating._physics_process(1.0/60.0)
-		expect.call(target.combat.current_health == 90 and target.animated_sprite.animation == &"hurt_mid", "Fumo: serie hurt_medium mantiene 10 danni complessivi al frame " + str(frame+1))
-		var expected_generation: int = hit_generation + (int(frame)-20)/Smoke.HURT_REPEAT_FRAMES
-		expect.call(target.combat.action_generation == expected_generation, "Fumo: una reazione ogni 6 frame, senza duplicati da piu hurtbox")
-	var before_exit := target.combat.action_generation
-	target.position.x = 1800
-	actor.animated_sprite.frame = 38
-	for tick in 2:
-		await tree.physics_frame
-	repeating._physics_process(1.0/60.0)
-	expect.call(target.combat.action_generation == before_exit, "Fumo: uscire dal cono interrompe subito le nuove reazioni")
-	target.position.x = 1250
-	actor.animated_sprite.frame = 44
-	for tick in 2:
-		await tree.physics_frame
-	repeating._physics_process(1.0/60.0)
-	expect.call(target.combat.action_generation == before_exit+1 and target.combat.current_health == 90, "Fumo: rientrare riprende la reazione senza nuovo danno o raffiche arretrate")
-	var final_generation := target.combat.action_generation
-	actor.animated_sprite.frame = 45
-	repeating._physics_process(1.0/60.0)
-	expect.call(target.combat.action_generation == final_generation and not repeating.active, "Fumo: fine dissolvenza ferma la raffica")
-	actor._on_animation_finished()
-	await tree.create_timer(0.55).timeout
-	expect.call(target.current_state == Fighter.State.IDLE and target.combat.current_health == 90, "Fumo: ultimo hurt si conclude senza loop o danni residui")
+		record.call()
+		var first_generation := victim.combat.action_generation
+		expect.call(victim.animated_sprite.frame == 0, "%s: primo hurt_medium dal primo frame" % victim.name)
+		for tick in 180:
+			await tree.physics_frame
+			repeating._physics_process(1.0/60.0)
+			record.call()
+			if victim.combat.action_generation != first_generation:
+				break
+		expect.call(victim.combat.action_generation == first_generation+1 and trace.slice(0,expected.size()) == expected, "%s: ciclo completo con ritorno prima del secondo hurt" % victim.name)
+		expect.call(victim.animated_sprite.frame == 0 and victim.animated_sprite.frame_progress < 1.0, "%s: nuovo ciclo riparte dal primo frame completo" % victim.name)
+		var second_generation := victim.combat.action_generation
+		victim.position.x = 1800
+		for tick in 180:
+			await tree.physics_frame
+			repeating._physics_process(1.0/60.0)
+			if victim.current_state == Fighter.State.IDLE:
+				break
+		expect.call(victim.combat.action_generation == second_generation and trace == expected+expected, "%s: uscita dal cono lascia finire il ciclo senza riavvio" % victim.name)
+		victim.position.x = 1250
+		for tick in 2:
+			await tree.physics_frame
+		repeating._physics_process(1.0/60.0)
+		record.call()
+		expect.call(victim.combat.action_generation == second_generation+1 and victim.animated_sprite.frame == 0, "%s: rientro avvia un nuovo ciclo completo" % victim.name)
+		var final_generation := victim.combat.action_generation
+		actor.animated_sprite.frame = 45
+		repeating._physics_process(1.0/60.0)
+		actor._on_animation_finished()
+		for tick in 180:
+			await tree.physics_frame
+			if victim.current_state == Fighter.State.IDLE:
+				break
+		expect.call(trace == expected+expected+expected and victim.combat.action_generation == final_generation, "%s: fine fumo completa anche l'ultimo ciclo, senza tagli" % victim.name)
+		expect.call(victim.combat.current_health == 90 and tree.get_nodes_in_group("oscare_cigarette_impact_audio").is_empty(), "%s: danno singolo e nessun audio d'impatto" % victim.name)
+		victim.animated_sprite.frame_changed.disconnect(record)
 	arena.queue_free()
 	await tree.process_frame
 	return true
