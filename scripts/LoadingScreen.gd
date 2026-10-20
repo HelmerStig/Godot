@@ -109,6 +109,10 @@ func _return_to_title() -> void:
 
 # Keep loader and scene transitions separate so failure paths can be tested.
 func _request_arena_load() -> Error:
+	# Select may have left an earlier request running. Reuse it on re-entry.
+	var status := ResourceLoader.load_threaded_get_status(ARENA_SCENE)
+	if status in [ResourceLoader.THREAD_LOAD_IN_PROGRESS,ResourceLoader.THREAD_LOAD_LOADED]:
+		return OK
 	return ResourceLoader.load_threaded_request(ARENA_SCENE)
 
 
@@ -166,7 +170,7 @@ func _add_rising_particles() -> void:
 
 
 func _layout_rising_particles() -> void:
-	if rising_particles == null or rising_particle_material == null:
+	if not is_inside_tree() or rising_particles == null or rising_particle_material == null:
 		return
 	var viewport_size := get_viewport_rect().size
 	rising_particles.position = Vector2(viewport_size.x * 0.5, viewport_size.y + 12.0)

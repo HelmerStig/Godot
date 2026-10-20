@@ -147,7 +147,7 @@ func _add_rising_particles() -> void:
 
 
 func _layout_rising_particles() -> void:
-	if rising_particles == null or rising_particle_material == null:
+	if not is_inside_tree() or rising_particles == null or rising_particle_material == null:
 		return
 	var viewport_size := get_viewport_rect().size
 	rising_particles.position = Vector2(viewport_size.x * 0.5, viewport_size.y + 12.0)
@@ -368,7 +368,7 @@ func _get_portrait(character_id: String) -> Texture2D:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if OS.has_feature("headless"):
+	if event.is_echo():
 		return
 	if event.is_action_pressed("p1_light_punch"):
 		_play_and_flash(roster[p1_index]["id"], 0, p1_punch_panels)
@@ -382,34 +382,71 @@ func _unhandled_input(event: InputEvent) -> void:
 		_play_and_flash(roster[p2_index]["id"], 1, p2_punch_panels)
 	elif event.is_action_pressed("p2_heavy_punch"):
 		_play_and_flash(roster[p2_index]["id"], 2, p2_punch_panels)
-	if not p1_confirmed:
-		if p1_nav_cooldown <= 0.0 and event.is_action_pressed("ui_left"):
-			p1_index = wrapi(p1_index - 1, 0, roster.size())
-			p1_nav_cooldown = NAV_COOLDOWN
-			_refresh_ui()
-		elif p1_nav_cooldown <= 0.0 and event.is_action_pressed("ui_right"):
-			p1_index = wrapi(p1_index + 1, 0, roster.size())
-			p1_nav_cooldown = NAV_COOLDOWN
-			_refresh_ui()
-		elif event.is_action_pressed("ui_accept") or event.is_action_pressed("p1_light_kick"):
+	# Confirming the second player removes this scene immediately. Keep the
+	# viewport reference before the handler can start that transition.
+	var viewport := get_viewport()
+	for player in [1,2]:
+		if _handle_player_input(event,player):
+			viewport.set_input_as_handled()
+			return
+
+
+func _handle_player_input(event: InputEvent, player: int) -> bool:
+	var prefix := "p%d_" % player
+	var confirmed := p1_confirmed if player == 1 else p2_confirmed
+	if event.is_action_pressed(prefix + "medium_kick"):
+		if player == 1:
+			p1_confirmed = false
+			p1_nav_cooldown = 0.0
+		else:
+			p2_confirmed = false
+			p2_nav_cooldown = 0.0
+		_refresh_ui()
+		return true
+	if confirmed:
+		return false
+	var keyboard_accept := player == 1 and (event is InputEventKey or event is InputEventAction) and event.is_action_pressed("ui_accept")
+	if keyboard_accept or event.is_action_pressed(prefix + "light_kick"):
+		if player == 1:
 			p1_confirmed = true
 			CharacterSelection.player1_id = roster[p1_index]["id"]
-			_refresh_ui()
-			_check_start()
-	if not p2_confirmed:
-		if p2_nav_cooldown <= 0.0 and event.is_action_pressed("p2_move_left"):
-			p2_index = wrapi(p2_index - 1, 0, roster.size())
-			p2_nav_cooldown = NAV_COOLDOWN
-			_refresh_ui()
-		elif p2_nav_cooldown <= 0.0 and event.is_action_pressed("p2_move_right"):
-			p2_index = wrapi(p2_index + 1, 0, roster.size())
-			p2_nav_cooldown = NAV_COOLDOWN
-			_refresh_ui()
-		elif event.is_action_pressed("p2_light_kick"):
+		else:
 			p2_confirmed = true
 			CharacterSelection.player2_id = roster[p2_index]["id"]
-			_refresh_ui()
-			_check_start()
+		_refresh_ui()
+		_check_start()
+		return true
+	var cooldown := p1_nav_cooldown if player == 1 else p2_nav_cooldown
+	if cooldown > 0:
+		return false
+	var direction := Vector2i.ZERO
+	if event.is_action_pressed(prefix + "move_left"):
+		direction.x = -1
+	elif event.is_action_pressed(prefix + "move_right"):
+		direction.x = 1
+	elif event.is_action_pressed(prefix + "jump"):
+		direction.y = -1
+	elif event.is_action_pressed(prefix + "crouch"):
+		direction.y = 1
+	if direction == Vector2i.ZERO:
+		return false
+	if player == 1:
+		p1_index = _navigated_index(p1_index,direction)
+		p1_nav_cooldown = NAV_COOLDOWN
+	else:
+		p2_index = _navigated_index(p2_index,direction)
+		p2_nav_cooldown = NAV_COOLDOWN
+	_refresh_ui()
+	return true
+
+
+func _navigated_index(index: int, direction: Vector2i) -> int:
+	if direction.x != 0:
+		return wrapi(index + direction.x,0,roster.size())
+	var columns := roster_grid.columns
+	var rows := ceili(float(roster.size()) / columns)
+	var row := wrapi(index / columns + direction.y,0,rows)
+	return mini(row * columns + index % columns,roster.size()-1)
 
 
 func _check_start() -> void:
@@ -453,11 +490,11 @@ func _refresh_ui() -> void:
 	if hint_label == null:
 		return
 	if p1_confirmed and not p2_confirmed:
-		hint_label.text = "P1 confermato!   P2: Num4/6 muovi | Num7 conferma"
+		hint_label.text = "P1 pronto (MK annulla) | P2: direzioni + LK | Select/Esc: indietro"
 	elif not p1_confirmed and p2_confirmed:
-		hint_label.text = "P2 confermato!   P1: \u2190\u2192 muovi | ENTER conferma"
+		hint_label.text = "P2 pronto (MK annulla) | P1: direzioni + LK/Invio | Select/Esc: indietro"
 	else:
-		hint_label.text = "P1: \u2190\u2192 | ENTER       P2: Num4/6 | Num7"
+		hint_label.text = "Direzioni: muovi | LK (P1 anche Invio): conferma | MK: annulla | Select/Esc: indietro"
 	_update_cursors()
 
 

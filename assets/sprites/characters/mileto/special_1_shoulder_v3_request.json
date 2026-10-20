@@ -1,0 +1,28 @@
+{
+  "status": "awaiting_cost_confirmation",
+  "estimated_credits": 5,
+  "intended_runtime_fps": 60,
+  "generation": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "videoTier": "turbo",
+    "durationSec": 2,
+    "turboMode": "first_frame",
+    "removeBg": "default",
+    "withSound": false,
+    "spritesheet": {
+      "frameCount": 64,
+      "frameSize": 512
+    },
+    "animations": [
+      {
+        "kind": "custom",
+        "name": "Special 1 - Shoulder Snap v3",
+        "raw_prompt": true,
+        "loop": false,
+        "first_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "last_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "prompt": "One explosive shoulder strike toward the RIGHT, with continuous fluid movement throughout the clip. Start moving immediately from the supplied guard. First quarter: flex the knees, twist the torso slightly away and draw the striking shoulder backward. Middle half: sharply unwind the torso and snap that shoulder forward at chest height, chin tucked behind it, striking arm folded tightly across the ribs, rear leg braced. The shoulder is the forward contact surface. Flow directly through the impact into recoil. Final quarter: straighten and return smoothly to the original guard. Distinct anticipation, fast shoulder impact and active recovery; keep moving through every phase rather than holding a pose. Pelvis stays at the same horizontal canvas position, feet grounded, full body visible. Fixed side view, right-facing, stable scale. Preserve Mileto's identity and clothing. Transparent background, clean character only. No punches, kicks, jumps, full spins, repeated attacks, horizontal travel, VFX, trails, dust, shadows, extra limbs or camera motion."
+      }
+    ]
+  }
+}

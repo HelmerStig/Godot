@@ -2,7 +2,7 @@ extends RefCounted
 
 ## Unica lista dei casi, condivisa dagli entry point singoli e dalla suite completa.
 const SUITES := {
-	"input": ["res://tests/cases/input_buffer.gd"],
+	"input": ["res://tests/cases/input_buffer.gd", "res://tests/cases/menu_navigation.gd"],
 	"arianna": [
 		"res://tests/cases/arianna_light_punch_audio.gd",
 		"res://tests/cases/arianna_moveset.gd",
@@ -10,6 +10,7 @@ const SUITES := {
 	],
 	"mangler": ["res://tests/cases/mangler_moveset.gd", "res://tests/cases/mangler_attack_audio.gd"],
 	"combat": [
+		"res://tests/cases/mileto_shoulder_special.gd",
 		"res://tests/cases/torpe_welding_special.gd",
 		"res://tests/cases/torpe_beer_special.gd",
 		"res://tests/cases/oscare_cigarette_special.gd",

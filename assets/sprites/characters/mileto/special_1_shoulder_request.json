@@ -1,0 +1,29 @@
+{
+  "status": "generation_failed_mcp_error_no_new_job_found",
+  "intended_runtime_fps": 60,
+  "reference_url": "https://ultimateframedata.com/sf6/hitboxes/arjun/arjun-cruelshoulder-lp.gif",
+  "estimated_credits": 5,
+  "generation": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "videoTier": "turbo",
+    "durationSec": 2,
+    "turboMode": "first_frame",
+    "removeBg": "default",
+    "withSound": false,
+    "spritesheet": {
+      "frameCount": 64,
+      "frameSize": 512
+    },
+    "animations": [
+      {
+        "kind": "custom",
+        "name": "Special 1 - Cruel Shoulder",
+        "raw_prompt": true,
+        "loop": false,
+        "first_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "last_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "prompt": "Create one non-looping side-view 2D fighting-game shoulder-strike animation for the supplied Mileto character. Begin in the supplied right-facing fighting guard. Briefly lift the near forearm across and above the head while coiling the upper body backward to load the strike. Bend both knees, lower the head, tuck the striking arm close to the body with its elbow bent, and turn the upper torso so the shoulder becomes the leading contact surface toward the RIGHT side of the picture. Drive that shoulder sharply forward at chest height with a compact powerful body thrust, keeping the head tucked behind the shoulder and the arms folded close rather than extending a fist. Show one clear shoulder impact pose, then recover the torso and arms smoothly to the exact starting guard. Perform the entire action IN PLACE: the pelvis stays centered at the same horizontal canvas position, the supporting feet keep the same ground baseline, and only the articulated body pose supplies the forward attacking intent. Fixed full-body side camera, facing right throughout, stable scale and canvas registration. Preserve Mileto's face, sunglasses, tattoos, shorts, flip-flops, proportions and sprite rendering. Render only the clean character silhouette against transparency. Negative prompt: horizontal travel, sliding across the canvas, running, repeated attacks, straight punch, kick, airborne jump, full spin, extra limbs, deformed hands, smoke, flame, sparks, energy glow, motion trails, dust, impact effects, hitbox overlays, background, ground shadow, camera motion, zoom."
+      }
+    ]
+  }
+}

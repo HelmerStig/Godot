@@ -1,0 +1,21 @@
+{
+  "id": "cmvgcqy0d009kacycgzr8kxv8",
+  "characterId": "cmu2elbu30001frxowdg4ngym",
+  "kind": "custom",
+  "direction": "right",
+  "version": 1,
+  "status": "succeeded",
+  "isSelected": true,
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "frameCount": 40,
+  "columns": 8,
+  "sourceVideoId": "cmvgcng2500kalryxxq9lknhk",
+  "errorText": null,
+  "createdAt": "2026-10-20T07:18:53.869Z",
+  "animationName": "Special 1 - Shoulder Snap v3",
+  "playbackFps": 48,
+  "sourceFrames1Based": "1-31, hold 31 until contact/interruption, 32-40 on contact",
+  "rushStartFrame1Based": 13,
+  "creditsSpent": 0
+}

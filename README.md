@@ -12,6 +12,8 @@ Il timer scende da 99; timeout e best-of-three sono intenzionalmente disabilitat
 
 Aprire `project.godot` con Godot 4.7 e premere **F5**. La scena principale è `scenes/TitleScreen.tscn`; da lì si passa alla selezione dei personaggi e quindi all'arena.
 
+Nella selezione personaggi, direzioni su/giu cambiano riga e sinistra/destra scorrono il roster per entrambi i giocatori. **LK** conferma (P1 anche **Invio**); **MK** annulla la conferma del proprio giocatore. **Select** su qualsiasi joypad, oppure **Esc**, torna alla schermata precedente nei menu, nel caricamento e nella finestra test; non esegue questa azione durante il combattimento. Al titolo iniziale resta sul titolo.
+
 | Azione | Player 1 | Player 2 (tastierino) |
 |---|---|---|
 | Sinistra / destra | A / D oppure frecce | 4 / 6 |

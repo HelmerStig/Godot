@@ -1,0 +1,29 @@
+{
+  "status": "awaiting_cost_confirmation",
+  "estimated_credits": 5,
+  "intended_runtime_fps": 60,
+  "revision_reason": "Make the shoulder strike visibly stronger than the first candidate.",
+  "generation": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "videoTier": "turbo",
+    "durationSec": 2,
+    "turboMode": "first_frame",
+    "removeBg": "default",
+    "withSound": false,
+    "spritesheet": {
+      "frameCount": 64,
+      "frameSize": 512
+    },
+    "animations": [
+      {
+        "kind": "custom",
+        "name": "Special 1 - Shoulder Drive v2",
+        "raw_prompt": true,
+        "loop": false,
+        "first_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "last_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "prompt": "Animate ONE powerful shoulder body-check toward the RIGHT. Begin in the supplied guard. Immediately bend both knees and load the torso backward. Tuck the chin behind the leading shoulder, fold that arm tightly across the chest, then explosively hinge the torso forward into a deep diagonal lean. The SHOULDER clearly projects farthest toward the opponent, above the bent front knee, with the head behind it and elbow folded against the ribs. Show a forceful full-body shoulder impact, rear leg braced, then recoil smoothly to the original guard. The shoulder is the striking surface throughout. Keep pelvis centered horizontally and feet on the same ground baseline; Godot supplies travel later. Fixed full-body side camera, facing right, stable scale. Preserve Mileto's identity, tattoos, sunglasses, shorts and flip-flops. Clean transparent character only. No punches, arm swings, kicks, jumps, spins, repeated strikes, horizontal travel, VFX, trails, dust, shadows, extra limbs or camera motion."
+      }
+    ]
+  }
+}

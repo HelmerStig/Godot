@@ -1,0 +1,49 @@
+{
+  "status": "succeeded",
+  "intended_runtime_fps": 60,
+  "reference_url": "https://ultimateframedata.com/sf6/hitboxes/arjun/arjun-cruelshoulder-lp.gif",
+  "authorized_credits": 5,
+  "generation": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "videoTier": "turbo",
+    "durationSec": 2,
+    "turboMode": "first_frame",
+    "removeBg": "default",
+    "withSound": false,
+    "spritesheet": {
+      "frameCount": 64,
+      "frameSize": 512
+    },
+    "animations": [
+      {
+        "kind": "custom",
+        "name": "Special 1 - Cruel Shoulder",
+        "raw_prompt": true,
+        "loop": false,
+        "first_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "last_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "prompt": "Single right-facing fighting-game shoulder strike, entirely in place. Start in the supplied guard. Lift the near forearm above the head, coil the torso backward, bend both knees and tuck the chin. Fold the striking arm against the body and thrust the shoulder powerfully toward the RIGHT at chest height, head tucked behind it. One clear shoulder impact, then recover to the original guard. Keep fists close to the body. Pelvis remains at the same horizontal canvas position, feet grounded, full body visible, fixed side camera and scale. Preserve Mileto's sunglasses, tattoos, shorts, flip-flops and sprite style. Clean character on transparency. No effects, trails, dust, shadows, horizontal travel, running, jumping, repeated strikes, kicks, extended punches, extra limbs or camera motion."
+      }
+    ]
+  },
+  "result": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "status": "queued",
+    "queuedAt": "2026-10-20T07:04:33.872Z",
+    "workflows": [
+      {
+        "jobId": "wf_bf248f58-64cd-479f-b98b-fac8907ba9fb",
+        "kind": "custom",
+        "videoId": "cmvgc8hzw00doho0596ov20uz"
+      }
+    ],
+    "message": "Queued 1 workflow(s) for spritesheet generation.",
+    "usage": {
+      "creditsUsed": 5,
+      "creditsRemaining": 2015
+    }
+  },
+  "spritesheet_id": "cmvgc9l2u0099gqbg96e9pmjv",
+  "native_frame_count": 56,
+  "playback_frame_count": 64
+}

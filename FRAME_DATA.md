@@ -207,3 +207,20 @@ Scintille attive ai frame runtime 43-64 (native 38-56), cioè per tutta la durat
 Le collisioni interrogano il segmento effettivo percorso da ciascuna scintilla contro le sole hurtbox, escludendo il proprietario. Un bersaglio subisce danno una sola volta per esecuzione; i punti aggiuntivi sono decorativi. Su HIT a terra si esegue hurt_high anche contro un bersaglio accovacciato; ogni ciclo completo, incluso un eventuale ritorno, può ripetersi al successivo contatto con una scintilla, senza altro danno. Il tracciamento della generazione dell’azione impedisce di sovrascrivere reset o azioni successive. La reazione breve di Oscare resta così visibile per il getto, conservando 8 frame a 48 FPS. Guardia media in piedi e bassa da accovacciato. In aria resta la normale reazione aerea. `saldatore.wav` inizia con l'emissione, può ripetersi senza modificare il WAV condiviso e si ferma insieme al getto. Le particelle residue possono terminare il volo dopo la recovery naturale; interruzione, KO e reset eliminano getto e audio.
 
 Controller `scripts/Torpe.gd`, effetto e proiettili `scripts/TorpeWeldingSparks.gd`, test `res://tests/test_torpe_welding.gd` nella suite combat. Nessuna generazione o spesa AutoSprite durante l'integrazione.
+
+
+## Mileto Special 1: Shoulder Snap v3 (20 ottobre 2026)
+
+Esportazione aggiornata AutoSprite `cmvgcqy0d009kacycgzr8kxv8`, video `cmvgcng2500kalryxxq9lknhk`: 40 frame nativi, celle 512x512, 8 colonne. `special_1_shoulder.png` viene eseguito a 48 FPS senza duplicazioni. QCF + LP/MP/HP a terra: finestra movimento 36 tick (600 ms), pulsante 10 tick, diagonale finale e passaggio rapido giu/avanti accettati. Le normali cedono la priorita alla special.
+
+Caricamento frame 1-12; avanzamento dal frame 13. Il frame originale 31 resta fermo finche la spalla incontra una hurtbox. Dopo contatto, anche parato, avanzamento fermo e recovery frame 32-40, poi idle. Un colpo ricevuto interrompe la special con normale hurt; KO, vittoria e reset eliminano aura e scia. A vuoto, muro o bordo arena avviano recovery per evitare un blocco permanente.
+
+| Pulsante | Velocita | Aura e scia |
+|---|---:|---|
+| LP | 800 px/s | azzurro |
+| MP | 1100 px/s | arancione |
+| HP | 1400 px/s | rosso |
+
+Singolo danno provvisorio 15 per ogni forza; reazione media in piedi, hurt_crouched da accovacciato, parata media/bassa secondo postura e contatto effettivo. ShapeCast2D sulla spalla (80x95, centro locale 55/-195, specchiato) verifica tutto lo spostamento consentito dalle collisioni fisiche e dai limiti del campo. Nessuna invulnerabilita. Aura procedurale con anello esplosivo iniziale, particelle e bagliore pulsante; scia di sprite colorati in coordinate mondo. `assets/sounds/sfx/scossa.wav` parte una volta all'attivazione (tutte le forze, -4 dB), si ferma a fine mossa, interruzione, KO o reset; il file condiviso non viene modificato. A contatto riuscito si riproduce una sola volta `strong-punch.wav` (-3 dB), anche su KO; su parata o mancato contatto resta silenzioso. Il reset ferma anche questo player, mentre una normale fine mossa lascia terminare il suono di impatto.
+
+Controller `scripts/Mileto.gd`, effetto `scripts/MiletoShoulderAura.gd`, test dedicato `tests/test_mileto_shoulder.gd` incluso nella suite combat. Download gratuito, nessuna nuova generazione AutoSprite.

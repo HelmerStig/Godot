@@ -1,0 +1,52 @@
+{
+  "status": "succeeded",
+  "authorized": true,
+  "request": {
+    "status": "awaiting_cost_confirmation",
+    "estimated_credits": 5,
+    "intended_runtime_fps": 60,
+    "generation": {
+      "characterId": "cmu2elbu30001frxowdg4ngym",
+      "videoTier": "turbo",
+      "durationSec": 2,
+      "turboMode": "first_frame",
+      "removeBg": "default",
+      "withSound": false,
+      "spritesheet": {
+        "frameCount": 64,
+        "frameSize": 512
+      },
+      "animations": [
+        {
+          "kind": "custom",
+          "name": "Special 1 - Shoulder Snap v3",
+          "raw_prompt": true,
+          "loop": false,
+          "first_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+          "last_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+          "prompt": "One explosive shoulder strike toward the RIGHT, continuously animated. Move immediately from guard. First quarter: flex knees, twist torso slightly away, draw striking shoulder backward. Middle half: sharply unwind and snap the shoulder forward at chest height, chin tucked behind it, striking arm folded against ribs, rear leg braced. The shoulder is the forward contact surface. Flow directly through impact into recoil. Final quarter: straighten and return smoothly to the original guard. Brief anticipation, fast impact and active recovery, without a held pose. Pelvis stays at the same horizontal canvas position, feet grounded. Fixed full-body side view, right-facing, stable scale. Preserve Mileto's identity and clothing. Transparent background, clean character only. No punches, kicks, jumps, full spins, repeated attacks, horizontal travel, effects, trails, dust, shadows, extra limbs or camera motion."
+        }
+      ]
+    }
+  },
+  "result": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "status": "queued",
+    "queuedAt": "2026-10-20T07:16:11.095Z",
+    "workflows": [
+      {
+        "jobId": "wf_e4dc7ee0-1a3d-422f-848a-26d22476fe0e",
+        "kind": "custom",
+        "videoId": "cmvgcng2500kalryxxq9lknhk"
+      }
+    ],
+    "message": "Queued 1 workflow(s) for spritesheet generation.",
+    "usage": {
+      "creditsUsed": 5,
+      "creditsRemaining": 2005
+    }
+  },
+  "spritesheet_id": "cmvgcohbe0086acycewtebcfb",
+  "native_frame_count": 56,
+  "playback_frame_count": 64
+}
