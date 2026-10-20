@@ -500,6 +500,7 @@ func _ready() -> void:
 	animated_sprite.sprite_frames = animated_sprite.sprite_frames.duplicate(true)
 	super._ready()
 	AnimationCatalog.new(self).configure_all()
+	configure_jump_startup_timing(ARIANNA_JUMP_TAKEOFF_FRAME)
 	whistle_audio_player = AudioStreamPlayer.new()
 	whistle_audio_player.name = "WhistleAudio"
 	whistle_audio_player.stream = ARIANNA_WHISTLE_SOUND

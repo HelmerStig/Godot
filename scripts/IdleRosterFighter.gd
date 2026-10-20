@@ -233,6 +233,7 @@ var _strong_punch_hit_sound_played := false
 
 func _ready() -> void:
 	_configure_animations()
+	configure_jump_startup_timing(jump_takeoff_frame - jump_start_frame)
 	var data := CharacterData.create_default()
 	data.character_name = String(fighter_id)
 	data.display_name = fighter_display_name

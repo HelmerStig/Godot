@@ -23,6 +23,7 @@ const SHADOW_FLOOR_OFFSET_Y := 20.0
 const RUN_DOUBLE_TAP_WINDOW_FRAMES := 15
 const BACK_HOP_DOUBLE_TAP_WINDOW_FRAMES := 15
 const ATTACK_FOREGROUND_Z_OFFSET := 1
+const JUMP_STARTUP_SECONDS := 4.0 / 60.0
 const HIT_PUSHBACK_SPEED := 180.0
 const SWEEP_PUSHBACK_SPEED := 240.0
 const HURT_HIGH_EFFECT_OFFSET := Vector2(0.0, -220.0)
@@ -523,6 +524,19 @@ func play_ko_animation(start_frame: int = 0) -> void:
 
 func update_sprite_scale() -> void:
 	pass
+
+
+func configure_jump_startup_timing(takeoff_frame: int) -> void:
+	# Compress only the grounded anticipation; preserve the source takeoff pose,
+	# airborne animation timing, impulse and gravity.
+	var frames := animated_sprite.sprite_frames
+	if not frames.has_animation(&"jump") or takeoff_frame <= 0:
+		return
+	var fps := frames.get_animation_speed(&"jump")
+	var count := mini(takeoff_frame,frames.get_frame_count(&"jump"))
+	var duration := fps * JUMP_STARTUP_SECONDS / float(count)
+	for index in count:
+		frames.set_frame(&"jump",index,frames.get_frame_texture(&"jump",index),duration)
 
 
 func start_jump(horizontal_direction: float) -> void:

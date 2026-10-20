@@ -224,3 +224,20 @@ Caricamento frame 1-12; avanzamento dal frame 13. Il frame originale 31 resta fe
 Singolo danno provvisorio 15 per ogni forza; reazione media in piedi, hurt_crouched da accovacciato, parata media/bassa secondo postura e contatto effettivo. ShapeCast2D sulla spalla (80x95, centro locale 55/-195, specchiato) verifica tutto lo spostamento consentito dalle collisioni fisiche e dai limiti del campo. Nessuna invulnerabilita. Aura procedurale con anello esplosivo iniziale, particelle e bagliore pulsante; scia di sprite colorati in coordinate mondo. `assets/sounds/sfx/scossa.wav` parte una volta all'attivazione (tutte le forze, -4 dB), si ferma a fine mossa, interruzione, KO o reset; il file condiviso non viene modificato. A contatto riuscito si riproduce una sola volta `strong-punch.wav` (-3 dB), anche su KO; su parata o mancato contatto resta silenzioso. Il reset ferma anche questo player, mentre una normale fine mossa lascia terminare il suono di impatto.
 
 Controller `scripts/Mileto.gd`, effetto `scripts/MiletoShoulderAura.gd`, test dedicato `tests/test_mileto_shoulder.gd` incluso nella suite combat. Download gratuito, nessuna nuova generazione AutoSprite.
+
+
+## Risposta del salto (20 ottobre 2026)
+
+Tutti i sette fighter comprimono la sola anticipazione a terra in `Fighter.JUMP_STARTUP_SECONDS = 4/60 s` (circa 66,7 ms). `configure_jump_startup_timing` riduce la durata dei frame precedenti allo stacco; indici e texture restano invariati. Gli FPS base, le durate dei frame dal decollo in poi, la gravita, l'impulso verticale e la velocita orizzontale restano quelli del personaggio. Gli attacchi aerei e il salto indietro non cambiano timing.
+
+| Fighter | Anticipazione precedente | Nuova anticipazione |
+|---|---:|---:|
+| Arianna | 281 ms | 67 ms |
+| Mangler | 208 ms | 67 ms |
+| Bue | 375 ms | 67 ms |
+| Peirolo | 500 ms | 67 ms |
+| Oscare | 333 ms | 67 ms |
+| Torpe | 375 ms | 67 ms |
+| Mileto | 458 ms | 67 ms |
+
+Il tempo effettivo fra la registrazione dell'input e il primo spostamento include anche i tick fisici e di animazione: i test misurano al massimo 7 tick (117 ms a 60 Hz). `tests/test_jump_response.gd`, incluso nella suite arena, esercita input veri per salto verticale, avanti e indietro su tutto il roster e controlla altezza e atterraggio di ogni fighter.

@@ -363,6 +363,7 @@ var attack_audio: Node
 func _ready() -> void:
 	AnimationSetup.configure_all(self)
 	super._ready()
+	configure_jump_startup_timing(JUMP_TAKEOFF_FRAME)
 	attack_audio = preload("res://scripts/FighterAttackAudio.gd").new()
 	attack_audio.name = "AttackAudio"
 	add_child(attack_audio)
