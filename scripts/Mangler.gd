@@ -481,19 +481,25 @@ func handle_input() -> void:
 			input_buffer.clear()
 			combat.try_attack(&"special_720_punch")
 			return
-		if input_buffer.matches_recent_sequence([
-			FighterInputBuffer.Direction.DOWN,
-			FighterInputBuffer.Direction.DOWN_FORWARD,
-			FighterInputBuffer.Direction.FORWARD,
-		]):
-			for sonic_punch: StringName in [&"heavy_punch", &"medium_punch", &"light_punch"]:
-				var sonic_direction := input_buffer.consume_attack(sonic_punch)
-				if sonic_direction != FighterInputBuffer.NO_DIRECTION:
-					pending_sonic_projectile_speed_multiplier = get_sonic_projectile_speed_multiplier(
-						sonic_punch
-					)
-					combat.try_attack(&"special_sonic_boom", sonic_direction)
-					return
+		if input_buffer.get_current_direction() in [FighterInputBuffer.Direction.FORWARD, FighterInputBuffer.Direction.DOWN_FORWARD]:
+			var full_sonic := input_buffer.matches_recent_sequence([
+				FighterInputBuffer.Direction.DOWN,
+				FighterInputBuffer.Direction.DOWN_FORWARD,
+				FighterInputBuffer.Direction.FORWARD,
+			])
+			var sonic_diagonal := input_buffer.matches_recent_sequence([
+				FighterInputBuffer.Direction.DOWN,
+				FighterInputBuffer.Direction.DOWN_FORWARD,
+			])
+			if full_sonic or sonic_diagonal:
+				for sonic_punch: StringName in [&"heavy_punch", &"medium_punch", &"light_punch"]:
+					if input_buffer.consume_attack(sonic_punch) != FighterInputBuffer.NO_DIRECTION:
+						input_buffer.clear()
+						pending_sonic_projectile_speed_multiplier = get_sonic_projectile_speed_multiplier(
+							sonic_punch
+						)
+						combat.try_attack(&"special_sonic_boom")
+						return
 		for attack_name in ATTACK_PRIORITY:
 			var attack_direction := input_buffer.consume_attack(attack_name)
 			if attack_direction != FighterInputBuffer.NO_DIRECTION:
@@ -552,16 +558,23 @@ func is_special_720_punch_chord_pressed() -> bool:
 
 
 func is_super_start_command_pressed() -> bool:
-	if not input_buffer.matches_recent_sequence([
+	if input_buffer.get_current_direction() not in [FighterInputBuffer.Direction.FORWARD, FighterInputBuffer.Direction.DOWN_FORWARD]:
+		return false
+	var full_super := input_buffer.matches_recent_sequence([
 		FighterInputBuffer.Direction.BACK,
 		FighterInputBuffer.Direction.DOWN,
 		FighterInputBuffer.Direction.FORWARD,
-	], SUPER_MOTION_WINDOW_FRAMES):
+	], SUPER_MOTION_WINDOW_FRAMES)
+	var super_diagonal := input_buffer.matches_recent_sequence([
+		FighterInputBuffer.Direction.DOWN,
+		FighterInputBuffer.Direction.FORWARD,
+	], SUPER_MOTION_WINDOW_FRAMES)
+	if not full_super and not super_diagonal:
 		return false
 	return input_buffer.consume_attack_chord(
 		[&"light_kick", &"medium_kick"],
 		FighterInputBuffer.DEFAULT_ATTACK_BUFFER_FRAMES,
-		SUPER_CHORD_WINDOW_FRAMES
+		FighterInputBuffer.DEFAULT_ATTACK_BUFFER_FRAMES
 	) != FighterInputBuffer.NO_DIRECTION
 
 
