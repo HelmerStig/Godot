@@ -128,6 +128,10 @@ Gli stati comprendono idle, camminata, corsa, preparazione e svolgimento di salt
 
 In aria i fighter attraversano il corpo dell'avversario, continuando a collidere con il terreno.
 
+### Special 2 di Mileto: chitarra elettrica
+
+Giù, giù-indietro, indietro + LP/MP/HP, con tolleranza di 600 ms. Caricamento a 100 FPS e lancio aggiornato `Guitar Rotary Throw v3` a 60 FPS, poi idle. Il proiettile animato gira in loop a 100 FPS, con scia azzurra ed esplosione elettrica all'impatto. Infligge 15 danni: hurt_high in piedi, hurt_crouched da abbassato. LP/MP/HP aumentano la velocità a 600/800/1000 px/s. Collisioni e parate richiedono un contatto effettivo con la hurtbox. Il proiettile usa scala 2,0. `chitarra-electricity.wav` accompagna la materializzazione dal frame 12 e si ferma al lancio; `boomerang.wav` parte al lancio e si ferma al contatto. A segno si sente lo stesso hit del calcio potente. Il reset elimina proiettile, effetti e audio della mossa.
+
 ## Asset e documentazione
 
 Gli atlas runtime sono in `assets/`; molti usano celle da 512×512, ma il foglio completo contiene più celle. Scala e offset dipendono dal personaggio e dall'animazione: non esiste una scala unica di scena. `original_images/` conserva materiale sorgente.

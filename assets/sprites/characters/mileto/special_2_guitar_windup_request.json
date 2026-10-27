@@ -1,0 +1,30 @@
+{
+  "status": "succeeded",
+  "estimated_credits": 5,
+  "requested_frame_count": 64,
+  "description": "Special 2 preparation only: guard to backward two-handed windup, electric outline, guitar materializes, finish in Guitar pose.",
+  "generation": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "videoTier": "turbo",
+    "durationSec": 2,
+    "turboMode": "first_frame",
+    "removeBg": "default",
+    "withSound": false,
+    "spritesheet": {
+      "frameCount": 64,
+      "frameSize": 512
+    },
+    "animations": [
+      {
+        "kind": "custom",
+        "name": "Special 2 - Lightning Guitar Windup",
+        "raw_prompt": true,
+        "loop": false,
+        "first_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "last_frame_pose_id": "cmvjdbccd008jdj9jrufi5w2b",
+        "prompt": "Create a non-looping side-view animation, facing RIGHT. Start in Mileto's supplied unarmed guard. With both feet firmly planted, bend the knees, lean the torso strongly backward and raise both empty hands together above and behind the head, loading a powerful two-handed overhead strike. At maximum backward extension, blue-white lightning filaments trace the complete silhouette of ONE electric guitar between his hands: neck, headstock, then body. The outline forms first; the black-and-white guitar gradually fills in and becomes solid. Both hands close securely around its neck as it materializes. Finish in the supplied Guitar pose, guitar raised behind his head, ready to strike. Keep that final windup pose; the actual swing belongs to a later clip. Preserve Mileto's appearance and the exact reference guitar. Fixed full-body camera, stable scale, ground line and horizontal position. Transparent background. No extra limbs, duplicate guitars, walking, camera movement or unrelated effects."
+      }
+    ]
+  },
+  "actual_frame_count": 56
+}

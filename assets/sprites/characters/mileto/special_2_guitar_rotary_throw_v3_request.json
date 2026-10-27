@@ -1,0 +1,29 @@
+{
+  "status": "succeeded",
+  "estimated_credits": 5,
+  "revision": "Stronger front-facing torso twist, quick compact setup from Guitar pose, horizontal hammer-throw sweep and wider canvas margins.",
+  "generation": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "videoTier": "turbo",
+    "durationSec": 2,
+    "turboMode": "first_frame",
+    "removeBg": "default",
+    "withSound": false,
+    "spritesheet": {
+      "frameCount": 64,
+      "frameSize": 512
+    },
+    "animations": [
+      {
+        "kind": "custom",
+        "name": "Special 2 - Guitar Rotary Throw v3",
+        "raw_prompt": true,
+        "loop": false,
+        "first_frame_pose_id": "cmvjdbccd008jdj9jrufi5w2b",
+        "last_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+        "prompt": "Single HORIZONTAL rotational guitar throw to the RIGHT. Begin in Guitar pose. In a brief setup, fold the elbows and bring the guitar close behind the rear shoulder, ready for a sideways throw. Then twist the hips and torso so his CHEST faces the CAMERA. Sweep both arms sideways around the ribs in ONE broad waist-level arc, like a hammer throw. Keep the guitar low and almost horizontal during this main sweep. Open the hands toward the RIGHT: the guitar vanishes in a SMALL blue-white electrical burst. Empty arms continue the lateral rotation, then return to unarmed guard. Show a clear front-facing chest at the middle of the turn. Keep the character slightly smaller within the canvas, leaving generous space around the entire guitar and burst. Fixed camera, feet grounded, stable ground line and horizontal position. Preserve Mileto and the black-and-white guitar. Transparent background. No overhead downward strike, repeated swing, full spin, extra limbs, duplicate guitar or camera motion."
+      }
+    ]
+  },
+  "actual_frame_count": 56
+}

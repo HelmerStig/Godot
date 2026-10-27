@@ -1,0 +1,22 @@
+{
+  "id": "cmvjdibk600zj10t075o3vhnk",
+  "characterId": "cmu2elbu30001frxowdg4ngym",
+  "kind": "custom",
+  "direction": "right",
+  "version": 1,
+  "status": "succeeded",
+  "isSelected": true,
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "frameCount": 56,
+  "columns": 8,
+  "sourceVideoId": "cmvjdh53900499wk6sgewfqyk",
+  "errorText": null,
+  "createdAt": "2026-10-22T10:03:29.670Z",
+  "credits_used": 5,
+  "requested_frame_count": 64,
+  "runtime_integrated": false,
+  "native_frame_count": 56,
+  "visual_review": "Backward two-handed windup is visible. Blue-white outline draws the guitar before its solid black-and-white body fills in. Ends holding Guitar pose, without a swing. Full silhouette remains within each cell.",
+  "preview": "tmp/mileto_guitar_windup_preview.gif"
+}

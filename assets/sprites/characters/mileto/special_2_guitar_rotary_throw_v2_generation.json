@@ -1,0 +1,51 @@
+{
+  "status": "succeeded",
+  "authorized": true,
+  "request": {
+    "status": "awaiting_cost_confirmation_and_visual_motion_confirmation",
+    "estimated_credits": 5,
+    "revision": "Replace the overhead downward throw with a horizontal rotational hammer-throw motion, chest visible toward camera.",
+    "generation": {
+      "characterId": "cmu2elbu30001frxowdg4ngym",
+      "videoTier": "turbo",
+      "durationSec": 2,
+      "turboMode": "first_frame",
+      "removeBg": "default",
+      "withSound": false,
+      "spritesheet": {
+        "frameCount": 64,
+        "frameSize": 512
+      },
+      "animations": [
+        {
+          "kind": "custom",
+          "name": "Special 2 - Guitar Rotary Throw v2",
+          "raw_prompt": true,
+          "loop": false,
+          "first_frame_pose_id": "cmvjdbccd008jdj9jrufi5w2b",
+          "last_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+          "prompt": "One rotational HORIZONTAL guitar throw toward the RIGHT, like a hammer throw. Start in the supplied Guitar pose. Bring the guitar to chest height, then sweep it sideways in a broad circular arc around the torso. Both hands hold its neck. Drive the motion with a strong waist twist that turns the CHEST TOWARD THE CAMERA, showing his front. The arms and guitar travel around the body at nearly constant chest height, like a horizontal bat swing. Extend both arms toward the RIGHT to release. At release, the guitar disappears in a compact blue-white electric burst near the hands. Empty arms continue the same circular follow-through, then recover to guard. Keep the whole guitar and burst inside the canvas. Fixed full-body camera, right-facing stance, planted feet, stable scale and horizontal position. Preserve Mileto and his reference guitar. Transparent background. No overhead chop, downward swing, vertical throwing arc, full-body spin, extra limbs, duplicate guitar or camera motion."
+        }
+      ]
+    }
+  },
+  "result": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "status": "queued",
+    "queuedAt": "2026-10-22T10:41:10.396Z",
+    "workflows": [
+      {
+        "jobId": "wf_82232201-1435-4cfe-abcb-0545677ddf1b",
+        "kind": "custom",
+        "videoId": "cmvjeurmb00q51187hs04dei9"
+      }
+    ],
+    "message": "Queued 1 workflow(s) for spritesheet generation.",
+    "usage": {
+      "creditsUsed": 5,
+      "creditsRemaining": 971
+    }
+  },
+  "spritesheet_id": "cmvjevv28009wdxw9py2llz7x",
+  "native_frame_count": 56
+}

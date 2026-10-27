@@ -1,0 +1,50 @@
+{
+  "status": "succeeded",
+  "request": {
+    "status": "authorized",
+    "estimated_credits": 5,
+    "description": "Confirmed overhead forward throw; torso shows chest to camera; guitar disappears in electric burst at release, then empty-handed follow-through.",
+    "generation": {
+      "characterId": "cmu2elbu30001frxowdg4ngym",
+      "videoTier": "turbo",
+      "durationSec": 2,
+      "turboMode": "first_frame",
+      "removeBg": "default",
+      "withSound": false,
+      "spritesheet": {
+        "frameCount": 64,
+        "frameSize": 512
+      },
+      "animations": [
+        {
+          "kind": "custom",
+          "name": "Special 2 - Guitar Overhead Throw",
+          "raw_prompt": true,
+          "loop": false,
+          "first_frame_pose_id": "cmvjdbccd008jdj9jrufi5w2b",
+          "last_frame_pose_id": "cmu2elbv20003frxomtwww0b9",
+          "prompt": "One powerful two-handed overhead guitar throw toward the RIGHT. Begin in the supplied Guitar pose, leaning back with the black-and-white guitar raised behind the head. Drive the torso forward and rotate the CHEST INTO VIEW toward the camera. Both arms swing the guitar from above and behind the head down and forward, like a two-handed hammer throw. Use an overhead forward arc, not a sideways sweep around the waist. Keep the chest visible during the swing. Extend both arms toward the RIGHT and release the guitar. At release it disappears completely in a brief blue-white electrical explosion near the hands; finish the follow-through with EMPTY hands. Then recover to the supplied unarmed guard. This is a single throw with one clear release. Fixed full-body side camera, stable scale, planted feet, no horizontal travel. Preserve Mileto's identity, outfit and exact guitar. Transparent background. No second guitar, fragments left in his hands, extra limbs, full body spin or camera movement."
+        }
+      ]
+    }
+  },
+  "result": {
+    "characterId": "cmu2elbu30001frxowdg4ngym",
+    "status": "queued",
+    "queuedAt": "2026-10-22T10:28:21.098Z",
+    "workflows": [
+      {
+        "jobId": "wf_fa1c112c-f35b-4fa2-8a3a-da47241372ea",
+        "kind": "custom",
+        "videoId": "cmvjeea0c01al10t0degj30z6"
+      }
+    ],
+    "message": "Queued 1 workflow(s) for spritesheet generation.",
+    "usage": {
+      "creditsUsed": 5,
+      "creditsRemaining": 976
+    }
+  },
+  "spritesheet_id": "cmvjef6n300k41187s052qa59",
+  "native_frame_count": 56
+}

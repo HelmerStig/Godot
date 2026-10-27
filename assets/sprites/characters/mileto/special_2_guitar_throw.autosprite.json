@@ -1,0 +1,17 @@
+{
+  "character": "Mileto",
+  "animation": "Special 2 - Guitar Rotary Throw v3",
+  "characterId": "cmu2elbu30001frxowdg4ngym",
+  "spritesheetId": "cmvjf76o8001ynj3ulpzukwg1",
+  "videoId": "cmvjf222t00r51187ihscz799",
+  "downloadedAt": "2026-10-22",
+  "frameCount": 23,
+  "columns": 8,
+  "cellSize": [512, 512],
+  "fps": 60,
+  "loop": false,
+  "projectileReleaseFrame": 21,
+  "windup": {"file": "Mileto-special_2_-_lightning_guitar_windup.png", "frameCount": 45, "columns": 8, "fps": 100},
+  "projectile": {"file": "guitar-projectile.png", "frameCount": 25, "columns": 5, "cellSize": [256, 256], "fps": 100, "loop": true},
+  "creditsSpent": 0
+}

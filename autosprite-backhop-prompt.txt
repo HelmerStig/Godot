@@ -234,6 +234,24 @@ Utilizziamo Special 1 - Shoulder Snap v3
 Un quarto di luna in avanti + lp, mp, hp (puoi farla anche con mp e hp, in quel caso aumenta la velocità) metti tollerenza in modo che non sia troppo difficile da eseguire. Il personaggio vaspostato velocemente in avanti durante l'esecuzione della fino ad arrivare all'avversario.
 Quando la special è attivata, vorrei che il personaggio avesse un'aura limonosa che esplode intorno a lui, evidenziando la potenza della mossa. Durante il movimento una scia luminosa accompagna il personaggio, accentuando la velocità e la forza dell'attacco. Mantieni il fotogramma 31 finchè non colpisce l'avversario o viene colpito. cambia il colore dell'aura in base a lp (azzurra), mp (arancione	), hp (rossa)
 
+Devo creare su autosprite.io la Special 2 di Mileto.
+Ho creato una posa che si chiama "Guitar pose".
+Il personaggio deve sporgersi all'indietro come per caricare un colpo a die mani, alla massima estensione compare una chitarra che viene impugnata con entrambe le mani, pronto a colpire.
+La comparsa deve essere fatta come eggetto fuufulmini che delineano il contorno della chittarra prima che si materializzi completamente.
+
+Pra partendo da guitar pose, il persojnaggio scagli in avanti la chitarra ruotando il busto verso la telecamera e seguendo con il movimento delle braccia fino a completare il il lancio, la rotazione dev'essere sull'asse x non y. Al termine del lancio la chitarra dovrà scomparire con un esplosione, poi la sostituiremo con un proiettile. Mi generi l'animazione su autosprite?
+
+Ora dobbiamo implementarla su godot. Quarto di luna indietro + LP, MP, HP per attivare la Special 2 di Mileto. Si esegue prima: assets\sprites\characters\mileto\Mileto-special_2_-_lightning_guitar_windup.png per poi passare a:Special 2 - Guitar Rotary Throw v3 (l'ho modificata su autosprite)
+	Tutte e 2 a 100fps
+
+	poi si crea il proiettile: assets\sprites\characters\mileto\guitar-projectile.png che è animato in loop a 60fps, e si gestisce la collisione con l'avversario per infliggere danno e far scomparire il proiettile i nun esplosione su godot, metti anche una scia al proiettile. Hai domande?
+
+	porta Guitar Rotary Throw v3 a 60fps e la chitarra a 100fps
+
+	Ora, quando la chitarra si materializza, usa il suono: assets\sounds\sfx\chitarra-electricity.wav
+	Quando viene lanciata: assets\sounds\sfx\boomerang.wav
+	Quando colpisce l'avversario: usa il suono che abbiamo usato per l'hit del calcio potente
+	Ingrandisci leggermente il proiettile della chitarra
 
 
 
