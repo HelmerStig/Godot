@@ -143,3 +143,9 @@ Gli atlas runtime sono in `assets/`; molti usano celle da 512×512, ma il foglio
 - [docs/archive/](docs/archive/): note precedenti, conservate come archivio e non come specifica corrente.
 
 Restano da sviluppare round competitivi, IA e multiplayer online. Sul piano tecnico, i due scenari storici dei moveset restano sequenze di integrazione lunghe; i nuovi casi indipendenti hanno moduli dedicati.
+
+### Special 1 di Bue: Tom Waits
+
+Quarto di luna avanti + LP/MP/HP, con tolleranza di 600 ms. Bue esegue Summon lightning a 60 FPS e al frame 10 evoca Tom davanti a se. Tom si materializza a 60 FPS, avanza con Run Singing a 48 FPS, si ferma al contatto ed esegue Hat slaps a 60 FPS: tre colpi da 5 danni con hurt_high/block_high in piedi, hurt_crouched/block_low da abbassato se la hurtbox interseca la traiettoria. Subito dopo il terzo impatto, saltando i frame finali fermi, Tom riprende la corsa ed esce dal campo senza colpire ancora. Le tre forze condividono velocita e danno. La special non puo essere ripetuta finche Tom non scompare, anche durante la corsa in uscita. Reset e fine round ripuliscono l'evocazione.
+
+Per l'evocazione di Tom, `scossa.wav` parte subito all'attivazione della special e termina con electric materialize. La corsa usa `tom waits.mp3` dal secondo 25, senza interruzioni durante Hat slaps e sovrapposto ai suoni hit fino all'uscita. I tre colpi riusciti usano l'hit del pugno leggero; il brano si ferma quando Tom esce dal campo.

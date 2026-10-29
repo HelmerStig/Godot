@@ -1,0 +1,17 @@
+{
+  "name": "special_1_summon_lightning",
+  "id": "cmvtekbno0079ktl7bg4169h4",
+  "characterId": "cmu2eighh001m2u5fqs7l1niq",
+  "kind": "custom",
+  "direction": "right",
+  "version": 1,
+  "status": "succeeded",
+  "isSelected": true,
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "frameCount": 30,
+  "columns": 7,
+  "sourceVideoId": "cmvtehrjb008c421aqlxt0wr7",
+  "errorText": null,
+  "createdAt": "2026-10-29T10:30:44.485Z"
+}

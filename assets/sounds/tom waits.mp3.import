@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cnd6l1o2jtcxh"
+path="res://.godot/imported/tom waits.mp3-14ef8056b13c8efea9741a83e2493627.mp3str"
+
+[deps]
+
+source_file="res://assets/sounds/tom waits.mp3"
+dest_files=["res://.godot/imported/tom waits.mp3-14ef8056b13c8efea9741a83e2493627.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

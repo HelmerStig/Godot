@@ -253,6 +253,15 @@ Ora dobbiamo implementarla su godot. Quarto di luna indietro + LP, MP, HP per at
 	Quando colpisce l'avversario: usa il suono che abbiamo usato per l'hit del calcio potente
 	Ingrandisci leggermente il proiettile della chitarra
 
+	Ora devo creare una special per Bue.
+	Si attiva con quarto di luna avanti + LP, MP, HP.
+	Appena attivata parte con l'animazione su autosprite di bue che si chiama: Summon lightning da eseguire a 60fps, -> al fotogramma 10 di summon lightning, si materializza il proiettile davanti, lo sprite è:
+	Perosnaggio Tom waits, spritesheet: electric materialize da eseguire sempre a 60fps. -> poi si passa a Run Singing da eseguire a 48fps, durante quest'animazione il proiettile si muove avanti e quando colpisce l'avversario, si passa a: electric hit da eseguire a 60fps, e poi a hat slaps da eseguire a 60fps, una volta eseguita, si ripassa a Run Singing ed il proiettile esce dallo schermo. Genera nell'avversario hurt_high x 3 volte se colpito o block_high se parato in posizione eretta. tutto chiaro?
+
+	ora passiamo ai suoni, al fotogramma 30 di summon lightning si sente questo suono che deve durare fino alla fine di electric materialize:
+	poi si passa a questo suono mentre il proiettile si muove in avanti: assets\sounds\tom waits.mp3
+	questo sound deve partire dal secondo: 23 e proseguire fino a quando il proiettile è uscito dallo schermo, durante le 3 hit usa invece il suono di hit che abbiamo usato per il pugno leggero, per 3 volte
+
 
 
 

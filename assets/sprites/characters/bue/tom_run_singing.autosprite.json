@@ -1,0 +1,17 @@
+{
+  "name": "tom_run_singing",
+  "id": "cmvta5wtp00k1msrqv1oql5x1",
+  "characterId": "cmvt9lhe001jmx7r428yhl7sp",
+  "kind": "custom",
+  "direction": "right",
+  "version": 1,
+  "status": "succeeded",
+  "isSelected": true,
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "frameCount": 49,
+  "columns": 7,
+  "sourceVideoId": "cmvta4wow0114av7rkafditwc",
+  "errorText": null,
+  "createdAt": "2026-10-29T08:27:33.614Z"
+}

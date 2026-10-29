@@ -1,0 +1,17 @@
+{
+  "name": "tom_hat_slaps",
+  "id": "cmvtdorg00036q4o8h604ltee",
+  "characterId": "cmvt9lhe001jmx7r428yhl7sp",
+  "kind": "custom",
+  "direction": "right",
+  "version": 1,
+  "status": "succeeded",
+  "isSelected": true,
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "frameCount": 49,
+  "columns": 7,
+  "sourceVideoId": "cmvtdntbc003yv5rxq1zn1zir",
+  "errorText": null,
+  "createdAt": "2026-10-29T10:06:11.952Z"
+}

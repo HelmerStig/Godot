@@ -1,0 +1,17 @@
+{
+  "name": "tom_electric_materialize",
+  "id": "cmvte0viw0076q4o84e8qwtuo",
+  "characterId": "cmvt9lhe001jmx7r428yhl7sp",
+  "kind": "custom",
+  "direction": "right",
+  "version": 1,
+  "status": "succeeded",
+  "isSelected": true,
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "frameCount": 30,
+  "columns": 7,
+  "sourceVideoId": "cmvtdyf4v002cogrjvq3hu77b",
+  "errorText": null,
+  "createdAt": "2026-10-29T10:15:37.112Z"
+}
