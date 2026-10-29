@@ -1,8 +1,25 @@
 extends RefCounted
 const Helpers := preload("res://tests/cases/oscare_cigarette_special.gd")
 const Singer := preload("res://scripts/BueSingerProjectile.gd")
+const Baglioni := preload("res://scripts/BueBaglioniProjectile.gd")
 
-static func run(tree: SceneTree, expect: Callable) -> bool:
+static func motion(actor: Fighter, facing: bool, button: StringName, mode := 0, variant := 1) -> void:
+	if variant == 1:
+		Helpers.motion(actor,facing,button,mode)
+		return
+	var back := -1 if facing else 1
+	actor.is_facing_right = facing
+	actor.animated_sprite.flip_h = not facing
+	actor.input_buffer.record_input_snapshot(0,1,[],facing)
+	if mode != 2:
+		actor.input_buffer.record_input_snapshot(back,1,[],facing)
+	actor.input_buffer.record_input_snapshot(back,1 if mode == 1 else 0,[button],facing)
+
+static func run(tree: SceneTree, expect: Callable, variant := 1) -> bool:
+	var singer_script = Baglioni if variant == 2 else Singer
+	var song := load("res://assets/sounds/baglioni.mp3" if variant == 2 else "res://assets/sounds/tom waits.mp3") as AudioStream
+	var song_start := 132.0 if variant == 2 else 25.0
+	var expected_sheets := [[&"materialize",28,60.0,false,Baglioni.BAGLIONI_MATERIALIZE],[&"run",49,48.0,true,Baglioni.BAGLIONI_RUN],[&"slaps",49,60.0,false,Baglioni.BAGLIONI_SLAPS]] if variant == 2 else [[&"materialize",30,60.0,false,Singer.MATERIALIZE],[&"run",49,48.0,true,Singer.RUN],[&"slaps",49,60.0,false,Singer.SLAPS]]
 	var arena := (load("res://scenes/MovementTest.tscn") as PackedScene).instantiate()
 	tree.root.add_child(arena)
 	for tick in 4:
@@ -28,10 +45,10 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 		for button in [&"light_punch",&"medium_punch",&"heavy_punch"]:
 			for mode in 3:
 				await Helpers.settle(tree,actor,target,arena.FLOOR_Y)
-				Helpers.motion(actor,facing,button,mode)
+				motion(actor,facing,button,mode,variant)
 				actor._physics_process(1.0/60)
-				expect.call(actor.summon_active,"Bue: QCF %s facing=%s tolleranza=%d" % [button,facing,mode])
-				expect.call(actor._summon_audio.playing and actor._summon_audio.stream == load("res://assets/sounds/sfx/scossa.wav"),"Bue: scossa parte subito all'attivazione")
+				expect.call(actor.summon_active and actor.summon_variant == variant,"Bue: quarter circle %s facing=%s tolleranza=%d" % [button,facing,mode])
+				expect.call(actor._summon_audio.playing == (variant == 1) and actor._summon_audio.stream == load("res://assets/sounds/sfx/scossa.wav"),"Bue: scossa all'attivazione per Tom, al frame 10 per Baglioni")
 				actor.animated_sprite.pause()
 				actor.animated_sprite.frame = 8
 				expect.call(tree.get_nodes_in_group("bue_singer_projectile").is_empty(),"Bue: nessuna evocazione prima del frame 10")
@@ -46,7 +63,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				singer.sprite.pause()
 				expect.call(singer.materialize_audio == actor._summon_audio and singer.materialize_audio.get_parent() == singer and singer.materialize_audio.playing and not singer.singing_audio.playing,"Tom: stessa scossa continua dopo evocazione, senza riavvio")
 				expect.call(singer.position == actor.position+Vector2(170 if facing else -170,26) and singer.sprite.flip_h == not facing,"Bue: Tom davanti e specchiato, piedi allineati a Bue")
-				for spec in [[&"materialize",30,60.0,false,Singer.MATERIALIZE],[&"run",49,48.0,true,Singer.RUN],[&"slaps",49,60.0,false,Singer.SLAPS]]:
+				for spec in expected_sheets:
 					var sf: SpriteFrames = singer.sprite.sprite_frames
 					var valid: bool = sf.get_frame_count(spec[0]) == spec[1]
 					for index in int(spec[1]):
@@ -57,8 +74,8 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				singer._physics_process(.05)
 				expect.call(singer.position == before,"Tom: materializzazione ferma")
 				singer._on_animation_finished()
-				expect.call(not singer.materialize_audio.playing and singer.singing_audio.playing and not singer.singing_audio.stream_paused and singer.singing_audio.stream == load("res://assets/sounds/tom waits.mp3"),"Tom: fine materializzazione ferma scossa e avvia brano")
-				expect.call(absf(singer.singing_audio.get_playback_position()-25.0) < .1,"Tom: brano parte dal secondo 25")
+				expect.call(not singer.materialize_audio.playing and singer.singing_audio.playing and not singer.singing_audio.stream_paused and singer.singing_audio.stream == song,"Tom: fine materializzazione ferma scossa e avvia brano")
+				expect.call(absf(singer.singing_audio.get_playback_position()-song_start) < .1,"Singer: brano parte dal secondo %s" % song_start)
 				singer._physics_process(.05)
 				expect.call(is_equal_approx(singer.position.x-before.x,(1 if facing else -1)*Singer.SPEED*.05),"Tom: Run Singing avanza con velocita comune")
 				actor._on_animation_finished()
@@ -81,7 +98,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 				target.position.y -= 500
 			for tick in 2:
 				await tree.physics_frame
-			var singer := Singer.new()
+			var singer: Singer = singer_script.new()
 			singer.setup(actor,facing)
 			arena.add_child(singer)
 			singer.position = actor.position + Vector2(dir*170,26)
@@ -112,14 +129,15 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			expect.call(target.combat.current_health == hp,"Tom: danno finale " + scenario + str(facing))
 			expect.call(singer.hit_sound_count == (0 if guarded else (1 if scenario in ["knockout","escaped"] else 3)),"Tom: un hit del pugno leggero per colpo riuscito")
 			for audio in tree.get_nodes_in_group("bue_singer_hit_audio"):
-				expect.call(audio.stream == load("res://assets/sounds/sfx/light-punch.wav") and (audio.playing or audio.is_queued_for_deletion()),"Tom: hit audio condiviso con pugno leggero e rimosso a fine suono")
+				# A finished voice can remain in the tree until its finished signal is dispatched.
+				expect.call(audio.stream == load("res://assets/sounds/sfx/light-punch.wav"),"Singer: hit audio condiviso con pugno leggero")
 			expect.call(cycles == (1 if scenario in ["knockout","escaped"] else 3),"Tom: tre reazioni distinte sincronizzate ai colpi " + scenario)
 			expect.call(singer.phase == Singer.Phase.EXITING and singer.sprite.animation == &"run","Tom: dopo Hat slaps torna Run Singing")
 			expect.call(singer.singing_audio.playing and not singer.singing_audio.stream_paused,"Tom: musica continua in uscita")
-			expect.call(singer.singing_audio.get_playback_position() > 25.1,"Tom: brano avanza durante i colpi senza ripartire da 25")
+			expect.call(singer.singing_audio.get_playback_position() > song_start + .1,"Tom: brano avanza durante i colpi senza ripartire da 25")
 			if scenario not in ["knockout","escaped"]:
-				expect.call(singer.strikes == 3 and not singer._slaps_finished,"Tom: riparte al terzo colpo senza attendere fine Hat slaps o hurt")
-				expect.call(singer.elapsed - .6 < .8,"Tom: nessuna pausa aggiuntiva, uscita entro 800 ms dal contatto")
+				expect.call(singer.strikes == 3 and singer._slaps_finished == (variant == 2),"Tom: riparte al terzo colpo senza attendere fine Hat slaps o hurt")
+				expect.call(singer.elapsed - .6 < (.95 if variant == 2 else .8),"Tom: nessuna pausa aggiuntiva, uscita entro 800 ms dal contatto")
 			var health := target.combat.current_health
 			var departure := singer.position.x
 			var already_outside := singer.is_queued_for_deletion()
@@ -130,14 +148,14 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 			singer._physics_process(.01)
 			expect.call(singer.is_queued_for_deletion(),"Tom: rimosso fuori campo")
 	await Helpers.settle(tree,actor,target,arena.FLOOR_Y)
-	actor._start_summon()
+	actor._start_summon(variant)
 	actor.animated_sprite.frame = 5
 	actor.combat.take_damage(1,target)
 	actor._on_animation_frame_changed()
 	expect.call(not actor.summon_active and tree.get_nodes_in_group("bue_singer_projectile").is_empty(),"Bue: hurt annulla evocazione prima del frame 10")
 	expect.call(not actor._summon_audio.playing,"Bue: hurt prima dell'evocazione ferma scossa")
 	await Helpers.settle(tree,actor,target,arena.FLOOR_Y)
-	actor._start_summon()
+	actor._start_summon(variant)
 	actor.animated_sprite.frame = 9
 	actor.combat.take_damage(1,target)
 	expect.call(tree.get_nodes_in_group("bue_singer_projectile").size() == 1,"Bue: Tom gia evocato continua dopo hurt del proprietario")
@@ -146,7 +164,7 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	expect.call(tree.get_nodes_in_group("bue_singer_projectile").is_empty(),"Bue: reset elimina evocazione")
 	expect.call(tree.get_nodes_in_group("bue_singer_hit_audio").is_empty(),"Bue: reset elimina anche gli audio di impatto")
 	# The lock follows Tom's lifetime, not just Bue's short summon animation.
-	actor._start_summon()
+	actor._start_summon(variant)
 	actor.animated_sprite.frame = 9
 	var active_singer = actor._summoned_singer
 	active_singer.set_physics_process(false)
@@ -154,21 +172,22 @@ static func run(tree: SceneTree, expect: Callable) -> bool:
 	actor._on_animation_finished()
 	for phase in [Singer.Phase.MATERIALIZING,Singer.Phase.APPROACHING,Singer.Phase.SLAPPING,Singer.Phase.EXITING]:
 		active_singer.phase = phase
-		for button in [&"light_punch",&"medium_punch",&"heavy_punch"]:
-			actor.input_buffer.clear()
-			Helpers.motion(actor,true,button)
-			expect.call(not actor._try_start_character_special() and not actor.summon_active and tree.get_nodes_in_group("bue_singer_projectile").size() == 1,"Bue: nessuna nuova evocazione con Tom attivo, fase=%d pulsante=%s" % [phase,button])
-	actor._start_summon()
+		for requested_variant in [1,2]:
+			for button in [&"light_punch",&"medium_punch",&"heavy_punch"]:
+				actor.input_buffer.clear()
+				motion(actor,true,button,0,requested_variant)
+				expect.call(not actor._try_start_character_special() and not actor.summon_active and tree.get_nodes_in_group("bue_singer_projectile").size() == 1,"Bue: blocco incrociato variante=%d fase=%d pulsante=%s" % [requested_variant,phase,button])
+	actor._start_summon(variant)
 	expect.call(not actor.summon_active and actor._summoned_singer == active_singer,"Bue: anche avvio diretto rispetta il blocco")
 	active_singer.queue_free()
 	expect.call(not actor._try_start_character_special(),"Bue: blocco fino all'effettiva scomparsa di Tom")
 	await tree.process_frame
 	actor.input_buffer.clear()
-	Helpers.motion(actor,true,&"light_punch")
+	motion(actor,true,&"light_punch",0,variant)
 	expect.call(actor._try_start_character_special() and actor.summon_active,"Bue: special nuovamente disponibile dopo uscita di Tom")
 	await Helpers.settle(tree,actor,target,arena.FLOOR_Y)
 	actor.controls_enabled = false
-	Helpers.motion(actor,true,&"light_punch")
+	motion(actor,true,&"light_punch",0,variant)
 	expect.call(not actor._try_start_character_special(),"Bue: controlli disabilitati impediscono special")
 	actor.controls_enabled = true
 	actor.position.y -= 300

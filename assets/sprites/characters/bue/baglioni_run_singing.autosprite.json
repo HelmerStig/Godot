@@ -1,0 +1,17 @@
+{
+  "name": "baglioni_run_singing",
+  "id": "cmvt9wd1401nux7r43t51pyk9",
+  "characterId": "cmvt9n13y00j3msrqyr3g7ec6",
+  "kind": "custom",
+  "direction": "right",
+  "version": 1,
+  "status": "succeeded",
+  "isSelected": true,
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "frameCount": 49,
+  "columns": 7,
+  "sourceVideoId": "cmvt9vb6r00yoav7rufig04k6",
+  "errorText": null,
+  "createdAt": "2026-10-29T08:20:08.056Z"
+}

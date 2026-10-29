@@ -3,11 +3,13 @@ class_name Bue
 
 const SUMMON_SHEET := preload("res://assets/sprites/characters/bue/special_1_summon_lightning.png")
 const SingerProjectile := preload("res://scripts/BueSingerProjectile.gd")
+const BaglioniProjectile := preload("res://scripts/BueBaglioniProjectile.gd")
 const SUMMON_ANIMATION := &"special_1_summon_lightning"
 const SUMMON_FRAME := 9 # Frame 10, inclusive, user-facing numbering.
 var summon_active := false
 var summon_spawned := false
 var summon_facing_right := true
+var summon_variant := 1
 var _summoned_singer
 var _summon_audio: AudioStreamPlayer
 
@@ -20,21 +22,25 @@ func _try_start_character_special() -> bool:
 	if summon_active or is_instance_valid(_summoned_singer) or not controls_enabled or not is_on_floor() or (not can_move and current_state != State.STANDING_UP) or current_state not in [State.IDLE,State.WALKING,State.RUNNING,State.CROUCHING,State.STANDING_UP]:
 		return false
 	var buffer := input_buffer
-	if buffer.get_current_direction() not in [FighterInputBuffer.Direction.FORWARD,FighterInputBuffer.Direction.DOWN_FORWARD]:
+	var backwards := buffer.get_current_direction() in [FighterInputBuffer.Direction.BACK,FighterInputBuffer.Direction.DOWN_BACK]
+	var horizontal := FighterInputBuffer.Direction.BACK if backwards else FighterInputBuffer.Direction.FORWARD
+	var diagonal := FighterInputBuffer.Direction.DOWN_BACK if backwards else FighterInputBuffer.Direction.DOWN_FORWARD
+	if buffer.get_current_direction() not in [horizontal,diagonal]:
 		return false
-	if not buffer.matches_recent_sequence([FighterInputBuffer.Direction.DOWN,FighterInputBuffer.Direction.DOWN_FORWARD,FighterInputBuffer.Direction.FORWARD],36) and not buffer.matches_recent_sequence([FighterInputBuffer.Direction.DOWN,FighterInputBuffer.Direction.DOWN_FORWARD],36):
+	if not buffer.matches_recent_sequence([FighterInputBuffer.Direction.DOWN,diagonal,horizontal],36) and not buffer.matches_recent_sequence([FighterInputBuffer.Direction.DOWN,diagonal],36):
 		return false
 	for button in [&"heavy_punch",&"medium_punch",&"light_punch"]:
-		if buffer.consume_attack(button,10) in [FighterInputBuffer.Direction.FORWARD,FighterInputBuffer.Direction.DOWN_FORWARD]:
+		if buffer.consume_attack(button,10) in [horizontal,diagonal]:
 			buffer.clear()
-			_start_summon()
+			_start_summon(2 if backwards else 1)
 			return true
 	return false
 
-func _start_summon() -> void:
+func _start_summon(variant := 1) -> void:
 	if summon_active or is_instance_valid(_summoned_singer):
 		return
 	_summoned_singer = null
+	summon_variant = variant
 	summon_active = true
 	summon_spawned = false
 	summon_facing_right = is_facing_right
@@ -46,7 +52,9 @@ func _start_summon() -> void:
 		_summon_audio.stream = SingerProjectile.MATERIALIZE_SOUND
 		_summon_audio.volume_db = -4
 		add_child(_summon_audio)
-	_summon_audio.play()
+	_summon_audio.stop()
+	if summon_variant == 1:
+		_summon_audio.play()
 	update_collision_profile()
 
 func _on_animation_frame_changed() -> void:
@@ -56,11 +64,13 @@ func _on_animation_frame_changed() -> void:
 
 func _spawn_singer() -> Node2D:
 	summon_spawned = true
-	var singer := SingerProjectile.new()
+	var singer = BaglioniProjectile.new() if summon_variant == 2 else SingerProjectile.new()
 	_summoned_singer = singer
 	singer.setup(self,summon_facing_right)
 	get_parent().add_child(singer)
 	singer.adopt_materialization_audio(_summon_audio)
+	if summon_variant == 2:
+		_summon_audio.play()
 	singer.global_position = global_position + Vector2(170 if summon_facing_right else -170,26)
 	return singer
 

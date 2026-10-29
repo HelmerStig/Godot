@@ -1,0 +1,17 @@
+{
+  "name": "baglioni_slap_flurry",
+  "id": "cmvta0djo00gpf7eheasb5k6g",
+  "characterId": "cmvt9n13y00j3msrqyr3g7ec6",
+  "kind": "custom",
+  "direction": "right",
+  "version": 1,
+  "status": "succeeded",
+  "isSelected": true,
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "frameCount": 49,
+  "columns": 7,
+  "sourceVideoId": "cmvt9zdgc00fff7ehsarllj2z",
+  "errorText": null,
+  "createdAt": "2026-10-29T08:23:15.348Z"
+}

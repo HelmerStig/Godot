@@ -1,0 +1,17 @@
+{
+  "name": "baglioni_electric_materialize",
+  "id": "cmvtdzope002oogrjgy0ztrg6",
+  "characterId": "cmvt9n13y00j3msrqyr3g7ec6",
+  "kind": "custom",
+  "direction": "right",
+  "version": 1,
+  "status": "succeeded",
+  "isSelected": true,
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "frameCount": 28,
+  "columns": 7,
+  "sourceVideoId": "cmvtdw4sw003lc2viv7zfx0i7",
+  "errorText": null,
+  "createdAt": "2026-10-29T10:14:41.618Z"
+}

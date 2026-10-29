@@ -10,6 +10,7 @@ const SUITES := {
 	],
 	"mangler": ["res://tests/cases/mangler_moveset.gd", "res://tests/cases/mangler_attack_audio.gd"],
 	"combat": [
+		"res://tests/cases/bue_baglioni_special.gd",
 		"res://tests/cases/bue_singer_special.gd",
 		"res://tests/cases/mileto_guitar_special.gd",
 		"res://tests/cases/mileto_shoulder_special.gd",

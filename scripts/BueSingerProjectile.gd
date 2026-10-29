@@ -26,6 +26,25 @@ var _slaps_finished := false
 var materialize_audio: AudioStreamPlayer
 var singing_audio: AudioStreamPlayer
 var hit_sound_count := 0
+var strike_frames: Array = SLAP_FRAMES
+
+func _animation_specs() -> Array:
+	return [[&"materialize",MATERIALIZE,30,60.0,false],[&"run",RUN,49,48.0,true],[&"slaps",SLAPS,49,60.0,false]]
+
+func _song_stream() -> AudioStream:
+	return SINGING_SOUND
+
+func _song_start() -> float:
+	return SONG_START
+
+func _strike_frames() -> Array:
+	return SLAP_FRAMES
+
+func _sprite_y() -> float:
+	return -158.0
+
+func _exit_on_last_strike() -> bool:
+	return true
 
 func setup(fighter: Fighter, direction_right: bool) -> void:
 	source_fighter = fighter
@@ -33,6 +52,7 @@ func setup(fighter: Fighter, direction_right: bool) -> void:
 
 func _ready() -> void:
 	add_to_group("bue_singer_projectile")
+	strike_frames = _strike_frames()
 	materialize_audio = AudioStreamPlayer.new()
 	materialize_audio.name = "MaterializationAudio"
 	materialize_audio.stream = MATERIALIZE_SOUND
@@ -40,18 +60,18 @@ func _ready() -> void:
 	add_child(materialize_audio)
 	singing_audio = AudioStreamPlayer.new()
 	singing_audio.name = "SingingAudio"
-	singing_audio.stream = SINGING_SOUND
+	singing_audio.stream = _song_stream()
 	singing_audio.volume_db = -6
 	add_child(singing_audio)
 	z_index = 8
 	sprite = AnimatedSprite2D.new()
 	sprite.name = "AnimatedSprite2D"
 	sprite.scale = Vector2.ONE * ART_SCALE
-	sprite.position.y = -158 # Feet at source y442, consistent across stationary poses.
+	sprite.position.y = _sprite_y()
 	sprite.flip_h = not facing_right
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
-	for spec in [[&"materialize",MATERIALIZE,30,60.0,false],[&"run",RUN,49,48.0,true],[&"slaps",SLAPS,49,60.0,false]]:
+	for spec in _animation_specs():
 		frames.add_animation(spec[0])
 		frames.set_animation_speed(spec[0],spec[3])
 		frames.set_animation_loop(spec[0],spec[4])
@@ -130,7 +150,7 @@ func _on_frame_changed() -> void:
 	if phase != Phase.SLAPPING or is_queued_for_deletion():
 		return
 	# Catch crossed frames if rendering skips one at 60 FPS; each strike is queued once.
-	while strikes + _pending_strikes < SLAP_FRAMES.size() and sprite.frame >= SLAP_FRAMES[strikes + _pending_strikes]:
+	while strikes + _pending_strikes < strike_frames.size() and sprite.frame >= strike_frames[strikes + _pending_strikes]:
 		_pending_strikes += 1
 	_process_pending_strike()
 
@@ -177,7 +197,7 @@ func _process_pending_strike() -> void:
 	if result in [FighterCombat.DamageResult.KNOCKOUT,FighterCombat.DamageResult.IGNORED]:
 		_pending_strikes = 0
 		_start_exit()
-	elif strikes == SLAP_FRAMES.size():
+	elif strikes == strike_frames.size() and _exit_on_last_strike():
 		# Resume forward travel on the third contact, without the stationary tail.
 		_start_exit()
 
@@ -208,7 +228,7 @@ func _start_running_audio() -> void:
 		singing_audio.stop()
 		return
 	if not singing_audio.playing:
-		singing_audio.play(SONG_START)
+		singing_audio.play(_song_start())
 
 func _play_hit_audio() -> void:
 	# Each contact is independent; allow a successful last hit to finish after KO.
